@@ -83,6 +83,8 @@ export default defineConfig({
     env: Object.fromEntries(
       Object.entries({
         NEXT_PUBLIC_GA_ID: process.env.NEXT_PUBLIC_GA_ID,
+        // Fixed live-demo statuses instead of OpenPing's real ones (app/api/status).
+        STATUS_FIXTURE: '1',
       }).filter(([, value]) => value !== undefined)
     ) as Record<string, string>,
   },

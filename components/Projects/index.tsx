@@ -7,6 +7,7 @@ import { projects } from '@/data/projects'
 import { Project, IconCycleState } from '@/lib/types'
 import { trackProjectEvent } from '@/lib/analytics'
 import ProjectCard from './ProjectCard'
+import MoreBuilds from './MoreBuilds'
 import { getInitialIconCycleState, createStateHandlerMap } from './utils'
 
 const BLURB =
@@ -118,6 +119,7 @@ const Projects: React.FC = () => {
           </span>
           .
         </p>
+        <MoreBuilds />
         <a
           href="https://n8builds.dev"
           target="_blank"

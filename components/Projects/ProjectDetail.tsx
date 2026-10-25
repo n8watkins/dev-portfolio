@@ -8,6 +8,7 @@ import { FiArrowLeft, FiGithub, FiArrowUpRight } from 'react-icons/fi'
 import { MdOpenInNew } from 'react-icons/md'
 import IconCycle from '@/components/ui/ProjectComponents/iconCycle'
 import { Project } from '@/lib/types'
+import StatusPill from './StatusPill'
 
 function Heading({ id, children }: { id: string; children: React.ReactNode }) {
   return (
@@ -52,6 +53,8 @@ function ProjectLinks({ project }: { project: Project }) {
         className="inline-flex items-center gap-2 text-slate-300 hover:text-sky-400 transition-colors">
         <FiArrowUpRight className="w-4 h-4" aria-hidden="true" /> n8builds.dev
       </a>
+      {/* Last in the row, so it appears without moving the links before it. */}
+      {project.statusName && <StatusPill name={project.statusName} />}
     </div>
   )
 }
@@ -101,7 +104,7 @@ export default function ProjectDetail({ project }: { project: Project }) {
           initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
-          className="relative w-full h-64 md:h-80 rounded-2xl overflow-hidden border border-white/10 bg-slate-900/40 shadow-xl shadow-black/30 mb-14">
+          className="relative w-full aspect-video rounded-2xl overflow-hidden border border-white/10 bg-slate-900/40 shadow-xl shadow-black/30 mb-14">
           <Image
             src={project.images[0]}
             alt={project.title}

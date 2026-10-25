@@ -64,6 +64,7 @@ export const projects = [
     aiUsage: `Echo runs on Google Gemini. The text-and-tools model (gemini-3.1-flash-lite by default) streams tokens over Server-Sent Events and calls functions - weather, time-zone, web search - mid-conversation. Speech-to-text and text-to-speech run in the browser via the Web Speech API, so the model is the only thing that ever touches the network. A second "Live" engine swaps in Gemini's native Live API for full speech-to-speech over a WebSocket. The model is the easy part; the orchestration around it - the sentence chunker that starts talking on the first sentence, the turn-taking state machine, the barge-in handling - is where the real engineering lives.`,
     github: 'https://github.com/n8watkins/echo-genai-voice-agent',
     liveSite: 'https://echo-kzw1.onrender.com',
+    statusName: 'Echo',
   },
   {
     id: 4,
@@ -130,6 +131,7 @@ export const projects = [
     aiUsage: `Scout is a from-scratch ReAct agent on Gemini - no agent framework, the whole loop is a few hundred lines on purpose. Each iteration the model decides its next move via function calling (search the web, read a page, or finish); Scout runs that tool, summarizes the result so it doesn't blow the context window, and feeds it back. A separate synthesis call writes the final report and is only allowed to cite sources it actually fetched, so the model can't invent references. The whole point is to make the reasoning loop legible rather than hiding it behind a black box.`,
     github: 'https://github.com/n8watkins/scout-agentic-ai-researcher',
     liveSite: 'https://scout-agentic-researcher.onrender.com',
+    statusName: 'Scout',
   },
   {
     id: 1,
@@ -199,6 +201,7 @@ export const projects = [
     aiUsage: `GeminiGPT wraps Gemini 2.5 Flash with streaming and function calling. The interesting AI piece is memory: every message is embedded and stored in a LanceDB vector index, so semantic search can pull relevant context from any past conversation - not just the current thread. A custom Node pipeline parses uploaded PDFs and DOCX files so the model can reason over your own documents, and a bring-your-own-key model keeps every conversation private to you.`,
     github: 'https://github.com/n8watkins/GeminiGPT',
     liveSite: 'https://geminigpt-n8.onrender.com',
+    statusName: 'GeminiGPT',
   },
   {
     id: 2,

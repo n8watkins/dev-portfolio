@@ -2,6 +2,7 @@
 
 import React from 'react'
 import Link from 'next/link'
+import StatusPill from './StatusPill'
 import { FiGithub } from 'react-icons/fi'
 import { motion } from 'framer-motion'
 import { MdOpenInNew, MdOutlineUnfoldMore } from 'react-icons/md'
@@ -36,9 +37,10 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
   onIconCycleStateChange,
 }) => {
   return (
-    <motion.div
+    <motion.article
       key={project.id}
       variants={staggerItemVariants}
+      aria-label={project.title}
       className="relative w-full max-w-full min-w-0 col-span-1">
       <div
         className={`flex flex-col ${
@@ -78,6 +80,12 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
               <span className="mt-1 text-xs md:text-sm font-semibold uppercase tracking-wider text-sky-400/90 truncate">
                 {project.subTitle}
               </span>
+              {/* The row's height is reserved, so the pill arriving moves nothing. */}
+              {project.statusName && (
+                <div className="mt-2 h-6">
+                  <StatusPill name={project.statusName} />
+                </div>
+              )}
             </div>
 
             <div className="flex items-center gap-4 flex-shrink-0 pt-1.5">
@@ -122,7 +130,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
           />
         </div>
       </div>
-    </motion.div>
+    </motion.article>
   )
 }
 
