@@ -10,7 +10,7 @@ import ProjectCard from './ProjectCard'
 import { getInitialIconCycleState, createStateHandlerMap } from './utils'
 
 const BLURB =
-  'Generative AI is changing what software can be — and how it gets built. These are the projects where I explore that shift hands-on.'
+  'Generative AI is changing what software can be - and how it gets built. These are the projects where I explore that shift hands-on.'
 
 const Projects: React.FC = () => {
   const router = useRouter()
@@ -105,13 +105,13 @@ const Projects: React.FC = () => {
       ))}
       </motion.div>
 
-      {/* Redirect — the rest of the build log lives on n8builds.dev */}
+      {/* Redirect - the rest of the build log lives on n8builds.dev */}
       <motion.div
         variants={fadeInUpVariants}
         {...defaultAnimationConfig}
         className="flex flex-col items-center gap-4 w-full px-2 md:px-4 pt-14 text-center select-none">
         <p className="text-base md:text-lg text-slate-600 dark:text-slate-400 max-w-2xl">
-          These are a few of them. I&apos;m shipping new AI-native builds in public — see
+          These are a few of them. I&apos;m shipping new AI-native builds in public - see
           the rest of what I&apos;m making at{' '}
           <span className="font-semibold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400">
             n8builds.dev

@@ -69,7 +69,7 @@ const Hero = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 1.15, ease: [0.25, 0.1, 0.25, 1] }}
               className="text-center md:text-start w-full pl-1 text-base md:text-lg text-slate-600 dark:text-slate-400 max-w-md">
-              Building intelligent products that automate, scale, and perform — across the full stack.
+              Building intelligent products that automate, scale, and perform - across the full stack.
             </motion.p>
             <div className="flex items-center justify-center md:justify-start w-full">
               <nav aria-label="Social media links" className="relative md:top-0 md:-left-2 z-50">
@@ -114,7 +114,7 @@ const Hero = () => {
               </nav>
             </div>
 
-            {/* Brand CTAs — the two places this card funnels to */}
+            {/* Brand CTAs - the two places this card funnels to */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}

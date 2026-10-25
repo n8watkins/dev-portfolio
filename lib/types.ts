@@ -26,9 +26,9 @@ export interface Project {
   des: string
   images: string[]
   technologies: Technologies
-  /** The "why" — the goal / what this project is exploring / the question behind it. */
+  /** The "why" - the goal / what this project is exploring / the question behind it. */
   purpose?: string
-  /** How the project actually uses AI — the model, the technique, the implementation. */
+  /** How the project actually uses AI - the model, the technique, the implementation. */
   aiUsage?: string
   highlights?: string[]
   github?: string

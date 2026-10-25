@@ -8,7 +8,7 @@ interface LinkButtonProps {
 }
 
 /**
- * External-link counterpart to ScrollButton — same animated conic-gradient
+ * External-link counterpart to ScrollButton - same animated conic-gradient
  * styling, but navigates to an external URL in a new tab instead of
  * smooth-scrolling to a section.
  */

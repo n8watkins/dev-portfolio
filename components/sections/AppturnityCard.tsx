@@ -32,7 +32,7 @@ const followLinks = [
 
 /**
  * Brand / "digital card" section: Appturnity (consulting) and n8builds.dev
- * (build-in-public log) — the two places this site funnels visitors.
+ * (build-in-public log) - the two places this site funnels visitors.
  */
 const AppturnityCard = () => {
   return (
@@ -42,7 +42,7 @@ const AppturnityCard = () => {
         {...defaultAnimationConfig}
         className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
 
-        {/* Appturnity — consulting */}
+        {/* Appturnity - consulting */}
         <motion.div
           variants={staggerItemVariants}
           className="group rounded-xl overflow-hidden bg-slate-900/30 border border-white/5 shadow-xl shadow-black/30 hover:bg-white/10 hover:border-white/40 hover:shadow-2xl hover:shadow-white/20 transition-all duration-300 flex flex-col">
@@ -66,7 +66,7 @@ const AppturnityCard = () => {
               Consulting
             </p>
             <div className="flex items-center gap-3">
-              {/* Appturnity brand mark — "A" monogram (swap for the real logo when available) */}
+              {/* Appturnity brand mark - "A" monogram (swap for the real logo when available) */}
               <span
                 aria-hidden="true"
                 className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#3b8bff] to-[#1d6fe0] text-xl font-bold text-white shadow-lg shadow-blue-500/30 group-hover:from-[#4f97ff] group-hover:to-[#2a78f0] transition-colors duration-300">
@@ -75,7 +75,7 @@ const AppturnityCard = () => {
               <h3 className="text-2xl md:text-3xl font-bold text-slate-100">Appturnity</h3>
             </div>
             <p className="text-sm md:text-base text-slate-400 leading-relaxed mt-3 mb-6 flex-1">
-              My consulting company — custom apps and AI automation for small businesses,
+              My consulting company - custom apps and AI automation for small businesses,
               from healthcare to property management to HVAC. The current obsession is{' '}
               <span className="text-slate-200 font-semibold">SiteForge</span>: an engine
               that audits local businesses and auto-builds each one a polished,
@@ -99,7 +99,7 @@ const AppturnityCard = () => {
           </div>
         </motion.div>
 
-        {/* n8builds.dev — build in public */}
+        {/* n8builds.dev - build in public */}
         <motion.div
           variants={staggerItemVariants}
           className="group rounded-xl overflow-hidden bg-slate-900/30 border border-white/5 shadow-xl shadow-black/30 hover:border-sky-400/20 hover:shadow-2xl hover:shadow-sky-500/25 transition-all duration-300 flex flex-col">
@@ -109,7 +109,7 @@ const AppturnityCard = () => {
             rel="noopener noreferrer"
             aria-label="Visit n8builds.dev"
             className="relative block aspect-[16/8] overflow-hidden bg-[#050812]">
-            {/* Brand visual — cyan-to-blue wordmark on deep navy */}
+            {/* Brand visual - cyan-to-blue wordmark on deep navy */}
             <div className="absolute inset-0 bg-grid-white/[0.04]" />
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
               <span className="text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-600 group-hover:from-cyan-300 group-hover:to-blue-500 transition-colors duration-300">
@@ -139,8 +139,8 @@ const AppturnityCard = () => {
               <h3 className="text-2xl md:text-3xl font-bold text-slate-100">n8builds.dev</h3>
             </div>
             <p className="text-sm md:text-base text-slate-400 leading-relaxed mt-3 mb-6 flex-1">
-              My build log. I&apos;m making a whole lot of things at once — AI products,
-              automations, dev tools — and shipping them in public. Sometimes I&apos;m live
+              My build log. I&apos;m making a whole lot of things at once - AI products,
+              automations, dev tools - and shipping them in public. Sometimes I&apos;m live
               while I do it: catch the streams on Twitch and YouTube.
             </p>
             <div className="flex flex-wrap items-center gap-2">

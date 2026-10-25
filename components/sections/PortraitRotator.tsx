@@ -66,7 +66,7 @@ const PortraitRotator: React.FC<PortraitRotatorProps> = ({
 
   return (
     <div className="absolute inset-0 rounded-full overflow-hidden">
-      {/* Static base image — keeps LCP fast and avoids any blank frame */}
+      {/* Static base image - keeps LCP fast and avoids any blank frame */}
       <Image
         src={images[0]}
         className="rounded-full object-cover"
