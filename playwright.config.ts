@@ -11,6 +11,8 @@ dotenv.config({ path: path.resolve(__dirname, '.env.local') })
  */
 export default defineConfig({
   testDir: './tests',
+  // tests/unit runs under node --test (npm run test:unit).
+  testIgnore: '**/unit/**',
 
   // Run tests in files in parallel
   fullyParallel: true,

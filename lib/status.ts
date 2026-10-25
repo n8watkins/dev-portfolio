@@ -21,17 +21,26 @@ export type StatusMap = Record<string, ServiceStatus>
 
 const STATES: readonly ServiceState[] = ['operational', 'degraded', 'down', 'suspended', 'maintenance', 'scheduled_off', 'unknown']
 
+/**
+ * OpenPing checks every 12 minutes while a schedule is on. A feed older than
+ * this means it isn't checking (off-hours, like weekends), so the Render demos
+ * it would keep awake are asleep, whatever state the last check left.
+ */
+export const STALE_AFTER_MS = 30 * 60 * 1000
+
 /** The parts of the public feed this site reads; anything else is ignored. */
-export function toStatusMap(feed: unknown): StatusMap {
+export function toStatusMap(feed: unknown, now = Date.now()): StatusMap {
   const map: StatusMap = {}
-  const groups = (feed as { groups?: { services?: unknown[] }[] })?.groups
+  const { groups, updatedAt } = (feed ?? {}) as { groups?: { services?: unknown[] }[]; updatedAt?: unknown }
   if (!Array.isArray(groups)) return map
+  const offDuty = typeof updatedAt === 'number' && now - updatedAt > STALE_AFTER_MS
   for (const group of groups) {
     for (const service of group?.services ?? []) {
       const { name, state, uptime90d } = (service ?? {}) as { name?: unknown; state?: unknown; uptime90d?: unknown }
       if (typeof name !== 'string') continue
+      const known = STATES.includes(state as ServiceState) ? (state as ServiceState) : 'unknown'
       map[name] = {
-        state: STATES.includes(state as ServiceState) ? (state as ServiceState) : 'unknown',
+        state: offDuty && (known === 'operational' || known === 'degraded') ? 'scheduled_off' : known,
         uptime90d: typeof uptime90d === 'number' && Number.isFinite(uptime90d) ? uptime90d : null,
       }
     }
