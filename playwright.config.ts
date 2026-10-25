@@ -11,6 +11,8 @@ dotenv.config({ path: path.resolve(__dirname, '.env.local') })
  */
 export default defineConfig({
   testDir: './tests',
+  // tests/unit runs under node --test (npm run test:unit).
+  testIgnore: '**/unit/**',
 
   // Run tests in files in parallel
   fullyParallel: true,
@@ -83,6 +85,8 @@ export default defineConfig({
     env: Object.fromEntries(
       Object.entries({
         NEXT_PUBLIC_GA_ID: process.env.NEXT_PUBLIC_GA_ID,
+        // Fixed live-demo statuses instead of OpenPing's real ones (app/api/status).
+        STATUS_FIXTURE: '1',
       }).filter(([, value]) => value !== undefined)
     ) as Record<string, string>,
   },

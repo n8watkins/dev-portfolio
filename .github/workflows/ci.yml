@@ -52,7 +52,7 @@ jobs:
         run: echo "version=$(node -p "require('./package-lock.json').packages['node_modules/@playwright/test'].version")" >> "$GITHUB_OUTPUT"
 
   checks:
-    name: Lint, types, build
+    name: Lint, types, unit tests, build
     needs: changes
     if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
@@ -66,6 +66,7 @@ jobs:
       - run: npm ci
       - run: npm run lint
       - run: npm run type-check
+      - run: npm run test:unit
       - run: npm run build
 
   e2e:

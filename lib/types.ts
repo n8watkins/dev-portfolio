@@ -33,6 +33,8 @@ export interface Project {
   highlights?: string[]
   github?: string
   liveSite?: string
+  /** The monitor's name on OpenPing's public status page, when the live site is monitored. */
+  statusName?: string
 }
 
 export type TechNameMappingInterface = {

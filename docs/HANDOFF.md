@@ -44,6 +44,19 @@ It funnels visitors to the two other sites:
   Production only.
 - **No reCAPTCHA and no contact form backend**: reCAPTCHA was purged in 2026-06; the contact section links out and shows an email address.
 
+## Live-demo status (OpenPing)
+
+- Echo, Scout and GeminiGPT show a status pill on their cards and pages: Online, Slow, Down, Maintenance or Asleep, with 90-day uptime, linking to https://openping.n8builds.dev/status.
+- `app/api/status` reads OpenPing's public feed on the server (it sends no CORS headers) and caches it a minute; `lib/status.ts` maps it; `components/Projects/StatusPill.tsx` shows it.
+- A project opts in with `statusName` in `data/projects.tsx` (its monitor's name on the status page).
+- OpenPing checks the Render demos on weekdays only. Its feed keeps the last state through off-hours, so a feed older than 30 minutes reads as Asleep (the demos sleep when nothing keeps them awake); a real outage still shows as Down.
+- The pill shows nothing until the status arrives or if it can't be read, and its row is reserved so it moves nothing.
+- Tests use fixed statuses (`STATUS_FIXTURE=1`, set by `playwright.config.ts`); `npm run test:unit` covers the mapping.
+
+## More builds
+
+A strip under the projects links TubeVault, Piper TTS and OpenPing to their n8builds.dev pages (`components/Projects/MoreBuilds.tsx`); Scribe, TL;DW and Portfolio Rank are already in the "Building in public" card.
+
 ## Conventions
 
 - Conventional Commits (`feat:`, `fix:`, `docs:`...).
@@ -55,16 +68,14 @@ It funnels visitors to the two other sites:
 
 ## Backlog
 
-1. **Live status for the Render apps:** show whether Echo, Scout and GeminiGPT are up, from OpenPing's public status feed (https://openping.n8builds.dev/api/public/status), styled in this site's colours.
-2. **More builds, pointing to n8builds.dev:** a strip of further builds that link to their n8builds.dev pages.
-3. **Adopt release-kit** (https://github.com/n8watkins/release-kit) for commit checks and releases; the owner applies it.
-4. **Lint warnings:** 9 React Compiler warnings in `FloatingNav.tsx`, `grid-pattern.tsx`, `MapAnimations.tsx`, `BentoGrid.tsx` and `background-gradient-animation.tsx` (refs read during render, setState in effects, variables used before declaration).
+1. **Adopt release-kit** (https://github.com/n8watkins/release-kit) for commit checks and releases; the owner applies it.
+2. **Lint warnings:** 9 React Compiler warnings in `FloatingNav.tsx`, `grid-pattern.tsx`, `MapAnimations.tsx`, `BentoGrid.tsx` and `background-gradient-animation.tsx` (refs read during render, setState in effects, variables used before declaration).
    Then make CI fail on warnings.
-5. **Sentry's feedback button** (the white megaphone, bottom left) clashes with the dark design; theme it or remove it.
-6. **Streaming links** once streaming starts (see Conventions).
-7. **Branch protection** on `main` requiring "CI result", once CI has run green on `main`.
-8. GeminiGPT placeholder screenshots; the Appturnity "A" monogram; the resume PDF's old portfolio URL (owner).
-9. Deferred dependency majors: Tailwind 4, TypeScript 6, `@types/node` 25.
+3. **Sentry's feedback button** (the white megaphone, bottom left) clashes with the dark design; theme it or remove it.
+4. **Streaming links** once streaming starts (see Conventions).
+5. **Branch protection** on `main` requiring "CI result", once CI has run green on `main`.
+6. GeminiGPT placeholder screenshots; the Appturnity "A" monogram; the resume PDF's old portfolio URL (owner).
+7. Deferred dependency majors: Tailwind 4, TypeScript 6, `@types/node` 25.
 
 ## File map
 
