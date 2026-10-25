@@ -50,3 +50,7 @@ The site's address is fixed in `lib/seo.ts`, not read from the environment.
 - [`WEB_VITALS.md`](WEB_VITALS.md): the Web Vitals HUD (Alt+Shift+V in development) and monitoring.
 - [`docs/bundle-analysis.md`](docs/bundle-analysis.md): a bundle-size snapshot.
 
+## Use it as a template
+
+The code is MIT licensed (see [LICENSE](LICENSE)): fork it and make it yours.
+The photos, screenshots, resume and the copy about me are not covered by the license; replace them with your own.

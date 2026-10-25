@@ -123,7 +123,7 @@ const AppturnityCard = () => {
           </a>
           <div className="p-6 md:p-8 flex flex-col flex-1">
             <p className="text-xs font-semibold uppercase tracking-widest text-sky-400 mb-2">
-              Follow the work
+              See how I build
             </p>
             <div className="flex items-center gap-3">
               {/* n8builds brand icon */}
@@ -139,9 +139,10 @@ const AppturnityCard = () => {
               <h3 className="text-2xl md:text-3xl font-bold text-slate-100">n8builds.dev</h3>
             </div>
             <p className="text-sm md:text-base text-slate-400 leading-relaxed mt-3 mb-6 flex-1">
-              My build log. I&apos;m making a whole lot of things at once - AI products,
-              automations, dev tools - and shipping them in public. Sometimes I&apos;m live
-              while I do it: catch the streams on Twitch and YouTube.
+              Where I build in public, and a build in its own right: every pull request runs
+              its test suite on five browsers before it merges, a build log updates from
+              GitHub every hour, and releases go out on a weekly schedule. Both sites are open
+              source, if you want to use either one as a template.
             </p>
             <div className="flex flex-wrap items-center gap-2">
               <a
@@ -150,6 +151,14 @@ const AppturnityCard = () => {
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-slate-700 text-sm text-slate-300 hover:text-sky-400 hover:border-sky-400/60 transition-colors duration-200 mr-1">
                 n8builds.dev
+                <FiArrowUpRight className="w-4 h-4" aria-hidden="true" />
+              </a>
+              <a
+                href="https://n8builds.dev/builds/n8builds"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-sky-400/40 bg-sky-500/10 text-sm text-sky-200 hover:text-sky-100 hover:border-sky-400/70 transition-colors duration-200 mr-1">
+                How it&apos;s built and tested
                 <FiArrowUpRight className="w-4 h-4" aria-hidden="true" />
               </a>
               {followLinks.map((social) => (
