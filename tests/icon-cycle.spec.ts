@@ -5,7 +5,7 @@ import { test, expect, type Page } from '@playwright/test'
  *
  * These tests pin the externally-observable behavior so the in-progress refactor
  * (see docs/ICONCYCLE_REFACTOR_PLAN.md) can proceed safely. They drive the real
- * component in a browser — no framer-motion / next-image mocking needed.
+ * component in a browser - no framer-motion / next-image mocking needed.
  *
  * Conventions used:
  *  - The first project card (Echo) is always the first match of each selector.
@@ -23,11 +23,27 @@ const firstCategory = (page: Page) =>
     return h3s.find((t) => t === 'Frontend' || t === 'Backend' || t === 'Cloud')
   })
 
+/**
+ * The site scrolls smoothly (`scroll-smooth` on every element), so a scroll
+ * Playwright starts keeps gliding for a few hundred milliseconds. Wait until it
+ * stops, or a hover lands where the element was rather than where it ends up.
+ */
+async function settleScroll(page: Page) {
+  await expect
+    .poll(async () => {
+      const before = await page.evaluate(() => window.scrollY)
+      await page.waitForTimeout(150)
+      return (await page.evaluate(() => window.scrollY)) === before
+    })
+    .toBe(true)
+}
+
 async function gotoProjects(page: Page) {
   await page.goto('/')
-  // Projects is lazy-loaded (next/dynamic) below the fold — scroll it in.
+  // Projects is lazy-loaded (next/dynamic) below the fold - scroll it in.
   await page.getByText('Realtime Voice Agent').first().scrollIntoViewIfNeeded()
   await expect(page.locator('#projects .select-text').first()).toBeVisible()
+  await settleScroll(page)
 }
 
 test.describe('IconCycle', () => {
@@ -61,7 +77,10 @@ test.describe('IconCycle', () => {
     })
     expect(alt, 'an icon should be visible in the first card').toBeTruthy()
 
-    await page.getByAltText(alt!).first().hover()
+    const icon = page.getByAltText(alt!).first()
+    await icon.scrollIntoViewIfNeeded()
+    await settleScroll(page)
+    await icon.hover()
     await expect.poll(() => firstLabel(page)).toBe(alt) // label locks to the hovered icon
     await page.waitForTimeout(4000)
     expect(await firstLabel(page)).toBe(alt) // and stays (paused)
