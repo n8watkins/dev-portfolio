@@ -39,7 +39,7 @@ const IconCycle: React.FC<IconCycleProps> = ({
 
   // Flattened, ordered list of every icon across all categories, derived from
   // props. Because it's a memo (not an effect-populated ref) it's correct on the
-  // very first render — which is why no loading skeleton is needed. The
+  // very first render - which is why no loading skeleton is needed. The
   // auto-cycle and handlers index into this single source of truth.
   const allIcons = useMemo(
     () =>
@@ -59,7 +59,7 @@ const IconCycle: React.FC<IconCycleProps> = ({
     { icons: string[]; descriptionIndex: number; kind: 'icon' | 'description' } | null
   >(null)
 
-  // Everything below is DERIVED from (cycledIconIndex, preview) — one source of
+  // Everything below is DERIVED from (cycledIconIndex, preview) - one source of
   // truth for "what's selected," so the category, description, and highlight can
   // never desync from the active icon.
   const currentIcon = allIcons[cycledIconIndex]
@@ -85,7 +85,7 @@ const IconCycle: React.FC<IconCycleProps> = ({
 
   // Auto-cycle: advance the active index through every icon, wrapping around.
   // currentCategory + highlightedDescriptionIndex follow automatically because
-  // they're derived from cycledIconIndex — the interval only moves one number.
+  // they're derived from cycledIconIndex - the interval only moves one number.
   // Declarative: the interval lives and dies with this effect and pauses whenever
   // the user is interacting or prefers reduced motion.
   useEffect(() => {

@@ -18,8 +18,8 @@ export default defineConfig({
   // Fail the build on CI if you accidentally left test.only in the source code
   forbidOnly: !!process.env.CI,
 
-  // Retry on CI only
-  retries: process.env.CI ? 2 : 0,
+  // No retries: a flaky test gets fixed, not retried until it passes.
+  retries: 0,
 
   // Opt out of parallel tests on CI
   workers: process.env.CI ? 1 : undefined,
@@ -73,25 +73,17 @@ export default defineConfig({
     },
   ],
 
-  // Run your local dev server before starting the tests
+  // A production build, like the live site: the Web Vitals checks mean nothing
+  // against the dev server. Locally an already-running server is reused.
   webServer: {
-    command: 'NODE_ENV=test npm run dev',
+    command: 'npm run build && npx next start -p 4829',
     url: 'http://localhost:4829',
     reuseExistingServer: !process.env.CI,
-    timeout: 120000,
+    timeout: 300000,
     env: Object.fromEntries(
       Object.entries({
-        NODE_ENV: 'test',
-        // Pass all environment variables from .env.local to the test server
-        RESEND_API_KEY: process.env.RESEND_API_KEY,
-        CONTACT_EMAIL_TO: process.env.CONTACT_EMAIL_TO,
-        CONTACT_EMAIL_FROM: process.env.CONTACT_EMAIL_FROM,
-        NEXT_PUBLIC_RECAPTCHA_SITE_KEY: process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY,
-        RECAPTCHA_SECRET_KEY: process.env.RECAPTCHA_SECRET_KEY,
         NEXT_PUBLIC_GA_ID: process.env.NEXT_PUBLIC_GA_ID,
-        NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
-        NEXT_PUBLIC_VERSION: process.env.NEXT_PUBLIC_VERSION,
-      }).filter(([_, value]) => value !== undefined)
+      }).filter(([, value]) => value !== undefined)
     ) as Record<string, string>,
   },
 })

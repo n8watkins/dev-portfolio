@@ -19,7 +19,7 @@ function Heading({ id, children }: { id: string; children: React.ReactNode }) {
   )
 }
 
-/** Live demo / Source / n8builds links — rendered both inline (mobile) and in the sidebar. */
+/** Live demo / Source / n8builds links - rendered both inline (mobile) and in the sidebar. */
 function ProjectLinks({ project }: { project: Project }) {
   return (
     <div className="flex flex-wrap items-center gap-x-5 gap-y-2.5 text-sm">
@@ -33,7 +33,7 @@ function ProjectLinks({ project }: { project: Project }) {
         </a>
       ) : (
         <span className="inline-flex items-center gap-2 text-slate-400">
-          <span className="h-2 w-2 rounded-full bg-slate-500" aria-hidden="true" /> Runs locally — grab it on GitHub
+          <span className="h-2 w-2 rounded-full bg-slate-500" aria-hidden="true" /> Runs locally - grab it on GitHub
         </span>
       )}
       {project.github && (
@@ -88,15 +88,15 @@ export default function ProjectDetail({ project }: { project: Project }) {
           <h1 className="text-4xl md:text-5xl font-bold text-slate-800 dark:text-slate-100">
             {project.title}
           </h1>
-          {/* No description here on purpose — the card already shows `des`; the
+          {/* No description here on purpose - the card already shows `des`; the
               article below opens with the distinct "goal" so the click pays off. */}
-          {/* Primary links — visible at all breakpoints (the sidebar is desktop-only) */}
+          {/* Primary links - visible at all breakpoints (the sidebar is desktop-only) */}
           <div className="mt-6 lg:hidden">
             <ProjectLinks project={project} />
           </div>
         </header>
 
-        {/* Hero image — top of the post */}
+        {/* Hero image - top of the post */}
         <motion.div
           initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
@@ -112,12 +112,12 @@ export default function ProjectDetail({ project }: { project: Project }) {
           />
         </motion.div>
 
-        {/* Body — article + sticky sidebar */}
+        {/* Body - article + sticky sidebar */}
         <div className="grid lg:grid-cols-[1fr_15rem] gap-10 lg:gap-14 items-start">
           <article className="space-y-12 min-w-0">
             {project.purpose && (
               <section>
-                <Heading id="goal">The goal — what I&apos;m exploring</Heading>
+                <Heading id="goal">The goal - what I&apos;m exploring</Heading>
                 <p className="text-lg md:text-xl leading-relaxed text-slate-600 dark:text-slate-300">
                   {project.purpose}
                 </p>
@@ -152,7 +152,7 @@ export default function ProjectDetail({ project }: { project: Project }) {
             )}
           </article>
 
-          {/* Sidebar (desktop) — itinerary + meta card */}
+          {/* Sidebar (desktop) - itinerary + meta card */}
           <aside className="hidden lg:block sticky top-10 space-y-6 select-none">
             <nav aria-label="On this page">
               <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-400 mb-3">
@@ -180,7 +180,7 @@ export default function ProjectDetail({ project }: { project: Project }) {
           </aside>
         </div>
 
-        {/* The stack — full width, room to breathe (it's back-end heavy) */}
+        {/* The stack - full width, room to breathe (it's back-end heavy) */}
         <section className="mt-16">
           <Heading id="stack">The stack</Heading>
           <div className="rounded-2xl border border-white/10 bg-slate-900/30 px-2 py-8 md:px-8">

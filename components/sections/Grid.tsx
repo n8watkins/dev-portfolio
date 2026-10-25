@@ -8,7 +8,7 @@ import { fadeInUpVariants, staggerContainerVariants, defaultAnimationConfig } fr
 const Grid = () => {
   return (
     <section className="mb-10">
-      {/* About intro — prose above the bento grid */}
+      {/* About intro - prose above the bento grid */}
       <motion.div
         variants={fadeInUpVariants}
         {...defaultAnimationConfig}
@@ -20,7 +20,7 @@ const Grid = () => {
           About me
         </h2>
         <p className="text-lg md:text-xl text-slate-700 dark:text-slate-300 leading-relaxed">
-          I&apos;m Nathan — a full-stack developer in Los Angeles, a little obsessed with what
+          I&apos;m Nathan - a full-stack developer in Los Angeles, a little obsessed with what
           generative AI makes possible. My favorite part of building is the moment a rough idea
           turns into something you can actually use.
         </p>
@@ -33,7 +33,7 @@ const Grid = () => {
             className="font-semibold text-sky-500 dark:text-sky-400 underline decoration-sky-400/40 underline-offset-4 hover:text-sky-300 hover:decoration-sky-300 transition-colors duration-200">
             Appturnity
           </a>
-          , I&apos;m the kind of person who builds tools to scratch my own itches — a faster way to
+          , I&apos;m the kind of person who builds tools to scratch my own itches - a faster way to
           dictate, a way to skip to the point of a long video, whatever&apos;s bugging me that week. You
           can see a lot of them on{' '}
           <a

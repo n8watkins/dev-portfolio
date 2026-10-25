@@ -34,7 +34,7 @@ const Footer = () => {
           </p>
         </motion.div>
 
-        {/* Slim contact card — this site routes; inbound contact lives on n8builds.dev */}
+        {/* Slim contact card - this site routes; inbound contact lives on n8builds.dev */}
         <motion.div
           variants={fadeInVariants}
           {...defaultAnimationConfig}
@@ -48,7 +48,7 @@ const Footer = () => {
                 aria-label="Get in touch via my main site, n8builds.dev"
                 className="group flex items-center gap-2 px-5 py-2.5 rounded-full border border-sky-400/40 text-base font-semibold text-slate-800 dark:text-slate-200 hover:text-white hover:border-transparent hover:bg-gradient-to-r hover:from-cyan-400 hover:to-blue-600 hover:shadow-lg hover:shadow-sky-500/40 transition-all duration-300"
               >
-                Get in touch — n8builds.dev
+                Get in touch - n8builds.dev
                 <FiArrowUpRight
                   className="w-4 h-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform duration-300"
                   aria-hidden="true"
@@ -61,7 +61,7 @@ const Footer = () => {
                 aria-label="Consulting inquiries via Appturnity"
                 className="group flex items-center gap-2 px-5 py-2.5 rounded-full border border-slate-400 dark:border-slate-600 text-base font-semibold text-slate-800 dark:text-slate-200 hover:bg-white hover:text-slate-900 dark:hover:text-slate-900 hover:border-white hover:shadow-lg hover:shadow-slate-100/20 transition-all duration-300"
               >
-                Consulting —{' '}
+                Consulting -{' '}
                 <span className="relative">
                   Appturnity
                   {/* Appturnity's hand-drawn understroke, shown on hover */}

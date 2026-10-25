@@ -1,24 +1,26 @@
 # Bundle Analysis Report
 
-**Date**: 2026-06-20 (structure refreshed; the byte counts below were measured on Next 14 in 2025-10 — **re-run `npm run analyze` to refresh them**)
+**Date**: 2026-06-20 (structure refreshed; the byte counts below were measured on Next 14 in 2025-10 - **re-run `npm run analyze` to refresh them**)
 **Next.js Version**: 16.2.7
 **Analysis Tool**: @next/bundle-analyzer
 
+> 2026-10-25: `/sentry-example-page` and `/api/sentry-example-api` (Sentry wizard leftovers) were removed; ignore their rows below until the next `npm run analyze`.
+
 ## Executive Summary
 
-The portfolio application is optimized with Next.js 16 App Router features and keeps lean bundle sizes for a feature-rich portfolio. ⚠️ The byte counts in the tables below predate the Next 16 upgrade and the projects redesign — treat them as historical until `npm run analyze` is re-run.
+The portfolio application is optimized with Next.js 16 App Router features and keeps lean bundle sizes for a feature-rich portfolio. ⚠️ The byte counts in the tables below predate the Next 16 upgrade and the projects redesign - treat them as historical until `npm run analyze` is re-run.
 
 ### Routes (current)
 
 | Route | Type |
 |-------|------|
 | `/` (Home) | Static |
-| `/projects/[slug]` — echo, scout, geminigpt, net-trailer | SSG |
+| `/projects/[slug]` - echo, scout, geminigpt, net-trailer | SSG |
 | `/sitemap.xml` | Static |
 | `/_not-found`, `/sentry-example-page` | Static |
 | `/api/health`, `/api/health/error`, `/api/sentry-example-api` | Dynamic |
 
-### Key Metrics (⚠️ stale — Next 14 / pre-redesign, re-measure)
+### Key Metrics (⚠️ stale - Next 14 / pre-redesign, re-measure)
 
 | Route | Size | First Load JS | Type |
 |-------|------|---------------|------|

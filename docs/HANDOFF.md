@@ -1,77 +1,79 @@
-# HANDOFF — portfolio2.0
+# HANDOFF - dev-portfolio
 
-_Last updated: 2026-06-20 (full projects redesign + blog-style detail pages + "Building in public" bento; reCAPTCHA purge; unified GA4 analytics LIVE across both sites; live demo links for all 4 projects; old vercel.app URL now 308-redirects to the real domain; repo moved into `~/n8builds/`)._
+Last updated: 2026-10-25.
 
-## Project summary
+## What this is
 
-Nathan Watkins' personal portfolio — an **online resume / digital card** that funnels visitors to **n8builds.dev** (his build-in-public site; project `n8builds-web`, source `~/n8builds/n8builds-web`) and **Appturnity** (consulting, https://appturnity.com). Dark-only, slate + sky-blue palette.
+Nathan Watkins' developer portfolio: the hire-me page, live at https://portfolio.n8builds.dev.
+It funnels visitors to the two other sites:
 
-- **Location: `~/n8builds/portfolio2.0`** — moved here 2026-06-20 from `~/portfolio/portfolio2.0`, now a sibling of `n8builds-web`. Still its **own** git repo (`n8watkins/Portfolio2.0`) and its **own** Vercel project — NOT merged into n8builds-web.
-- Stack: Next.js 16 (App Router), React 19, TypeScript, Tailwind 3.4, framer-motion 12.
-- Run: `npm run dev` → http://localhost:4829. Checks: `npm run build` / `type-check` / `lint`. Husky + lint-staged on commit.
-- Tests: `npx playwright test --project=chromium --workers=1`. Specs: `tests/icon-cycle.spec.ts` (6, the redesign's coverage) + `tests/web-vitals.spec.ts`.
-- Deploy: Vercel project **`portfolio`** → **portfolio.n8builds.dev**. Git-connected; pushes to `main` auto-deploy.
-- **Fully committed + pushed. Clean tree, one branch (`main`), no worktrees/stashes.**
+| Site | Job | Repo |
+|---|---|---|
+| portfolio.n8builds.dev | Developer portfolio (this repo) | `n8watkins/dev-portfolio`, `~/n8builds/dev-portfolio` |
+| n8builds.dev | Build-in-public workshop: every build, the build log, notes, streams | `n8watkins/n8builds-web`, `~/n8builds/n8builds-web` |
+| appturnity.com | Consulting | separate |
 
-## This session (2026-06-20)
+- The repo was renamed from `Portfolio2.0` to `dev-portfolio` on 2026-10-25 (GitHub redirects the old URL), and the folder moved from `~/n8builds/portfolio/portfolio2.0` to `~/n8builds/dev-portfolio`.
+- Stack: Next.js 16 (App Router, webpack build), React 19, TypeScript, Tailwind 3.4, Framer Motion 12, Sentry, GA4, Vercel Speed Insights.
+  Dark only (`forcedTheme="dark"`), slate + sky-blue.
+- Vercel project `portfolio`, git-connected: every push to `main` deploys; pull requests get previews.
 
-**Projects redesign (the big one):**
-- Cards: alternating "back and forth" layout — auto-cycling screenshot on one side, title + full `des` + interactive tech-stack cycler on the other (`ProjectCard.tsx`, `CardImageCarousel.tsx`).
-- **Per-project detail PAGES** at `/projects/[slug]` (`app/projects/[slug]/page.tsx`, `ProjectDetail.tsx`) — blog-style: hero image, sticky "On this page" TOC, sections (goal / how it uses AI / how it works), full-width tech-stack breakdown. **Replaces the old Details modal.**
-- **`iconCycle` re-added + refactored** — simple view on cards, detailed (keyboard-accessible) view on detail pages. `tests/icon-cycle.spec.ts` = 6 passing.
-- **`ProjectModal.tsx` + `ImageSlider.tsx` deleted** — navigation replaced the modal (preserved in git history).
-- 4 projects (echo, scout, geminigpt, net-trailer) carry slug/purpose/aiUsage/highlights in `data/projects.tsx`; sitemap includes the 4 detail URLs.
+## Running and testing
 
-**"Building in public" bento** (`components/ui/BentoComponents/CurrentBuildsCarousel.tsx`, `data/grid/items/gridItem6.tsx`): auto-cycling feed of LocalDictate / TL;DW / Portfolio Rank — real icons (copied from n8builds into `public/builds/`), stack chips, per-build Code/Live links, pause-on-hover/focus (WCAG 2.2.2). Header is **"Building in public"** (renamed from "Currently building" — honest, since two of the three are shipped, not in-progress).
+- `npm run dev` serves http://localhost:4829.
+- `npm test` runs Playwright against a production build on port 4829 (it builds first, or reuses a server already running there locally).
+  No retries: a flaky test gets fixed.
+- Specs: `tests/icon-cycle.spec.ts` (the tech-stack cycler), `tests/seo.spec.ts` (titles, share cards, no em dashes, the Scribe card, no Sentry example routes), `tests/web-vitals.spec.ts` (Web Vitals budgets and axe accessibility).
+- The site scrolls smoothly (`scroll-smooth` on every element), so a test that scrolls must wait for the scroll to stop before hovering or clicking (`settleScroll` in `icon-cycle.spec.ts`).
+- GitHub Actions (`.github/workflows/ci.yml`): lint, types and build, then the Playwright suite in Chromium inside Playwright's Docker image (its version read from `package-lock.json`).
+  Docs-only changes skip both.
+  "CI result" is the single summary check for branch protection.
 
-**About me** (`components/sections/Grid.tsx`): rewritten — Appturnity + n8builds links woven inline (no trailing link dump). Twitch deliberately NOT surfaced.
+## Decisions (do not re-ask)
 
-**reCAPTCHA fully purged** (was a prior backlog item): gone from code, README, `.env.local`, AND Vercel (`NEXT_PUBLIC_RECAPTCHA_SITE_KEY`, `RECAPTCHA_SECRET_KEY` removed from the `portfolio` project). README also de-fictionalized — it documented a contact-form/Resend/7-layer-security system that **never existed** in the code. Left `RESEND_API_KEY` + `CONTACT_EMAIL_TO` in Vercel (the `ContactInput/Select/Textarea` field components still exist; a real contact form may be wired later).
+- **Separate from n8builds.dev, on purpose** (confirmed 2026-10-25): different readers (people hiring vs. people following the work), and a repo people can be sent to on its own.
+  It is not a page of n8builds.dev.
+- **Featured projects** are Echo, Scout, GeminiGPT and Net-Trailer.
+  Scribe and Solara are not featured here (2026-10-25); the "Building in public" card and links send visitors to n8builds.dev for everything else.
+- **Titles and share cards** live in `lib/seo.ts`: "Nathan Watkins | AI Full-Stack Developer" for the home page, "<project> - <subtitle> | Nathan Watkins" for project pages, share descriptions of at most 120 characters.
+  The share image is generated from `app/opengraph-image.tsx`; there is no saved screenshot to go stale.
+- **The site's address is fixed** in `lib/seo.ts` (`https://portfolio.n8builds.dev`), not read from `NEXT_PUBLIC_SITE_URL`: a stale local value once pointed the share cards at an old vercel.app address.
+- **No em dashes** in visible copy (`tests/seo.spec.ts` checks), as on n8builds.dev.
+- **Inter is bundled** (`app/fonts/`); the share card uses `assets/fonts/*.ttf`.
+- **One GA4 property** (`G-JZQGKY9Q37`) covers this site and n8builds.dev; segment by hostname.
+  Production only.
+- **No reCAPTCHA and no contact form backend**: reCAPTCHA was purged in 2026-06; the contact section links out and shows an email address.
 
-**Unified GA4 analytics — LIVE + verified.** One property (renamed to **n8builds.dev**), Measurement ID **`G-JZQGKY9Q37`**, on BOTH sites. portfolio.n8builds.dev was already wired; this session set the same ID on the `n8builds-web` Vercel project (Production) and redeployed — `G-JZQGKY9Q37` confirmed live on **both** n8builds.dev and portfolio.n8builds.dev. No Google Cloud project needed (GA4 is web-console only); segment by **Hostname**. Both **Production-only** now (Vercel + `.env.local`) — only the live sites report. Route changes are handled by GA4 Enhanced Measurement (no custom tracker — see "Done since the redesign").
+## Conventions
 
-**Housekeeping:** repo moved into `~/n8builds/`; Claude memory migrated to the new path namespace (`~/.claude/projects/-home-natkins-n8builds-portfolio2-0/memory/`); test artifacts (`playwright-report/`, `test-results/`) gitignored + untracked; stale `backup-before-improvements` branch deleted (recover via `git branch backup-before-improvements 3eb79f0` within git's gc window).
+- Conventional Commits (`feat:`, `fix:`, `docs:`...).
+  Never add an agent co-author trailer.
+- Work on a branch and open a pull request, so CI runs before `main` deploys.
+- Dev server: kill by port (`lsof -t -i:4829 | xargs -r kill`); `pkill -f <pattern>` matches its own shell.
+- Social handles: GitHub, X and LinkedIn are `n8watkins`.
+  Streaming links (Twitch, YouTube) get settled when streaming starts; n8builds.dev links `twitch.tv/n8watkins` while this site links `twitch.tv/n8builds` and `youtube.com/@n8builds`.
 
-## Next steps
+## Backlog
 
-1. **Resume PDF** (outside repo) still links the old portfolio URL → update to portfolio.n8builds.dev. (Nathan's task — outside this repo. The old `n8sportfolio.vercel.app` now redirects, so existing links won't break.)
-2. **Replace GeminiGPT placeholder screenshots** — `public/projects/geminigpt*.webp` are basic captures; swap for populated-chat shots now that it's deployed.
-3. **Appturnity "A" logo** — `AppturnityCard.tsx` uses a placeholder gradient "A" monogram; swap for the real logo when available. (Deprioritized by Nathan.)
-4. **Deferred dep majors** (user opt-in): tailwindcss 4, eslint 10, typescript 6, @types/node 25.
-5. **Richer About / Experience copy** — flesh out the bios (carried over from the retired FOLLOW_UP roadmap).
-6. **Extract a shared `IconRow`/`IconButton`** in `iconCycle.tsx` — `renderIcons` is inline-duplicated across the simple + detailed views (carried over from the retired iconCycle refactor plan).
-
-### Done since the redesign (2026-06-20, later in the session)
-- **Analytics finalized + LIVE on both sites.** GA tightened to **Production-only** (portfolio Vercel + `.env.local`; n8builds-web already so). Decided **against a custom route tracker** — GA4 Enhanced Measurement already tracks App Router soft navigations; leave its "page changes based on browser history events" ON (the default), no code needed.
-- **Live demo links** added for Echo (`echo-kzw1.onrender.com`), Scout (`scout-agentic-researcher.onrender.com`), GeminiGPT (`geminigpt-n8.onrender.com`) — all on Render, all 200. **GeminiGPT is now deployed** (prior backlog item, done). Net-Trailer already had one.
-- **Dead code deleted**: `ProjectModal.tsx` + `ImageSlider.tsx`.
-- **Old default Vercel URL redirects**: `n8sportfolio.vercel.app/*` → 308 → `portfolio.n8builds.dev/*` (host-scoped redirect in `next.config.mjs`; verified live, path-preserving). It was a leftover alias on the project, not a second deploy.
-
-## Docs (consolidated 2026-06-20: 8 → 4)
-
-Live set: **`README.md`** (product overview + setup), **`docs/HANDOFF.md`** (this — session handoff + backlog), **`WEB_VITALS.md`** (Web Vitals monitoring reference), **`docs/bundle-analysis.md`** (bundle-size snapshot — re-run `npm run analyze` to refresh the byte counts).
-
-Deleted (fully stale / historical, recoverable in git history): `FOLLOW_UP.md` + `PIN_IT.md` (2025-09 roadmaps tied to the removed contact-form stack), `docs/code-quality-improvements-summary.md` (one-off Oct-2025 changelog), `docs/ICONCYCLE_REFACTOR_PLAN.md` (refactor done; its one open cleanup carried into Next steps above).
-
-## Conventions & gotchas
-
-- Commit after each logical change, conventional-commit style, trailer `Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>`. Push when asked. `main` auto-deploys.
-- **Repo path is now `~/n8builds/portfolio2.0`.** Claude project memory is keyed to the path — migrated this session.
-- Dev port 4829. Kill by port: `lsof -t -i:4829 | xargs -r kill` — `pkill -f <pattern>` self-matches the shell (exit 144).
-- Vercel: both projects are git-connected. To apply an env-var change without shipping local WIP, `vercel redeploy <latest-prod-deployment-url>` (rebuilds live source + current env — re-inlines `NEXT_PUBLIC_*`). **n8builds-web currently has WIP on `feat/hero-terminal-circuit` (7 commits ahead) — do NOT `vercel --prod` from its local tree.**
-- No Google Cloud project is used or needed. No Vercel/GA MCP is connected — analytics work was done via the authenticated Vercel CLI (`natkins23`).
-- Twitch/YouTube handle **n8builds**; GitHub/X/LinkedIn **n8watkins**.
-- 9 pre-existing lint warnings (0 errors, React Compiler/refs).
+1. **Live status for the Render apps:** show whether Echo, Scout and GeminiGPT are up, from OpenPing's public status feed (https://openping.n8builds.dev/api/public/status), styled in this site's colours.
+2. **More builds, pointing to n8builds.dev:** a strip of further builds that link to their n8builds.dev pages.
+3. **Adopt release-kit** (https://github.com/n8watkins/release-kit) for commit checks and releases; the owner applies it.
+4. **Lint warnings:** 9 React Compiler warnings in `FloatingNav.tsx`, `grid-pattern.tsx`, `MapAnimations.tsx`, `BentoGrid.tsx` and `background-gradient-animation.tsx` (refs read during render, setState in effects, variables used before declaration).
+   Then make CI fail on warnings.
+5. **Sentry's feedback button** (the white megaphone, bottom left) clashes with the dark design; theme it or remove it.
+6. **Streaming links** once streaming starts (see Conventions).
+7. **Branch protection** on `main` requiring "CI result", once CI has run green on `main`.
+8. GeminiGPT placeholder screenshots; the Appturnity "A" monogram; the resume PDF's old portfolio URL (owner).
+9. Deferred dependency majors: Tailwind 4, TypeScript 6, `@types/node` 25.
 
 ## File map
 
-- `components/Projects/ProjectCard.tsx` — alternating image-led card
-- `components/Projects/CardImageCarousel.tsx` — auto-cycling card screenshot
-- `components/Projects/ProjectDetail.tsx` + `app/projects/[slug]/page.tsx` — blog-style detail page
-- `components/ui/ProjectComponents/iconCycle.tsx` — tech-stack cycler (simple + detailed views)
-- `components/ui/BentoComponents/CurrentBuildsCarousel.tsx` + `data/grid/items/gridItem6.tsx` — "Building in public" bento
-- `components/sections/Grid.tsx` — About me + bento wrapper
-- `components/sections/AppturnityCard.tsx` — twin Appturnity/n8builds cards ("A" monogram placeholder)
-- `data/projects.tsx` — project copy (slug/des/purpose/aiUsage/highlights)
-- `app/layout.tsx` — GA snippet (reads `NEXT_PUBLIC_GA_ID`) + metadata
-- `lib/analytics.ts` — GA custom-event helpers (route page-views handled by GA4 Enhanced Measurement)
+- `lib/seo.ts`: site address, titles, descriptions, `shareSummary`.
+- `app/layout.tsx`: metadata, fonts, GA snippet. `app/opengraph-image.tsx` (+ `twitter-image.tsx`): the share card.
+- `components/Projects/ProjectCard.tsx`, `CardImageCarousel.tsx`: alternating project cards.
+- `components/Projects/ProjectDetail.tsx`, `app/projects/[slug]/page.tsx`: project detail pages.
+- `components/ui/ProjectComponents/iconCycle.tsx`: the tech-stack cycler.
+- `components/ui/BentoComponents/CurrentBuildsCarousel.tsx`, `data/grid/items/gridItem6.tsx`: "Building in public".
+- `components/sections/Grid.tsx` (About and the bento), `AppturnityCard.tsx`, `Experience.tsx`, `Hero.tsx`.
+- `data/projects.tsx`: project copy.
+- `components/ErrorBoundary.tsx`, `SectionErrorBoundary.tsx` report to `app/api/health/error`.

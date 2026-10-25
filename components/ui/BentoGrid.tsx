@@ -6,7 +6,7 @@ import { staggerItemVariants } from '@/lib/animations'
 import type { GridItemConfig } from '@/lib/types/gridItem'
 
 /**
- * Cursor-following glow shared by every bento card — a single blurred radial
+ * Cursor-following glow shared by every bento card - a single blurred radial
  * div eased toward the cursor with rAF (runs only while hovered), matching
  * the look of the heavier BackgroundGradientAnimation on the email card.
  */
@@ -99,7 +99,7 @@ export const BentoGridItem = ({
       {/* Background layer - data-driven */}
       {renderBackground?.()}
 
-      {/* Cursor-following glow — above backgrounds, below content.
+      {/* Cursor-following glow - above backgrounds, below content.
           Fixed pixel size (not % of the card) so the glow looks identical on
           every bento item regardless of its dimensions. The element is centered
           on its own origin via negative margins, then translate() drops that
