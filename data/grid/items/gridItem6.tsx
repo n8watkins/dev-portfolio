@@ -2,8 +2,8 @@ import CurrentBuildsCarousel from '@/components/ui/BentoComponents/CurrentBuilds
 import type { GridItemConfig } from '@/lib/types/gridItem'
 
 /**
- * Grid Item 6: "Building in public" — a bento card with a carousel of the
- * projects I'm shipping in public (LocalDictate, TL;DW, Portfolio Rank), each
+ * Grid Item 6: "Building in public" - a bento card with a carousel of the
+ * projects I'm shipping in public (Scribe, TL;DW, Portfolio Rank), each
  * with its own icon, its stack, a timer, and direct links out to GitHub / the
  * live demo / n8builds.dev.
  */

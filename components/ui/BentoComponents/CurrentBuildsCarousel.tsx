@@ -6,7 +6,7 @@ import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { FiGithub, FiArrowUpRight } from 'react-icons/fi'
 
 /**
- * "Building in public" — a living feed of the projects I'm shipping in public
+ * "Building in public" - a living feed of the projects I'm shipping in public
  * (see n8builds.dev), adapted into the bento style. The header stays fixed
  * top-left while the build cycles underneath: each slide carries the project's
  * own icon, a one-line pitch, its stack, and direct links out (Code / Live).
@@ -27,19 +27,19 @@ interface Build {
 
 const BUILDS: Build[] = [
   {
-    name: 'LocalDictate',
+    name: 'Scribe',
     tag: 'Desktop · Rust + Whisper',
-    desc: 'Hold a hotkey, talk, release — transcribed on-device by whisper.cpp and dropped right at your cursor. No cloud, no account, no audio leaves your machine.',
-    image: '/builds/localdictate.png',
+    desc: 'Hold a hotkey, talk, release: transcribed on-device by whisper.cpp and dropped right at your cursor. No cloud, no account, no audio leaves your machine.',
+    image: '/builds/scribe.png',
     gradient: 'from-slate-500/25 via-blue-600/15 to-transparent',
     accent: 'text-sky-300',
     stack: ['Tauri', 'Rust', 'whisper.cpp', 'SQLite'],
-    links: { github: 'https://github.com/n8watkins/localdictate' },
+    links: { github: 'https://github.com/n8watkins/scribe', live: 'https://scribe.n8builds.dev' },
   },
   {
     name: 'TL;DW',
     tag: 'Chrome extension · Gemini',
-    desc: 'Too Long; Didn’t Watch — press Alt+G on any YouTube video and it opens Gemini with your saved prompt and the video URL already filled in.',
+    desc: 'Too Long; Didn’t Watch - press Alt+G on any YouTube video and it opens Gemini with your saved prompt and the video URL already filled in.',
     image: '/builds/tldw.png',
     gradient: 'from-orange-500/25 via-amber-500/12 to-transparent',
     accent: 'text-orange-300',
@@ -49,7 +49,7 @@ const BUILDS: Build[] = [
   {
     name: 'Portfolio Rank',
     tag: 'Web app · AI scoring',
-    desc: '1,700+ developer portfolios, browsable and searchable — soon ranked by head-to-head votes and AI scoring instead of alphabetically.',
+    desc: '1,700+ developer portfolios, browsable and searchable - soon ranked by head-to-head votes and AI scoring instead of alphabetically.',
     image: '/builds/portfolio-rank.png',
     gradient: 'from-sky-500/25 via-blue-500/12 to-transparent',
     accent: 'text-sky-300',
@@ -70,7 +70,7 @@ export default function CurrentBuildsCarousel() {
     const id = setInterval(() => setIndex((i) => (i + 1) % BUILDS.length), INTERVAL_MS)
     return () => clearInterval(id)
     // Re-arm on index change too (e.g. dot click) so the timer bar stays in sync.
-    // Pause on hover/focus (WCAG 2.2.2) — also keeps the focused slide from
+    // Pause on hover/focus (WCAG 2.2.2) - also keeps the focused slide from
     // unmounting and dropping a keyboard user's focus mid-interaction.
   }, [prefersReducedMotion, paused, index])
 
@@ -83,7 +83,7 @@ export default function CurrentBuildsCarousel() {
       onMouseLeave={() => setPaused(false)}
       onFocus={() => setPaused(true)}
       onBlur={() => setPaused(false)}>
-      {/* Fixed header — stays put while the build below cycles */}
+      {/* Fixed header - stays put while the build below cycles */}
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2.5">
           <span className="relative flex h-2.5 w-2.5">
@@ -107,7 +107,7 @@ export default function CurrentBuildsCarousel() {
         </a>
       </div>
 
-      {/* Timer bar — fills over each build's turn */}
+      {/* Timer bar - fills over each build's turn */}
       <div className="mt-2.5 h-1 w-full overflow-hidden rounded-full bg-white/10">
         {prefersReducedMotion ? (
           <div className="h-full w-full bg-sky-400/60" />
@@ -122,7 +122,7 @@ export default function CurrentBuildsCarousel() {
         )}
       </div>
 
-      {/* Cycling build — icon + details */}
+      {/* Cycling build - icon + details */}
       <div className="relative flex-1 mt-2.5 min-h-0">
         <AnimatePresence mode="wait">
           <motion.div
