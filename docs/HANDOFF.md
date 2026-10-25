@@ -42,6 +42,8 @@ It funnels visitors to the two other sites:
 - **Inter is bundled** (`app/fonts/`); the share card uses `assets/fonts/*.ttf`.
 - **One GA4 property** (`G-JZQGKY9Q37`) covers this site and n8builds.dev; segment by hostname.
   Production only.
+- **The n8builds.dev card sells how the work is built** (2026-10-25): every pull request tested on five browsers, an hourly build log, weekly releases, both sites open source; it links to the case study at n8builds.dev/builds/n8builds.
+- **MIT for the code, not the personal content** (2026-10-25): see `LICENSE`; photos, screenshots, the resume and the copy about Nathan stay his.
 - **No reCAPTCHA and no contact form backend**: reCAPTCHA was purged in 2026-06; the contact section links out and shows an email address.
 
 ## Live-demo status (OpenPing)
