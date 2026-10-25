@@ -1,5 +1,5 @@
 local_ops_id: locops_portfolio_2_2026_06
-name: Portfolio 2.0
+name: dev-portfolio
 slug: portfolio-2
 type: web-app
 status: active
@@ -7,7 +7,7 @@ priority: medium
 project_kind: single
 
 local:
-  path: /home/natkins/personal/portfolio/Portfolio2.0
+  path: /home/natkins/n8builds/dev-portfolio
   dev_command: npm run dev
   build_command: npm run build
   test_command: npm run type-check
@@ -15,7 +15,7 @@ local:
 
 deployments:
   - provider: vercel
-    production_url:
+    production_url: https://portfolio.n8builds.dev
 
 docs:
   readme: README.md
