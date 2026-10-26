@@ -11,7 +11,7 @@ import {
   defaultAnimationConfig,
 } from '@/lib/animations'
 
-const EMAIL = 'nathancwatkins23@gmail.com'
+const EMAIL = 'contact@n8builds.dev'
 
 const Footer = () => {
   return (

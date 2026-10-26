@@ -25,7 +25,7 @@ const EmailButton: React.FC<ResumeButtonsProps> = ({ buttonContainer, buttonClas
   }, [])
 
   const handleEmailClick = () => {
-    navigator.clipboard.writeText('nathancwatkins23@gmail.com').then(() => {
+    navigator.clipboard.writeText('contact@n8builds.dev').then(() => {
       if (!copiedEmail) {
         setCopiedEmail(true)
         setAnimationKey((prevKey) => prevKey + 1)

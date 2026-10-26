@@ -91,7 +91,7 @@ const AppturnityCard = () => {
                 <FiArrowUpRight className="w-4 h-4" aria-hidden="true" />
               </a>
               <a
-                href="mailto:nathancwatkins23@gmail.com?subject=Consulting%20inquiry"
+                href="mailto:contact@n8builds.dev?subject=Consulting%20inquiry"
                 className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-sky-500/15 border border-sky-500/30 text-sm text-sky-300 hover:bg-sky-500/25 hover:border-sky-400/60 cursor-pointer transition-colors duration-200">
                 Need something built?
               </a>
