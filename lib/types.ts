@@ -25,6 +25,8 @@ export interface Project {
   subTitle: string
   des: string
   images: string[]
+  /** A 1200x630 card for link previews, when the first screenshot isn't one. */
+  shareImage?: string
   technologies: Technologies
   /** The "why" - the goal / what this project is exploring / the question behind it. */
   purpose?: string
