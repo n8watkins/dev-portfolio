@@ -14,7 +14,7 @@ import SectionHeading from '@/components/ui/SectionHeading'
 const EMAIL = 'contact@n8builds.dev'
 
 const BUTTON =
-  'inline-flex items-center justify-center gap-2 h-10 px-4 text-sm sm:h-11 sm:px-5 sm:text-base rounded-full border font-semibold transition-all duration-200'
+  'inline-flex items-center justify-center gap-2 h-10 px-3.5 text-sm sm:h-11 sm:px-5 sm:text-base rounded-full border font-semibold transition-all duration-200'
 const OUTLINE = 'border-slate-600 text-slate-200 hover:border-sky-400/60 hover:text-sky-300'
 
 const Footer = () => {
