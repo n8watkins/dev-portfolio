@@ -206,6 +206,35 @@
   display: none !important;
 }
 
+/* Hero entrance, in CSS so it runs with the first paint, not after hydration.
+   The headline and portrait only slide (they never start invisible), so the
+   portrait stays a Largest Contentful Paint candidate from the first frame. */
+@keyframes hero-in {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+}
+@keyframes hero-slide-l {
+  from {
+    transform: translateX(-20px);
+  }
+}
+@keyframes hero-slide-r {
+  from {
+    transform: translateX(20px);
+  }
+}
+.hero-in {
+  animation: hero-in 0.5s cubic-bezier(0.25, 0.1, 0.25, 1) both;
+}
+.hero-slide-l {
+  animation: hero-slide-l 0.5s cubic-bezier(0.25, 0.1, 0.25, 1) both;
+}
+.hero-slide-r {
+  animation: hero-slide-r 0.5s cubic-bezier(0.25, 0.1, 0.25, 1) both;
+}
+
 /* Respect prefers-reduced-motion: neutralize animations/transitions and
    auto-scrolling for users who ask the OS to reduce motion (WCAG 2.3.3). */
 @media (prefers-reduced-motion: reduce) {
