@@ -161,17 +161,20 @@ const AppturnityCard = () => {
                 How it&apos;s built and tested
                 <FiArrowUpRight className="w-4 h-4" aria-hidden="true" />
               </a>
-              {followLinks.map((social) => (
-                <a
-                  key={social.label}
-                  href={social.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label={`Follow Nathan on ${social.label}`}
-                  className="w-11 h-11 rounded-full text-slate-300 hover:text-sky-400 hover:bg-slate-700/70 transition-colors duration-200">
-                  {social.icon}
-                </a>
-              ))}
+              {/* The icons wrap as one group, never one icon onto the button row. */}
+              <div className="flex items-center gap-2">
+                {followLinks.map((social) => (
+                  <a
+                    key={social.label}
+                    href={social.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={`Follow Nathan on ${social.label}`}
+                    className="w-11 h-11 rounded-full text-slate-300 hover:text-sky-400 hover:bg-slate-700/70 transition-colors duration-200">
+                    {social.icon}
+                  </a>
+                ))}
+              </div>
             </div>
           </div>
         </motion.div>
