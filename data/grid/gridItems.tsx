@@ -12,4 +12,4 @@
  * - Individual imports possible: import { gridItem1 } from '@/data/grid/items'
  */
 
-export { gridItems, gridItem2, gridItem3, gridItem4, gridItem5, gridItem6 } from './items'
+export { gridItems, gridItem2, gridItem3, gridItem4, gridItem5 } from './items'

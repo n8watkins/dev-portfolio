@@ -13,7 +13,7 @@ import type { GridItemConfig } from '@/lib/types/gridItem'
 // At rest the resume graphic peeks in from the bottom-right corner, clear of
 // the title; hovering (or focusing a button) slides it up into view.
 const imgClassName =
-  'absolute w-full h-full pl-52 1sm:pt-10 1sm:h-[10rem] pt-0 rounded-3xl z-10 transition duration-500 translate-x-8 translate-y-20 group-hover:scale-105 group-hover:translate-x-6 group-hover:translate-y-10 group-focus-within:translate-x-6 group-focus-within:translate-y-10'
+  'absolute w-full h-full pl-52 1sm:pt-10 1sm:h-[10rem] pt-0 rounded-3xl z-10 transition duration-500 translate-x-2 translate-y-16 group-hover:scale-105 group-hover:translate-x-6 group-hover:translate-y-10 group-focus-within:translate-x-6 group-focus-within:translate-y-10'
 
 const buttonContainer = 'flex items-center justify-evenly z-50 w-full h-full pb-14'
 const buttonClass =
@@ -38,7 +38,7 @@ export const gridItem4: GridItemConfig = {
     'group-focus-within:opacity-0 group-hover:opacity-100 group-hover:-translate-y-20 group-hover:translate-x-[3.5rem] 1sm:group-hover:translate-x-[0rem] sm:group-hover:translate-x-[5.5rem] duration-200 md:group-hover:translate-x-[1rem] xl:group-hover:translate-x-[3rem] ',
 
   titleClassName:
-    'flex transition duration-300  pt-[5rem] z-30 font-sans font-bold   select-none text-slate-200 dark:text-neutral-200  text-2xl lg:text-3xl text-start w-full',
+    'flex transition duration-300 pt-[3.75rem] z-30 font-sans font-bold   select-none text-slate-200 dark:text-neutral-200  text-2xl lg:text-3xl text-start w-full',
 
   buttonContainer,
   buttonClass,

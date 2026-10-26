@@ -4,6 +4,14 @@ import Marquee from '@/components/magicui/marquee'
 import { tech_libraries, tech_tools } from '@/data/techStack'
 import { ReactElement } from 'react'
 
+/**
+ * A tech tile, after n8builds.dev's AI kit tiles (components/ui/StackTile.tsx
+ * there): the brand mark and name centred, the description revealed on hover
+ * or focus (a tap on touch screens). The name and description are one block,
+ * centred by flexbox; at rest the description's row is collapsed (0fr), so the
+ * name sits alone in the middle, and revealing it opens the row while the name
+ * shrinks, the block staying centred whatever the description's length.
+ */
 const StackContainer = ({
   name,
   icon,
@@ -15,29 +23,30 @@ const StackContainer = ({
 }) => {
   return (
     <figure
+      tabIndex={0}
       className={cn(
-        'stack-container',
-        'relative flex h-28 min-w-40 max-w-52 px-2 cursor-pointer overflow-hidden rounded-xl border pb-2 items-center justify-center',
-        'border-gray-950/[.1] bg-blue-300 hover:bg-sky-100/90',
-        'dark:border-gray-50/[.1] dark:bg-gray-50/[.10] dark:hover:bg-gray-50/[.15]',
-        'transition-all duration-300 ease-in-out',
-        'hover:shadow-lg',
-        '[&_.content-wrapper]:hover:scale-75 [&_.content-wrapper]:hover:-translate-y-9',
-        '[&_.description]:hover:opacity-100'
-      )}>
-      <div className="content-wrapper flex flex-col items-center transition-all duration-300 ease-in-out">
-        <figcaption className="icon-name-wrapper mt-2 text-xl font-medium dark:text-white flex flex-col items-center transition-all duration-300 ease-in-out">
-          <div className="icon-name flex flex-row gap-2 pt-24">
-            <span className="icon transition-transform duration-300 ease-in-out">{icon}</span>
-            <span className="name transition-all duration-300 ease-in-out  whitespace-nowrap">
-              {name}
-            </span>
+        'group/tile relative flex h-28 w-52 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-xl border px-2',
+        'border-white/[0.08] bg-white/[0.04] transition-all duration-300 ease-in-out outline-none',
+        'focus-visible:ring-2 focus-visible:ring-cyan-400',
+        'hover:border-cyan-400/30 hover:bg-white/[0.08] hover:shadow-lg hover:shadow-cyan-500/5',
+        'focus:border-cyan-400/30 focus:bg-white/[0.08] focus:shadow-lg focus:shadow-cyan-500/5'
+      )}
+    >
+      <figcaption className="flex w-48 flex-col items-center font-medium text-white">
+        <div className="flex items-center gap-2 text-xl transition-[font-size,line-height] duration-300 ease-in-out group-hover/tile:text-base group-focus/tile:text-base">
+          <span className="flex size-7 shrink-0 items-center justify-center transition-[width,height] duration-300 ease-in-out [&>*]:!h-full [&>*]:!w-full group-hover/tile:size-5 group-focus/tile:size-5">
+            {icon}
+          </span>
+          <span className="whitespace-nowrap">{name}</span>
+        </div>
+        <div className="grid grid-rows-[0fr] transition-[grid-template-rows] duration-300 ease-in-out group-hover/tile:grid-rows-[1fr] group-focus/tile:grid-rows-[1fr]">
+          <div className="overflow-hidden">
+            <p className="pt-1 text-center text-sm leading-[1.125rem] text-[#9cadc5] opacity-0 transition-opacity duration-300 ease-in-out group-hover/tile:opacity-100 group-focus/tile:opacity-100">
+              {description}
+            </p>
           </div>
-          <div className="description  flex items-start justify-center text-base w-48 h-24 opacity-0 translate-y-2 transition-all duration-300 ease-in-out ">
-            {description}
-          </div>
-        </figcaption>
-      </div>
+        </div>
+      </figcaption>
     </figure>
   )
 }

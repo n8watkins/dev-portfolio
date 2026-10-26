@@ -237,6 +237,27 @@
   }
 }
 
+/* The n8builds.dev teaser's build fades in as it changes (BuildsTeaser.tsx). */
+@media (prefers-reduced-motion: no-preference) {
+  .teaser-in {
+    animation: hero-in 0.4s cubic-bezier(0.25, 0.1, 0.25, 1) both;
+  }
+}
+
+/* The hero grid's fade (components/sections/HeroGrid.tsx, from n8builds.dev):
+   out at the top and bottom, and toward the left and right edges, the two
+   masks intersected, so the grid melts into the page. */
+.hero-grid-mask {
+  -webkit-mask-image:
+    linear-gradient(to bottom, transparent, black 120px, black 80%, transparent),
+    linear-gradient(to right, transparent, black clamp(48px, 16%, 320px), black calc(100% - clamp(48px, 16%, 320px)), transparent);
+  -webkit-mask-composite: source-in;
+  mask-image:
+    linear-gradient(to bottom, transparent, black 120px, black 80%, transparent),
+    linear-gradient(to right, transparent, black clamp(48px, 16%, 320px), black calc(100% - clamp(48px, 16%, 320px)), transparent);
+  mask-composite: intersect;
+}
+
 /* The hero's whoami terminal types itself out on load
    (components/sections/WhoamiTerminal.tsx), as on n8builds.dev. Each line is
    in the HTML at full size; a clip-path steps across it one character per
@@ -357,5 +378,21 @@ select:focus-visible {
 @media (max-width: 767px) {
   #sentry-feedback {
     display: none;
+  }
+}
+
+/* A project row's wash (components/Projects/index.tsx), from n8builds.dev's
+   Lab: a glow of the project's colour (--lab-from, "r g b") from the page edge
+   on its screenshot's side (--lab-x). It fades out before its edges. */
+.lab-row-wash {
+  background: radial-gradient(
+    var(--lab-rx, 90%) 50% at var(--lab-x, 0%) 50%,
+    rgb(var(--lab-from) / 0.2),
+    transparent 100%
+  );
+}
+@media (min-width: 768px) {
+  .lab-row-wash {
+    --lab-rx: 60%;
   }
 }

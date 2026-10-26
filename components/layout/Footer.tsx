@@ -40,7 +40,7 @@ const Footer = () => {
             </>
           }
         >
-          Hiring for an AI full-stack role, or have a project in mind? Reach me directly, or send a
+          Hiring a full-stack developer, or have a project in mind? Reach me directly, or send a
           message through the form on n8builds.dev.
         </SectionHeading>
 
