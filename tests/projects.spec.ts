@@ -17,11 +17,12 @@ test('each monitored project card shows its live-demo status, and the unmonitore
   await projectsInView(page)
   const pill = (title: string) => card(page, title).getByRole('link', { name: /^Live demo:/ })
 
-  await expect(pill('Echo')).toHaveText(/Online\s*· 93% uptime/)
+  // The state only: the demos are monitored on weekdays, so no uptime number.
+  await expect(pill('Echo')).toHaveText('Online')
   await expect(pill('Echo')).toHaveAttribute('data-status', 'up')
-  await expect(pill('Scout')).toHaveText(/Asleep\s*· 99\.5% uptime/)
+  await expect(pill('Scout')).toHaveText('Asleep')
   await expect(pill('Scout')).toHaveAttribute('title', /first visit wakes the demo/)
-  await expect(pill('GeminiGPT')).toHaveText(/Down\s*· 81% uptime/)
+  await expect(pill('GeminiGPT')).toHaveText('Down')
   await expect(pill('Net-Trailer')).toHaveCount(0)
 
   // It links to the public status page.

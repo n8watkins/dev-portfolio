@@ -8,7 +8,7 @@ import { FiArrowLeft, FiGithub, FiArrowUpRight } from 'react-icons/fi'
 import { MdOpenInNew } from 'react-icons/md'
 import IconCycle from '@/components/ui/ProjectComponents/iconCycle'
 import { Project } from '@/lib/types'
-import StatusPill from './StatusPill'
+import StatusPill, { DemoSleepNote } from './StatusPill'
 
 function Heading({ id, children }: { id: string; children: React.ReactNode }) {
   return (
@@ -20,21 +20,32 @@ function Heading({ id, children }: { id: string; children: React.ReactNode }) {
   )
 }
 
-/** Live demo / Source / n8builds links - rendered both inline (mobile) and in the sidebar. */
-function ProjectLinks({ project }: { project: Project }) {
+const ACTION =
+  'inline-flex items-center justify-center gap-2 h-10 px-4 rounded-full border text-sm font-semibold transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:ring-offset-2 focus-visible:ring-offset-darkBlue'
+const OUTLINE =
+  'border-slate-600 text-slate-200 hover:border-sky-400/60 hover:text-sky-300 hover:bg-slate-800/60'
+
+/**
+ * Live demo / Source as real buttons (as on the home page's cards), then the
+ * status and an n8builds.dev link. Rendered inline (mobile, a row) and in the
+ * sidebar (desktop, stacked to the sidebar's width).
+ */
+function ProjectLinks({ project, stacked = false }: { project: Project; stacked?: boolean }) {
   return (
-    <div className="flex flex-wrap items-center gap-x-5 gap-y-2.5 text-sm">
+    <div className={stacked ? 'flex flex-col gap-2.5' : 'flex flex-wrap items-center gap-2.5'}>
       {project.liveSite ? (
         <a
           href={project.liveSite}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 text-sky-300 hover:text-sky-200 transition-colors">
+          aria-label={`Try the ${project.title} live demo (new tab)`}
+          className={`${ACTION} text-white bg-gradient-to-r from-cyan-500 to-blue-600 border-transparent hover:from-cyan-400 hover:to-blue-500 hover:shadow-lg hover:shadow-sky-500/30`}>
           <MdOpenInNew className="w-4 h-4" aria-hidden="true" /> Live demo
         </a>
       ) : (
-        <span className="inline-flex items-center gap-2 text-slate-400">
-          <span className="h-2 w-2 rounded-full bg-slate-500" aria-hidden="true" /> Runs locally - grab it on GitHub
+        <span className="inline-flex items-center gap-2 text-sm text-slate-400">
+          <span className="h-2 w-2 rounded-full bg-slate-500" aria-hidden="true" /> Runs locally -
+          grab it on GitHub
         </span>
       )}
       {project.github && (
@@ -42,19 +53,23 @@ function ProjectLinks({ project }: { project: Project }) {
           href={project.github}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 text-slate-300 hover:text-sky-400 transition-colors">
+          aria-label={`View ${project.title} source on GitHub (new tab)`}
+          className={`${ACTION} ${OUTLINE}`}>
           <FiGithub className="w-4 h-4" aria-hidden="true" /> Source
         </a>
       )}
-      <a
-        href="https://n8builds.dev"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="inline-flex items-center gap-2 text-slate-300 hover:text-sky-400 transition-colors">
-        <FiArrowUpRight className="w-4 h-4" aria-hidden="true" /> n8builds.dev
-      </a>
-      {/* Last in the row, so it appears without moving the links before it. */}
-      {project.statusName && <StatusPill name={project.statusName} />}
+      <div className={`flex flex-wrap items-center gap-x-4 gap-y-2.5 ${stacked ? 'pt-1' : ''}`}>
+        <a
+          href="https://n8builds.dev"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1.5 text-sm text-slate-300 hover:text-sky-400 transition-colors">
+          n8builds.dev <FiArrowUpRight className="w-4 h-4" aria-hidden="true" />
+        </a>
+        {/* Last in the row, so it appears without moving anything before it. */}
+        {project.statusName && <StatusPill name={project.statusName} />}
+      </div>
+      {project.statusName && <DemoSleepNote className={stacked ? '' : 'basis-full'} />}
     </div>
   )
 }
@@ -178,7 +193,7 @@ export default function ProjectDetail({ project }: { project: Project }) {
               <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-400 mb-3">
                 Project
               </p>
-              <ProjectLinks project={project} />
+              <ProjectLinks project={project} stacked />
             </div>
           </aside>
         </div>
