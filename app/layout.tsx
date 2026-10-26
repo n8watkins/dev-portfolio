@@ -2,11 +2,12 @@ import type { Metadata } from 'next'
 import localFont from 'next/font/local'
 import './globals.css'
 import { ThemeProvider } from './provider'
-import Script from 'next/script'
 import ErrorBoundary from '@/components/ErrorBoundary'
 import { WebVitals } from './web-vitals'
 import { WebVitalsHUD } from '@/components/WebVitalsHUD'
 import { SpeedInsights } from "@vercel/speed-insights/next"
+import { consentBootstrapScript } from '@/lib/consent'
+import ConsentLoader from '@/components/consent/ConsentLoader'
 import { SITE_DESCRIPTION, SITE_NAME, SITE_SHARE_DESCRIPTION, SITE_TITLE, SITE_URL } from '@/lib/seo'
 
 // Inter, bundled (variable weight, Latin subset, from @fontsource-variable/inter
@@ -60,32 +61,18 @@ export default function RootLayout({
       <head>
         <meta name="google-site-verification" content="UaCoLg9YeNobXjRaOb59YzQxzc8RDb1yiOZEKdmNECU" />
 
-        {/* Preconnect and DNS prefetching for external domains */}
-        <link rel="preconnect" href="https://www.googletagmanager.com" />
-        <link rel="dns-prefetch" href="//www.googletagmanager.com" />
-
         {/* Project external links */}
         <link rel="dns-prefetch" href="//github.com" />
         <link rel="dns-prefetch" href="//web.app" />
         <link rel="dns-prefetch" href="//vercel.app" />
         <link rel="dns-prefetch" href="//firebase.google.com" />
 
-        {/* Only where an ID is set (production); otherwise it would load gtag.js?id=undefined. */}
+        {/* Google Analytics with Consent Mode v2 (lib/consent.ts, shared with
+            n8builds.dev): the defaults are set before gtag.js can load,
+            European and Quebec visitors are asked first, and gtag.js loads
+            after the page is loaded and idle. Only where an ID is set. */}
         {GA_ID && (
-          <>
-            <Script
-              src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}
-              strategy="lazyOnload"
-            />
-            <Script id="google-analytics" strategy="lazyOnload">
-              {`
-                window.dataLayer = window.dataLayer || [];
-                function gtag(){dataLayer.push(arguments);}
-                gtag('js', new Date());
-                gtag('config', '${GA_ID}');
-              `}
-            </Script>
-          </>
+          <script id="consent-bootstrap" dangerouslySetInnerHTML={{ __html: consentBootstrapScript(GA_ID) }} />
         )}
       </head>
       <body className={inter.className}>
@@ -99,6 +86,8 @@ export default function RootLayout({
           <ErrorBoundary>
             {children}
           </ErrorBoundary>
+          {/* Asks European and Quebec visitors about analytics; the banner loads only when needed. */}
+          {GA_ID && <ConsentLoader />}
           <WebVitals />
           <WebVitalsHUD />
           <SpeedInsights />

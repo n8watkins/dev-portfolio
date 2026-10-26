@@ -10,6 +10,7 @@ import {
   defaultAnimationConfig,
 } from '@/lib/animations'
 import SectionHeading from '@/components/ui/SectionHeading'
+import CookieSettingsButton from '@/components/consent/CookieSettingsButton'
 
 const EMAIL = 'contact@n8builds.dev'
 
@@ -148,6 +149,8 @@ const Footer = () => {
               Appturnity
               <FiArrowUpRight className="w-4 h-4" aria-hidden="true" />
             </a>
+            {/* Reopens the analytics consent banner (components/consent). */}
+            <CookieSettingsButton className="cursor-pointer text-sm text-slate-400 hover:text-sky-400 transition-colors duration-200" />
           </div>
           <span
             className="hidden sm:block w-px h-6 bg-slate-300 dark:bg-slate-700"
