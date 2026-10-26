@@ -3,58 +3,49 @@
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
-import { FiGithub, FiArrowUpRight } from 'react-icons/fi'
+import { FiArrowUpRight } from 'react-icons/fi'
 
 /**
  * "Building in public" - a living feed of the projects I'm shipping in public
- * (see n8builds.dev), adapted into the bento style. The header stays fixed
+ * on n8builds.dev, adapted into the bento style. The header stays fixed
  * top-left while the build cycles underneath: each slide carries the project's
- * own icon, a one-line pitch, its stack, and direct links out (Code / Live).
+ * own icon, a one-line pitch, its stack, and a link to its page on
+ * n8builds.dev, where every build lives (never its own repo or site: the
+ * portfolio features Echo, Scout, GeminiGPT and Net-Trailer, not these).
  * Auto-advances, but pauses on hover/focus.
  */
-type BuildLink = { github: string; live?: string }
-
 interface Build {
   name: string
+  /** Its page is https://n8builds.dev/builds/<slug>. */
+  slug: string
   tag: string
   desc: string
   image: string
   gradient: string
   accent: string
   stack: string[]
-  links: BuildLink
 }
 
 const BUILDS: Build[] = [
   {
-    name: 'Scribe',
-    tag: 'Desktop · Rust + Whisper',
-    desc: 'Hold a hotkey, talk, release: transcribed on-device by whisper.cpp and dropped right at your cursor. No cloud, no account, no audio leaves your machine.',
-    image: '/builds/scribe.png',
-    gradient: 'from-slate-500/25 via-blue-600/15 to-transparent',
-    accent: 'text-sky-300',
-    stack: ['Tauri', 'Rust', 'whisper.cpp', 'SQLite'],
-    links: { github: 'https://github.com/n8watkins/scribe', live: 'https://scribe.n8builds.dev' },
-  },
-  {
     name: 'TL;DW',
+    slug: 'tldw',
     tag: 'Chrome extension · Gemini',
     desc: 'Too Long; Didn’t Watch - press Alt+G on any YouTube video and it opens Gemini with your saved prompt and the video URL already filled in.',
     image: '/builds/tldw.png',
     gradient: 'from-orange-500/25 via-amber-500/12 to-transparent',
     accent: 'text-orange-300',
     stack: ['Chrome MV3', 'TypeScript', 'Vite'],
-    links: { github: 'https://github.com/n8watkins/tl-dw' },
   },
   {
     name: 'Portfolio Rank',
+    slug: 'portfolio-rank',
     tag: 'Web app · AI scoring',
-    desc: '1,700+ developer portfolios, browsable and searchable - soon ranked by head-to-head votes and AI scoring instead of alphabetically.',
+    desc: '1,700+ developer portfolios, browsable and searchable, ranked by head-to-head votes and AI scoring instead of alphabetically.',
     image: '/builds/portfolio-rank.png',
     gradient: 'from-sky-500/25 via-blue-500/12 to-transparent',
     accent: 'text-sky-300',
     stack: ['Next.js', 'TypeScript', 'Vercel'],
-    links: { github: 'https://github.com/n8watkins/portfolio-rank', live: 'https://portfoliorank.vercel.app' },
   },
 ]
 
@@ -77,7 +68,8 @@ export default function CurrentBuildsCarousel() {
   const build = BUILDS[index]
 
   return (
-    <div
+    <section
+      aria-labelledby="building-in-public"
       className="absolute inset-0 z-30 flex flex-col p-4 md:p-5 select-none"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
@@ -90,7 +82,9 @@ export default function CurrentBuildsCarousel() {
             <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 motion-safe:animate-ping" />
             <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-400" />
           </span>
-          <p className="text-xs sm:text-sm font-semibold uppercase tracking-[0.15em] sm:tracking-[0.2em] text-slate-100">
+          <p
+            id="building-in-public"
+            className="text-xs sm:text-sm font-semibold uppercase tracking-[0.15em] sm:tracking-[0.2em] text-slate-100">
             Building in public
           </p>
         </div>
@@ -161,31 +155,20 @@ export default function CurrentBuildsCarousel() {
                 ))}
               </div>
 
-              {/* Per-build redirects */}
+              {/* Its page on n8builds.dev */}
               <div className="mt-2.5 flex items-center gap-2.5">
                 <a
-                  href={build.links.github}
+                  href={`https://n8builds.dev/builds/${build.slug}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  aria-label={`${build.name} source on GitHub`}
-                  className="group/code inline-flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-sm font-medium text-slate-200 hover:bg-white/10 hover:text-white hover:border-white/25 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400">
-                  <FiGithub className="w-4 h-4 transition-transform group-hover/code:scale-110" aria-hidden="true" />
-                  Code
+                  aria-label={`See the build: ${build.name} on n8builds.dev`}
+                  className="group/build inline-flex items-center gap-1.5 rounded-lg border border-sky-400/30 bg-sky-500/15 px-3 py-1.5 text-sm font-medium text-sky-200 hover:bg-sky-500/25 hover:text-sky-100 hover:border-sky-400/60 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-sky-500/20 active:translate-y-0 transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400">
+                  See the build
+                  <FiArrowUpRight
+                    className="w-4 h-4 transition-transform group-hover/build:translate-x-0.5 group-hover/build:-translate-y-0.5"
+                    aria-hidden="true"
+                  />
                 </a>
-                {build.links.live && (
-                  <a
-                    href={build.links.live}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label={`${build.name} live demo`}
-                    className="group/live inline-flex items-center gap-1.5 rounded-lg border border-sky-400/30 bg-sky-500/15 px-3 py-1.5 text-sm font-medium text-sky-200 hover:bg-sky-500/25 hover:text-sky-100 hover:border-sky-400/60 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-sky-500/20 active:translate-y-0 transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400">
-                    Live
-                    <FiArrowUpRight
-                      className="w-4 h-4 transition-transform group-hover/live:translate-x-0.5 group-hover/live:-translate-y-0.5"
-                      aria-hidden="true"
-                    />
-                  </a>
-                )}
               </div>
             </div>
           </motion.div>
@@ -207,6 +190,6 @@ export default function CurrentBuildsCarousel() {
           />
         ))}
       </div>
-    </div>
+    </section>
   )
 }

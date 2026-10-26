@@ -4,8 +4,8 @@ import { trackProjectEvent } from '@/lib/analytics'
 
 /**
  * More builds, each linking to its page on n8builds.dev, where every build
- * lives. Scribe, TL;DW and Portfolio Rank are in the "Building in public"
- * card, so they aren't repeated here.
+ * lives. TL;DW and Portfolio Rank are in the "Building in public" card, so
+ * they aren't repeated here.
  */
 const BUILDS = [
   {

@@ -8,7 +8,7 @@ The build-in-public workshop (every build, the build log, notes and streams) is 
 ## What's on it
 
 - **Projects:** Echo, Scout, GeminiGPT and Net-Trailer, each as an alternating card with an auto-cycling screenshot and an interactive tech-stack cycler, and a blog-style detail page at `/projects/<slug>`.
-- **Building in public:** a bento card that cycles through builds from n8builds.dev (Scribe, TL;DW, Portfolio Rank) with links to their code and live sites.
+- **Building in public:** a bento card that cycles through builds from n8builds.dev (TL;DW, Portfolio Rank), each linking to its page there.
 - **About, experience and contact,** with links out to n8builds.dev and Appturnity.
 - **Share cards:** generated at build time (`app/opengraph-image.tsx`), with titles and descriptions kept in one place (`lib/seo.ts`).
 

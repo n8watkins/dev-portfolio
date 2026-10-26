@@ -57,13 +57,6 @@ test('no visible copy uses an em dash', async ({ page }) => {
   }
 })
 
-test('the "Building in public" card shows Scribe, not its old name LocalDictate', async ({ page }) => {
-  await page.goto('/')
-  const html = await page.content()
-  expect(html).not.toContain('LocalDictate')
-  expect(html).toContain('https://github.com/n8watkins/scribe')
-})
-
 test("the Sentry wizard's example page and API are not deployed", async ({ request }) => {
   // The example API throws on every request: public, it let anyone fill the Sentry quota.
   expect((await request.get('/sentry-example-page')).status()).toBe(404)
