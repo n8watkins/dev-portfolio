@@ -1,6 +1,6 @@
 import React from 'react'
 import Image from 'next/image'
-import { FiGithub, FiArrowUpRight } from 'react-icons/fi'
+import { FiGithub, FiArrowUpRight, FiFileText } from 'react-icons/fi'
 import { CiLinkedin } from 'react-icons/ci'
 import { FaXTwitter } from 'react-icons/fa6'
 import HeroGrid from '@/components/sections/HeroGrid'
@@ -8,6 +8,8 @@ import WhoamiTerminal from '@/components/sections/WhoamiTerminal'
 import PortraitRotator from '@/components/sections/PortraitRotator'
 import { heroPortraits } from '@/data/portraits'
 import { ROLE } from '@/lib/seo'
+import { RESUME_VIEW_URL } from '@/lib/resume'
+import { trackResumeEvent } from '@/lib/analytics'
 
 /**
  * The entrance is CSS (`.hero-in`, `.hero-slide-*` in globals.css), not JS: the
@@ -37,21 +39,33 @@ const socials = [
   },
 ]
 
-/** The two sites this one leads to, each with a line on what it is and why to go. */
+/**
+ * The hero's two doors, each with a line on what it is: the resume (the
+ * hiring path, opened as the resume card opens it) and n8builds.dev.
+ * Appturnity is in the cards, the contact section and the footer.
+ */
 const doors = [
+  {
+    href: RESUME_VIEW_URL,
+    name: 'Resume',
+    icon: (
+      <span className="flex h-7 w-7 items-center justify-center rounded-md bg-gradient-to-br from-cyan-500 to-blue-600 text-white">
+        <FiFileText className="h-4 w-4" />
+      </span>
+    ),
+    line: 'My experience and skills, on one page.',
+    look: 'border-sky-400/40 bg-sky-500/[0.08] hover:border-sky-300/70 hover:bg-sky-500/[0.14]',
+    onClick: () => trackResumeEvent('view'),
+  },
   {
     href: 'https://n8builds.dev',
     name: 'n8builds.dev',
-    icon: '/tab/n8-icon.png',
+    icon: (
+      <Image src="/tab/n8-icon.png" alt="" width={28} height={28} className="h-7 w-7 rounded-md" />
+    ),
     line: 'Where I build in public: free, open-source tools.',
-    ring: 'hover:border-sky-400/50',
-  },
-  {
-    href: 'https://appturnity.com',
-    name: 'Appturnity',
-    icon: '/brands/appturnity.png',
-    line: 'My company: free websites for local businesses.',
-    ring: 'hover:border-[#1066f4]/70',
+    look: 'border-white/10 bg-white/[0.03] hover:border-sky-400/50 hover:bg-white/[0.06]',
+    onClick: undefined,
   },
 ]
 
@@ -119,15 +133,12 @@ const Hero = () => {
                   href={door.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className={`group flex items-start gap-3 rounded-xl border border-white/10 bg-white/[0.03] p-3.5 text-left transition-all duration-200 hover:bg-white/[0.06] hover:shadow-lg hover:shadow-sky-500/10 ${door.ring}`}
+                  onClick={door.onClick}
+                  className={`group flex items-start gap-3 rounded-xl border p-3.5 text-left transition-all duration-200 hover:shadow-lg hover:shadow-sky-500/10 ${door.look}`}
                 >
-                  <Image
-                    src={door.icon}
-                    alt=""
-                    width={28}
-                    height={28}
-                    className="mt-0.5 h-7 w-7 shrink-0 rounded-md object-contain"
-                  />
+                  <span className="mt-0.5 shrink-0" aria-hidden="true">
+                    {door.icon}
+                  </span>
                   <span className="min-w-0">
                     <span className="flex items-center gap-1 text-base font-semibold text-slate-100">
                       {door.name}

@@ -79,7 +79,7 @@ export function DemoSleepNote({ className = '' }: { className?: string }) {
     <p className={`flex items-start gap-2 text-sm text-slate-400 ${className}`}>
       <span className="mt-[0.4rem] h-2 w-2 shrink-0 rounded-full bg-slate-400" aria-hidden="true" />
       <span>
-        Live demos sleep on weekends; the first visit then may take a few seconds to wake.
+        Live demos sleep on weekends; the first visit then may take up to a minute to wake.
       </span>
     </p>
   )

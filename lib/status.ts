@@ -62,7 +62,7 @@ export function describe(status: ServiceStatus): { label: string; detail: string
     case 'scheduled_off':
     case 'suspended':
       // Render's free tier sleeps between visits; OpenPing keeps the demos awake on weekdays.
-      return { label: 'Asleep', detail: 'Asleep: off-hours, so the first visit wakes the demo, which can take a moment.', tone: 'idle' }
+      return { label: 'Asleep', detail: 'Asleep: off-hours, so the first visit wakes the demo, which may take up to a minute.', tone: 'idle' }
     default:
       return null
   }

@@ -42,7 +42,8 @@ export const metadata: Metadata = {
     creator: '@n8watkins',
   },
   icons: {
-    icon: '/tab/n8-icon.png',
+    // A small favicon: the 512px one (89 KB) was fetched early and slowed the portrait on phones.
+    icon: [{ url: '/tab/n8-icon-96.png', sizes: '96x96', type: 'image/png' }],
     apple: '/tab/apple-icon.png',
   },
   metadataBase: new URL(SITE_URL),

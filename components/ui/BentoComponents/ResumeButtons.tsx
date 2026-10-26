@@ -2,13 +2,13 @@ import React from 'react'
 import { FaExternalLinkAlt } from 'react-icons/fa'
 import { IoMdDownload } from 'react-icons/io'
 import { trackResumeEvent } from '@/lib/analytics'
+import { RESUME_DOWNLOAD_URL, RESUME_VIEW_URL } from '@/lib/resume'
 
 interface ResumeButtonsProps {
   buttonContainer?: string
   buttonClass?: string
 }
 
-const RESUME_ID = '1YqIv0xOL4vOygI448JKCzKTkLHONxg8L'
 
 /**
  * View / Download, revealed when the card is hovered or a button inside it
@@ -22,7 +22,7 @@ const ResumeButtons: React.FC<ResumeButtonsProps> = ({ buttonContainer, buttonCl
         <a
           target="_blank"
           rel="noopener noreferrer"
-          href={`https://drive.google.com/file/d/${RESUME_ID}/view?usp=sharing`}
+          href={RESUME_VIEW_URL}
           aria-label="View my resume (new tab)"
           onClick={() => trackResumeEvent('view')}
           className={`${buttonClass} gap-3 bg-[linear-gradient(110deg,#1e40af,45%,#2563eb,55%,#1e40af)] border-white/30 animate-duration-[5000ms] text-white focus-visible:ring-2 focus-visible:ring-sky-400`}
@@ -31,7 +31,7 @@ const ResumeButtons: React.FC<ResumeButtonsProps> = ({ buttonContainer, buttonCl
           <FaExternalLinkAlt className="h-5 w-5" aria-hidden="true" />
         </a>
         <a
-          href={`https://drive.google.com/uc?export=download&id=${RESUME_ID}`}
+          href={RESUME_DOWNLOAD_URL}
           download="Nathan_Watkins_Resume"
           aria-label="Download my resume (PDF)"
           onClick={() => trackResumeEvent('download')}
