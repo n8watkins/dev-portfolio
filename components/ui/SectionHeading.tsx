@@ -1,0 +1,36 @@
+'use client'
+
+import React from 'react'
+import { motion } from 'framer-motion'
+import { fadeInUpVariants, defaultAnimationConfig } from '@/lib/animations'
+
+/**
+ * Every section's heading, in n8builds.dev's style: a small label, then a
+ * left-aligned heading, then an optional line or two under it.
+ */
+export default function SectionHeading({
+  eyebrow,
+  title,
+  children,
+  className = '',
+}: {
+  eyebrow: string
+  title: React.ReactNode
+  children?: React.ReactNode
+  className?: string
+}) {
+  return (
+    <motion.div
+      variants={fadeInUpVariants}
+      {...defaultAnimationConfig}
+      className={`w-full text-left select-none ${className}`}>
+      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-sky-400">{eyebrow}</p>
+      <h2 className="mt-3 text-3xl sm:text-4xl font-bold tracking-tight text-slate-100">{title}</h2>
+      {children && (
+        <div className="mt-4 max-w-3xl text-base md:text-lg leading-relaxed text-slate-400">
+          {children}
+        </div>
+      )}
+    </motion.div>
+  )
+}

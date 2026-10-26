@@ -5,7 +5,12 @@ import Image from 'next/image'
 import { motion } from 'framer-motion'
 import { FiArrowUpRight, FiGithub } from 'react-icons/fi'
 import { FaTwitch, FaYoutube, FaXTwitter } from 'react-icons/fa6'
-import { staggerContainerVariants, staggerItemVariants, defaultAnimationConfig } from '@/lib/animations'
+import SectionHeading from '@/components/ui/SectionHeading'
+import {
+  staggerContainerVariants,
+  staggerItemVariants,
+  defaultAnimationConfig,
+} from '@/lib/animations'
 
 const followLinks = [
   {
@@ -37,21 +42,28 @@ const followLinks = [
 const AppturnityCard = () => {
   return (
     <div className="relative pb-10 px-4 xl:max-w-6xl 2xl:max-w-7xl m-auto select-none">
+      <SectionHeading
+        eyebrow="Beyond the resume"
+        title="My company and my workshop"
+        className="mb-8"
+      />
       <motion.div
         variants={staggerContainerVariants}
         {...defaultAnimationConfig}
-        className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
-
+        className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8"
+      >
         {/* Appturnity - consulting */}
         <motion.div
           variants={staggerItemVariants}
-          className="group rounded-xl overflow-hidden bg-slate-900/30 border border-white/5 shadow-xl shadow-black/30 hover:bg-white/10 hover:border-white/40 hover:shadow-2xl hover:shadow-white/20 transition-all duration-300 flex flex-col">
+          className="group rounded-xl overflow-hidden bg-slate-900/30 border border-white/5 shadow-xl shadow-black/30 hover:bg-white/10 hover:border-white/40 hover:shadow-2xl hover:shadow-white/20 transition-all duration-300 flex flex-col"
+        >
           <a
             href="https://appturnity.com/"
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Visit Appturnity"
-            className="relative block aspect-[16/8] overflow-hidden">
+            className="relative block aspect-[16/8] overflow-hidden"
+          >
             <Image
               src="/brand/appturnity-site.webp"
               alt="The Appturnity website"
@@ -69,30 +81,33 @@ const AppturnityCard = () => {
               {/* Appturnity brand mark - "A" monogram (swap for the real logo when available) */}
               <span
                 aria-hidden="true"
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#3b8bff] to-[#1d6fe0] text-xl font-bold text-white shadow-lg shadow-blue-500/30 group-hover:from-[#4f97ff] group-hover:to-[#2a78f0] transition-colors duration-300">
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#3b8bff] to-[#1d6fe0] text-xl font-bold text-white shadow-lg shadow-blue-500/30 group-hover:from-[#4f97ff] group-hover:to-[#2a78f0] transition-colors duration-300"
+              >
                 A
               </span>
               <h3 className="text-2xl md:text-3xl font-bold text-slate-100">Appturnity</h3>
             </div>
             <p className="text-sm md:text-base text-slate-400 leading-relaxed mt-3 mb-6 flex-1">
-              My consulting company - custom apps and AI automation for small businesses,
-              from healthcare to property management to HVAC. The current obsession is{' '}
-              <span className="text-slate-200 font-semibold">SiteForge</span>: an engine
-              that audits local businesses and auto-builds each one a polished,
-              ready-to-launch website, then turns that into an ongoing care plan.
+              My consulting company - custom apps and AI automation for small businesses, from
+              healthcare to property management to HVAC. The current obsession is{' '}
+              <span className="text-slate-200 font-semibold">SiteForge</span>: an engine that audits
+              local businesses and auto-builds each one a polished, ready-to-launch website, then
+              turns that into an ongoing care plan.
             </p>
             <div className="flex flex-wrap items-center gap-3">
               <a
                 href="https://appturnity.com/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-slate-700 text-sm text-slate-300 hover:text-sky-400 hover:border-sky-400/60 transition-colors duration-200">
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-slate-700 text-sm text-slate-300 hover:text-sky-400 hover:border-sky-400/60 transition-colors duration-200"
+              >
                 appturnity.com
                 <FiArrowUpRight className="w-4 h-4" aria-hidden="true" />
               </a>
               <a
                 href="mailto:contact@n8builds.dev?subject=Consulting%20inquiry"
-                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-sky-500/15 border border-sky-500/30 text-sm text-sky-300 hover:bg-sky-500/25 hover:border-sky-400/60 cursor-pointer transition-colors duration-200">
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-sky-500/15 border border-sky-500/30 text-sm text-sky-300 hover:bg-sky-500/25 hover:border-sky-400/60 cursor-pointer transition-colors duration-200"
+              >
                 Need something built?
               </a>
             </div>
@@ -102,22 +117,22 @@ const AppturnityCard = () => {
         {/* n8builds.dev - build in public */}
         <motion.div
           variants={staggerItemVariants}
-          className="group rounded-xl overflow-hidden bg-slate-900/30 border border-white/5 shadow-xl shadow-black/30 hover:border-sky-400/20 hover:shadow-2xl hover:shadow-sky-500/25 transition-all duration-300 flex flex-col">
+          className="group rounded-xl overflow-hidden bg-slate-900/30 border border-white/5 shadow-xl shadow-black/30 hover:border-sky-400/20 hover:shadow-2xl hover:shadow-sky-500/25 transition-all duration-300 flex flex-col"
+        >
           <a
             href="https://n8builds.dev"
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Visit n8builds.dev"
-            className="relative block aspect-[16/8] overflow-hidden bg-[#050812]">
+            className="relative block aspect-[16/8] overflow-hidden bg-[#050812]"
+          >
             {/* Brand visual - cyan-to-blue wordmark on deep navy */}
             <div className="absolute inset-0 bg-grid-white/[0.04]" />
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
               <span className="text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-600 group-hover:from-cyan-300 group-hover:to-blue-500 transition-colors duration-300">
                 n8builds.dev
               </span>
-              <span className="text-xs uppercase tracking-[0.3em] text-slate-400">
-                Build log
-              </span>
+              <span className="text-xs uppercase tracking-[0.3em] text-slate-400">Build log</span>
             </div>
             <div className="absolute inset-0 bg-gradient-to-t from-slate-950/40 to-transparent pointer-events-none" />
           </a>
@@ -128,28 +143,23 @@ const AppturnityCard = () => {
             <div className="flex items-center gap-3">
               {/* n8builds brand icon */}
               <span className="relative h-10 w-10 shrink-0 overflow-hidden rounded-xl">
-                <Image
-                  src="/tab/n8-icon.png"
-                  alt=""
-                  fill
-                  sizes="40px"
-                  className="object-cover"
-                />
+                <Image src="/tab/n8-icon.png" alt="" fill sizes="40px" className="object-cover" />
               </span>
               <h3 className="text-2xl md:text-3xl font-bold text-slate-100">n8builds.dev</h3>
             </div>
             <p className="text-sm md:text-base text-slate-400 leading-relaxed mt-3 mb-6 flex-1">
-              Where I build in public, and a build in its own right: every pull request runs
-              its test suite on five browsers before it merges, a build log updates from
-              GitHub every hour, and releases go out on a weekly schedule. Both sites are open
-              source, if you want to use either one as a template.
+              Where I build in public, and a build in its own right: every pull request runs its
+              test suite on five browsers before it merges, a build log updates from GitHub every
+              hour, and releases go out on a weekly schedule. Both sites are open source, if you
+              want to use either one as a template.
             </p>
             <div className="flex flex-wrap items-center gap-2">
               <a
                 href="https://n8builds.dev"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-slate-700 text-sm text-slate-300 hover:text-sky-400 hover:border-sky-400/60 transition-colors duration-200 mr-1">
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-slate-700 text-sm text-slate-300 hover:text-sky-400 hover:border-sky-400/60 transition-colors duration-200 mr-1"
+              >
                 n8builds.dev
                 <FiArrowUpRight className="w-4 h-4" aria-hidden="true" />
               </a>
@@ -157,7 +167,8 @@ const AppturnityCard = () => {
                 href="https://n8builds.dev/builds/n8builds"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-sky-400/40 bg-sky-500/10 text-sm text-sky-200 hover:text-sky-100 hover:border-sky-400/70 transition-colors duration-200 mr-1">
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-sky-400/40 bg-sky-500/10 text-sm text-sky-200 hover:text-sky-100 hover:border-sky-400/70 transition-colors duration-200 mr-1"
+              >
                 How it&apos;s built and tested
                 <FiArrowUpRight className="w-4 h-4" aria-hidden="true" />
               </a>
@@ -170,7 +181,8 @@ const AppturnityCard = () => {
                     target="_blank"
                     rel="noopener noreferrer"
                     aria-label={`Follow Nathan on ${social.label}`}
-                    className="w-11 h-11 rounded-full text-slate-300 hover:text-sky-400 hover:bg-slate-700/70 transition-colors duration-200">
+                    className="w-11 h-11 rounded-full text-slate-300 hover:text-sky-400 hover:bg-slate-700/70 transition-colors duration-200"
+                  >
                     {social.icon}
                   </a>
                 ))}
