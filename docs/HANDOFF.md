@@ -22,8 +22,9 @@ It funnels visitors to the two other sites:
 
 - `npm run dev` serves http://localhost:4829.
 - `npm test` runs Playwright against a production build on port 4829 (it builds first, or reuses a server already running there locally).
+  `E2E_PORT=4839 npm test` uses another port, so a running `npm run dev` on 4829 is not mistaken for the test build.
   No retries: a flaky test gets fixed.
-- Specs: `tests/icon-cycle.spec.ts` (the tech-stack cycler), `tests/seo.spec.ts` (titles, share cards, no em dashes, the Scribe card, no Sentry example routes), `tests/web-vitals.spec.ts` (Web Vitals budgets and axe accessibility).
+- Specs: `tests/home.spec.ts` (the n8builds card, and the "Building in public" card's links to n8builds.dev), `tests/icon-cycle.spec.ts` (the tech-stack cycler), `tests/seo.spec.ts` (titles, share cards, no em dashes, no Sentry example routes), `tests/web-vitals.spec.ts` (Web Vitals budgets and axe accessibility).
 - The site scrolls smoothly (`scroll-smooth` on every element), so a test that scrolls must wait for the scroll to stop before hovering or clicking (`settleScroll` in `icon-cycle.spec.ts`).
 - GitHub Actions (`.github/workflows/ci.yml`): lint, types and build, then the Playwright suite in Chromium inside Playwright's Docker image (its version read from `package-lock.json`).
   Docs-only changes skip both.
@@ -57,7 +58,7 @@ It funnels visitors to the two other sites:
 
 ## More builds
 
-A strip under the projects links TubeVault, Piper TTS and OpenPing to their n8builds.dev pages (`components/Projects/MoreBuilds.tsx`); Scribe, TL;DW and Portfolio Rank are already in the "Building in public" card.
+A strip under the projects links TubeVault, Piper TTS and OpenPing to their n8builds.dev pages (`components/Projects/MoreBuilds.tsx`); TL;DW and Portfolio Rank are already in the "Building in public" card, which links them to their n8builds.dev pages too (never to their own repos or sites).
 
 ## Conventions
 

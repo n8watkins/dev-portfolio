@@ -5,6 +5,9 @@ import * as path from 'path'
 // Load environment variables from .env.local
 dotenv.config({ path: path.resolve(__dirname, '.env.local') })
 
+// E2E_PORT lets a second checkout (or a running `npm run dev` on 4829) coexist.
+const PORT = Number(process.env.E2E_PORT) || 4829
+
 /**
  * Playwright configuration for Web Vitals testing
  * See https://playwright.dev/docs/test-configuration
@@ -35,7 +38,7 @@ export default defineConfig({
   // Shared settings for all the projects below
   use: {
     // Base URL to use in actions like `await page.goto('/')`
-    baseURL: 'http://localhost:4829',
+    baseURL: `http://localhost:${PORT}`,
 
     // Collect trace when retrying the failed test
     trace: 'on-first-retry',
@@ -78,8 +81,8 @@ export default defineConfig({
   // A production build, like the live site: the Web Vitals checks mean nothing
   // against the dev server. Locally an already-running server is reused.
   webServer: {
-    command: 'npm run build && npx next start -p 4829',
-    url: 'http://localhost:4829',
+    command: `npm run build && npx next start -p ${PORT}`,
+    url: `http://localhost:${PORT}`,
     reuseExistingServer: !process.env.CI,
     timeout: 300000,
     env: Object.fromEntries(

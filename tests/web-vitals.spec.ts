@@ -24,7 +24,7 @@ test.describe('Web Vitals Performance', () => {
 
   test.beforeEach(async ({ page }) => {
     // Enable performance metrics collection
-    await page.goto('http://localhost:4829', {
+    await page.goto('/', {
       waitUntil: 'networkidle',
     })
   })
@@ -303,7 +303,7 @@ test.describe('Accessibility', () => {
   test.skip(({ browserName }) => browserName !== 'chromium', 'Accessibility tests run with Web Vitals in Chromium only')
 
   test('should have no accessibility violations', async ({ page }) => {
-    await page.goto('http://localhost:4829')
+    await page.goto('/')
 
     // Basic accessibility checks
     const violations = await page.evaluate(() => {
