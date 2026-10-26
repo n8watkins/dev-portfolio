@@ -3,6 +3,7 @@ import GridBackground from '@/components/ui/GridBackground'
 import { FiGithub, FiArrowUpRight, FiArrowDown } from 'react-icons/fi'
 import { CiLinkedin } from 'react-icons/ci'
 import { FaXTwitter } from 'react-icons/fa6'
+import WhoamiTerminal from '@/components/sections/WhoamiTerminal'
 import PortraitRotator from '@/components/sections/PortraitRotator'
 import { heroPortraits } from '@/data/portraits'
 
@@ -42,16 +43,7 @@ const Hero = () => {
     >
       <GridBackground />
       <div className="max-w-[100vw] h-full md:max-w-2xl lg:max-w-[70vw] flex flex-col items-center justify-center z-50">
-        <p className="uppercase tracking-widest pb-2 1lg:pb-5 md:pb-10 pt-40 sm:pt-40 md:pt-10 text-base md:text-xl text-center text-darkBlue font-semibold dark:font-normal dark:text-white max-w-80">
-          <span className="hero-in inline-block">Code.</span>{' '}
-          <span className="hero-in inline-block" style={delay(80)}>
-            Create.
-          </span>{' '}
-          <span className="hero-in inline-block" style={delay(160)}>
-            Innovate.
-          </span>
-        </p>
-        <div className="flex flex-col-reverse md:flex-row items-center justify-center w-full gap-8 md:gap-14">
+        <div className="flex flex-col-reverse md:flex-row items-center justify-center w-full gap-8 md:gap-14 pt-32 md:pt-0">
           <div className="flex max-w-[100vw] md:max-w-2xl lg:max-w-[60vw] flex-col items-start gap-3 md:gap-5">
             <h1 className="hero-slide-l text-center md:text-start w-full justify-start text-5xl lg:text-6xl font-semibold">
               Hi, I&apos;m <span className="text-sky-400">Nathan</span>
@@ -62,13 +54,12 @@ const Hero = () => {
             >
               AI Full-Stack Developer
             </p>
-            <p
-              className="hero-in text-center md:text-start w-full pl-1 text-base md:text-lg text-slate-600 dark:text-slate-400 max-w-md"
-              style={delay(250)}
-            >
-              Building intelligent products that automate, scale, and perform - across the full
-              stack.
-            </p>
+            <div className="w-full px-4 md:px-0 md:pl-1">
+              <WhoamiTerminal
+                className="hero-in mx-auto md:mx-0 w-full max-w-md"
+                style={delay(200)}
+              />
+            </div>
             <div className="flex items-center justify-center md:justify-start w-full">
               <nav aria-label="Social media links" className="relative md:top-0 md:-left-2 z-50">
                 <div className="flex items-center justify-center pb-2 gap-3">

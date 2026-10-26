@@ -225,14 +225,102 @@
     transform: translateX(20px);
   }
 }
-.hero-in {
-  animation: hero-in 0.5s cubic-bezier(0.25, 0.1, 0.25, 1) both;
+@media (prefers-reduced-motion: no-preference) {
+  .hero-in {
+    animation: hero-in 0.5s cubic-bezier(0.25, 0.1, 0.25, 1) both;
+  }
+  .hero-slide-l {
+    animation: hero-slide-l 0.5s cubic-bezier(0.25, 0.1, 0.25, 1) both;
+  }
+  .hero-slide-r {
+    animation: hero-slide-r 0.5s cubic-bezier(0.25, 0.1, 0.25, 1) both;
+  }
 }
-.hero-slide-l {
-  animation: hero-slide-l 0.5s cubic-bezier(0.25, 0.1, 0.25, 1) both;
+
+/* The hero's whoami terminal types itself out on load
+   (components/sections/WhoamiTerminal.tsx), as on n8builds.dev. Each line is
+   in the HTML at full size; a clip-path steps across it one character per
+   step (font-mono, so a step is exactly 1ch), and a block cursor rides the end
+   of the typed text. --chars, --start and --hold come from the component.
+   Clip-path and transform only: no layout shift. Reduced motion shows the
+   text, and the prompt, at once. */
+.whoami-type {
+  position: relative;
+  display: inline-block;
 }
-.hero-slide-r {
-  animation: hero-slide-r 0.5s cubic-bezier(0.25, 0.1, 0.25, 1) both;
+.whoami-type::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.2em;
+  width: 0.62em;
+  height: 1.15em;
+  background: rgb(34 211 238 / 0.85);
+  opacity: 0;
+  pointer-events: none;
+}
+.whoami-cursor {
+  display: inline-block;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .whoami-type > span {
+    display: inline-block;
+    animation: whoami-type calc(var(--chars) * 32ms) steps(var(--chars), end) var(--start) both;
+  }
+  .whoami-type::after {
+    animation:
+      whoami-caret-move calc(var(--chars) * 32ms) steps(var(--chars), end) var(--start) both,
+      whoami-caret-on var(--hold) linear var(--start);
+  }
+  .whoami-prompt {
+    animation: whoami-show 1ms linear var(--start) both;
+  }
+  .whoami-cursor {
+    animation: whoami-blink 1.06s step-end var(--start) infinite;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .whoami-cursor {
+    opacity: 0.6;
+  }
+}
+@keyframes whoami-type {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+@keyframes whoami-caret-move {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(calc(var(--chars) * 1ch));
+  }
+}
+@keyframes whoami-caret-on {
+  from,
+  to {
+    opacity: 1;
+  }
+}
+@keyframes whoami-show {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes whoami-blink {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
 }
 
 /* Respect prefers-reduced-motion: neutralize animations/transitions and
