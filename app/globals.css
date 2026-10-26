@@ -234,3 +234,11 @@ select:focus-visible {
   outline-offset: 2px;
   border-radius: 0.25rem;
 }
+
+/* Sentry's bug-report button floats bottom-left; on a phone it sits on top of
+   the hero's buttons and the footer, so it is a desktop-only affordance. */
+@media (max-width: 767px) {
+  #sentry-feedback {
+    display: none;
+  }
+}

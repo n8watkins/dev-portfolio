@@ -48,6 +48,8 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
 }
 
+const GA_ID = process.env.NEXT_PUBLIC_GA_ID
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -68,18 +70,23 @@ export default function RootLayout({
         <link rel="dns-prefetch" href="//vercel.app" />
         <link rel="dns-prefetch" href="//firebase.google.com" />
 
-        <Script
-          src={`https://www.googletagmanager.com/gtag/js?id=${process.env.NEXT_PUBLIC_GA_ID}`}
-          strategy="lazyOnload"
-        />
-        <Script id="google-analytics" strategy="lazyOnload">
-          {`
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
-            gtag('config', '${process.env.NEXT_PUBLIC_GA_ID}');
-          `}
-        </Script>
+        {/* Only where an ID is set (production); otherwise it would load gtag.js?id=undefined. */}
+        {GA_ID && (
+          <>
+            <Script
+              src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}
+              strategy="lazyOnload"
+            />
+            <Script id="google-analytics" strategy="lazyOnload">
+              {`
+                window.dataLayer = window.dataLayer || [];
+                function gtag(){dataLayer.push(arguments);}
+                gtag('js', new Date());
+                gtag('config', '${GA_ID}');
+              `}
+            </Script>
+          </>
+        )}
       </head>
       <body className={inter.className}>
         <a
