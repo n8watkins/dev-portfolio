@@ -13,16 +13,18 @@ async function projectsInView(page: Page) {
 
 const card = (page: Page, title: string) => page.getByRole('article', { name: title, exact: true })
 
-test('each monitored project card shows its live-demo status, and the unmonitored one shows none', async ({ page }) => {
+test('each monitored project card shows its live-demo status, and the unmonitored one shows none', async ({
+  page,
+}) => {
   await projectsInView(page)
   const pill = (title: string) => card(page, title).getByRole('link', { name: /^Live demo:/ })
 
   // The state only: the demos are monitored on weekdays, so no uptime number.
-  await expect(pill('Echo')).toHaveText('Online')
+  await expect(pill('Echo')).toHaveText(/Live demo\s*Online/)
   await expect(pill('Echo')).toHaveAttribute('data-status', 'up')
-  await expect(pill('Scout')).toHaveText('Asleep')
+  await expect(pill('Scout')).toHaveText(/Live demo\s*Asleep/)
   await expect(pill('Scout')).toHaveAttribute('title', /first visit wakes the demo/)
-  await expect(pill('GeminiGPT')).toHaveText('Down')
+  await expect(pill('GeminiGPT')).toHaveText(/Live demo\s*Down/)
   await expect(pill('Net-Trailer')).toHaveCount(0)
 
   // It links to the public status page.
@@ -46,7 +48,11 @@ test('the status arriving moves nothing on the card', async ({ page }) => {
     description.evaluate((el) => {
       const card = el.closest('article')!.getBoundingClientRect()
       const box = el.getBoundingClientRect()
-      return { top: Math.round(box.top - card.top), left: Math.round(box.left - card.left), height: Math.round(box.height) }
+      return {
+        top: Math.round(box.top - card.top),
+        left: Math.round(box.left - card.left),
+        height: Math.round(box.height),
+      }
     })
   // Wait out the card's entrance (it fades and scales in) before measuring.
   let before = await offset()
@@ -83,27 +89,16 @@ test('the status API answers with names, states and uptime only', async ({ reque
   expect(JSON.stringify(body)).not.toMatch(/https?:\/\//)
 })
 
-test('"More builds" links each build to its n8builds.dev page', async ({ page }) => {
-  await projectsInView(page)
-  const strip = page.getByRole('list', { name: 'More builds on n8builds.dev' })
-  await strip.scrollIntoViewIfNeeded()
-  for (const [name, slug] of [['TubeVault', 'tubevault'], ['Piper TTS', 'piper-tts'], ['OpenPing', 'openping']]) {
-    const link = strip.getByRole('link', { name: new RegExp(`^${name} on n8builds.dev`) })
-    await expect(link).toHaveAttribute('href', `https://n8builds.dev/builds/${slug}`)
-    await expect(link).toHaveAttribute('target', '_blank')
-  }
-  // Scribe and Solara aren't featured on the portfolio.
-  await expect(strip.getByText(/Scribe|Solara/)).toHaveCount(0)
-})
-
 test('a project page shows its screenshot whole, not cropped to a strip', async ({ page }) => {
   for (const width of [375, 1280]) {
     await page.setViewportSize({ width, height: 900 })
     for (const slug of ['echo', 'scout', 'geminigpt', 'net-trailer']) {
       await page.goto(`/projects/${slug}`)
-      const image = page.locator('main img').first()
+      const image = page.locator('main [data-gallery] img').first()
       await expect(image).toBeVisible()
-      await expect.poll(() => image.evaluate((img: HTMLImageElement) => img.complete && img.naturalWidth > 0)).toBe(true)
+      await expect
+        .poll(() => image.evaluate((img: HTMLImageElement) => img.complete && img.naturalWidth > 0))
+        .toBe(true)
       const { box, natural } = await image.evaluate((img: HTMLImageElement) => {
         const frame = img.parentElement!.getBoundingClientRect()
         return { box: frame.width / frame.height, natural: img.naturalWidth / img.naturalHeight }
@@ -112,4 +107,21 @@ test('a project page shows its screenshot whole, not cropped to a strip', async 
       expect(Math.abs(box - natural) / natural, `${slug} at ${width}px`).toBeLessThan(0.25)
     }
   }
+})
+
+test('a project row opens its page, its live demo and its source', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await projectsInView(page)
+  const echo = card(page, 'Echo')
+  await expect(
+    echo.getByRole('link', { name: 'Try the Echo live demo (new tab)' })
+  ).toHaveAttribute('href', 'https://echo-kzw1.onrender.com')
+  await expect(
+    echo.getByRole('link', { name: 'View Echo source on GitHub (new tab)' })
+  ).toHaveAttribute('href', /github\.com\/n8watkins\//)
+  await expect(
+    echo.getByRole('list', { name: 'What Echo does' }).getByRole('listitem')
+  ).not.toHaveCount(0)
+  await echo.getByRole('link', { name: 'View Echo details' }).click()
+  await expect(page).toHaveURL(/\/projects\/echo$/, { timeout: 30000 })
 })

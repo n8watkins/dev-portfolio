@@ -24,7 +24,16 @@ export interface Project {
   title: string
   subTitle: string
   des: string
-  images: string[]
+  /** Screenshots, first one shown; the gallery steps through the rest. */
+  images: { src: string; alt: string }[]
+  /** The app's own icon, shown left of its name. */
+  icon: string
+  /** The app's brand colour: its row's glow, outline, checks and main button (lib/accents.ts). */
+  accent: 'echo' | 'scout' | 'geminigpt' | 'net-trailer'
+  /** A few pills for the tech; the full stack is on the project's page. */
+  tags: string[]
+  /** What it actually does, shown as checks in its colour (from each app's own Key Features). */
+  features: string[]
   /** A 1200x630 card for link previews, when the first screenshot isn't one. */
   shareImage?: string
   technologies: Technologies
@@ -43,8 +52,3 @@ export type TechNameMappingInterface = {
   [key: string]: string
 }
 
-export interface IconCycleState {
-  currentCategory: keyof Technologies
-  cycledIconIndex: number
-  highlightedDescriptionIndex: number
-}

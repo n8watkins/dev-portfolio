@@ -52,17 +52,17 @@ export function toStatusMap(feed: unknown, now = Date.now()): StatusMap {
 export function describe(status: ServiceStatus): { label: string; detail: string; tone: 'up' | 'warn' | 'down' | 'idle' } | null {
   switch (status.state) {
     case 'operational':
-      return { label: 'Online', detail: 'The live demo is up.', tone: 'up' }
+      return { label: 'Online', detail: 'Online: the live demo is running now.', tone: 'up' }
     case 'degraded':
-      return { label: 'Slow', detail: 'The live demo is up but responding slowly.', tone: 'warn' }
+      return { label: 'Slow', detail: 'Slow: the live demo is up but responding slowly.', tone: 'warn' }
     case 'down':
-      return { label: 'Down', detail: 'The live demo is not responding right now.', tone: 'down' }
+      return { label: 'Down', detail: 'Down: the live demo is not responding right now.', tone: 'down' }
     case 'maintenance':
-      return { label: 'Maintenance', detail: 'The live demo is in planned maintenance.', tone: 'warn' }
+      return { label: 'Maintenance', detail: 'Maintenance: the live demo is in planned maintenance.', tone: 'warn' }
     case 'scheduled_off':
     case 'suspended':
       // Render's free tier sleeps between visits; OpenPing keeps the demos awake on weekdays.
-      return { label: 'Asleep', detail: 'Off-hours: the first visit wakes the demo, which takes about a minute.', tone: 'idle' }
+      return { label: 'Asleep', detail: 'Asleep: off-hours, so the first visit wakes the demo, which can take a moment.', tone: 'idle' }
     default:
       return null
   }

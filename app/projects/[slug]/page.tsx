@@ -18,7 +18,7 @@ export async function generateMetadata({
   if (!project) return { title: 'Project not found' }
   const title = `${project.title} - ${project.subTitle}`
   const share = shareSummary(project.des)
-  const shareImage = project.shareImage ?? project.images?.[0]
+  const shareImage = project.shareImage ?? project.images?.[0]?.src
   const image = shareImage ? [{ url: shareImage, alt: `${project.title} screenshot` }] : undefined
   return {
     title,

@@ -24,8 +24,8 @@ It funnels visitors to the two other sites:
 - `npm test` runs Playwright against a production build on port 4829 (it builds first, or reuses a server already running there locally).
   `E2E_PORT=4839 npm test` uses another port, so a running `npm run dev` on 4829 is not mistaken for the test build.
   No retries: a flaky test gets fixed.
-- Specs: `tests/home.spec.ts` (the n8builds card, and the "Building in public" card's links to n8builds.dev), `tests/icon-cycle.spec.ts` (the tech-stack cycler), `tests/seo.spec.ts` (titles, share cards, no em dashes, no Sentry example routes), `tests/web-vitals.spec.ts` (Web Vitals budgets and axe accessibility).
-- The site scrolls smoothly (`scroll-smooth` on every element), so a test that scrolls must wait for the scroll to stop before hovering or clicking (`settleScroll` in `icon-cycle.spec.ts`).
+- Specs: `tests/home.spec.ts` (the n8builds card, and the n8builds.dev teaser's links), `tests/projects.spec.ts` (status pills, project rows and pages), `tests/seo.spec.ts` (titles, share cards, no em dashes, no Sentry example routes), `tests/web-vitals.spec.ts` (Web Vitals budgets and axe accessibility).
+- The site scrolls smoothly (`scroll-smooth` on every element), so a test that scrolls must wait for the scroll to stop before hovering or clicking.
 - GitHub Actions (`.github/workflows/ci.yml`): lint, types and build, then the Playwright suite in Chromium inside Playwright's Docker image (its version read from `package-lock.json`).
   Docs-only changes skip both.
   "CI result" is the single summary check for branch protection.
@@ -35,8 +35,9 @@ It funnels visitors to the two other sites:
 - **Separate from n8builds.dev, on purpose** (confirmed 2026-10-25): different readers (people hiring vs. people following the work), and a repo people can be sent to on its own.
   It is not a page of n8builds.dev.
 - **Featured projects** are Echo, Scout, GeminiGPT and Net-Trailer.
-  Scribe and Solara are not featured here (2026-10-25); the "Building in public" card and links send visitors to n8builds.dev for everything else.
-- **Titles and share cards** live in `lib/seo.ts`: "Nathan Watkins | AI Full-Stack Developer" for the home page, "<project> - <subtitle> | Nathan Watkins" for project pages, share descriptions of at most 120 characters.
+  Each is a row after n8builds.dev's Lab (2026-10-26): screenshots with left/right, its icon, tech pills, feature checks, Live demo / Source / Details, all in the app's own colour (`lib/accents.ts`).
+  Everything else is in the n8builds.dev teaser under them (see below).
+- **Titles and share cards** live in `lib/seo.ts`: "Nathan Watkins | Full-Stack Developer" for the home page (the headline dropped "AI" on 2026-10-26), "<project> - <subtitle> | Nathan Watkins" for project pages, share descriptions of at most 120 characters.
   The share image is generated from `app/opengraph-image.tsx`; there is no saved screenshot to go stale.
 - **The site's address is fixed** in `lib/seo.ts` (`https://portfolio.n8builds.dev`), not read from `NEXT_PUBLIC_SITE_URL`: a stale local value once pointed the share cards at an old vercel.app address.
 - **No em dashes** in visible copy (`tests/seo.spec.ts` checks), as on n8builds.dev.
@@ -49,16 +50,17 @@ It funnels visitors to the two other sites:
 
 ## Live-demo status (OpenPing)
 
-- Echo, Scout and GeminiGPT show a status pill on their cards and pages: Online, Slow, Down, Maintenance or Asleep, with 90-day uptime, linking to https://openping.n8builds.dev/status.
+- The pill shows the state, not the uptime number: the demos are monitored on weekdays only, on purpose (2026-10-26); a note says they sleep on weekends.
+- Echo, Scout and GeminiGPT show a status pill on their cards and pages: "Live demo" and Online, Slow, Down, Maintenance or Asleep, linking to https://openping.n8builds.dev/status.
 - `app/api/status` reads OpenPing's public feed on the server (it sends no CORS headers) and caches it a minute; `lib/status.ts` maps it; `components/Projects/StatusPill.tsx` shows it.
 - A project opts in with `statusName` in `data/projects.tsx` (its monitor's name on the status page).
 - OpenPing checks the Render demos on weekdays only. Its feed keeps the last state through off-hours, so a feed older than 30 minutes reads as Asleep (the demos sleep when nothing keeps them awake); a real outage still shows as Down.
 - The pill shows nothing until the status arrives or if it can't be read, and its row is reserved so it moves nothing.
 - Tests use fixed statuses (`STATUS_FIXTURE=1`, set by `playwright.config.ts`); `npm run test:unit` covers the mapping.
 
-## More builds
+## The n8builds.dev teaser
 
-A strip under the projects links TubeVault, Piper TTS and OpenPing to their n8builds.dev pages (`components/Projects/MoreBuilds.tsx`); TL;DW and Portfolio Rank are already in the "Building in public" card, which links them to their n8builds.dev pages too (never to their own repos or sites).
+Under the projects, `components/Projects/BuildsTeaser.tsx` shows n8builds.dev's builds one at a time (Scribe, OpenPing, Solara, Portfolio Rank, TubeVault, Piper TTS, TL;DW), each with its real icon (`public/builds/<slug>/`), its accent, a Live site link when it has one and "See the build" on n8builds.dev (owner, 2026-10-26; it replaced the "Building in public" bento card and the More builds strip).
 
 ## Conventions
 
@@ -74,7 +76,7 @@ A strip under the projects links TubeVault, Piper TTS and OpenPing to their n8bu
 1. **Adopt release-kit** (https://github.com/n8watkins/release-kit) for commit checks and releases; the owner applies it.
 2. **Lint warnings:** 9 React Compiler warnings in `FloatingNav.tsx`, `grid-pattern.tsx`, `MapAnimations.tsx`, `BentoGrid.tsx` and `background-gradient-animation.tsx` (refs read during render, setState in effects, variables used before declaration).
    Then make CI fail on warnings.
-3. **Sentry's feedback button** (the white megaphone, bottom left) clashes with the dark design; theme it or remove it.
+3. **Sentry's feedback button** is dark and hidden below 768px; decide whether to keep it at all.
 4. **Streaming links** once streaming starts (see Conventions).
 5. **Branch protection** on `main` requiring "CI result", once CI has run green on `main`.
 6. GeminiGPT placeholder screenshots; the Appturnity "A" monogram; the resume PDF's old portfolio URL (owner).
@@ -84,10 +86,9 @@ A strip under the projects links TubeVault, Piper TTS and OpenPing to their n8bu
 
 - `lib/seo.ts`: site address, titles, descriptions, `shareSummary`.
 - `app/layout.tsx`: metadata, fonts, GA snippet. `app/opengraph-image.tsx` (+ `twitter-image.tsx`): the share card.
-- `components/Projects/ProjectCard.tsx`, `CardImageCarousel.tsx`: alternating project cards.
+- `components/Projects/ProjectCard.tsx`, `ProjectGallery.tsx`, `lib/accents.ts`: the project rows.
 - `components/Projects/ProjectDetail.tsx`, `app/projects/[slug]/page.tsx`: project detail pages.
-- `components/ui/ProjectComponents/iconCycle.tsx`: the tech-stack cycler.
-- `components/ui/BentoComponents/CurrentBuildsCarousel.tsx`, `data/grid/items/gridItem6.tsx`: "Building in public".
+- `components/Projects/BuildsTeaser.tsx`: the n8builds.dev teaser. `components/sections/HeroGrid.tsx`: the hero grid (from n8builds.dev).
 - `components/sections/Grid.tsx` (About and the bento), `AppturnityCard.tsx`, `Experience.tsx`, `Hero.tsx`.
 - `data/projects.tsx`: project copy.
 - `components/ErrorBoundary.tsx`, `SectionErrorBoundary.tsx` report to `app/api/health/error`.
