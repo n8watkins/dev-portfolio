@@ -60,7 +60,7 @@ export const FloatingNav = ({
         target="_blank"
         rel="noopener noreferrer"
         onClick={() => trackResumeEvent('view')}
-        className="fixed right-4 top-2 1lg:top-4 xl:top-6 z-[9999] hidden sm:inline-flex items-center gap-2 rounded-xl border border-sky-400/40 bg-sky-500/10 px-3.5 py-2 lg:px-4 lg:py-2.5 text-sm lg:text-[0.95rem] font-semibold text-sky-100 backdrop-blur-sm transition-colors duration-200 hover:border-sky-300/70 hover:bg-sky-500/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+        className="fixed right-4 top-2 1lg:top-4 xl:top-6 z-[9999] hidden sm:inline-flex items-center gap-2 rounded-xl border border-sky-400/40 bg-sky-500/10 h-10 px-3.5 lg:h-[3.125rem] lg:px-4 text-sm lg:text-[0.95rem] font-semibold text-sky-100 backdrop-blur-sm transition-colors duration-200 hover:border-sky-300/70 hover:bg-sky-500/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
       >
         <FiFileText className="h-4 w-4" aria-hidden="true" />
         Resume<span className="sr-only"> (opens in a new tab)</span>
