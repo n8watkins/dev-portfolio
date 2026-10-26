@@ -29,8 +29,9 @@ export const gridItem4: GridItemConfig = {
   textContainerClassName:
     'flex items-center justify-start xs:pl-10 1sm:pl-5  w-full h-full whitespace-nowrap dark:via-[#0d304c]/90 dark:to-[#0d304c]/0 ',
 
+  // Keyboard focus on a button reveals them like hover does; the title steps aside.
   textOrder:
-    'group-hover:-translate-y-20 group-hover:translate-x-[3.5rem] 1sm:group-hover:translate-x-[0rem] sm:group-hover:translate-x-[5.5rem] duration-200 md:group-hover:translate-x-[1rem] xl:group-hover:translate-x-[3rem] ',
+    'group-focus-within:opacity-0 group-hover:opacity-100 group-hover:-translate-y-20 group-hover:translate-x-[3.5rem] 1sm:group-hover:translate-x-[0rem] sm:group-hover:translate-x-[5.5rem] duration-200 md:group-hover:translate-x-[1rem] xl:group-hover:translate-x-[3rem] ',
 
   titleClassName:
     'flex transition duration-300  pt-[5rem] z-30 font-sans font-bold   select-none text-slate-200 dark:text-neutral-200  text-2xl lg:text-3xl text-start w-full',
