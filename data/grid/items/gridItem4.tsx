@@ -10,6 +10,11 @@ import type { GridItemConfig } from '@/lib/types/gridItem'
  * - Title animates up on hover to reveal buttons
  * - Two action buttons: Download PDF and View Online
  */
+// At rest the resume graphic peeks in from the bottom-right corner, clear of
+// the title; hovering (or focusing a button) slides it up into view.
+const imgClassName =
+  'absolute w-full h-full pl-52 1sm:pt-10 1sm:h-[10rem] pt-0 rounded-3xl z-10 transition duration-500 translate-x-8 translate-y-20 group-hover:scale-105 group-hover:translate-x-6 group-hover:translate-y-10 group-focus-within:translate-x-6 group-focus-within:translate-y-10'
+
 const buttonContainer = 'flex items-center justify-evenly z-50 w-full h-full pb-14'
 const buttonClass =
   'inline-flex h-12 py-2 px-6 z-[5000] animate-shimmer items-center justify-center rounded-md border border-slate-800 bg-[length:200%_100%] font-medium text-slate-200 transition-transform focus:outline-none focus:ring-0 focus:ring-offset-slate-50 hover:scale-105 animate-duration-[3000ms] cursor-pointer'
@@ -22,8 +27,7 @@ export const gridItem4: GridItemConfig = {
     'col-span-2 row-span-2 md:row-span-1 md:col-span-2  lg:col-span-2 xl:row-span-2 xl:col-span-2 group  ',
 
   imgContainerClass: '  ',
-  imgClassName:
-    'absolute w-full h-full pl-52 1sm:pt-10 1sm:h-[10rem] pt-0 rounded-3xl  z-10 group-hover:scale-105 transition duration-500 group-hover:translate-y-10 group-hover:translate-x-6  ',
+  imgClassName,
   img: '/bento/resume.svg',
 
   textContainerClassName:
@@ -46,7 +50,7 @@ export const gridItem4: GridItemConfig = {
           src="/bento/resume.svg"
           fill
           sizes="100%"
-          className="absolute w-full h-full pl-52 1sm:pt-10 1sm:h-[10rem] pt-0 rounded-3xl  z-10 group-hover:scale-105 transition duration-500 group-hover:translate-y-10 group-hover:translate-x-6  "
+          className={imgClassName}
           alt=""
           loading="lazy"
         />
