@@ -209,8 +209,8 @@ export const projects: Project[] = [
       Cloud: {
         descriptionParts: [
           {
-            text: 'Containerized deployment on Railway',
-            icons: [{ icon: 'railway.svg' }, { icon: 'dock.svg' }],
+            text: 'Ships to Render as a Docker container',
+            icons: [{ icon: 'render.svg' }, { icon: 'dock.svg' }],
           },
           {
             text: 'Version control and CI via GitHub',
@@ -224,7 +224,7 @@ export const projects: Project[] = [
       'Every message is embedded and indexed in a LanceDB vector database, enabling semantic search that recalls context across all of your past chats, not just the current one.',
       'Drop in PDFs and DOCX files - a custom Node.js pipeline parses them server-side so the model can reason over your documents.',
       'Bring-your-own-key design: your Gemini API key stays client-side, so usage and conversations remain private.',
-      'Chats persist in SQLite; the whole app ships as a Docker container deployed on Railway with CI through GitHub.',
+      'Chats persist in SQLite; the whole app ships as a Docker container deployed on Render with CI through GitHub.',
     ],
     purpose: `GeminiGPT is where I explore making AI chat useful beyond a single thread. The question: what makes a chat assistant feel like it actually remembers you? What I'm testing is semantic memory - every message embedded and searchable across all your past conversations - plus document understanding and token-by-token streaming, all on a bring-your-own-key model so your data stays yours.`,
     aiUsage: `GeminiGPT wraps Gemini 2.5 Flash with streaming and function calling. The interesting AI piece is memory: every message is embedded and stored in a LanceDB vector index, so semantic search can pull relevant context from any past conversation - not just the current thread. A custom Node pipeline parses uploaded PDFs and DOCX files so the model can reason over your own documents, and a bring-your-own-key model keeps every conversation private to you.`,
