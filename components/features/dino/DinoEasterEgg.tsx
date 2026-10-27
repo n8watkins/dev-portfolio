@@ -4,8 +4,7 @@ import { useEffect, useRef, useState, type ComponentType } from 'react'
 import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion'
 
 /**
- * The tech stack card's easter egg, ported from n8builds-web's AI kit
- * (components/features/dino there): a pixel dino that walks along the marquee
+ * The homepage AI kit's easter egg: a pixel dino that walks along the marquee
  * rows (components/features/dino/DinoGame.tsx). This shell is all the page
  * ships up front: an empty, absolutely positioned layer (so nothing shifts)
  * that loads the game once the marquee nears the viewport. Under reduced

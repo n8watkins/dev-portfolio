@@ -13,8 +13,10 @@ export const gridItem3: GridItemConfig = {
   id: 3,
   title: 'My tech stack',
   description: 'I constantly try to improve',
+  // One row taller on phones than the relocate card: the dino's roar bubble
+  // needs headroom above the first row, and the title needs the bottom.
   gridItemContainer:
-    'col-span-2 row-span-4 md:col-span-2 md:row-span-3 lg:col-span-2 lg:row-span-3 xl:col-span-2 xl:row-span-4',
+    'col-span-2 row-span-5 md:col-span-2 md:row-span-3 lg:col-span-2 lg:row-span-3 xl:col-span-2 xl:row-span-4',
 
   imgClassName: '',
   img: '',
@@ -31,5 +33,7 @@ export const gridItem3: GridItemConfig = {
   buttonContainer: '',
   buttonClass: '',
 
+  // The dino measures the rows once it loads; a scaling entrance would skew that.
+  entrance: 'fade',
   renderForeground: () => <TechStack />,
 }

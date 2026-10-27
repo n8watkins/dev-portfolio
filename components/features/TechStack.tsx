@@ -1,80 +1,40 @@
+'use client'
 import React from 'react'
-import { cn } from '@/lib/utils'
-import Marquee, { MarqueeCopyContext } from '@/components/magicui/marquee'
+import Marquee from '@/components/magicui/marquee'
+import StackTile from '@/components/ui/StackTile'
 import DinoEasterEgg from '@/components/features/dino/DinoEasterEgg'
 import { tech_libraries, tech_tools } from '@/data/techStack'
-import { ReactElement, useContext } from 'react'
 
 /**
- * A tech tile, after n8builds.dev's AI kit tiles (components/ui/StackTile.tsx
- * there): the brand mark and name centred, the description revealed on hover
- * or focus (a tap on touch screens). The name and description are one block,
- * centred by flexbox; at rest the description's row is collapsed (0fr), so the
- * name sits alone in the middle, and revealing it opens the row while the name
- * shrinks, the block staying centred whatever the description's length.
+ * The "My tech stack" bento card's marquee, with the dino easter egg.
+ *
+ * This is the portfolio's copy of n8builds-web's AI kit
+ * (components/features/AITechStack.tsx there): the same structure, and the
+ * marquee, tile and dino are byte-identical copies of n8builds-web's files
+ * (see "Kept in sync with n8builds-web" in docs/HANDOFF.md and
+ * `npm run check:sync`). Only this wrapper differs: the content (the tech
+ * stack instead of the AI kit), the bento card's colours, and the rows sitting
+ * low in the card (above its title) with headroom for the dino.
+ *
+ * While the rows move, the tiles sit well apart (2.5rem across) so the gaps
+ * read clearly wider than the dino that hops and falls through them. Under
+ * reduced motion there is no dino and the tiles wrap into a grid the card scrolls.
  */
-const StackContainer = ({
-  name,
-  icon,
-  description,
-}: {
-  name: string
-  icon?: string | ReactElement
-  description: string
-}) => {
-  // Duplicate marquee copies stay tappable but out of the tab order.
-  const isCopy = useContext(MarqueeCopyContext)
-  return (
-    <figure
-      tabIndex={isCopy ? -1 : 0}
-      className={cn(
-        'group/tile relative flex h-24 sm:h-28 w-52 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-xl border px-2',
-        'border-white/[0.08] bg-white/[0.04] transition-all duration-300 ease-in-out outline-none',
-        'focus-visible:ring-2 focus-visible:ring-cyan-400',
-        'hover:border-cyan-400/30 hover:bg-white/[0.08] hover:shadow-lg hover:shadow-cyan-500/5',
-        'focus:border-cyan-400/30 focus:bg-white/[0.08] focus:shadow-lg focus:shadow-cyan-500/5'
-      )}
-    >
-      <figcaption className="flex w-48 flex-col items-center font-medium text-white">
-        <div className="flex items-center gap-2 text-xl transition-[font-size,line-height] duration-300 ease-in-out group-hover/tile:text-base group-focus/tile:text-base">
-          <span className="flex size-7 shrink-0 items-center justify-center transition-[width,height] duration-300 ease-in-out [&>*]:!h-full [&>*]:!w-full group-hover/tile:size-5 group-focus/tile:size-5">
-            {icon}
-          </span>
-          <span className="whitespace-nowrap">{name}</span>
-        </div>
-        <div className="grid grid-rows-[0fr] transition-[grid-template-rows] duration-300 ease-in-out group-hover/tile:grid-rows-[1fr] group-focus/tile:grid-rows-[1fr]">
-          <div className="overflow-hidden">
-            <p className="pt-1 text-center text-sm leading-[1.125rem] text-[#9cadc5] opacity-0 transition-opacity duration-300 ease-in-out group-hover/tile:opacity-100 group-focus/tile:opacity-100">
-              {description}
-            </p>
-          </div>
-        </div>
-      </figcaption>
-    </figure>
-  )
-}
-
 export function TechStack() {
   return (
     <div
-      // The dino walks the rows (components/features/dino, from n8builds.dev's
-      // AI kit). While they move, the tiles sit well apart (2.5rem) so the gaps
-      // read clearly wider than the dino that hops and falls through them.
-      // The rows sit low in the card, so the first row has headroom for the
-      // dino walking on top of it.
       data-dino-panel
-      className="absolute inset-0 flex w-full flex-col items-center justify-end pb-[6.5rem] motion-safe:gap-2 overflow-hidden rounded-3xl border-none bg-gradient-to-br from-blue-400 via-blue-500 to-blue-400 border dark:from-[#0d304c] dark:to-[#0d304c]"
+      className="absolute inset-0 flex w-full flex-col items-center justify-end overflow-hidden rounded-3xl bg-gradient-to-br from-[#0d304c] to-[#0d304c] pb-[5.5rem] sm:pb-[6.5rem] motion-safe:gap-2 motion-reduce:justify-start motion-reduce:overflow-y-auto"
     >
       <Marquee
         label="Libraries and frameworks"
         reverse
         pauseOnHover
-        wrap={false}
         data-marquee-row
         className="[--duration:45s] motion-safe:[--gap:2.5rem]"
       >
         {tech_libraries.map((tech) => (
-          <StackContainer
+          <StackTile
             key={tech.name}
             name={tech.name}
             icon={tech.icon}
@@ -85,12 +45,11 @@ export function TechStack() {
       <Marquee
         label="Tools and services"
         pauseOnHover
-        wrap={false}
         data-marquee-row
         className="[--duration:45s] motion-safe:[--gap:2.5rem]"
       >
         {tech_tools.map((tech) => (
-          <StackContainer
+          <StackTile
             key={tech.name}
             name={tech.name}
             icon={tech.icon}
@@ -99,8 +58,10 @@ export function TechStack() {
         ))}
       </Marquee>
       <DinoEasterEgg />
-      <div className="pointer-events-none absolute left-0 w-1/3 h-full bg-gradient-to-r from-blue-500 to-transparent dark:from-[#0d304c] dark:to-transparent"></div>
-      <div className="pointer-events-none absolute right-0 w-1/3 h-full bg-gradient-to-l from-blue-500 to-transparent dark:from-[#0d304c] dark:to-transparent"></div>
+      <div className="pointer-events-none absolute left-0 h-full w-1/4 bg-gradient-to-r from-[#0d304c] to-transparent motion-reduce:hidden" />
+      <div className="pointer-events-none absolute right-0 h-full w-1/4 bg-gradient-to-l from-[#0d304c] to-transparent motion-reduce:hidden" />
     </div>
   )
 }
+
+export default TechStack

@@ -396,3 +396,14 @@ select:focus-visible {
     --lab-rx: 60%;
   }
 }
+
+/* Tailwind 4 syntax used by the files kept byte-identical with n8builds-web
+   (components/magicui/marquee.tsx, components/ui/StackTile.tsx), which this
+   site's Tailwind 3 doesn't generate. Keep in sync with those files. */
+.gap-\(--gap\) {
+  gap: var(--gap);
+}
+.\*\:size-full\! > * {
+  width: 100% !important;
+  height: 100% !important;
+}

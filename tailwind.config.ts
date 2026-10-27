@@ -25,6 +25,16 @@ const config = {
       },
     },
     extend: {
+      // Tailwind 4's any-number opacity steps, used by the files shared with
+      // n8builds-web (bg-white/4, border-white/8...); see globals.css too.
+      opacity: {
+        '3': '0.03',
+        '4': '0.04',
+        '6': '0.06',
+        '8': '0.08',
+        '12': '0.12',
+        '15': '0.15',
+      },
       scale: {
         '103': '1.03',
       },

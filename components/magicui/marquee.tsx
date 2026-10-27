@@ -1,4 +1,3 @@
-// Ported from n8builds-web (components/magicui/marquee.tsx), Tailwind 3 syntax.
 import React, { createContext, useEffect, useRef, useState } from 'react'
 import { cn } from '@/lib/utils'
 import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion'
@@ -19,8 +18,6 @@ interface MarqueeProps {
   children?: React.ReactNode
   vertical?: boolean
   repeat?: number
-  /** Reduced motion: wrap into a grid from md up (default), or keep one row to swipe. */
-  wrap?: boolean
   [key: string]: any
 }
 
@@ -32,7 +29,6 @@ export default function Marquee({
   children,
   vertical = false,
   repeat = 4,
-  wrap = true,
   ...props
 }: MarqueeProps) {
   const [isHovered, setIsHovered] = useState(false)
@@ -92,13 +88,10 @@ export default function Marquee({
         aria-label={label}
         tabIndex={0}
         className={cn(
-          'flex p-2 [--gap:1rem] [gap:var(--gap)]',
+          'flex p-2 [--gap:1rem] gap-(--gap)',
           vertical
             ? 'flex-col items-center'
-            : cn(
-                'w-full snap-x overflow-x-auto [&>*]:shrink-0 [&>*]:snap-start',
-                wrap && 'md:flex-wrap md:justify-center md:overflow-visible'
-              ),
+            : 'w-full snap-x overflow-x-auto md:flex-wrap md:justify-center md:overflow-visible *:shrink-0 *:snap-start',
           className
         )}
       >
@@ -112,7 +105,7 @@ export default function Marquee({
       {...props}
       ref={rowRef}
       className={cn(
-        'flex overflow-hidden p-2 [--duration:40s] [--gap:1rem] [gap:var(--gap)]',
+        'flex overflow-hidden p-2 [--duration:40s] [--gap:1rem] gap-(--gap)',
         {
           'flex-row': !vertical,
           'flex-col': vertical,
@@ -135,7 +128,7 @@ export default function Marquee({
             // The copies only make the loop seamless: hide them from assistive
             // tech so each item is announced once (see MarqueeCopyContext).
             aria-hidden={i > 0 || undefined}
-            className={cn('flex shrink-0 justify-around [gap:var(--gap)]', {
+            className={cn('flex shrink-0 justify-around gap-(--gap)', {
               'animate-marquee flex-row': !vertical,
               'animate-marquee-vertical flex-col': vertical,
               '[animation-play-state:paused]': isPaused,
