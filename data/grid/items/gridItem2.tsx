@@ -15,7 +15,7 @@ export const gridItem2: GridItemConfig = {
   title: 'Ready to relocate',
   description: '',
   gridItemContainer:
-    'col-span-2 row-span-5 md:col-span-2 md:row-span-3 lg:col-span-2 lg:row-span-3 xl:col-span-2 xl:row-span-5 ',
+    'col-span-2 row-span-4 md:col-span-2 md:row-span-3 lg:col-span-2 lg:row-span-3 xl:col-span-2 xl:row-span-4',
 
   imgContainerClass: 'relative w-full h-full group overflow-hidden rounded-3xl',
   imgClassName: 'absolute top-0   rounded-3xl  z-10  transition duration-500',
@@ -34,7 +34,11 @@ export const gridItem2: GridItemConfig = {
 
   renderBackground: () => (
     <div className="relative w-full h-full overflow-hidden">
-      <div className="relative w-full h-full group overflow-hidden rounded-3xl">
+      {/* The card is shorter than the globe was drawn for: the image keeps
+          its old height, anchored to the bottom (where the pin, the arcs and
+          the label are placed), and only its top is cropped, so the
+          animation still lines up with the map. */}
+      <div className="absolute inset-x-0 bottom-0 h-[31rem] lg:h-[29rem] xl:h-[35rem] group overflow-hidden rounded-b-3xl">
         <Image
           src="/bento/globe.jpeg"
           fill
