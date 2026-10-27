@@ -244,8 +244,9 @@ test.describe('dino easter egg (motion allowed)', () => {
     const colour = () =>
       dino(page).evaluate((el) => getComputedStyle(el).getPropertyValue('--dino-body').trim())
     const before = await colour()
-    // It never holds still, so click it where it is.
-    await pokeDino(page)
+    // A backflip needs it walking (mid-hop a click only roars), so click it
+    // where it is, while it walks.
+    await pokeWalking(page)
     await expect(dino(page)).toHaveAttribute('data-roars', '1')
     await expect(dino(page)).toHaveAttribute('data-mode', 'flip')
     await expect(roarBubble(page)).toBeVisible()
