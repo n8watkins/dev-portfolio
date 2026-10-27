@@ -14,7 +14,11 @@ import { tech_libraries, tech_tools } from '@/data/techStack'
  * (see "Kept in sync with n8builds-web" in docs/HANDOFF.md and
  * `npm run check:sync`). Only this wrapper differs: the content (the tech
  * stack instead of the AI kit), the bento card's colours, and the rows sitting
- * low in the card (above its title) with headroom for the dino.
+ * low in the card (above its title) with headroom for the dino. The tiles are
+ * a little shorter here (h-24, not the shared h-28), so
+ * the card leaves about twice the room above them: the catch game's
+ * scoreboards sit in a band there that the dino never enters. Nothing in the
+ * panel can be selected or tap-highlighted.
  *
  * While the rows move, the tiles sit well apart (2.5rem across) so the gaps
  * read clearly wider than the dino that hops and falls through them. Under
@@ -24,7 +28,7 @@ export function TechStack() {
   return (
     <div
       data-dino-panel
-      className="absolute inset-0 flex w-full flex-col items-center justify-end overflow-hidden rounded-3xl bg-gradient-to-br from-[#0d304c] to-[#0d304c] pb-[4.5rem] sm:pb-[6rem] motion-safe:gap-5 motion-reduce:justify-start motion-reduce:overflow-y-auto"
+      className="absolute inset-0 flex w-full flex-col items-center justify-end overflow-hidden rounded-3xl bg-gradient-to-br from-[#0d304c] to-[#0d304c] pb-[4.5rem] select-none [-webkit-tap-highlight-color:transparent] sm:pb-[6rem] motion-safe:gap-5 motion-reduce:justify-start motion-reduce:overflow-y-auto motion-safe:[&_figure]:h-24"
     >
       <Marquee
         label="Libraries and frameworks"
