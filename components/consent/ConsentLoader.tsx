@@ -38,11 +38,11 @@ export default function ConsentLoader() {
   if (!getConsent() || (!mustAsk && !settings)) return null
   return (
     <ConsentBanner
+      // A fresh bar (and exit animation) each time it opens.
+      key={settings ? 'settings' : 'ask'}
       fromSettings={Boolean(settings)}
-      onClose={() => {
-        settings?.opener?.focus()
-        setSettings(null)
-      }}
+      returnFocusTo={settings?.opener ?? null}
+      onClosed={() => setSettings(null)}
     />
   )
 }

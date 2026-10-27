@@ -24,7 +24,7 @@ export default function Home() {
   useScrollTracking()
 
   return (
-    <main id="main-content" className="relative w-full bg-blue-400 dark:bg-darkBlue flex overflow-hidden">
+    <main id="main-content" tabIndex={-1} className="relative w-full bg-blue-400 dark:bg-darkBlue flex overflow-hidden focus:outline-none">
       <div className="w-full m-auto">
         <SectionErrorBoundary sectionName="Hero Section">
           <Hero />

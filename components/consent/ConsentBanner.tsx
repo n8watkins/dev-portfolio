@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useId, useRef } from 'react'
+import { useCallback, useEffect, useId, useRef, useState, type AnimationEvent } from 'react'
 import { FiCheck } from 'react-icons/fi'
 import { LuCookie } from 'react-icons/lu'
 import { getConsent, type ConsentChoice } from '@/lib/consent'
@@ -13,12 +13,59 @@ import { getConsent, type ConsentChoice } from '@/lib/consent'
  * smaller secondary button beside it, still solid, readable (AA) and one
  * click away.
  */
-export default function ConsentBanner({ fromSettings, onClose }: { fromSettings: boolean; onClose: () => void }) {
+export default function ConsentBanner({
+  fromSettings,
+  returnFocusTo,
+  onClosed,
+}: {
+  /** Opened from "Cookie settings" (not the first-visit question). */
+  fromSettings: boolean
+  /** Where focus goes when the bar closes (the "Cookie settings" button), if anywhere. */
+  returnFocusTo: HTMLElement | null
+  /** Called once the exit animation is over, to unmount the bar. */
+  onClosed: () => void
+}) {
   const ref = useRef<HTMLDivElement>(null)
   const titleId = useId()
   const bodyId = useId()
   const consent = getConsent()
   const current = consent?.state
+  const [closing, setClosing] = useState(false)
+  const finish = useRef<(() => void) | null>(null)
+
+  /**
+   * Closes the bar: focus moves on at once (back to "Cookie settings", or to
+   * the page's main content if it was inside the bar), then the bar fades and
+   * slides down (instant under reduced motion), then the choice, if any, is
+   * applied and the bar unmounts.
+   */
+  const close = useCallback(
+    (choice?: ConsentChoice) => {
+      if (finish.current) return
+      let done = false
+      finish.current = () => {
+        if (done) return
+        done = true
+        if (choice) getConsent()?.set(choice)
+        onClosed()
+      }
+      const focusInside = ref.current?.contains(document.activeElement)
+      if (returnFocusTo) returnFocusTo.focus()
+      else if (focusInside) document.getElementById('main-content')?.focus({ preventScroll: true })
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        finish.current()
+        return
+      }
+      setClosing(true)
+      // In case animationend never fires (a hidden tab, say).
+      window.setTimeout(() => finish.current?.(), 500)
+    },
+    [onClosed, returnFocusTo],
+  )
+
+  const onAnimationEnd = (event: AnimationEvent<HTMLDivElement>) => {
+    if (event.target === event.currentTarget && event.animationName === 'consent-out') finish.current?.()
+  }
 
   // Opened from "Cookie settings": move focus to the bar itself (not to
   // either button, so neither is favoured), and Escape closes it.
@@ -26,11 +73,11 @@ export default function ConsentBanner({ fromSettings, onClose }: { fromSettings:
     if (!fromSettings) return
     ref.current?.focus()
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onClose()
+      if (event.key === 'Escape') close()
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [fromSettings, onClose])
+  }, [fromSettings, close])
 
   // Where the bar reaches the bottom-right corner (phones and narrower
   // laptops), the floating scroll-to-top button rises above it while it's
@@ -55,10 +102,7 @@ export default function ConsentBanner({ fromSettings, onClose }: { fromSettings:
     }
   }, [])
 
-  const choose = (choice: ConsentChoice) => {
-    getConsent()?.set(choice)
-    onClose()
-  }
+  const choose = (choice: ConsentChoice) => close(choice)
 
   const focusRing = 'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300'
 
@@ -70,7 +114,10 @@ export default function ConsentBanner({ fromSettings, onClose }: { fromSettings:
       aria-labelledby={titleId}
       aria-describedby={bodyId}
       tabIndex={-1}
-      className="consent-in outline-none fixed inset-x-3 bottom-[calc(0.75rem+env(safe-area-inset-bottom,0px))] z-[60] mx-auto max-w-[62rem] rounded-2xl border border-cyan-400/25 bg-[#07101f]/95 p-5 text-slate-300 shadow-[0_22px_60px_-12px_rgba(0,0,0,0.85)] backdrop-blur-md sm:bottom-6 sm:flex sm:items-center sm:gap-8 sm:px-7 sm:py-6"
+      inert={closing}
+      data-closing={closing || undefined}
+      onAnimationEnd={onAnimationEnd}
+      className={`${closing ? 'consent-out' : 'consent-in'} outline-none fixed inset-x-3 bottom-[calc(0.75rem+env(safe-area-inset-bottom,0px))] z-[60] mx-auto max-w-[62rem] rounded-2xl border border-cyan-400/25 bg-[#07101f]/95 p-5 text-slate-300 shadow-[0_22px_60px_-12px_rgba(0,0,0,0.85)] backdrop-blur-md sm:bottom-6 sm:flex sm:items-center sm:gap-8 sm:px-7 sm:py-6`}
     >
       <div className="min-w-0 flex-1">
         <h2 id={titleId} className="flex items-center gap-2 text-[1.05rem] font-bold text-slate-50">

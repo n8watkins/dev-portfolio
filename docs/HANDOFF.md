@@ -45,6 +45,7 @@ It funnels visitors to the two other sites:
   Production only.
 - **Analytics consent, the same as n8builds.dev** (2026-10-26): `lib/consent.ts` is a copy of n8builds-web's (keep the two in sync) and `components/consent/` holds the banner.
   Visitors in a European or Quebec time zone are asked first (GA doesn't load until they accept); everyone else gets analytics by default; Global Privacy Control counts as a decline; Consent Mode v2 region defaults (EEA, UK, CH, CA-QC denied) are the backstop.
+  The bar's look matches n8builds.dev (owner's call, 2026-10-26): up to 62rem wide, a cookie icon inline with the "Cookies" title, a larger brand-gradient Accept with a check icon on the right, and a smaller but solid, readable Decline (at least 40px tall) on its left; choosing plays a short fade-and-slide exit (instant under reduced motion) and moves focus to the main content or back to "Cookie settings".
   The choice is the `n8-consent` cookie on `.n8builds.dev`, shared with n8builds.dev both ways. "Cookie settings" in the footer reopens the banner; its Privacy link goes to https://n8builds.dev/privacy#cookies (this site has no privacy page).
   Tests use a made-up GA ID (`G-E2ETEST000`) and the America/Los_Angeles time zone (`playwright.config.ts`); `tests/consent.spec.ts` and `tests/unit/consent.test.mts` cover it.
 - **The n8builds.dev card sells how the work is built** (2026-10-25): every pull request tested on five browsers, an hourly build log, weekly releases, both sites open source; it links to the case study at n8builds.dev/builds/n8builds.

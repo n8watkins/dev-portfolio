@@ -71,14 +71,42 @@ test.describe('in a European time zone', () => {
     expect(gtag).toEqual([])
   })
 
-  test('the two choices are the same size, Decline first and Accept on the right', async ({ page }) => {
+  test('Accept is the larger button on the right; Decline is a real button beside it', async ({ page }) => {
     await page.goto('/')
-    const decline = await banner(page).getByRole('button', { name: 'Decline' }).boundingBox()
+    const declineButton = banner(page).getByRole('button', { name: 'Decline' })
+    await expect(declineButton).toBeVisible()
+    const decline = await declineButton.boundingBox()
     const accept = await banner(page).getByRole('button', { name: 'Accept' }).boundingBox()
     expect(decline && accept).toBeTruthy()
     expect(accept!.x).toBeGreaterThan(decline!.x)
-    expect(accept!.width).toBeCloseTo(decline!.width, 0)
-    expect(accept!.height).toBeCloseTo(decline!.height, 0)
+    expect(accept!.width * accept!.height).toBeGreaterThan(decline!.width * decline!.height)
+    // Easy to hit: at least 40px tall, with readable, solid styling.
+    expect(decline!.height).toBeGreaterThanOrEqual(40)
+    expect(decline!.width).toBeGreaterThanOrEqual(60)
+  })
+
+  test('choosing plays the exit animation, then the bar is gone and focus is on the page', async ({ page }) => {
+    await page.goto('/')
+    const bar = banner(page)
+    await expect(bar).toBeVisible()
+    await bar.getByRole('button', { name: 'Decline' }).focus()
+    await page.keyboard.press('Enter')
+    // Mid-exit: still on screen, marked closing and inert (no double clicks).
+    await expect(bar).toHaveAttribute('data-closing', 'true')
+    await expect(bar).toHaveAttribute('inert', '')
+    await expect(page.locator('#main-content')).toBeFocused()
+    // Then unmounted, with the choice applied.
+    await expect(page.getByRole('dialog', { name: 'Cookies', includeHidden: true })).toHaveCount(0)
+    expect(await page.evaluate(() => window.n8Consent?.state)).toBe('denied')
+  })
+
+  test('under reduced motion the bar closes at once', async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+    await page.goto('/')
+    await banner(page).getByRole('button', { name: 'Accept' }).click()
+    // No exit animation: gone as soon as the click is handled.
+    expect(await page.locator('[role="dialog"][aria-labelledby]').count()).toBe(0)
+    expect(await page.evaluate(() => window.n8Consent?.state)).toBe('granted')
   })
 
   test('the banner links to the privacy policy and has no serious a11y issues', async ({ page }) => {
@@ -177,6 +205,8 @@ test.describe('on portfolio.n8builds.dev itself', () => {
 
     await page.goto('https://portfolio.n8builds.dev/')
     await banner(page).getByRole('button', { name: 'Accept' }).click()
+    // The choice is stored once the exit animation is over.
+    await expect(banner(page)).toHaveCount(0)
     const cookie = await consentCookie(context)
     expect(cookie).toMatchObject({ value: 'granted', domain: '.n8builds.dev', path: '/', secure: true, sameSite: 'Lax' })
     const days = (cookie!.expires * 1000 - Date.now()) / 86_400_000
