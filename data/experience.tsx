@@ -44,8 +44,8 @@ export const workExperience: WorkExperienceItem[] = [
       { label: 'comfort1hvac.com', url: 'https://comfort1hvac.com/' },
       { label: 'primeshows.live', url: 'https://primeshows.live/' },
     ],
-    hoverImage: '/projects/Appturnity.webp',
-    hoverFrame: 'object-[70%_0%] origin-[70%_0%] scale-[1.18] group-hover:scale-110',
+    hoverImage: '/projects/appturnity-home-2026-10.webp',
+    hoverFrame: 'object-[30%_40%] origin-[30%_40%] scale-100 group-hover:scale-[1.03]',
   },
   {
     id: 2,
@@ -62,7 +62,7 @@ export const workExperience: WorkExperienceItem[] = [
     ],
     links: [{ label: 'arroyosecogc.com', url: 'https://www.arroyosecogc.com/' }],
     hoverImage: '/experience/arroyoseco.webp',
-    hoverFrame: 'object-[60%_0%] origin-[60%_0%] scale-[1.18] group-hover:scale-110',
+    hoverFrame: 'object-[45%_0%] origin-[45%_0%] scale-[1.05] group-hover:scale-100',
   },
   {
     id: 3,
@@ -89,6 +89,6 @@ export const workExperience: WorkExperienceItem[] = [
       'Teach full-stack development with JavaScript and Python, including LLM-assisted coding and debugging.',
     ],
     hoverImage: '/experience/coderschool.webp',
-    hoverFrame: 'object-[50%_30%] origin-[50%_35%] scale-[1.45] group-hover:scale-[1.35]',
+    hoverFrame: 'object-[50%_36%] origin-[50%_36%] scale-[2.1] group-hover:scale-[1.95]',
   },
 ]
