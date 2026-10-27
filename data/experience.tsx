@@ -45,7 +45,7 @@ export const workExperience: WorkExperienceItem[] = [
       { label: 'primeshows.live', url: 'https://primeshows.live/' },
     ],
     hoverImage: '/projects/appturnity-home-2026-10.webp',
-    hoverFrame: 'object-[30%_40%] origin-[30%_40%] scale-100 group-hover:scale-[1.03]',
+    hoverFrame: 'object-[0%_40%] origin-[0%_40%] scale-100 group-hover:scale-[1.03]',
   },
   {
     id: 2,
@@ -62,7 +62,7 @@ export const workExperience: WorkExperienceItem[] = [
     ],
     links: [{ label: 'arroyosecogc.com', url: 'https://www.arroyosecogc.com/' }],
     hoverImage: '/experience/arroyoseco.webp',
-    hoverFrame: 'object-[45%_0%] origin-[45%_0%] scale-[1.05] group-hover:scale-100',
+    hoverFrame: 'object-[35%_0%] origin-[35%_0%] scale-[1.15] group-hover:scale-110',
   },
   {
     id: 3,
@@ -89,6 +89,6 @@ export const workExperience: WorkExperienceItem[] = [
       'Teach full-stack development with JavaScript and Python, including LLM-assisted coding and debugging.',
     ],
     hoverImage: '/experience/coderschool.webp',
-    hoverFrame: 'object-[50%_36%] origin-[50%_36%] scale-[2.1] group-hover:scale-[1.95]',
+    hoverFrame: 'object-[50%_30%] origin-[50%_30%] scale-[2.3] group-hover:scale-[2.15]',
   },
 ]
