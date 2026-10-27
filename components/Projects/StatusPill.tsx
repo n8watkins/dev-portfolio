@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Image from 'next/image'
 import { STATUS_PAGE, describe, type StatusMap } from '@/lib/status'
 
 // One request per page view, shared by every pill on the page.
@@ -76,11 +77,40 @@ export default function StatusPill({ name, className = '' }: { name: string; cla
  */
 export function DemoSleepNote({ className = '' }: { className?: string }) {
   return (
-    <p className={`flex items-start gap-2 text-sm text-slate-400 ${className}`}>
-      <span className="mt-[0.4rem] h-2 w-2 shrink-0 rounded-full bg-slate-400" aria-hidden="true" />
-      <span>
-        Live demos sleep on weekends; the first visit then may take up to a minute to wake.
-      </span>
-    </p>
+    <div className={`flex flex-col gap-1.5 text-sm text-slate-400 ${className}`}>
+      <p className="flex items-start gap-2">
+        <span
+          className="mt-[0.4rem] h-2 w-2 shrink-0 rounded-full bg-slate-400"
+          aria-hidden="true"
+        />
+        <span>
+          Live demos sleep on weekends; the first visit then may take up to a minute to wake.
+        </span>
+      </p>
+      {/* The monitor is one of the owner's builds: a small ad for it on n8builds.dev. */}
+      <p className="flex items-center gap-2">
+        <Image
+          src="/builds/openping/icon.svg"
+          alt=""
+          width={16}
+          height={16}
+          unoptimized
+          className="h-4 w-4 shrink-0 rounded"
+        />
+        <span>
+          Status by{' '}
+          <a
+            href="https://n8builds.dev/builds/openping"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-semibold text-emerald-300 underline decoration-emerald-300/40 underline-offset-4 transition-colors hover:text-emerald-200 hover:decoration-emerald-200"
+          >
+            OpenPing
+            <span className="sr-only"> (opens in a new tab)</span>
+          </a>
+          , my open-source uptime monitor.
+        </span>
+      </p>
+    </div>
   )
 }
