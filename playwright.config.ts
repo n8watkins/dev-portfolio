@@ -48,6 +48,10 @@ export default defineConfig({
 
     // Video on failure
     video: 'retain-on-failure',
+
+    // A fixed time zone outside the ones asked about analytics consent, so the
+    // consent banner (lib/consent.ts) never shows unless a spec asks for it.
+    timezoneId: 'America/Los_Angeles',
   },
 
   // Configure projects for major browsers
@@ -87,7 +91,9 @@ export default defineConfig({
     timeout: 300000,
     env: Object.fromEntries(
       Object.entries({
-        NEXT_PUBLIC_GA_ID: process.env.NEXT_PUBLIC_GA_ID,
+        // A made-up GA ID, never the real property, so the consent banner and
+        // the GA loader are built and tested (tests/consent.spec.ts).
+        NEXT_PUBLIC_GA_ID: 'G-E2ETEST000',
         // Fixed live-demo statuses instead of OpenPing's real ones (app/api/status).
         STATUS_FIXTURE: '1',
       }).filter(([, value]) => value !== undefined)

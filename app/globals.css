@@ -445,3 +445,30 @@ select:focus-visible {
     animation: none;
   }
 }
+
+/* The consent banner's entrance (components/consent/ConsentBanner.tsx), as
+   n8builds.dev's fade-up: opacity and transform only, skipped under reduced
+   motion. */
+@keyframes consent-in {
+  from {
+    opacity: 0.01;
+    transform: translateY(16px);
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .consent-in {
+    animation: consent-in 0.55s cubic-bezier(0.25, 0.1, 0.25, 1) both;
+  }
+}
+
+/* Its exit: fades and slides down, then unmounts on animationend (the
+   banner skips it under reduced motion and closes at once). */
+@keyframes consent-out {
+  to {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+}
+.consent-out {
+  animation: consent-out 0.22s cubic-bezier(0.4, 0, 1, 1) both;
+}

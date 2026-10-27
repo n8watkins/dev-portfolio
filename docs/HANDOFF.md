@@ -24,7 +24,7 @@ It funnels visitors to the two other sites:
 - `npm test` runs Playwright against a production build on port 4829 (it builds first, or reuses a server already running there locally).
   `E2E_PORT=4839 npm test` uses another port, so a running `npm run dev` on 4829 is not mistaken for the test build.
   No retries: a flaky test gets fixed.
-- Specs: `tests/home.spec.ts` (the n8builds card, and the n8builds.dev teaser's links), `tests/projects.spec.ts` (status pills, project rows and pages), `tests/seo.spec.ts` (titles, share cards, no em dashes, no Sentry example routes), `tests/web-vitals.spec.ts` (Web Vitals budgets and axe accessibility).
+- Specs: `tests/consent.spec.ts` (the analytics consent banner), `tests/home.spec.ts` (the n8builds card, and the n8builds.dev teaser's links), `tests/projects.spec.ts` (status pills, project rows and pages), `tests/seo.spec.ts` (titles, share cards, no em dashes, no Sentry example routes), `tests/web-vitals.spec.ts` (Web Vitals budgets and axe accessibility).
 - The site scrolls smoothly (`scroll-smooth` on every element), so a test that scrolls must wait for the scroll to stop before hovering or clicking.
 - GitHub Actions (`.github/workflows/ci.yml`): lint, types and build, then the Playwright suite in Chromium inside Playwright's Docker image (its version read from `package-lock.json`).
   Docs-only changes skip both.
@@ -44,6 +44,11 @@ It funnels visitors to the two other sites:
 - **Inter is bundled** (`app/fonts/`); the share card uses `assets/fonts/*.ttf`.
 - **One GA4 property** (`G-JZQGKY9Q37`) covers this site and n8builds.dev; segment by hostname.
   Production only.
+- **Analytics consent, the same as n8builds.dev** (2026-10-26): `lib/consent.ts` is a copy of n8builds-web's (keep the two in sync) and `components/consent/` holds the banner.
+  Visitors in a European or Quebec time zone are asked first (GA doesn't load until they accept); everyone else gets analytics by default; Global Privacy Control counts as a decline; Consent Mode v2 region defaults (EEA, UK, CH, CA-QC denied) are the backstop.
+  The bar's look matches n8builds.dev (owner's call, 2026-10-26): up to 62rem wide, a cookie icon inline with the "Cookies" title, a larger brand-gradient Accept with a check icon on the right, and a smaller but solid, readable Decline (at least 40px tall) on its left; choosing plays a short fade-and-slide exit (instant under reduced motion) and moves focus to the main content or back to "Cookie settings".
+  The choice is the `n8-consent` cookie on `.n8builds.dev`, shared with n8builds.dev both ways. "Cookie settings" in the footer reopens the banner; its Privacy link goes to https://n8builds.dev/privacy#cookies (this site has no privacy page).
+  Tests use a made-up GA ID (`G-E2ETEST000`) and the America/Los_Angeles time zone (`playwright.config.ts`); `tests/consent.spec.ts` and `tests/unit/consent.test.mts` cover it.
 - **The n8builds.dev card sells how the work is built** (2026-10-25): every pull request tested on five browsers, an hourly build log, weekly releases, both sites open source; it links to the case study at n8builds.dev/builds/n8builds.
 - **MIT for the code, not the personal content** (2026-10-25): see `LICENSE`; photos, screenshots, the resume and the copy about Nathan stay his.
 - **No reCAPTCHA and no contact form backend**: reCAPTCHA was purged in 2026-06; the contact section links out and shows an email address.

@@ -9,6 +9,7 @@ import SectionHeading from '@/components/ui/SectionHeading'
 import SiteDoors from '@/components/ui/SiteDoors'
 import { projects } from '@/data/projects'
 import { RESUME_VIEW_URL } from '@/lib/resume'
+import CookieSettingsButton from '@/components/consent/CookieSettingsButton'
 
 const EMAIL = 'contact@n8builds.dev'
 const CONTACT_FORM = 'https://n8builds.dev/#contact-form'
@@ -192,7 +193,11 @@ const Footer = () => {
         </div>
 
         <div className="mt-10 flex flex-col-reverse items-center justify-between gap-4 border-t border-white/[0.06] pt-6 sm:flex-row">
-          <p className="text-sm text-slate-400">Copyright © 2026 Nathan Watkins</p>
+          <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
+            <p className="text-sm text-slate-400">Copyright © 2026 Nathan Watkins</p>
+            {/* Reopens the analytics consent banner (components/consent). */}
+            <CookieSettingsButton className="cursor-pointer text-sm text-slate-400 transition-colors duration-200 hover:text-sky-300" />
+          </div>
           <nav aria-label="Footer social media links" className="flex items-center gap-1">
             {socials.map(({ href, label, Icon, pad }) => (
               <a
