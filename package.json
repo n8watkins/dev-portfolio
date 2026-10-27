@@ -21,7 +21,8 @@
     "test:report": "playwright show-report",
     "lighthouse": "lhci autorun",
     "analyze": "ANALYZE=true npm run build",
-    "prepare": "husky"
+    "prepare": "husky",
+    "check:sync": "node scripts/check-n8builds-sync.mjs"
   },
   "dependencies": {
     "@radix-ui/react-dropdown-menu": "^2.1.1",

@@ -11,9 +11,9 @@ const meta = (page: Page, key: string) =>
 
 test('the home page has one title and a share card that matches it', async ({ page, request }) => {
   await page.goto('/')
-  await expect(page).toHaveTitle('Nathan Watkins | AI Full-Stack Developer')
-  expect(await meta(page, 'og:title')).toBe('Nathan Watkins | AI Full-Stack Developer')
-  expect(await meta(page, 'twitter:title')).toBe('Nathan Watkins | AI Full-Stack Developer')
+  await expect(page).toHaveTitle('Nathan Watkins | Full-Stack Developer')
+  expect(await meta(page, 'og:title')).toBe('Nathan Watkins | Full-Stack Developer')
+  expect(await meta(page, 'twitter:title')).toBe('Nathan Watkins | Full-Stack Developer')
 
   const share = await meta(page, 'og:description')
   expect(share!.length).toBeLessThanOrEqual(120)
@@ -21,7 +21,9 @@ test('the home page has one title and a share card that matches it', async ({ pa
   expect((await meta(page, 'description'))!.length).toBeLessThanOrEqual(160)
 
   expect(await meta(page, 'og:url')).toBe('https://portfolio.n8builds.dev')
-  expect(await page.locator('link[rel="canonical"]').getAttribute('href')).toBe('https://portfolio.n8builds.dev')
+  expect(await page.locator('link[rel="canonical"]').getAttribute('href')).toBe(
+    'https://portfolio.n8builds.dev'
+  )
 
   for (const key of ['og:image', 'twitter:image']) {
     const url = new URL((await meta(page, key))!)
@@ -35,12 +37,16 @@ test('the home page has one title and a share card that matches it', async ({ pa
   }
 })
 
-test('a project page is titled after the project, with a short share description', async ({ page }) => {
+test('a project page is titled after the project, with a short share description', async ({
+  page,
+}) => {
   await page.goto('/projects/echo')
   await expect(page).toHaveTitle(/^Echo - .+ \| Nathan Watkins$/)
   expect((await meta(page, 'og:description'))!.length).toBeLessThanOrEqual(120)
   expect(await meta(page, 'twitter:card')).toBe('summary_large_image')
-  expect(await page.locator('link[rel="canonical"]').getAttribute('href')).toBe('https://portfolio.n8builds.dev/projects/echo')
+  expect(await page.locator('link[rel="canonical"]').getAttribute('href')).toBe(
+    'https://portfolio.n8builds.dev/projects/echo'
+  )
 })
 
 test('no visible copy uses an em dash', async ({ page }) => {

@@ -8,6 +8,18 @@ export type WorkExperienceItem = {
   bullets: string[]
   links?: { label: string; url: string }[]
   hoverImage?: string
+  /**
+   * The glow around the card's right (image) side on hover, in the colours of
+   * its hover image: a background class for a blurred layer behind the card
+   * (a full Tailwind class, so the build sees it). The other side glows a light
+   * blue; a card with no image glows light blue all round, so it has none.
+   */
+  hoverGlow?: string
+  /**
+   * Where the hover image sits in its frame and how far it is zoomed (at rest,
+   * then on hover): each picture framed on its own subject.
+   */
+  hoverFrame?: string
   additional?: boolean
 }
 
@@ -15,6 +27,8 @@ export const workExperience: WorkExperienceItem[] = [
   {
     id: 1,
     company: 'Appturnity',
+    // White, where Appturnity's white page shows
+    hoverGlow: 'bg-white/[0.16]',
     companyUrl: 'https://appturnity.com',
     location: 'Los Angeles, CA',
     role: 'Full Stack Developer & Co-Founder',
@@ -30,11 +44,14 @@ export const workExperience: WorkExperienceItem[] = [
       { label: 'comfort1hvac.com', url: 'https://comfort1hvac.com/' },
       { label: 'primeshows.live', url: 'https://primeshows.live/' },
     ],
-    hoverImage: '/projects/Appturnity.webp',
+    hoverImage: '/projects/appturnity-home-2026-10.webp',
+    hoverFrame: 'object-[0%_40%] origin-[0%_40%] scale-100 group-hover:scale-[1.03]',
   },
   {
     id: 2,
     company: 'Donovan Golf Course Management',
+    // A little of the course's green
+    hoverGlow: 'bg-green-400/[0.14]',
     companyUrl: 'https://www.arroyosecogc.com/',
     location: 'Pasadena, CA',
     role: 'Web Developer',
@@ -45,6 +62,7 @@ export const workExperience: WorkExperienceItem[] = [
     ],
     links: [{ label: 'arroyosecogc.com', url: 'https://www.arroyosecogc.com/' }],
     hoverImage: '/experience/arroyoseco.webp',
+    hoverFrame: 'object-[35%_0%] origin-[35%_0%] scale-[1.15] group-hover:scale-110',
   },
   {
     id: 3,
@@ -60,6 +78,8 @@ export const workExperience: WorkExperienceItem[] = [
   {
     id: 4,
     company: 'The Coder School',
+    // Green, and white at the bottom
+    hoverGlow: 'bg-gradient-to-b from-green-400/[0.16] to-white/[0.14]',
     companyUrl: 'https://www.thecoderschool.com/locations/santamonica/',
     location: 'Santa Monica, CA',
     role: 'Programming Instructor',
@@ -69,5 +89,6 @@ export const workExperience: WorkExperienceItem[] = [
       'Teach full-stack development with JavaScript and Python, including LLM-assisted coding and debugging.',
     ],
     hoverImage: '/experience/coderschool.webp',
+    hoverFrame: 'object-[50%_30%] origin-[50%_30%] scale-[2.3] group-hover:scale-[2.15]',
   },
 ]

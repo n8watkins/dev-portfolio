@@ -79,4 +79,10 @@ export interface GridItemConfig {
    * Used for overlays or floating elements on top of the content.
    */
   renderForeground?: () => ReactNode
+  /**
+   * 'fade': the card only fades in, never moves or scales. For a card whose
+   * content measures its own layout once (the tech stack's dino), which a
+   * scaling entrance would throw off.
+   */
+  entrance?: 'fade'
 }

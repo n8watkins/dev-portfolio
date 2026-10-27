@@ -2,11 +2,12 @@ import type { Metadata } from 'next'
 import localFont from 'next/font/local'
 import './globals.css'
 import { ThemeProvider } from './provider'
-import Script from 'next/script'
 import ErrorBoundary from '@/components/ErrorBoundary'
 import { WebVitals } from './web-vitals'
 import { WebVitalsHUD } from '@/components/WebVitalsHUD'
 import { SpeedInsights } from "@vercel/speed-insights/next"
+import { consentBootstrapScript } from '@/lib/consent'
+import ConsentLoader from '@/components/consent/ConsentLoader'
 import { SITE_DESCRIPTION, SITE_NAME, SITE_SHARE_DESCRIPTION, SITE_TITLE, SITE_URL } from '@/lib/seo'
 
 // Inter, bundled (variable weight, Latin subset, from @fontsource-variable/inter
@@ -42,11 +43,14 @@ export const metadata: Metadata = {
     creator: '@n8watkins',
   },
   icons: {
-    icon: '/tab/n8-icon.png',
+    // A small favicon: the 512px one (89 KB) was fetched early and slowed the portrait on phones.
+    icon: [{ url: '/tab/n8-icon-96.png', sizes: '96x96', type: 'image/png' }],
     apple: '/tab/apple-icon.png',
   },
   metadataBase: new URL(SITE_URL),
 }
+
+const GA_ID = process.env.NEXT_PUBLIC_GA_ID
 
 export default function RootLayout({
   children,
@@ -58,28 +62,19 @@ export default function RootLayout({
       <head>
         <meta name="google-site-verification" content="UaCoLg9YeNobXjRaOb59YzQxzc8RDb1yiOZEKdmNECU" />
 
-        {/* Preconnect and DNS prefetching for external domains */}
-        <link rel="preconnect" href="https://www.googletagmanager.com" />
-        <link rel="dns-prefetch" href="//www.googletagmanager.com" />
-
         {/* Project external links */}
         <link rel="dns-prefetch" href="//github.com" />
         <link rel="dns-prefetch" href="//web.app" />
         <link rel="dns-prefetch" href="//vercel.app" />
         <link rel="dns-prefetch" href="//firebase.google.com" />
 
-        <Script
-          src={`https://www.googletagmanager.com/gtag/js?id=${process.env.NEXT_PUBLIC_GA_ID}`}
-          strategy="lazyOnload"
-        />
-        <Script id="google-analytics" strategy="lazyOnload">
-          {`
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
-            gtag('config', '${process.env.NEXT_PUBLIC_GA_ID}');
-          `}
-        </Script>
+        {/* Google Analytics with Consent Mode v2 (lib/consent.ts, shared with
+            n8builds.dev): the defaults are set before gtag.js can load,
+            European and Quebec visitors are asked first, and gtag.js loads
+            after the page is loaded and idle. Only where an ID is set. */}
+        {GA_ID && (
+          <script id="consent-bootstrap" dangerouslySetInnerHTML={{ __html: consentBootstrapScript(GA_ID) }} />
+        )}
       </head>
       <body className={inter.className}>
         <a
@@ -92,6 +87,8 @@ export default function RootLayout({
           <ErrorBoundary>
             {children}
           </ErrorBoundary>
+          {/* Asks European and Quebec visitors about analytics; the banner loads only when needed. */}
+          {GA_ID && <ConsentLoader />}
           <WebVitals />
           <WebVitalsHUD />
           <SpeedInsights />

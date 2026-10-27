@@ -7,17 +7,17 @@
 // it, so a stale environment variable can't point them somewhere else.
 export const SITE_URL = 'https://portfolio.n8builds.dev'
 export const SITE_NAME = 'Nathan Watkins'
-export const ROLE = 'AI Full-Stack Developer'
+export const ROLE = 'Full-Stack Developer'
 
 /** The home page title; other pages are "<page> | Nathan Watkins". */
 export const SITE_TITLE = `${SITE_NAME} | ${ROLE}`
 
 /** For search results (about 155 characters). */
 export const SITE_DESCRIPTION =
-  'Nathan Watkins, AI full-stack developer in Los Angeles. Realtime voice agents, research agents and client sites, built with React, Next.js and AI.'
+  'Nathan Watkins, full-stack developer in Los Angeles. Realtime voice agents, research agents and client sites, built with React, Next.js and AI.'
 
 /** For share cards (previews show about 120 characters). */
-export const SITE_SHARE_DESCRIPTION = 'AI full-stack developer in LA: voice agents, research agents and client sites, built with React, Next.js and AI.'
+export const SITE_SHARE_DESCRIPTION = 'Full-stack developer in LA: voice agents, research agents and client sites, built with React, Next.js and AI.'
 
 /** Shorten text at a word boundary, with an ellipsis. */
 export function summarize(text: string, max = 155): string {

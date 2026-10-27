@@ -1,72 +1,69 @@
+'use client'
 import React from 'react'
-import { cn } from '@/lib/utils'
 import Marquee from '@/components/magicui/marquee'
+import StackTile from '@/components/ui/StackTile'
+import DinoEasterEgg from '@/components/features/dino/DinoEasterEgg'
 import { tech_libraries, tech_tools } from '@/data/techStack'
-import { ReactElement } from 'react'
 
-const StackContainer = ({
-  name,
-  icon,
-  description,
-}: {
-  name: string
-  icon?: string | ReactElement
-  description: string
-}) => {
-  return (
-    <figure
-      className={cn(
-        'stack-container',
-        'relative flex h-28 min-w-40 max-w-52 px-2 cursor-pointer overflow-hidden rounded-xl border pb-2 items-center justify-center',
-        'border-gray-950/[.1] bg-blue-300 hover:bg-sky-100/90',
-        'dark:border-gray-50/[.1] dark:bg-gray-50/[.10] dark:hover:bg-gray-50/[.15]',
-        'transition-all duration-300 ease-in-out',
-        'hover:shadow-lg',
-        '[&_.content-wrapper]:hover:scale-75 [&_.content-wrapper]:hover:-translate-y-9',
-        '[&_.description]:hover:opacity-100'
-      )}>
-      <div className="content-wrapper flex flex-col items-center transition-all duration-300 ease-in-out">
-        <figcaption className="icon-name-wrapper mt-2 text-xl font-medium dark:text-white flex flex-col items-center transition-all duration-300 ease-in-out">
-          <div className="icon-name flex flex-row gap-2 pt-24">
-            <span className="icon transition-transform duration-300 ease-in-out">{icon}</span>
-            <span className="name transition-all duration-300 ease-in-out  whitespace-nowrap">
-              {name}
-            </span>
-          </div>
-          <div className="description  flex items-start justify-center text-base w-48 h-24 opacity-0 translate-y-2 transition-all duration-300 ease-in-out ">
-            {description}
-          </div>
-        </figcaption>
-      </div>
-    </figure>
-  )
-}
-
+/**
+ * The "My tech stack" bento card's marquee, with the dino easter egg.
+ *
+ * This is the portfolio's copy of n8builds-web's AI kit
+ * (components/features/AITechStack.tsx there): the same structure, and the
+ * marquee, tile and dino are byte-identical copies of n8builds-web's files
+ * (see "Kept in sync with n8builds-web" in docs/HANDOFF.md and
+ * `npm run check:sync`). Only this wrapper differs: the content (the tech
+ * stack instead of the AI kit), the bento card's colours, and the rows sitting
+ * low in the card (above its title) with headroom for the dino.
+ *
+ * While the rows move, the tiles sit well apart (2.5rem across) so the gaps
+ * read clearly wider than the dino that hops and falls through them. Under
+ * reduced motion there is no dino and the tiles wrap into a grid the card scrolls.
+ */
 export function TechStack() {
   return (
-    <div className="absolute bottom-20 flex h-[100%] w-full flex-col items-center justify-center overflow-hidden rounded-3xl border-none bg-gradient-to-br from-blue-400 via-blue-500 to-blue-400 border dark:from-[#0d304c] dark:to-[#0d304c]">
-      <Marquee reverse pauseOnHover className="[--duration:45s]">
+    <div
+      data-dino-panel
+      className="absolute inset-0 flex w-full flex-col items-center justify-end overflow-hidden rounded-3xl bg-gradient-to-br from-[#0d304c] to-[#0d304c] pb-[4.5rem] sm:pb-[6rem] motion-safe:gap-5 motion-reduce:justify-start motion-reduce:overflow-y-auto"
+    >
+      <Marquee
+        label="Libraries and frameworks"
+        reverse
+        pauseOnHover
+        data-marquee-row
+        className="[--duration:45s] motion-safe:[--gap:2.5rem]"
+      >
         {tech_libraries.map((tech) => (
-          <StackContainer
+          <StackTile
             key={tech.name}
             name={tech.name}
             icon={tech.icon}
             description={tech.description}
+            still
           />
         ))}
       </Marquee>
-      <Marquee pauseOnHover className="[--duration:45s]">
+      <Marquee
+        label="Tools and services"
+        pauseOnHover
+        data-marquee-row
+        className="[--duration:45s] motion-safe:[--gap:2.5rem]"
+      >
         {tech_tools.map((tech) => (
-          <StackContainer
+          <StackTile
             key={tech.name}
             name={tech.name}
             icon={tech.icon}
             description={tech.description}
+            still
           />
         ))}
       </Marquee>
-      <div className="pointer-events-none absolute left-0 w-1/3 h-full bg-gradient-to-r from-blue-500 to-transparent dark:from-[#0d304c] dark:to-transparent"></div>
-      <div className="pointer-events-none absolute right-0 w-1/3 h-full bg-gradient-to-l from-blue-500 to-transparent dark:from-[#0d304c] dark:to-transparent"></div>
+      <DinoEasterEgg />
+      <div className="pointer-events-none absolute left-0 h-full w-1/4 bg-gradient-to-r from-[#0d304c] to-transparent motion-reduce:hidden" />
+      <div className="pointer-events-none absolute right-0 h-full w-1/4 bg-gradient-to-l from-[#0d304c] to-transparent motion-reduce:hidden" />
     </div>
   )
 }
+
+export default TechStack

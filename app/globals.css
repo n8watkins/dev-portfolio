@@ -206,6 +206,160 @@
   display: none !important;
 }
 
+/* Hero entrance, in CSS so it runs with the first paint, not after hydration.
+   The headline and portrait only slide (they never start invisible), so the
+   portrait stays a Largest Contentful Paint candidate from the first frame. */
+@keyframes hero-in {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+}
+@keyframes hero-slide-l {
+  from {
+    transform: translateX(-20px);
+  }
+}
+@keyframes hero-slide-r {
+  from {
+    transform: translateX(20px);
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .hero-in {
+    animation: hero-in 0.5s cubic-bezier(0.25, 0.1, 0.25, 1) both;
+  }
+  .hero-slide-l {
+    animation: hero-slide-l 0.5s cubic-bezier(0.25, 0.1, 0.25, 1) both;
+  }
+  .hero-slide-r {
+    animation: hero-slide-r 0.5s cubic-bezier(0.25, 0.1, 0.25, 1) both;
+  }
+}
+
+/* The n8builds.dev teaser's build slides in sideways as it changes
+   (BuildsTeaser.tsx): from the right going forward, from the left going back. */
+@keyframes teaser-from-r {
+  from {
+    opacity: 0;
+    transform: translateX(32px);
+  }
+}
+@keyframes teaser-from-l {
+  from {
+    opacity: 0;
+    transform: translateX(-32px);
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .teaser-in-r {
+    animation: teaser-from-r 0.45s cubic-bezier(0.25, 0.1, 0.25, 1) both;
+  }
+  .teaser-in-l {
+    animation: teaser-from-l 0.45s cubic-bezier(0.25, 0.1, 0.25, 1) both;
+  }
+}
+
+/* The hero grid's fade (components/sections/HeroGrid.tsx, from n8builds.dev):
+   out at the top and bottom, and toward the left and right edges, the two
+   masks intersected, so the grid melts into the page. */
+.hero-grid-mask {
+  -webkit-mask-image:
+    linear-gradient(to bottom, transparent, black 120px, black 80%, transparent),
+    linear-gradient(to right, transparent, black clamp(48px, 16%, 320px), black calc(100% - clamp(48px, 16%, 320px)), transparent);
+  -webkit-mask-composite: source-in;
+  mask-image:
+    linear-gradient(to bottom, transparent, black 120px, black 80%, transparent),
+    linear-gradient(to right, transparent, black clamp(48px, 16%, 320px), black calc(100% - clamp(48px, 16%, 320px)), transparent);
+  mask-composite: intersect;
+}
+
+/* The hero's whoami terminal types itself out on load
+   (components/sections/WhoamiTerminal.tsx), as on n8builds.dev. Each line is
+   in the HTML at full size; a clip-path steps across it one character per
+   step (font-mono, so a step is exactly 1ch), and a block cursor rides the end
+   of the typed text. --chars, --start and --hold come from the component.
+   Clip-path and transform only: no layout shift. Reduced motion shows the
+   text, and the prompt, at once. */
+.whoami-type {
+  position: relative;
+  display: inline-block;
+}
+.whoami-type::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.2em;
+  width: 0.62em;
+  height: 1.15em;
+  background: rgb(34 211 238 / 0.85);
+  opacity: 0;
+  pointer-events: none;
+}
+.whoami-cursor {
+  display: inline-block;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .whoami-type > span {
+    display: inline-block;
+    animation: whoami-type calc(var(--chars) * 32ms) steps(var(--chars), end) var(--start) both;
+  }
+  .whoami-type::after {
+    animation:
+      whoami-caret-move calc(var(--chars) * 32ms) steps(var(--chars), end) var(--start) both,
+      whoami-caret-on var(--hold) linear var(--start);
+  }
+  .whoami-prompt {
+    animation: whoami-show 1ms linear var(--start) both;
+  }
+  .whoami-cursor {
+    animation: whoami-blink 1.06s step-end var(--start) infinite;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .whoami-cursor {
+    opacity: 0.6;
+  }
+}
+@keyframes whoami-type {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+@keyframes whoami-caret-move {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(calc(var(--chars) * 1ch));
+  }
+}
+@keyframes whoami-caret-on {
+  from,
+  to {
+    opacity: 1;
+  }
+}
+@keyframes whoami-show {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes whoami-blink {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+
 /* Respect prefers-reduced-motion: neutralize animations/transitions and
    auto-scrolling for users who ask the OS to reduce motion (WCAG 2.3.3). */
 @media (prefers-reduced-motion: reduce) {
@@ -233,4 +387,88 @@ select:focus-visible {
   outline: 2px solid theme('colors.sky.400');
   outline-offset: 2px;
   border-radius: 0.25rem;
+}
+
+/* Sentry's bug-report button floats bottom-left; on a phone it sits on top of
+   the hero's buttons and the footer, so it is a desktop-only affordance. */
+@media (max-width: 767px) {
+  #sentry-feedback {
+    display: none;
+  }
+}
+
+/* A project row's wash (components/Projects/index.tsx), from n8builds.dev's
+   Lab: a glow of the project's colour (--lab-from, "r g b") from the page edge
+   on its screenshot's side (--lab-x). It fades out before its edges. */
+.lab-row-wash {
+  background: radial-gradient(
+    var(--lab-rx, 90%) 50% at var(--lab-x, 0%) 50%,
+    rgb(var(--lab-from) / 0.2),
+    transparent 100%
+  );
+}
+@media (min-width: 768px) {
+  .lab-row-wash {
+    --lab-rx: 60%;
+  }
+}
+
+/* Tailwind 4 syntax used by the files kept byte-identical with n8builds-web
+   (components/magicui/marquee.tsx, components/ui/StackTile.tsx,
+   components/Projects/TechStackCycle.tsx), which this site's Tailwind 3
+   doesn't generate. Keep in sync with those files (npm run check:sync). */
+.gap-\(--gap\) {
+  gap: var(--gap);
+}
+.\*\:size-full\! > * {
+  width: 100% !important;
+  height: 100% !important;
+}
+.min-h-26 {
+  min-height: 6.5rem;
+}
+@keyframes slide-in {
+  from {
+    opacity: 0;
+    translate: var(--slide-from, 24px) 0;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+.slide-in {
+  animation: slide-in 0.3s ease-out both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .slide-in {
+    animation: none;
+  }
+}
+
+/* The consent banner's entrance (components/consent/ConsentBanner.tsx), as
+   n8builds.dev's fade-up: opacity and transform only, skipped under reduced
+   motion. */
+@keyframes consent-in {
+  from {
+    opacity: 0.01;
+    transform: translateY(16px);
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .consent-in {
+    animation: consent-in 0.55s cubic-bezier(0.25, 0.1, 0.25, 1) both;
+  }
+}
+
+/* Its exit: fades and slides down, then unmounts on animationend (the
+   banner skips it under reduced motion and closes at once). */
+@keyframes consent-out {
+  to {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+}
+.consent-out {
+  animation: consent-out 0.22s cubic-bezier(0.4, 0, 1, 1) both;
 }

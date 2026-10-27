@@ -309,11 +309,22 @@ test.describe('Accessibility', () => {
     const violations = await page.evaluate(() => {
       const issues: string[] = []
 
-      // Check for alt text on images
+      // Every image needs an alt attribute. alt="" is right for a decorative
+      // image (an icon beside its name, a backdrop): screen readers skip it.
+      // An image that is a link's or button's only content must name it.
       const images = document.querySelectorAll('img')
       images.forEach((img) => {
-        if (!img.alt && !img.getAttribute('aria-label')) {
-          issues.push(`Image missing alt text: ${img.src}`)
+        if (!img.hasAttribute('alt') && !img.getAttribute('aria-label')) {
+          issues.push(`Image missing alt attribute: ${img.src}`)
+        }
+        const control = img.closest('a, button')
+        if (
+          control &&
+          !img.alt &&
+          !control.getAttribute('aria-label') &&
+          !control.textContent?.trim()
+        ) {
+          issues.push(`Link or button named by an image with empty alt: ${img.src}`)
         }
       })
 
@@ -349,9 +360,6 @@ test.describe('Accessibility', () => {
       })
     }
 
-    // This is a soft warning - doesn't fail the test
-    if (violations.length > 0) {
-      console.warn(`\n⚠️  Found ${violations.length} accessibility issue(s)`)
-    }
+    expect(violations).toEqual([])
   })
 })

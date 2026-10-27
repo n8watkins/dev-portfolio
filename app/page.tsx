@@ -1,5 +1,6 @@
 'use client'
-import React from 'react'
+import React, { useEffect } from 'react'
+import { SCROLL_TO_KEY } from '@/components/Projects/BackToProjects'
 import Hero from '@/components/sections/Hero'
 import Grid from '@/components/sections/Grid'
 import { FloatingNav } from '@/components/layout/FloatingNav'
@@ -23,8 +24,41 @@ export default function Home() {
   // Track scroll depth milestones
   useScrollTracking()
 
+  // Coming back from a project page ("Back to projects"): land on the
+  // projects without a #projects in the address. The section is lazy-loaded,
+  // so wait (up to 3s) until it has rendered.
+  useEffect(() => {
+    let target: string | null = null
+    try {
+      target = sessionStorage.getItem(SCROLL_TO_KEY)
+      sessionStorage.removeItem(SCROLL_TO_KEY)
+    } catch {
+      return
+    }
+    if (!target) return
+    const started = performance.now()
+    let frame = 0
+    const tryScroll = () => {
+      const el = document.getElementById(target!)
+      if (el && el.offsetHeight > 400) {
+        window.scrollTo({
+          top: el.getBoundingClientRect().top + window.scrollY - 80,
+          behavior: 'instant',
+        })
+        return
+      }
+      if (performance.now() - started < 3000) frame = requestAnimationFrame(tryScroll)
+    }
+    tryScroll()
+    return () => cancelAnimationFrame(frame)
+  }, [])
+
   return (
-    <main id="main-content" className="relative w-full bg-blue-400 dark:bg-darkBlue flex overflow-hidden">
+    <main
+      id="main-content"
+      tabIndex={-1}
+      className="relative w-full bg-blue-400 dark:bg-darkBlue flex overflow-hidden focus:outline-none"
+    >
       <div className="w-full m-auto">
         <SectionErrorBoundary sectionName="Hero Section">
           <Hero />

@@ -1,0 +1,27 @@
+/* The Work with me screenshots (components/sections/AppturnityCard.tsx, from n8builds.dev's Work with me): a
+   full-length page scrolls slowly inside its fixed frame, pauses at the
+   bottom, scrolls back up and repeats, as on Appturnity's own site.
+   --travel is how far the image moves (all of it but the frame's height) and
+   --duration how long one way takes. Transform only, on its own layer. It
+   holds still while the card is off screen (PauseOffscreen sets
+   data-offscreen) and, under reduced motion, shows the page's top, still. */
+@media (prefers-reduced-motion: no-preference) {
+  .scroll {
+    animation: shot-scroll var(--duration, 30s) ease-in-out infinite alternate;
+    will-change: transform;
+  }
+  [data-offscreen] .scroll {
+    animation-play-state: paused;
+  }
+}
+
+@keyframes shot-scroll {
+  0%,
+  10% {
+    transform: translateY(0);
+  }
+  90%,
+  100% {
+    transform: translateY(var(--travel));
+  }
+}

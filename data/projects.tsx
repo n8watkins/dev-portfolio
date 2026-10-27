@@ -1,11 +1,24 @@
-export const projects = [
+import type { Project } from '@/lib/types'
+
+export const projects: Project[] = [
   {
     id: 3,
     slug: 'echo',
     title: 'Echo',
     subTitle: 'Realtime Voice Agent',
     des: `A browser-based realtime voice AI - speak and it speaks back, streamed and interruptible. Echo closes the whole spoken loop (mic → transcribe → think → speak) with function-calling tools in the middle and a turn-taking state machine that lets you talk over it. The model was the easy part; the ~800 milliseconds of perceived latency were the hard part.`,
-    images: ['/projects/echo1.webp', '/projects/echo.webp'],
+    // The real UI leads; the title card repeats the card's own heading, so it is only the share image.
+    images: [
+      { src: '/projects/echo/1-app.webp', alt: 'Echo: the voice orb, ready to talk, with suggested things to say' },
+      { src: '/projects/echo/2-intro.webp', alt: "Echo's welcome: what it is and its key features" },
+      { src: '/projects/echo/3-dev.webp', alt: "Echo's under-the-hood view, beside the conversation" },
+      { src: '/projects/echo/4-settings.webp', alt: "Echo's settings: voice, wake word and bring your own key" },
+    ],
+    shareImage: '/projects/echo1.webp',
+    icon: '/projects/icons/echo.svg',
+    accent: 'echo',
+    tags: ['Next.js', 'Gemini', 'Web Speech API', 'SSE', 'WebSocket'],
+    features: ['Real-time voice chat', 'Interrupt it anytime', 'Speaks while it thinks', 'Calls tools mid-reply'],
     technologies: {
       Frontend: {
         descriptionParts: [
@@ -72,7 +85,16 @@ export const projects = [
     title: 'Scout',
     subTitle: 'Agentic Research Assistant',
     des: `An AI agent that plans, searches the live web, reads sources, and writes a cited report - streaming each step as it happens. Scout is a from-scratch ReAct loop on Gemini with function calling and SSE: no agent framework, no black box. It doesn't hand you an answer, it shows you the reasoning loop that produced it. The process is the product.`,
-    images: ['/projects/scout1.webp', '/projects/scout.webp'],
+    images: [
+      { src: '/projects/scout/1-dark.webp', alt: 'Scout: ask a hard research question and watch it plan, search, read and cite' },
+      { src: '/projects/scout/2-app.webp', alt: 'Scout in light mode, with suggested research topics' },
+      { src: '/projects/scout/3-intro.webp', alt: "Scout's welcome: what it is and its key features" },
+    ],
+    shareImage: '/projects/scout1.webp',
+    icon: '/projects/icons/scout.svg',
+    accent: 'scout',
+    tags: ['Next.js', 'Gemini', 'ReAct agent', 'SSE', 'SQLite'],
+    features: ['Plans its own research', 'Reads the live web', 'Writes cited reports', 'Streams every step'],
     technologies: {
       Frontend: {
         descriptionParts: [
@@ -138,8 +160,15 @@ export const projects = [
     slug: 'geminigpt',
     title: 'GeminiGPT',
     subTitle: 'AI Chat Platform',
-    des: `A full-stack AI chat platform powered by Google's Gemini 2.5 Flash. Supports multi-chat sessions, cross-chat semantic search over LanceDB vector embeddings, PDF and DOCX document understanding, and real-time response streaming over WebSockets - with a bring-your-own-key model that keeps usage private.`,
-    images: ['/projects/geminigpt.webp', '/projects/geminigpt1.webp'],
+    des: `A full-stack AI chat platform powered by Google's Gemini 3.1 Flash Lite. Supports multi-chat sessions, cross-chat semantic search over LanceDB vector embeddings, PDF and DOCX document understanding, and real-time response streaming over WebSockets - with a bring-your-own-key model that keeps usage private.`,
+    images: [
+      { src: '/projects/geminigpt/1-app.webp', alt: 'GeminiGPT: a new chat with suggested prompts' },
+      { src: '/projects/geminigpt/2-intro.webp', alt: "GeminiGPT's welcome: what it is and its key features" },
+    ],
+    icon: '/projects/icons/geminigpt.svg',
+    accent: 'geminigpt',
+    tags: ['Next.js', 'Gemini', 'Socket.IO', 'LanceDB', 'SQLite'],
+    features: ['Memory across chats', 'Semantic chat search', 'Reads PDFs and DOCX', 'Streaming replies'],
     technologies: {
       Frontend: {
         descriptionParts: [
@@ -160,7 +189,7 @@ export const projects = [
       Backend: {
         descriptionParts: [
           {
-            text: 'Gemini 2.5 Flash with streaming responses and function calling',
+            text: 'Gemini 3.1 Flash Lite with streaming responses and function calling',
             icons: [{ icon: 'gemini.svg' }],
           },
           {
@@ -180,8 +209,8 @@ export const projects = [
       Cloud: {
         descriptionParts: [
           {
-            text: 'Containerized deployment on Railway',
-            icons: [{ icon: 'railway.svg' }, { icon: 'dock.svg' }],
+            text: 'Ships to Render as a Docker container',
+            icons: [{ icon: 'render.svg' }, { icon: 'dock.svg' }],
           },
           {
             text: 'Version control and CI via GitHub',
@@ -191,14 +220,14 @@ export const projects = [
       },
     },
     highlights: [
-      'Responses stream token-by-token from Gemini 2.5 Flash over Socket.IO WebSockets, so answers render as they generate - no waiting on the full completion.',
+      'Responses stream token-by-token from Gemini 3.1 Flash Lite over Socket.IO WebSockets, so answers render as they generate - no waiting on the full completion.',
       'Every message is embedded and indexed in a LanceDB vector database, enabling semantic search that recalls context across all of your past chats, not just the current one.',
       'Drop in PDFs and DOCX files - a custom Node.js pipeline parses them server-side so the model can reason over your documents.',
       'Bring-your-own-key design: your Gemini API key stays client-side, so usage and conversations remain private.',
-      'Chats persist in SQLite; the whole app ships as a Docker container deployed on Railway with CI through GitHub.',
+      'Chats persist in SQLite; the whole app ships as a Docker container deployed on Render with CI through GitHub.',
     ],
     purpose: `GeminiGPT is where I explore making AI chat useful beyond a single thread. The question: what makes a chat assistant feel like it actually remembers you? What I'm testing is semantic memory - every message embedded and searchable across all your past conversations - plus document understanding and token-by-token streaming, all on a bring-your-own-key model so your data stays yours.`,
-    aiUsage: `GeminiGPT wraps Gemini 2.5 Flash with streaming and function calling. The interesting AI piece is memory: every message is embedded and stored in a LanceDB vector index, so semantic search can pull relevant context from any past conversation - not just the current thread. A custom Node pipeline parses uploaded PDFs and DOCX files so the model can reason over your own documents, and a bring-your-own-key model keeps every conversation private to you.`,
+    aiUsage: `GeminiGPT wraps Gemini 3.1 Flash Lite with streaming and function calling. The interesting AI piece is memory: every message is embedded and stored in a LanceDB vector index, so semantic search can pull relevant context from any past conversation - not just the current thread. A custom Node pipeline parses uploaded PDFs and DOCX files so the model can reason over your own documents, and a bring-your-own-key model keeps every conversation private to you.`,
     github: 'https://github.com/n8watkins/GeminiGPT',
     liveSite: 'https://geminigpt-n8.onrender.com',
     statusName: 'GeminiGPT',
@@ -208,13 +237,16 @@ export const projects = [
     slug: 'net-trailer',
     title: 'Net-Trailer',
     subTitle: 'AI-Powered Netflix Clone',
-    des: `A Netflix-style streaming app with an AI brain. Describe what you're in the mood for in plain language and Gemini turns it into tailored picks, while a personalized "Recommended For You" engine learns from your watch history and feedback. Plus TMDB-powered browsing and trailers, secure auth, full Stripe and PayPal subscription checkout, and Firebase-backed persistence.`,
+    des: `A Netflix-style streaming app with an AI brain. Describe what you're in the mood for in plain language and Gemini turns it into tailored picks, while a personalized "Recommended For You" engine learns from your watch history and feedback. Plus TMDB-powered browsing and trailers, secure auth, and Firebase-backed persistence.`,
     images: [
-      '/projects/netflix.webp',
-      '/projects/netflix1.webp',
-      '/projects/netflix2.webp',
-      '/projects/netflix3.webp',
+      { src: '/projects/net-trailer/1-app.webp', alt: 'Net-Trailer: a featured title with Play and More Info' },
+      { src: '/projects/net-trailer/2-rows.webp', alt: 'Net-Trailer: Trending and Top Rated rows from TMDB' },
+      { src: '/projects/net-trailer/3-intro.webp', alt: "Net-Trailer's welcome: quick start, browse features or watch a demo" },
     ],
+    icon: '/projects/icons/net-trailer.png',
+    accent: 'net-trailer',
+    tags: ['Next.js', 'Gemini', 'TMDB', 'Firebase'],
+    features: ['Describe a mood, get picks', 'Learns your taste', 'Explains every pick', 'Voice search'],
     technologies: {
       Frontend: {
         descriptionParts: [
@@ -237,10 +269,6 @@ export const projects = [
           {
             text: 'AI recommendations powered by Gemini - natural-language search that reads your intent, plus a personalized engine that learns from your history with a feedback loop',
             icons: [{ icon: 'gemini.svg' }],
-          },
-          {
-            text: 'Integrated payment gateways for secure transactions',
-            icons: [{ icon: 'paypal.png' }, { icon: 'stripe.png' }],
           },
           {
             text: 'Implemented secure authentication and authorization',
@@ -269,8 +297,7 @@ export const projects = [
       'Tell it what you’re in the mood for in plain English - a Gemini-powered analyzer reads your intent (media type, genres, vibe) and builds a matching suggestion row on the fly, with a multi-model router that falls back automatically.',
       'A personalized “Recommended For You” engine learns from your full watch and rating history with a real-time feedback loop - dislikes and skips reshape future picks, and each suggestion can explain why it surfaced.',
       'Browses live TMDB data - trending titles, genre rows, and trailer playback - with a cinematic, Netflix-style UI built in React and Tailwind CSS.',
-      'Secure sign-in with NextAuth; sessions gate the watchlist and checkout flows.',
-      'Full subscription checkout implemented twice over: both Stripe and PayPal payment flows, end to end.',
+      'Secure sign-in with NextAuth; sessions gate the watchlist and profile.',
       'Your watchlist and profile persist in Firebase, syncing in real time across sessions.',
       'Server-rendered with Next.js and deployed on Vercel, with Cloudinary handling optimized image delivery.',
     ],

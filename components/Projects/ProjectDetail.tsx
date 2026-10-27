@@ -3,38 +3,53 @@
 import React from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { motion } from 'framer-motion'
-import { FiArrowLeft, FiGithub, FiArrowUpRight } from 'react-icons/fi'
-import { MdOpenInNew } from 'react-icons/md'
-import IconCycle from '@/components/ui/ProjectComponents/iconCycle'
+import { FiArrowUpRight, FiCheck, FiExternalLink, FiGithub } from 'react-icons/fi'
 import { Project } from '@/lib/types'
-import StatusPill from './StatusPill'
+import { accents } from '@/lib/accents'
+import ProjectGallery from './ProjectGallery'
+import TechStackCycle from './TechStackCycle'
+import BackToProjects from './BackToProjects'
+import StatusPill, { DemoSleepNote } from './StatusPill'
 
 function Heading({ id, children }: { id: string; children: React.ReactNode }) {
   return (
     <h2
       id={id}
-      className="scroll-mt-24 text-xs font-semibold uppercase tracking-widest text-sky-400 mb-3">
+      className="scroll-mt-24 text-xs font-semibold uppercase tracking-widest text-sky-400 mb-3"
+    >
       {children}
     </h2>
   )
 }
 
-/** Live demo / Source / n8builds links - rendered both inline (mobile) and in the sidebar. */
-function ProjectLinks({ project }: { project: Project }) {
+/** The row buttons from the home page's project rows. */
+const BUTTON =
+  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl px-4 py-2 text-sm font-semibold transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:ring-offset-2 focus-visible:ring-offset-darkBlue'
+const QUIET = 'border border-white/[0.12] bg-white/[0.04] text-slate-200 hover:bg-white/[0.08]'
+
+/**
+ * Live demo (in the project's colour) and Source as buttons, then the status
+ * and an n8builds.dev link. Rendered under the header (a row) and in the
+ * desktop sidebar (stacked to its width).
+ */
+function ProjectLinks({ project, stacked = false }: { project: Project; stacked?: boolean }) {
+  const accent = accents[project.accent]
   return (
-    <div className="flex flex-wrap items-center gap-x-5 gap-y-2.5 text-sm">
+    <div className={stacked ? 'flex flex-col gap-2.5' : 'flex flex-wrap items-center gap-2.5'}>
       {project.liveSite ? (
         <a
           href={project.liveSite}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 text-sky-300 hover:text-sky-200 transition-colors">
-          <MdOpenInNew className="w-4 h-4" aria-hidden="true" /> Live demo
+          aria-label={`Try the ${project.title} live demo (new tab)`}
+          className={`${BUTTON} ${accent.primary}`}
+        >
+          <FiExternalLink className="w-3.5 h-3.5" aria-hidden="true" /> Live demo
         </a>
       ) : (
-        <span className="inline-flex items-center gap-2 text-slate-400">
-          <span className="h-2 w-2 rounded-full bg-slate-500" aria-hidden="true" /> Runs locally - grab it on GitHub
+        <span className="inline-flex items-center gap-2 text-sm text-slate-400">
+          <span className="h-2 w-2 rounded-full bg-slate-500" aria-hidden="true" /> Runs locally -
+          grab it on GitHub
         </span>
       )}
       {project.github && (
@@ -42,29 +57,38 @@ function ProjectLinks({ project }: { project: Project }) {
           href={project.github}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 text-slate-300 hover:text-sky-400 transition-colors">
+          aria-label={`View ${project.title} source on GitHub (new tab)`}
+          className={`${BUTTON} ${QUIET}`}
+        >
           <FiGithub className="w-4 h-4" aria-hidden="true" /> Source
         </a>
       )}
-      <a
-        href="https://n8builds.dev"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="inline-flex items-center gap-2 text-slate-300 hover:text-sky-400 transition-colors">
-        <FiArrowUpRight className="w-4 h-4" aria-hidden="true" /> n8builds.dev
-      </a>
-      {/* Last in the row, so it appears without moving the links before it. */}
-      {project.statusName && <StatusPill name={project.statusName} />}
+      <div className={`flex flex-wrap items-center gap-x-4 gap-y-2.5 ${stacked ? 'pt-1' : ''}`}>
+        <a
+          href="https://n8builds.dev"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1.5 text-sm text-slate-300 hover:text-sky-400 transition-colors"
+        >
+          n8builds.dev <FiArrowUpRight className="w-4 h-4" aria-hidden="true" />
+        </a>
+        {/* Last in the row, so it appears without moving anything before it. */}
+        {project.statusName && <StatusPill name={project.statusName} />}
+      </div>
+      {project.statusName && <DemoSleepNote className={stacked ? '' : 'basis-full'} />}
     </div>
   )
 }
 
 /**
- * Project detail page, read like a short blog post: image up top, a sticky
- * "on this page" itinerary + meta card on the side (desktop), generous spacing,
- * and a full-width interactive stack breakdown at the bottom.
+ * A project's page, read like a short blog post: the header with its icon,
+ * buttons and status; the screenshots (a gallery with left/right, smaller than
+ * the page); what it does as checks in its colour; then the goal, how it uses
+ * AI, how it works and the stack in its three groups, with an "on this page"
+ * sidebar on desktop.
  */
 export default function ProjectDetail({ project }: { project: Project }) {
+  const accent = accents[project.accent]
   // TOC derived from the sections that actually render (sections are conditional).
   const toc = [
     project.purpose && { id: 'goal', label: 'The goal' },
@@ -74,46 +98,86 @@ export default function ProjectDetail({ project }: { project: Project }) {
   ].filter(Boolean) as { id: string; label: string }[]
 
   return (
-    <main className="min-h-screen bg-blue-400 dark:bg-darkBlue text-slate-700 dark:text-slate-200">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-12 md:py-16">
-        <Link
-          href="/#projects"
-          className="group inline-flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 hover:text-sky-400 transition-colors mb-10 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 rounded">
-          <FiArrowLeft className="group-hover:-translate-x-0.5 transition-transform" aria-hidden="true" />
-          Back to projects
-        </Link>
+    <main className="relative min-h-screen overflow-hidden bg-darkBlue text-slate-200">
+      {/* The project's colour, glowing in from the top */}
+      <div
+        aria-hidden="true"
+        className="lab-row-wash pointer-events-none absolute inset-x-0 top-0 h-[40rem]"
+        style={{ '--lab-from': accent.rgb, '--lab-x': '0%' } as React.CSSProperties}
+      />
+      <div className="relative max-w-5xl xl:max-w-6xl 2xl:max-w-7xl mx-auto px-4 sm:px-6 pt-24 pb-12 md:pt-28 md:pb-16">
+        <BackToProjects />
 
         {/* Header */}
         <header className="mb-8">
-          <p className="text-xs font-semibold uppercase tracking-widest text-sky-400 mb-2">
-            {project.subTitle}
-          </p>
-          <h1 className="text-4xl md:text-5xl font-bold text-slate-800 dark:text-slate-100">
-            {project.title}
-          </h1>
-          {/* No description here on purpose - the card already shows `des`; the
-              article below opens with the distinct "goal" so the click pays off. */}
+          <div className="flex items-center gap-4">
+            <Image
+              src={project.icon}
+              alt=""
+              width={64}
+              height={64}
+              unoptimized={project.icon.endsWith('.svg')}
+              className="h-14 w-14 shrink-0 rounded-2xl shadow-lg shadow-black/40 sm:h-16 sm:w-16"
+            />
+            <div className="min-w-0">
+              <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-slate-50">
+                {project.title}
+              </h1>
+              <p className={`mt-1 text-base font-semibold ${accent.subtitle}`}>
+                {project.subTitle}
+              </p>
+            </div>
+          </div>
           {/* Primary links - visible at all breakpoints (the sidebar is desktop-only) */}
           <div className="mt-6 lg:hidden">
             <ProjectLinks project={project} />
           </div>
         </header>
 
-        {/* Hero image - top of the post */}
-        <motion.div
-          initial={{ opacity: 0, y: 14 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-          className="relative w-full aspect-video rounded-2xl overflow-hidden border border-white/10 bg-slate-900/40 shadow-xl shadow-black/30 mb-14">
-          <Image
-            src={project.images[0]}
-            alt={project.title}
-            fill
-            sizes="(max-width: 1024px) 100vw, 64rem"
-            className="object-cover object-center"
-            priority
+        {/* Screenshots and what it does */}
+        <div className="grid gap-8 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:items-center mb-14">
+          <ProjectGallery
+            title={project.title}
+            images={project.images}
+            className="w-full"
+            sizes="(max-width: 1024px) 100vw, 36rem"
+            frameClassName={accent.outline}
+            imageClassName="object-cover object-top"
           />
-        </motion.div>
+          <div>
+            <p className="text-base leading-relaxed text-slate-300">{project.des}</p>
+            <ul
+              aria-label={`What ${project.title} does`}
+              className="mt-5 grid gap-x-5 gap-y-2 sm:grid-cols-2"
+            >
+              {project.features.map((feature) => (
+                <li
+                  key={feature}
+                  className="flex items-start gap-2 text-sm font-medium text-slate-200"
+                >
+                  <FiCheck
+                    className={`mt-[3px] h-4 w-4 shrink-0 ${accent.check}`}
+                    aria-hidden="true"
+                  />
+                  {feature}
+                </li>
+              ))}
+            </ul>
+            <ul
+              aria-label={`${project.title} is built with`}
+              className="mt-5 flex flex-wrap gap-1.5"
+            >
+              {project.tags.map((tag) => (
+                <li
+                  key={tag}
+                  className="rounded-md border border-white/10 bg-white/[0.04] px-2 py-1 font-mono text-xs text-slate-300"
+                >
+                  {tag}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
 
         {/* Body - article + sticky sidebar */}
         <div className="grid lg:grid-cols-[1fr_15rem] gap-10 lg:gap-14 items-start">
@@ -121,7 +185,7 @@ export default function ProjectDetail({ project }: { project: Project }) {
             {project.purpose && (
               <section>
                 <Heading id="goal">The goal - what I&apos;m exploring</Heading>
-                <p className="text-lg md:text-xl leading-relaxed text-slate-600 dark:text-slate-300">
+                <p className="text-lg md:text-xl leading-relaxed text-slate-300">
                   {project.purpose}
                 </p>
               </section>
@@ -130,7 +194,7 @@ export default function ProjectDetail({ project }: { project: Project }) {
             {project.aiUsage && (
               <section>
                 <Heading id="ai">How it uses AI</Heading>
-                <p className="text-lg md:text-xl leading-relaxed text-slate-600 dark:text-slate-300">
+                <p className="text-lg md:text-xl leading-relaxed text-slate-300">
                   {project.aiUsage}
                 </p>
               </section>
@@ -143,10 +207,12 @@ export default function ProjectDetail({ project }: { project: Project }) {
                   {project.highlights.map((highlight, i) => (
                     <li
                       key={i}
-                      className="flex gap-3 text-lg md:text-xl leading-relaxed text-slate-600 dark:text-slate-300">
-                      <span className="text-sky-400 select-none mt-1" aria-hidden="true">
-                        ▸
-                      </span>
+                      className="flex gap-3 text-lg md:text-xl leading-relaxed text-slate-300"
+                    >
+                      <FiCheck
+                        className={`mt-1.5 h-5 w-5 shrink-0 ${accent.check}`}
+                        aria-hidden="true"
+                      />
                       <span>{highlight}</span>
                     </li>
                   ))}
@@ -166,7 +232,8 @@ export default function ProjectDetail({ project }: { project: Project }) {
                   <li key={s.id}>
                     <a
                       href={`#${s.id}`}
-                      className="block -ml-px border-l border-transparent pl-4 text-sm text-slate-400 hover:text-sky-400 hover:border-sky-400 transition-colors">
+                      className="block -ml-px border-l border-transparent pl-4 text-sm text-slate-400 hover:text-sky-400 hover:border-sky-400 transition-colors"
+                    >
                       {s.label}
                     </a>
                   </li>
@@ -178,16 +245,17 @@ export default function ProjectDetail({ project }: { project: Project }) {
               <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-400 mb-3">
                 Project
               </p>
-              <ProjectLinks project={project} />
+              <ProjectLinks project={project} stacked />
             </div>
           </aside>
         </div>
 
-        {/* The stack - full width, room to breathe (it's back-end heavy) */}
+        {/* The stack: Frontend / Backend / Cloud, cycling through what each
+            part uses (n8builds.dev's TechStackCycle, kept in sync) */}
         <section className="mt-16">
           <Heading id="stack">The stack</Heading>
-          <div className="rounded-2xl border border-white/10 bg-slate-900/30 px-2 py-8 md:px-8">
-            <IconCycle technologies={project.technologies} view="detailed" projectId={project.id} />
+          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 sm:p-8">
+            <TechStackCycle technologies={project.technologies} />
           </div>
         </section>
       </div>

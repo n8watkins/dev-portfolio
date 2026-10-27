@@ -1,180 +1,218 @@
 import { FaXTwitter, FaTwitch, FaYoutube } from 'react-icons/fa6'
 import { motion } from 'framer-motion'
 import Image from 'next/image'
-import { FiGithub, FiArrowUpRight, FiMail } from 'react-icons/fi'
+import Link from 'next/link'
+import { FiGithub, FiMail } from 'react-icons/fi'
 import { CiLinkedin } from 'react-icons/ci'
-import { fadeInUpVariants, fadeInVariants, staggerContainerVariants, staggerItemVariants, defaultAnimationConfig } from '@/lib/animations'
+import { fadeInVariants, defaultAnimationConfig } from '@/lib/animations'
+import SectionHeading from '@/components/ui/SectionHeading'
+import SiteDoors from '@/components/ui/SiteDoors'
+import { projects } from '@/data/projects'
+import { RESUME_VIEW_URL } from '@/lib/resume'
+import CookieSettingsButton from '@/components/consent/CookieSettingsButton'
+
+const EMAIL = 'contact@n8builds.dev'
+const CONTACT_FORM = 'https://n8builds.dev/#contact-form'
+
+const ICON_BUTTON =
+  'inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-600 text-slate-200 transition-all duration-200 hover:border-sky-400/60 hover:text-sky-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 sm:h-11 sm:w-11'
+const LINK = 'text-sm text-slate-400 transition-colors duration-200 hover:text-sky-300'
+
+/**
+ * The streaming links (Twitch, YouTube) stay hidden until streaming starts,
+ * as on n8builds.dev; flip this then.
+ */
+const STREAMING = false
+
+const socials = [
+  { href: 'https://github.com/n8watkins', label: 'GitHub', Icon: FiGithub, pad: 'p-3' },
+  {
+    href: 'https://www.linkedin.com/in/n8watkins/',
+    label: 'LinkedIn',
+    Icon: CiLinkedin,
+    pad: 'p-2',
+  },
+  { href: 'https://x.com/n8watkins', label: 'X', Icon: FaXTwitter, pad: 'p-3' },
+  ...(STREAMING
+    ? [
+        { href: 'https://youtube.com/@n8builds', label: 'YouTube', Icon: FaYoutube, pad: 'p-3' },
+        { href: 'https://twitch.tv/n8builds', label: 'Twitch', Icon: FaTwitch, pad: 'p-3' },
+      ]
+    : []),
+]
+
+/** The site map: this page's sections, the project pages, and the rest of me online. */
+const sitemap = [
+  {
+    title: 'On this page',
+    links: [
+      { label: 'About', href: '/#about' },
+      { label: 'Projects', href: '/#projects' },
+      { label: 'Experience', href: '/#experience' },
+      { label: 'My workshop', href: '/#appturnity' },
+      { label: 'Contact', href: '/#contact' },
+    ],
+  },
+  {
+    title: 'Projects',
+    links: projects.map((p) => ({ label: p.title, href: `/projects/${p.slug}` })),
+  },
+  {
+    title: 'Elsewhere',
+    links: [
+      { label: 'Resume', href: RESUME_VIEW_URL, external: true },
+      { label: 'n8builds.dev', href: 'https://n8builds.dev', external: true },
+      { label: 'Build log', href: 'https://n8builds.dev/builds', external: true },
+      { label: 'Appturnity', href: 'https://appturnity.com', external: true },
+      { label: 'Source code', href: 'https://github.com/n8watkins/dev-portfolio', external: true },
+    ],
+  },
+]
 
 const Footer = () => {
   return (
-    <footer className="xl:max-w-5xl  pt-0 pb-12 ">
+    <footer className="xl:max-w-5xl pt-0 pb-20 lg:pb-12">
       {/* background grid */}
       <div className="w-full absolute left-0 1sm:-translate-y-52 -bottom-72 min-h-96 pointer-events-none">
-         <Image
-           src="/footer-grid.svg"
-           alt=""
-           className="w-full h-full opacity-50 z-10 pointer-events-none"
-           fill
-           sizes="100vw"
+        <Image
+          src="/footer-grid.svg"
+          alt=""
+          className="w-full h-full opacity-50 z-10 pointer-events-none"
+          fill
+          sizes="100vw"
         />
-        </div>
+      </div>
 
+      <div className="px-4 pt-6 md:pt-20">
+        <SectionHeading
+          eyebrow="Contact"
+          title={
+            <>
+              Let&apos;s build something <span className="text-sky-400">together</span>
+            </>
+          }
+        >
+          Hiring a full-stack developer, or have a project in mind? Reach out!
+        </SectionHeading>
 
-      <div className="flex flex-col items-center">
-        {/* Header */}
-        <motion.div
-          variants={fadeInUpVariants}
-          {...defaultAnimationConfig}
-          className="text-center mb-12">
-          <h2 className="text-5xl font-bold py-14 text-slate-800 dark:text-slate-200 select-none lg:max-w-[45vw] mb-6">
-            Let&apos;s build something <span className="text-sky-400">amazing together!</span>
-          </h2>
-          <p className="text-slate-600 dark:text-slate-400 max-w-2xl mx-auto px-5 leading-tight text-lg md:text-xl">
-            Got a project in mind? Let&apos;s chat! 💬
-          </p>
-        </motion.div>
-
-        {/* Slim contact card - this site routes; inbound contact lives on n8builds.dev */}
+        {/* One centred block, framed in the site's cyan-to-blue like the hero's
+            cards: the address, LinkedIn and X, then the form on n8builds.dev. */}
         <motion.div
           variants={fadeInVariants}
           {...defaultAnimationConfig}
-          className="w-full max-w-2xl mx-auto mb-8 px-4">
-          <div className="bg-white/5 dark:bg-slate-900/50 backdrop-blur-sm rounded-2xl p-8 border border-white/10 shadow-xl flex flex-col items-center gap-6">
-            <div className="flex flex-wrap items-center justify-center gap-3">
-              <a
-                href="https://n8builds.dev"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Get in touch via my main site, n8builds.dev"
-                className="group flex items-center gap-2 px-5 py-2.5 rounded-full border border-sky-400/40 text-base font-semibold text-slate-800 dark:text-slate-200 hover:text-white hover:border-transparent hover:bg-gradient-to-r hover:from-cyan-400 hover:to-blue-600 hover:shadow-lg hover:shadow-sky-500/40 transition-all duration-300"
-              >
-                Get in touch - n8builds.dev
-                <FiArrowUpRight
-                  className="w-4 h-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform duration-300"
-                  aria-hidden="true"
-                />
-              </a>
-              <a
-                href="https://appturnity.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Consulting inquiries via Appturnity"
-                className="group flex items-center gap-2 px-5 py-2.5 rounded-full border border-slate-400 dark:border-slate-600 text-base font-semibold text-slate-800 dark:text-slate-200 hover:bg-white hover:text-slate-900 dark:hover:text-slate-900 hover:border-white hover:shadow-lg hover:shadow-slate-100/20 transition-all duration-300"
-              >
-                Consulting -{' '}
-                <span className="relative">
-                  Appturnity
-                  {/* Appturnity's hand-drawn understroke, shown on hover */}
-                  <svg
-                    className="absolute -bottom-1.5 left-0 w-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-[#237EF6]/40"
-                    viewBox="0 0 300 12"
-                    fill="none"
-                    aria-hidden="true">
-                    <path
-                      d="M1 5.5C54.5 2.5 150.5 1.5 299 11.5"
-                      stroke="currentColor"
-                      strokeWidth="14"
-                      strokeLinecap="round"
-                    />
-                  </svg>
-                </span>
-                <FiArrowUpRight
-                  className="w-4 h-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform duration-300"
-                  aria-hidden="true"
-                />
-              </a>
+          className="mx-auto mt-8 mb-8 w-full rounded-3xl bg-gradient-to-br from-cyan-400/40 via-blue-500/20 to-blue-600/40 p-px shadow-xl shadow-black/30"
+        >
+          <div className="relative overflow-hidden rounded-[23px] bg-[#0b1324] px-5 py-8 text-center sm:px-10 sm:py-10">
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute -top-24 left-1/2 h-48 w-[28rem] -translate-x-1/2 rounded-full bg-cyan-500/[0.12] blur-3xl"
+            />
+            <div className="relative flex flex-col items-center gap-5">
+              <div className="flex flex-wrap items-center justify-center gap-2.5">
+                <a
+                  href={`mailto:${EMAIL}`}
+                  className="inline-flex h-10 items-center justify-center gap-2 rounded-full bg-gradient-to-r from-cyan-500 to-blue-600 px-4 text-sm font-semibold text-white transition-all duration-200 hover:from-cyan-400 hover:to-blue-500 hover:shadow-lg hover:shadow-sky-500/30 sm:h-11 sm:px-5 sm:text-base"
+                >
+                  <FiMail className="h-4 w-4" aria-hidden="true" />
+                  {EMAIL}
+                </a>
+                <a
+                  href="https://www.linkedin.com/in/n8watkins/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="LinkedIn (new tab)"
+                  title="LinkedIn"
+                  className={ICON_BUTTON}
+                >
+                  <CiLinkedin className="h-6 w-6" aria-hidden="true" />
+                </a>
+                <a
+                  href="https://x.com/n8watkins"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="X (new tab)"
+                  title="X"
+                  className={ICON_BUTTON}
+                >
+                  <FaXTwitter className="h-4 w-4" aria-hidden="true" />
+                </a>
+              </div>
+              <div className="h-px w-full max-w-sm bg-gradient-to-r from-transparent via-white/15 to-transparent" />
+              <p className="text-sm text-slate-300 sm:text-base">
+                Or message me through{' '}
+                <a
+                  href={CONTACT_FORM}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-semibold text-sky-300 underline decoration-sky-300/40 underline-offset-4 transition-colors hover:text-sky-200 hover:decoration-sky-200"
+                >
+                  n8builds.dev
+                  <span className="sr-only"> (its contact form, in a new tab)</span>
+                </a>
+                .
+              </p>
             </div>
-            <a
-              href="mailto:nathancwatkins23@gmail.com"
-              className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400 hover:text-sky-500 dark:hover:text-sky-400 transition-colors duration-200"
-            >
-              <FiMail className="w-4 h-4" aria-hidden="true" />
-              nathancwatkins23@gmail.com
-            </a>
           </div>
         </motion.div>
       </div>
-      <motion.div
-        variants={staggerContainerVariants}
-        {...defaultAnimationConfig}
-        className="flex mt-8 lg:flex-row flex-col-reverse justify-center xl:justify-between items-center gap-8 lg:mx-10">
-        <motion.p
-          variants={staggerItemVariants}
-          className="lg:text-base text-sm lg:font-normal font-light">
-          Copyright © 2026 Nathan Watkins
-        </motion.p>
 
-        <motion.nav
-          variants={staggerItemVariants}
-          aria-label="Footer social media links"
-          className="flex items-center justify-center pb-4 gap-3 z-50">
-          <a
-            href="https://n8builds.dev"
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="Visit my main site, n8builds.dev"
-            className="flex items-center gap-1 text-sm text-slate-600 dark:text-slate-400 hover:text-sky-500 dark:hover:text-sky-400 transition-colors duration-200"
-          >
-            n8builds.dev
-            <FiArrowUpRight className="w-4 h-4" aria-hidden="true" />
-          </a>
-          <a
-            href="https://appturnity.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="Visit Appturnity, my consulting company"
-            className="flex items-center gap-1 text-sm text-slate-600 dark:text-slate-400 hover:text-sky-500 dark:hover:text-sky-400 transition-colors duration-200"
-          >
-            Appturnity
-            <FiArrowUpRight className="w-4 h-4" aria-hidden="true" />
-          </a>
-          <span className="w-px h-6 bg-slate-300 dark:bg-slate-700" aria-hidden="true" />
-          <a
-            href="https://github.com/n8watkins"
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="View Nathan's GitHub profile"
-            className="w-12 h-12 rounded-full hover:bg-blue-500/60 dark:hover:bg-slate-700/70 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:ring-offset-2 focus-visible:ring-offset-darkBlue transition-all duration-200"
-          >
-            <FiGithub className="w-full h-full p-3" aria-hidden="true" />
-          </a>
-          <a
-            href="https://www.linkedin.com/in/n8watkins/"
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="View Nathan's LinkedIn profile"
-            className="w-12 h-12 rounded-full hover:bg-blue-500/60 dark:hover:bg-slate-700/70 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:ring-offset-2 focus-visible:ring-offset-darkBlue transition-all duration-200"
-          >
-            <CiLinkedin className="w-full h-full p-2" aria-hidden="true" />
-          </a>
-          <a
-            href="https://x.com/n8watkins"
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="View Nathan's X (Twitter) profile"
-            className="w-12 h-12 rounded-full hover:bg-blue-500/60 dark:hover:bg-slate-700/70 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:ring-offset-2 focus-visible:ring-offset-darkBlue transition-all duration-200"
-          >
-            <FaXTwitter className="w-full h-full p-3" aria-hidden="true" />
-          </a>
-          <a
-            href="https://twitch.tv/n8builds"
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="Follow Nathan on Twitch"
-            className="w-12 h-12 rounded-full hover:bg-blue-500/60 dark:hover:bg-slate-700/70 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:ring-offset-2 focus-visible:ring-offset-darkBlue transition-all duration-200"
-          >
-            <FaTwitch className="w-full h-full p-3" aria-hidden="true" />
-          </a>
-          <a
-            href="https://youtube.com/@n8builds"
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="Follow Nathan on YouTube"
-            className="w-12 h-12 rounded-full hover:bg-blue-500/60 dark:hover:bg-slate-700/70 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:ring-offset-2 focus-visible:ring-offset-darkBlue transition-all duration-200"
-          >
-            <FaYoutube className="w-full h-full p-3" aria-hidden="true" />
-          </a>
-        </motion.nav>
+      {/* The site footer: the two other sites as the hero's cards, a site map, then the fine print. */}
+      <motion.div {...defaultAnimationConfig} variants={fadeInVariants} className="mt-14 px-4">
+        <div className="grid gap-10 border-t border-white/[0.08] pt-10 lg:grid-cols-[minmax(0,1.45fr)_minmax(0,1fr)] lg:gap-12">
+          <div className="flex flex-col gap-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-300">
+              Where else I build
+            </p>
+            <SiteDoors />
+          </div>
+          <nav aria-label="Site map" className="grid grid-cols-2 gap-x-6 gap-y-8 sm:grid-cols-3">
+            {sitemap.map((col) => (
+              <div key={col.title} className="flex flex-col gap-2.5">
+                <p className="whitespace-nowrap text-xs font-semibold uppercase tracking-[0.18em] text-slate-300">
+                  {col.title}
+                </p>
+                <ul className="flex flex-col gap-2">
+                  {col.links.map((l) => (
+                    <li key={l.label}>
+                      {'external' in l && l.external ? (
+                        <a href={l.href} target="_blank" rel="noopener noreferrer" className={LINK}>
+                          {l.label}
+                          <span className="sr-only"> (opens in a new tab)</span>
+                        </a>
+                      ) : (
+                        <Link href={l.href} className={LINK}>
+                          {l.label}
+                        </Link>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </nav>
+        </div>
+
+        <div className="mt-10 flex flex-col-reverse items-center justify-between gap-4 border-t border-white/[0.06] pt-6 sm:flex-row">
+          <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
+            <p className="text-sm text-slate-400">Copyright © 2026 Nathan Watkins</p>
+            {/* Reopens the analytics consent banner (components/consent). */}
+            <CookieSettingsButton className="cursor-pointer text-sm text-slate-400 transition-colors duration-200 hover:text-sky-300" />
+          </div>
+          <nav aria-label="Footer social media links" className="flex items-center gap-1">
+            {socials.map(({ href, label, Icon, pad }) => (
+              <a
+                key={href}
+                href={href}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={`View Nathan's ${label} profile`}
+                className="h-11 w-11 rounded-full transition-all duration-200 hover:bg-slate-700/70 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+              >
+                <Icon className={`h-full w-full ${pad}`} aria-hidden="true" />
+              </a>
+            ))}
+          </nav>
+        </div>
       </motion.div>
     </footer>
   )
