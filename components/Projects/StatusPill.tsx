@@ -95,8 +95,8 @@ export function DemoSleepNote({ className = '' }: { className?: string }) {
           aria-hidden="true"
         />
         <span>
-          Live demos run {DEMO_HOURS} and sleep on weekends; the first visit then may take up to a
-          minute to wake.
+          Live demos run {DEMO_HOURS}. On weekends they sleep, so the first visit can take a minute
+          to wake one up.
         </span>
       </p>
       <p className="flex items-start gap-2">

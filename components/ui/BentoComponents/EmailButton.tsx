@@ -48,7 +48,7 @@ const EmailButton: React.FC<ResumeButtonsProps> = ({ buttonContainer, buttonClas
       <BackgroundGradientAnimation interactive={false} className="h-full pb-32 group pointer-events-none ">
         <div className="z-50 flex justify-center group-hover:scale-105 duration-200  text-2xl pt-5  font-sans font-bold ">
           <h2 className="text-slate-800 dark:text-white text-2xl text-center  lg:text-2xl xl:text-3xl pt-3    ">
-            Have a Project? Let&apos;s Connect!{' '}
+            Have a project? Let&apos;s connect!{' '}
           </h2>
         </div>
         {/* First firework - BAM! */}

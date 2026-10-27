@@ -127,7 +127,7 @@ const doors: Door[] = [
     icon: '/brands/appturnity.png',
     title: 'Web services for service businesses',
     blurb:
-      'We build pool, HVAC, landscaping and other service businesses a free website, then automate their busywork with AI.',
+      'We build pool, HVAC and landscaping businesses a free website, then automate their busywork with AI.',
     pointsLabel: 'Today',
     points: [
       'A website built and launched for you, free',
