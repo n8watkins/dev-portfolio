@@ -307,7 +307,13 @@ test.describe('dino easter egg (motion allowed)', () => {
 
   test('once back in from a side, it walks well into the panel before turning or leaving', async ({
     page,
+    browserName,
   }) => {
+    // A long game-logic check, the same in every engine: Chromium only. In CI,
+    // Firefox and WebKit can deliver animation frames a second or more apart,
+    // and the dino's per-frame step cap (so a stall can't fling it) then slows
+    // its clock far below the test's, so a 45s wait can pass with few moves.
+    test.skip(browserName !== 'chromium', 'game logic, checked in Chromium (slow CI frames elsewhere)')
     // Short stays, so it would turn or leave at once if it could: it leaves,
     // comes back in from a side, and wants to turn straight away.
     await dinoTiming(page, {
@@ -407,9 +413,24 @@ test.describe('dino easter egg (motion allowed)', () => {
 
   test('roams: leaps up, drops down, turns round, and comes back in from elsewhere', async ({
     page,
+    browserName,
   }) => {
-    // Short stays so it chooses often; no lines to stop it.
-    await dinoTiming(page, { roam: true, stay: [0.2, 0.4], firstLineAfter: 600 })
+    // A long game-logic check, the same in every engine: Chromium only. In CI,
+    // Firefox and WebKit can deliver animation frames a second or more apart,
+    // and the dino's per-frame step cap (so a stall can't fling it) then slows
+    // its clock far below the test's, so a 45s wait can pass with few moves.
+    test.skip(browserName !== 'chromium', 'game logic, checked in Chromium (slow CI frames elsewhere)')
+    // Short stays so it chooses often; no lines to stop it. Its choices and
+    // ways back in go round in a fixed order (change rows, turn, change, turn,
+    // leave; in from the left, the right, then above), so every move comes up
+    // within a few cycles instead of whenever the shuffle allows.
+    await dinoTiming(page, {
+      roam: true,
+      stay: [0.2, 0.4],
+      firstLineAfter: 600,
+      choices: ['change', 'turn', 'change', 'turn', 'exit'],
+      entries: ['left', 'right', 'drop'],
+    })
     await page.goto('/')
     await showKit(page, '[data-dino-panel]')
     await expect(dino(page)).toHaveAttribute('data-mode', 'walk', { timeout: 10_000 })
