@@ -82,23 +82,13 @@ const OPENPING_LINK =
   'font-semibold text-emerald-300 underline decoration-emerald-300/40 underline-offset-4 transition-colors hover:text-emerald-200 hover:decoration-emerald-200'
 
 /**
- * When the demos run (kept awake on weekdays only, on purpose), said once near
- * the pills so "Asleep" reads as expected, and who watches them: OpenPing, one
- * of the owner's builds, linked to its own site and its page on n8builds.dev.
+ * Who watches the demos (OpenPing, one of the owner's builds, linked to its own
+ * site and its page on n8builds.dev), then when they run (kept awake on
+ * weekdays only, on purpose), said once near the pills so "Asleep" reads as expected.
  */
 export function DemoSleepNote({ className = '' }: { className?: string }) {
   return (
     <div className={`flex flex-col gap-1.5 text-sm text-slate-400 ${className}`}>
-      <p className="flex items-start gap-2">
-        <span
-          className="mt-[0.4rem] h-2 w-2 shrink-0 rounded-full bg-slate-400"
-          aria-hidden="true"
-        />
-        <span>
-          Live demos run {DEMO_HOURS}. On weekends they sleep, so the first visit can take a minute
-          to wake one up.
-        </span>
-      </p>
       <p className="flex items-start gap-2">
         <Image
           src="/builds/openping/icon.svg"
@@ -129,6 +119,16 @@ export function DemoSleepNote({ className = '' }: { className?: string }) {
             How I built it
             <span className="sr-only"> on n8builds.dev (opens in a new tab)</span>
           </a>
+        </span>
+      </p>
+      <p className="flex items-start gap-2">
+        <span
+          className="mt-[0.4rem] h-2 w-2 shrink-0 rounded-full bg-slate-400"
+          aria-hidden="true"
+        />
+        <span>
+          Live demos run {DEMO_HOURS}. On weekends they sleep, so the first visit can take a minute
+          to wake one up.
         </span>
       </p>
     </div>

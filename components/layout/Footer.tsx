@@ -25,7 +25,12 @@ const STREAMING = false
 
 const socials = [
   { href: 'https://github.com/n8watkins', label: 'GitHub', Icon: FiGithub, pad: 'p-3' },
-  { href: 'https://www.linkedin.com/in/n8watkins/', label: 'LinkedIn', Icon: CiLinkedin, pad: 'p-2' },
+  {
+    href: 'https://www.linkedin.com/in/n8watkins/',
+    label: 'LinkedIn',
+    Icon: CiLinkedin,
+    pad: 'p-2',
+  },
   { href: 'https://x.com/n8watkins', label: 'X', Icon: FaXTwitter, pad: 'p-3' },
   ...(STREAMING
     ? [
@@ -58,7 +63,7 @@ const sitemap = [
       { label: 'n8builds.dev', href: 'https://n8builds.dev', external: true },
       { label: 'Build log', href: 'https://n8builds.dev/builds', external: true },
       { label: 'Appturnity', href: 'https://appturnity.com', external: true },
-      { label: 'Source on GitHub', href: 'https://github.com/n8watkins/dev-portfolio', external: true },
+      { label: 'Source code', href: 'https://github.com/n8watkins/dev-portfolio', external: true },
     ],
   },
 ]
@@ -90,7 +95,7 @@ const Footer = () => {
         </SectionHeading>
 
         {/* One centred block, framed in the site's cyan-to-blue like the hero's
-            cards: email, LinkedIn and X, the address, then the form on n8builds.dev. */}
+            cards: the address, LinkedIn and X, then the form on n8builds.dev. */}
         <motion.div
           variants={fadeInVariants}
           {...defaultAnimationConfig}
@@ -108,7 +113,7 @@ const Footer = () => {
                   className="inline-flex h-10 items-center justify-center gap-2 rounded-full bg-gradient-to-r from-cyan-500 to-blue-600 px-4 text-sm font-semibold text-white transition-all duration-200 hover:from-cyan-400 hover:to-blue-500 hover:shadow-lg hover:shadow-sky-500/30 sm:h-11 sm:px-5 sm:text-base"
                 >
                   <FiMail className="h-4 w-4" aria-hidden="true" />
-                  Email me
+                  {EMAIL}
                 </a>
                 <a
                   href="https://www.linkedin.com/in/n8watkins/"
@@ -131,12 +136,6 @@ const Footer = () => {
                   <FaXTwitter className="h-4 w-4" aria-hidden="true" />
                 </a>
               </div>
-              <a
-                href={`mailto:${EMAIL}`}
-                className="text-sm text-slate-400 transition-colors duration-200 hover:text-sky-400"
-              >
-                {EMAIL}
-              </a>
               <div className="h-px w-full max-w-sm bg-gradient-to-r from-transparent via-white/15 to-transparent" />
               <p className="text-sm text-slate-300 sm:text-base">
                 Or message me through{' '}

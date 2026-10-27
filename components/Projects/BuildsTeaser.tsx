@@ -29,7 +29,7 @@ interface Build {
   /** A screenshot beside the copy (contain: a small popup, shown whole on a dark frame). */
   shot?: { src: string; alt: string; contain?: boolean }
   /** The accent: the product's own colour (text and the card's glow). */
-  accent: { text: string; glow: string; bar: string }
+  accent: { text: string; glow: string; bar: string; rgb: string }
 }
 
 const BUILDS: Build[] = [
@@ -46,7 +46,12 @@ const BUILDS: Build[] = [
     desc: 'Hold a hotkey, talk and let go: your words land at the cursor in any app, transcribed by Whisper on your own PC.',
     tags: ['Tauri', 'Rust', 'whisper.cpp'],
     liveSite: 'https://scribe.n8builds.dev',
-    accent: { text: 'text-sky-300', glow: 'from-sky-400/[0.14]', bar: 'bg-sky-400' },
+    accent: {
+      text: 'text-sky-300',
+      glow: 'from-sky-400/[0.14]',
+      bar: 'bg-sky-400',
+      rgb: '56 189 248',
+    },
   },
   {
     slug: 'openping',
@@ -61,7 +66,12 @@ const BUILDS: Build[] = [
     desc: 'Watches live demos, the ones on this page included, from your own Cloudflare account; off-hours never count as downtime.',
     tags: ['Cloudflare Workers', 'D1', 'Hono', 'React'],
     liveSite: 'https://openping.n8builds.dev',
-    accent: { text: 'text-emerald-300', glow: 'from-emerald-400/[0.14]', bar: 'bg-emerald-400' },
+    accent: {
+      text: 'text-emerald-300',
+      glow: 'from-emerald-400/[0.14]',
+      bar: 'bg-emerald-400',
+      rgb: '52 211 153',
+    },
   },
   {
     slug: 'solara',
@@ -73,7 +83,12 @@ const BUILDS: Build[] = [
     desc: 'The UV index is a number, not an answer. Solara turns live UV, your skin type and your sunscreen into safe sun windows.',
     tags: ['Next.js', 'Firebase', 'Open-Meteo'],
     liveSite: 'https://solara-uv.web.app',
-    accent: { text: 'text-orange-300', glow: 'from-orange-400/[0.14]', bar: 'bg-orange-400' },
+    accent: {
+      text: 'text-orange-300',
+      glow: 'from-orange-400/[0.14]',
+      bar: 'bg-orange-400',
+      rgb: '250 204 21',
+    },
   },
   {
     slug: 'portfolio-rank',
@@ -93,7 +108,12 @@ const BUILDS: Build[] = [
     desc: 'Nearly 2,000 developer portfolios, ranked by head-to-head votes instead of A to Z, with a real screenshot of every site.',
     tags: ['Next.js', 'Gemini', 'Turso', 'Vercel'],
     liveSite: 'https://portfoliorank.vercel.app',
-    accent: { text: 'text-amber-300', glow: 'from-amber-400/[0.14]', bar: 'bg-amber-400' },
+    accent: {
+      text: 'text-amber-300',
+      glow: 'from-amber-400/[0.14]',
+      bar: 'bg-amber-400',
+      rgb: '251 191 36',
+    },
   },
   {
     slug: 'tubevault',
@@ -108,7 +128,12 @@ const BUILDS: Build[] = [
     tagline: 'Local-first YouTube archiver',
     desc: 'Archive YouTube videos, playlists and whole channels with a local yt-dlp helper. Your library, on your own disk.',
     tags: ['Chrome MV3', 'yt-dlp', 'React'],
-    accent: { text: 'text-rose-300', glow: 'from-rose-400/[0.14]', bar: 'bg-rose-400' },
+    accent: {
+      text: 'text-rose-300',
+      glow: 'from-rose-400/[0.14]',
+      bar: 'bg-rose-400',
+      rgb: '251 113 133',
+    },
   },
   {
     slug: 'piper-tts',
@@ -123,7 +148,12 @@ const BUILDS: Build[] = [
     tagline: 'Fully local read-aloud for Chrome',
     desc: 'Highlight text, right-click, and hear it read aloud by a Piper model running fully on your machine. No cloud, no keys.',
     tags: ['Chrome MV3', 'Piper', 'React'],
-    accent: { text: 'text-violet-300', glow: 'from-violet-400/[0.14]', bar: 'bg-violet-400' },
+    accent: {
+      text: 'text-violet-300',
+      glow: 'from-violet-400/[0.14]',
+      bar: 'bg-violet-400',
+      rgb: '167 139 250',
+    },
   },
   {
     slug: 'tldw',
@@ -133,7 +163,12 @@ const BUILDS: Build[] = [
     tagline: 'One-keystroke YouTube to Gemini',
     desc: "On any YouTube video, press Alt+G: it opens Gemini with your saved prompt and the video, and submits. Too Long; Didn't Watch.",
     tags: ['Chrome MV3', 'TypeScript', 'Vite'],
-    accent: { text: 'text-orange-300', glow: 'from-orange-400/[0.14]', bar: 'bg-orange-400' },
+    accent: {
+      text: 'text-orange-300',
+      glow: 'from-orange-400/[0.14]',
+      bar: 'bg-orange-400',
+      rgb: '251 146 60',
+    },
   },
 ]
 
@@ -228,7 +263,9 @@ export default function BuildsTeaser() {
 
       {/* One build at a time, in its own colour */}
       <div
-        className="relative mt-5 overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] p-5 sm:p-6"
+        // On hover the card's edge and a soft glow pick up the current build's colour.
+        className="relative mt-5 overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] p-5 transition-[border-color,box-shadow] duration-300 hover:border-[rgb(var(--build)/0.4)] hover:shadow-[0_0_44px_-16px_rgb(var(--build)/0.5)] sm:p-6"
+        style={{ '--build': build.accent.rgb } as React.CSSProperties}
         role="group"
         aria-roledescription="carousel"
         aria-label="Builds on n8builds.dev"
