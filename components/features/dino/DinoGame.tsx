@@ -84,8 +84,11 @@ interface Level {
 const COLORS = { body: '#cfdbe9', eye: '#081427', shine: '#ffffff' } as const
 // Each roar gives the body a new random colour: a bright, light hue at least
 // 60 degrees round the wheel from the last one, so the change always shows.
-// Now and then (1 in 12, and every 10th catch in a round) it turns rainbow.
+// Now and then it turns rainbow: 1 in 12 at random, always on the 5th
+// click, and on every 10th catch in a round.
 const RAINBOW_ODDS = 1 / 12
+// And always on the visit's 5th click, so it gets found.
+const RAINBOW_CLICK = 5
 const RAINBOW = ['#f87171', '#fb923c', '#facc15', '#4ade80', '#22d3ee', '#818cf8', '#e879f9']
 function randomHue(last: number) {
   const hue = (last + 60 + Math.random() * 240) % 360
@@ -186,8 +189,11 @@ function makeBubble(text: string, px: number) {
   return { left, right, w: left.cols * px, h: left.rows * px }
 }
 type Bubble = ReturnType<typeof makeBubble>
-// The roar is a touch chunkier than the dino, so the word reads.
-const ROAR = makeBubble('RAWR!', 3)
+// The roar is a touch chunkier than the dino, so the word reads. Each click
+// shouts the next of these, from a shuffled bag, never the same twice in a
+// row (letters, ! ? . ' and spaces: the pixel font has no digits).
+export const ROAR_WORDS = ['RAWR!', 'TOO SLOW!', 'MISSED ME!', 'NOPE!', 'CATCH ME!', 'HEY!']
+const ROARS = ROAR_WORDS.map((word) => makeBubble(word, 3))
 
 /**
  * Things the dino says now and then while it walks, in this order, each once
@@ -215,8 +221,16 @@ interface DinoTiming {
   roam?: boolean
   /** Click reactions in this order, round and round, instead of shuffled. */
   reactions?: readonly Reaction[]
+  /** Roaming choices and ways back in, the same way. */
+  choices?: readonly Choice[]
+  entries?: readonly Entry[]
 }
 const between = ([a, b]: readonly [number, number]) => a + Math.random() * (b - a)
+// Hands out the items in order, round and round (the tests' fixed sequences).
+function cycle<T>(items: readonly T[]) {
+  let i = 0
+  return () => items[i++ % items.length]
+}
 // Hands out a shuffled bag's items one by one, reshuffling when it is empty.
 function bag<T>(items: readonly T[]) {
   let left: T[] = []
@@ -246,7 +260,7 @@ const FRAMES = (Object.keys(DINO_FRAMES) as DinoFrame[]).map((name) => ({
 
 export default function DinoGame() {
   const dinoRef = useRef<HTMLDivElement>(null)
-  const bubbleRef = useRef<HTMLDivElement>(null)
+  const roarsRef = useRef<HTMLDivElement>(null)
   const linesRef = useRef<HTMLDivElement>(null)
   const scoreRef = useRef<HTMLDivElement>(null)
   // The rainbow's gradient id, unique per dino (useId's colons don't belong in url()).
@@ -254,11 +268,11 @@ export default function DinoGame() {
 
   useEffect(() => {
     const dino = dinoRef.current
-    const bubble = bubbleRef.current
+    const roarEls = [...(roarsRef.current?.children ?? [])] as HTMLElement[]
     const score = scoreRef.current
     const lineEls = [...(linesRef.current?.children ?? [])] as HTMLElement[]
     const panel = dino?.closest<HTMLElement>('[data-dino-panel]')
-    if (!dino || !bubble || !score || !panel) return
+    if (!dino || !roarEls.length || !score || !panel) return
 
     let rows: Row[] = []
     let levels: Level[] = []
@@ -319,6 +333,19 @@ export default function DinoGame() {
     // The click easter egg.
     let roars = 0
     let roarLeft = 0 // s the bubble has left
+    let roarWord = 0 // the roar showing (ROAR_WORDS)
+    const nextRoarWord = (() => {
+      const pick = bag(ROARS.map((_, i) => i))
+      return () => {
+        let next = pick()
+        if (next === roarWord && ROARS.length > 1) next = pick()
+        return next
+      }
+    })()
+    // Once it has come in from a side (or dropped in), how far it walks into
+    // the panel before it may turn round or choose to leave, px: it never
+    // peeks in and straight back out.
+    let commit = 0
     let hue = 210 // the body's last random hue
     // The game (see ROUND): a round's time left and catches, the best so far,
     // and how long the final score has left on screen.
@@ -371,16 +398,10 @@ export default function DinoGame() {
     let leaving = false // heading for the side of the panel to leave
     let awayLeft = 0
     let climb = { t: 0, from: 0, to: 0, h: 0, vx: 0, target: 0 }
-    const nextChoice = bag(CHOICES)
-    const nextReaction = timing?.reactions?.length
-      ? (() => {
-          let i = 0
-          const order = timing.reactions!
-          return () => order[i++ % order.length]
-        })()
-      : bag(REACTIONS)
+    const nextChoice = timing?.choices?.length ? cycle(timing.choices) : bag(CHOICES)
+    const nextReaction = timing?.reactions?.length ? cycle(timing.reactions) : bag(REACTIONS)
     let dashLeft = 0 // s of dashing left
-    const nextEntry = bag(ENTRIES)
+    const nextEntry = timing?.entries?.length ? cycle(timing.entries) : bag(ENTRIES)
 
     // The first time in (and without roaming, every time): it drops onto the
     // top row a little way in, walking right, so it is seen straight away.
@@ -405,6 +426,7 @@ export default function DinoGame() {
       if (entry === 'drop' || !floors.length) {
         x = panelW * (0.25 + Math.random() * 0.5)
         dir = Math.random() < 0.5 ? 1 : -1
+        commit = panelW * 0.2
         return
       }
       level = floors[Math.floor(Math.random() * floors.length)]
@@ -413,6 +435,8 @@ export default function DinoGame() {
       y = levels[level].y
       mode = 'walk'
       reentering = true
+      // From the side it walks over a third of the way in first.
+      commit = W + panelW * 0.35
     }
 
     const goAway = () => {
@@ -584,6 +608,7 @@ export default function DinoGame() {
         dashLeft = Math.max(0, dashLeft - dt)
         x += dir * speed * dt
         walked += speed * dt
+        commit = Math.max(0, commit - speed * dt)
         stayLeft -= dt * pace
         if (walked >= STEP_EVERY) {
           walked = 0
@@ -623,7 +648,7 @@ export default function DinoGame() {
                 mode = 'miss'
                 carry = current.row?.velocity ?? 0
                 missPending = false
-              } else if (roam && stayLeft <= 0 && !leaving && !reentering) {
+              } else if (roam && stayLeft <= 0 && !leaving && !reentering && commit <= 0) {
                 // Been here a while: it does something else.
                 stayLeft = between(stayFor)
                 const choice = nextChoice()
@@ -787,7 +812,7 @@ export default function DinoGame() {
       }
       if (roarLeft > 0) {
         roarLeft -= dt
-        place(bubble, ROAR, roarLeft, ROAR_FOR)
+        place(roarEls[roarWord], ROARS[roarWord], roarLeft, ROAR_FOR)
       }
       const dataset = `${frame}|${level}|${dir}|${mode}`
       if (dataset !== lastDataset) {
@@ -815,6 +840,10 @@ export default function DinoGame() {
     const roar = (event: MouseEvent) => {
       event.preventDefault()
       roars += 1
+      // A new word: the last one's bubble goes, the next one's shows.
+      roarEls[roarWord].style.visibility = 'hidden'
+      roarWord = nextRoarWord()
+      dino.dataset.roar = ROAR_WORDS[roarWord]
       roarLeft = ROAR_FOR
       // A catch: the first click starts a round (or a new one once the last
       // score has had a moment on screen), then every click counts.
@@ -830,7 +859,8 @@ export default function DinoGame() {
       dino.dataset.catches = String(catches)
       scoreboard()
       // A new colour every time; sometimes a rainbow.
-      const rainbow = Math.random() < RAINBOW_ODDS || (roundLeft > 0 && catches % 10 === 0)
+      const rainbow =
+        Math.random() < RAINBOW_ODDS || roars === RAINBOW_CLICK || (roundLeft > 0 && catches % 10 === 0)
       if (rainbow) {
         dino.style.setProperty('--dino-body', `url(#${rainbowId})`)
         dino.dataset.rainbow = 'true'
@@ -958,7 +988,11 @@ export default function DinoGame() {
           ))}
         </svg>
       </div>
-      <BubbleView ref={bubbleRef} bubble={ROAR} name="roar" />
+      <div ref={roarsRef} className="contents">
+        {ROARS.map((b, i) => (
+          <BubbleView key={ROAR_WORDS[i]} bubble={b} name={`roar-${i}`} />
+        ))}
+      </div>
       {/* The game's scoreboard, top centre of the panel (clear of its side fades): shown during a round and
           for a moment after it. Decorative, like the dino. */}
       <div
