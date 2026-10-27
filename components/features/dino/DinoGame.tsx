@@ -5,20 +5,27 @@ import { DINO_COLS, DINO_FRAMES, DINO_ROWS, framePaths, type DinoFrame } from '.
 
 /**
  * The easter egg itself (loaded lazily by DinoEasterEgg.tsx). A pixel dino
- * walks along the top of the first marquee row, hopping each gap between the
- * tiles as they scroll by. When the visitor pauses the row it is on (hovering
- * it, or focusing or tapping a tile), the dino mistimes its next jump and falls
- * through a gap to the next row, the next level, where it walks the other way.
- * Falling off the last row, it drops back in at the top left and starts over.
- * A panel with a single row gets a solid ground line under it as its second
- * level.
+ * walks along the tops of the marquee rows, hopping each gap between the
+ * tiles as they scroll by. It first drops in onto the top row, walking right.
+ * From then on it roams: after a few seconds on a row it may leap up to the
+ * row above, drop through a gap to the row below, turn around at a tile's
+ * edge, or walk off the side of the panel and come back a moment later from
+ * somewhere else (dropping in from above, or walking in from either side on
+ * any row). Its choices come from a shuffled bag, so each kind comes round
+ * soon and none repeats for long.
+ *
+ * When the visitor pauses the row it is on (hovering it, or focusing or
+ * tapping a tile), the dino mistimes its next jump and falls through a gap to
+ * the next row, where it walks the other way. Falling off the last row, it
+ * comes back in somewhere else. A panel with a single row gets a solid ground
+ * line under it as its second level.
  *
  * Clicking (or tapping) the dino makes it roar: a pixel "RAWR!" bubble pops
  * up and, if it is walking, it backflips on the spot, changing colour each
  * time. Only its own small box takes the pointer, so the tiles around it stay
  * clickable; it is decorative and hidden from assistive tech. Now and then
- * it says something in a smaller bubble (DINO_LINES), the first a few seconds
- * in, hinting that it can be clicked.
+ * it says something in a smaller bubble (DINO_LINES), the first a moment after
+ * it comes into view, hinting that it can be clicked.
  *
  * It runs on requestAnimationFrame with direct DOM writes (no React renders
  * per frame, no motion library), and stops while the panel is off screen or
@@ -36,7 +43,21 @@ const STEP_EVERY = 12 // px walked per leg swap
 const STILL = 2 // px/s: a row moving slower than this is paused
 const LANDING = 20 // px past the far edge of a gap that a hop lands
 
-type Mode = 'walk' | 'hop' | 'miss' | 'fall' | 'flip'
+// 'drop' is a jump down through a gap on purpose (a 'miss' is a mistimed
+// one), 'climb' a leap up to the row above, 'away' the moment off the panel
+// before it comes back in somewhere else.
+type Mode = 'walk' | 'hop' | 'miss' | 'drop' | 'climb' | 'fall' | 'flip' | 'away'
+// What it does at a tile's edge once it has been on a row a while: change
+// rows (up if there is a row above, else down), turn around, or head for the
+// side of the panel and leave.
+type Choice = 'change' | 'turn' | 'exit'
+const CHOICES: Choice[] = ['change', 'turn', 'change', 'exit']
+// How it comes back in after leaving.
+type Entry = 'drop' | 'left' | 'right'
+const ENTRIES: Entry[] = ['drop', 'left', 'right']
+const STAY = [2, 4.5] as const // s on a row before it chooses something
+const AWAY = [0.8, 2] as const // s off the panel before it comes back
+const CLIMB_T = 0.5 // s for a leap up to the row above
 
 interface Row {
   el: HTMLElement
@@ -153,18 +174,36 @@ const ROAR = makeBubble('RAWR!', 3)
 export const DINO_LINES = ['Psst... click me', "Can't catch me!", 'Hop hop', 'RAWR!!!']
 const CLICK_HINTS = new Set([0]) // lines that only make sense before a click
 const LINES = DINO_LINES.map((line) => makeBubble(line, 2))
-const FIRST_LINE_AFTER = 4 // s of walking in view before the first line
-const LINE_GAP = [15, 25] as const // s between lines (walking in view)
+const FIRST_LINE_AFTER = 1 // s of walking in view before the first line
+const LINE_GAP = [10, 18] as const // s between lines (walking in view)
 const LINE_FOR = 2.6 // s a line stays up
 const LINE_KEY = 'n8-dino-line' // sessionStorage: the next line to say
 /**
- * The E2E tests shorten the line waits (tests/e2e/ai-kit.spec.ts sets this
- * before the page loads) so they don't sit through 4-25s of walking; nothing
- * on the site sets it.
+ * The E2E tests shorten the waits (tests/e2e/ai-kit.spec.ts sets this before
+ * the page loads) so they don't sit through seconds of walking, and turn the
+ * roaming off where they need it to keep to its rows; nothing on the site
+ * sets it.
  */
 interface DinoTiming {
   firstLineAfter?: number
   lineGap?: readonly [number, number]
+  stay?: readonly [number, number]
+  roam?: boolean
+}
+const between = ([a, b]: readonly [number, number]) => a + Math.random() * (b - a)
+// Hands out a shuffled bag's items one by one, reshuffling when it is empty.
+function bag<T>(items: readonly T[]) {
+  let left: T[] = []
+  return () => {
+    if (!left.length) {
+      left = [...items]
+      for (let i = left.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1))
+        ;[left[i], left[j]] = [left[j], left[i]]
+      }
+    }
+    return left.pop()!
+  }
 }
 // Only the current frame shows (the root's data-frame); spelled out in full so
 // Tailwind's scanner sees each class.
@@ -264,15 +303,92 @@ export default function DinoGame() {
     let lineLeft = 0
     let flip = { t: 0, h: 0, floor: 0 }
     let angle = 0
+    // Roaming (see the top of the file).
+    const roam = timing?.roam ?? true
+    const stayFor = timing?.stay ?? STAY
+    let stayLeft = between(stayFor)
+    let leaving = false // heading for the side of the panel to leave
+    let awayLeft = 0
+    let climb = { t: 0, from: 0, to: 0, h: 0, vx: 0, target: 0 }
+    const nextChoice = bag(CHOICES)
+    const nextEntry = bag(ENTRIES)
 
+    // The first time in (and without roaming, every time): it drops onto the
+    // top row a little way in, walking right, so it is seen straight away.
     const respawn = () => {
       level = -1
       dir = 1
       mode = 'fall'
-      x = Math.max(16, panelW * 0.15)
+      x = Math.max(16, panelW * 0.3)
       y = -H
       vy = 0
       carry = 0
+      leaving = false
+      stayLeft = between(stayFor)
+    }
+
+    // Back in after leaving: dropping in from above anywhere along the top,
+    // or walking in from either side on any row.
+    const enter = () => {
+      const entry = nextEntry()
+      const floors = levels.flatMap((l, i) => (l.row ? [i] : []))
+      respawn()
+      if (entry === 'drop' || !floors.length) {
+        x = panelW * (0.25 + Math.random() * 0.5)
+        dir = Math.random() < 0.5 ? 1 : -1
+        return
+      }
+      level = floors[Math.floor(Math.random() * floors.length)]
+      dir = entry === 'left' ? 1 : -1
+      x = entry === 'left' ? -W : panelW
+      y = levels[level].y
+      mode = 'walk'
+      reentering = true
+    }
+
+    const goAway = () => {
+      mode = 'away'
+      awayLeft = between(AWAY)
+      x = -W * 3
+      leaving = false
+      if (line >= 0) lineLeft = Math.min(lineLeft, 0.1)
+    }
+
+    // A leap up to the row above: a forward arc that ends coming down onto
+    // its tiles, as high as the panel's top edge allows (it clips).
+    const startClimb = (target: number) => {
+      const from = y
+      const to = levels[target].y
+      const d = from - to
+      let h = d * 0.45 + 10
+      // The arc's highest point, for a height h: keep it inside the panel.
+      const peak = (hh: number) => {
+        const p = Math.min((4 * hh + d) / (8 * hh), 1)
+        return from - d * p - hh * 4 * p * (1 - p)
+      }
+      while (h > d / 4 + 1 && peak(h) - H < 2) h -= 2
+      // Aim for a tile of the row above where it will be on landing (that
+      // row moves too), as near as possible to an ordinary forward leap.
+      const row = levels[target].row
+      const foot = x + W / 2
+      let spotX = foot + dir * SPEED * 0.9 * CLIMB_T
+      if (row) {
+        const shift = row.velocity * CLIMB_T
+        let best = Infinity
+        for (const [a, b] of intervals(row, panel.getBoundingClientRect().left)) {
+          const lo = a + shift + 6
+          const hi = b + shift - 6
+          if (lo > hi) continue
+          const spot = Math.min(Math.max(spotX, lo), hi)
+          // Forward, and not so far it would have to fly.
+          const reach = (spot - foot) * dir
+          if (reach < SPEED * 0.3 * CLIMB_T || reach > SPEED * 1.6 * CLIMB_T) continue
+          if (Math.abs(spot - spotX) < Math.abs(best - spotX)) best = spot
+        }
+        if (best !== Infinity) spotX = best
+      }
+      climb = { t: 0, from, to, h, vx: (spotX - foot) / CLIMB_T, target }
+      mode = 'climb'
     }
 
     const support = (foot: number, spans: [number, number][]) =>
@@ -292,6 +408,7 @@ export default function DinoGame() {
       y = target.y
       vy = 0
       mode = 'walk'
+      stayLeft = between(stayFor)
     }
 
     let raf = 0
@@ -330,7 +447,8 @@ export default function DinoGame() {
       const dt = Math.min(realDt, 0.05)
       last = now
       if (!dt) return
-      const panelLeft = panel.getBoundingClientRect().left
+      const panelBox = panel.getBoundingClientRect()
+      const panelLeft = panelBox.left
 
       const current = levels[level]
 
@@ -373,11 +491,17 @@ export default function DinoGame() {
       } else if (mode === 'walk' && current) {
         x += dir * SPEED * dt
         walked += SPEED * dt
+        stayLeft -= dt
         if (walked >= STEP_EVERY) {
           walked = 0
           frame = frame === 'stepA' ? 'stepB' : 'stepA'
         }
         if (frame !== 'stepA' && frame !== 'stepB') frame = 'stepA'
+        // Roaming, it only leaves the panel when it has chosen to: heading
+        // into a side fade otherwise, it turns back (a tile can reach past
+        // the panel's side, so this can't wait for a tile's edge).
+        if (roam && !leaving && !reentering && (dir > 0 ? x + W > panelW * 0.85 : x < panelW * 0.15))
+          dir = dir > 0 ? -1 : 1
         if (spans) {
           const under = support(foot, spans)
           if (under) reentering = false
@@ -406,6 +530,27 @@ export default function DinoGame() {
                 mode = 'miss'
                 carry = current.row?.velocity ?? 0
                 missPending = false
+              } else if (roam && stayLeft <= 0 && !leaving && !reentering) {
+                // Been here a while: it does something else.
+                stayLeft = between(stayFor)
+                const choice = nextChoice()
+                const above = levels[level - 1]
+                const below = levels[level + 1]
+                if (choice === 'change' && above?.row) {
+                  startClimb(level - 1)
+                } else if (choice === 'change' && below) {
+                  // On purpose: a little hop that comes down in the gap.
+                  const T = 0.24
+                  const target = edge + dir * gap * 0.5
+                  hop = { t: 0, T, h: 10, floor: current.y, vx: (target - foot) / T }
+                  mode = 'drop'
+                  carry = current.row?.velocity ?? 0
+                } else if (choice === 'turn') {
+                  dir = dir > 0 ? -1 : 1
+                } else {
+                  // Walks on, hopping as usual, until it leaves the panel.
+                  leaving = true
+                }
               } else {
                 // A lunge sized to the gap: it clears it and lands a little
                 // way onto the next tile (relative to the row, which carries
@@ -420,7 +565,7 @@ export default function DinoGame() {
             }
           }
         }
-      } else if (mode === 'hop' || mode === 'miss') {
+      } else if (mode === 'hop' || mode === 'miss' || mode === 'drop') {
         hop.t += dt
         const p = Math.min(hop.t / hop.T, 1)
         x += hop.vx * dt
@@ -439,6 +584,29 @@ export default function DinoGame() {
             vy = 0
           }
         }
+      } else if (mode === 'climb') {
+        // Through the air on its own (no row carries it), landing on the row
+        // above; if that comes down in a gap, it falls back to where it was.
+        climb.t += dt
+        const p = Math.min(climb.t / CLIMB_T, 1)
+        x += climb.vx * dt
+        y = climb.from + (climb.to - climb.from) * p - climb.h * 4 * p * (1 - p)
+        frame = 'hop'
+        if (p >= 1) {
+          level = climb.target
+          missPending = false
+          const target = levels[level]
+          const up = target.row ? intervals(target.row, panelLeft) : null
+          land(target, up)
+          if (up && !support(x + W / 2, up)) {
+            mode = 'fall'
+            carry = 0
+            frame = 'fall'
+          } else frame = 'stepA'
+        }
+      } else if (mode === 'away') {
+        awayLeft -= dt
+        if (awayLeft <= 0) enter()
       } else if (mode === 'flip') {
         // Rides along with its tile while it spins.
         flip.t += dt
@@ -468,12 +636,16 @@ export default function DinoGame() {
           land(target, target.row ? intervals(target.row, panelLeft) : null)
           frame = 'stepA'
         } else if (!target && y > panelH + H) {
-          respawn()
+          if (roam) goAway()
+          else respawn()
         }
       }
 
-      // Off one end of a level: come back in at the other.
-      if (mode === 'walk') {
+      // Off one end of a level: roaming, it is gone for a moment and comes
+      // back somewhere else; otherwise it comes back in at the other end.
+      if (mode === 'walk' && roam && ((dir > 0 && x > panelW) || (dir < 0 && x < -W))) {
+        goAway()
+      } else if (mode === 'walk') {
         if (dir > 0 && x > panelW) {
           x = -W
           reentering = true
@@ -490,9 +662,14 @@ export default function DinoGame() {
       dino.style.transform = `translate3d(${x.toFixed(1)}px, ${(y - H).toFixed(1)}px, 0) scaleX(${dir}) rotate(${angle.toFixed(1)}deg)`
 
       // Now and then it says something: counted while it walks in plain
-      // view (clear of the edge fades, so the line is seen), never over a
-      // roar.
-      const clear = x > panelW * 0.22 && x + W < panelW * 0.78
+      // view (clear of the edge fades, and well inside the window, so the
+      // line is seen), never over a roar.
+      const onPage = panelBox.top + y
+      const clear =
+        x > panelW * 0.22 &&
+        x + W < panelW * 0.78 &&
+        onPage > innerHeight * 0.1 &&
+        onPage < innerHeight * 0.9
       if (line < 0 && roarLeft <= 0 && mode === 'walk' && clear && nextLine < LINES.length) {
         lineWait -= dt
         if (lineWait <= 0) {
@@ -507,7 +684,7 @@ export default function DinoGame() {
               // Storage blocked: lines may repeat next visit.
             }
           }
-          lineWait = lineGap[0] + Math.random() * (lineGap[1] - lineGap[0])
+          lineWait = between(lineGap)
         }
       }
       if (line >= 0) {
@@ -562,7 +739,7 @@ export default function DinoGame() {
     respawn()
     const resize = new ResizeObserver(() => {
       measure()
-      if (x > panelW) respawn()
+      if (mode !== 'away' && x > panelW) respawn()
     })
     resize.observe(panel)
     const visibility = new IntersectionObserver((entries) => {
