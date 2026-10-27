@@ -28,6 +28,9 @@ export function TechStack() {
   return (
     <div
       data-dino-panel
+      // The dino game sends its rounds to n8builds.dev (app/api/game there):
+      // counts only, no cookies; n8builds.dev's privacy page covers both sites.
+      data-dino-stats="https://n8builds.dev/api/game"
       className="absolute inset-0 flex w-full flex-col items-center justify-end overflow-hidden rounded-3xl bg-gradient-to-br from-[#0d304c] to-[#0d304c] pb-[4.5rem] select-none [-webkit-tap-highlight-color:transparent] sm:pb-[6rem] motion-safe:gap-5 motion-reduce:justify-start motion-reduce:overflow-y-auto motion-safe:[&_figure]:h-24"
     >
       <Marquee
