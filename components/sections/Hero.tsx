@@ -40,23 +40,39 @@ const socials = [
 ]
 
 /**
- * The two sites this one leads to, each with a line on what it is and why to
- * go. The resume is a button beside the socials (and top right in the navbar).
+ * The two sites this one leads to, each in its own brand: n8builds.dev's
+ * cyan-to-blue and its N8 mark, Appturnity's white-to-light-blue and its A.
+ * A gradient hairline frames each card; on hover (or keyboard focus) the
+ * brand's colour washes in, the mark lifts and the arrow nudges out. CSS only.
  */
 const doors = [
   {
     href: 'https://n8builds.dev',
+    eyebrow: 'I build in public',
     name: 'n8builds.dev',
     icon: '/tab/n8-icon.png',
-    line: 'Where I build in public: free, open-source tools.',
-    ring: 'hover:border-sky-400/50',
+    pitch: 'Free tools I ship every week. Try one, or fork it.',
+    detail: '7 builds · all open source',
+    frame:
+      'from-cyan-400/50 via-blue-500/30 to-blue-600/50 group-hover:from-cyan-300 group-hover:to-blue-500',
+    wash: 'from-cyan-500/25 via-blue-600/10',
+    eyebrowText: 'from-cyan-300 to-blue-400',
+    dot: 'bg-emerald-400',
+    glow: 'hover:shadow-xl hover:shadow-cyan-500/25',
   },
   {
     href: 'https://appturnity.com',
+    eyebrow: 'My company',
     name: 'Appturnity',
     icon: '/brands/appturnity.png',
-    line: 'My company: free websites for local businesses.',
-    ring: 'hover:border-[#1066f4]/70',
+    pitch: 'Run a local business? We build your site and launch it free.',
+    detail: 'Free website for local businesses',
+    frame:
+      'from-white/40 via-sky-300/25 to-[#1066f4]/50 group-hover:from-white/80 group-hover:to-[#1066f4]',
+    wash: 'from-sky-300/20 via-[#1066f4]/15',
+    eyebrowText: 'from-white to-sky-300',
+    dot: 'bg-[#1066f4]',
+    glow: 'hover:shadow-xl hover:shadow-[#1066f4]/30',
   },
 ]
 
@@ -127,7 +143,7 @@ const Hero = () => {
 
             {/* The two sites this one funnels to, each saying what it is. */}
             <div
-              className="hero-in grid w-full max-w-md md:max-w-xl grid-cols-1 sm:grid-cols-2 gap-3 mx-auto md:mx-0"
+              className="hero-in grid w-full max-w-md md:max-w-xl grid-cols-1 sm:grid-cols-2 gap-3.5 mx-auto md:mx-0"
               style={delay(450)}
             >
               {doors.map((door) => (
@@ -136,25 +152,43 @@ const Hero = () => {
                   href={door.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className={`group flex items-start gap-3 rounded-xl border border-white/10 bg-white/[0.03] p-3.5 text-left transition-all duration-200 hover:bg-white/[0.06] hover:shadow-lg hover:shadow-sky-500/10 ${door.ring}`}
+                  className={`group relative block rounded-2xl bg-gradient-to-br p-px text-left shadow-lg shadow-black/30 transition-all duration-300 hover:-translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 ${door.frame} ${door.glow}`}
                 >
-                  <Image
-                    src={door.icon}
-                    alt=""
-                    width={28}
-                    height={28}
-                    className="mt-0.5 h-7 w-7 shrink-0 rounded-md object-contain"
-                  />
-                  <span className="min-w-0">
-                    <span className="flex items-center gap-1 text-base font-semibold text-slate-100">
-                      {door.name}
-                      <FiArrowUpRight
-                        className="h-4 w-4 text-slate-400 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-sky-300"
-                        aria-hidden="true"
+                  <span className="relative flex h-full flex-col overflow-hidden rounded-[15px] bg-[#0b1324] p-4">
+                    {/* The brand's colour, washing in from the top left on hover */}
+                    <span
+                      aria-hidden="true"
+                      className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${door.wash} to-transparent opacity-30 transition-opacity duration-300 group-hover:opacity-100 group-focus-visible:opacity-100`}
+                    />
+                    <span className="relative flex items-center gap-3">
+                      <Image
+                        src={door.icon}
+                        alt=""
+                        width={36}
+                        height={36}
+                        className="h-9 w-9 shrink-0 rounded-lg object-contain transition-transform duration-300 group-hover:-rotate-6 group-hover:scale-110"
                       />
+                      <span className="min-w-0 flex-1">
+                        <span
+                          className={`block bg-gradient-to-r ${door.eyebrowText} bg-clip-text text-[0.65rem] font-bold uppercase tracking-[0.14em] text-transparent`}
+                        >
+                          {door.eyebrow}
+                        </span>
+                        <span className="block text-base font-bold text-slate-50">{door.name}</span>
+                      </span>
+                      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-slate-300 transition-all duration-300 group-hover:border-white/30 group-hover:bg-white/10 group-hover:text-white">
+                        <FiArrowUpRight
+                          className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+                          aria-hidden="true"
+                        />
+                      </span>
                     </span>
-                    <span className="mt-0.5 block text-sm leading-snug text-slate-400">
-                      {door.line}
+                    <span className="relative mt-2.5 block text-pretty text-sm leading-snug text-slate-300">
+                      {door.pitch}
+                    </span>
+                    <span className="relative mt-3 inline-flex w-fit items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-0.5 text-xs font-medium text-slate-300">
+                      <span className={`h-1.5 w-1.5 rounded-full ${door.dot}`} aria-hidden="true" />
+                      {door.detail}
                     </span>
                   </span>
                   <span className="sr-only"> (opens in a new tab)</span>
