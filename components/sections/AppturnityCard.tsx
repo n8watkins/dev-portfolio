@@ -125,13 +125,14 @@ const doors: Door[] = [
     id: 'appturnity',
     name: 'Appturnity',
     icon: '/brands/appturnity.png',
-    title: 'Web services for service businesses',
+    title: 'Run a service business? We help!',
     blurb:
       'We build pool, HVAC and landscaping businesses a free website, then automate their busywork with AI.',
     pointsLabel: 'Today',
     points: [
       'A website built and launched for you, free',
-      'Free hosting and 90 days of free edits',
+      'Online booking and appointment reminders',
+      'Lead and quote follow-up',
       'Paid plans add your own domain and Google Business Profile help',
     ],
     cta: { label: 'Visit Appturnity', href: 'https://appturnity.com' },
