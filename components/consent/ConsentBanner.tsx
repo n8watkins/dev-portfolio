@@ -1,15 +1,17 @@
 'use client'
 
 import { useEffect, useId, useRef } from 'react'
-import { FiBarChart2 } from 'react-icons/fi'
+import { FiCheck } from 'react-icons/fi'
+import { LuCookie } from 'react-icons/lu'
 import { getConsent, type ConsentChoice } from '@/lib/consent'
 
 /**
- * The analytics consent banner: a compact bar centred at the bottom of the
- * screen (text left, buttons right from sm up; stacked on phones). It never
- * blocks the page: no backdrop, no scroll lock, no focus trap. Accept wears
- * the brand colour and Decline is a solid neutral button of the same size,
- * font and weight beside it, so declining is as easy as accepting.
+ * The analytics consent banner: a bar centred at the bottom of the screen
+ * (text left, buttons right from sm up; stacked on phones). It never blocks
+ * the page: no backdrop, no scroll lock, no focus trap. Accept is the larger,
+ * brand-coloured button (the owner's choice, 2026-10-26); Decline is a
+ * smaller secondary button beside it, still solid, readable (AA) and one
+ * click away.
  */
 export default function ConsentBanner({ fromSettings, onClose }: { fromSettings: boolean; onClose: () => void }) {
   const ref = useRef<HTMLDivElement>(null)
@@ -58,8 +60,7 @@ export default function ConsentBanner({ fromSettings, onClose }: { fromSettings:
     onClose()
   }
 
-  const button =
-    'flex-1 cursor-pointer rounded-xl px-5 py-2.5 text-sm font-semibold text-white transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300 sm:min-w-[7.5rem] sm:flex-none'
+  const focusRing = 'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300'
 
   return (
     <div
@@ -69,53 +70,49 @@ export default function ConsentBanner({ fromSettings, onClose }: { fromSettings:
       aria-labelledby={titleId}
       aria-describedby={bodyId}
       tabIndex={-1}
-      className="consent-in outline-none fixed inset-x-3 bottom-[calc(0.75rem+env(safe-area-inset-bottom,0px))] z-[60] mx-auto max-w-[52rem] rounded-2xl border border-cyan-400/20 bg-[#07101f]/95 p-4 text-slate-300 shadow-[0_18px_50px_-12px_rgba(0,0,0,0.8)] backdrop-blur-md sm:bottom-5 sm:flex sm:items-center sm:gap-6 sm:px-5"
+      className="consent-in outline-none fixed inset-x-3 bottom-[calc(0.75rem+env(safe-area-inset-bottom,0px))] z-[60] mx-auto max-w-[62rem] rounded-2xl border border-cyan-400/25 bg-[#07101f]/95 p-5 text-slate-300 shadow-[0_22px_60px_-12px_rgba(0,0,0,0.85)] backdrop-blur-md sm:bottom-6 sm:flex sm:items-center sm:gap-8 sm:px-7 sm:py-6"
     >
-      <div className="flex min-w-0 flex-1 items-start gap-3">
-        <span
-          aria-hidden="true"
-          className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-cyan-400/25 bg-cyan-400/10 text-cyan-300"
-        >
-          <FiBarChart2 className="h-4 w-4" />
-        </span>
-        <div className="min-w-0">
-          <h2 id={titleId} className="text-[0.95rem] font-bold text-slate-50">
-            Cookies
-          </h2>
-          <p id={bodyId} className="mt-0.5 text-[0.85rem] leading-relaxed text-slate-400">
-            I use cookies to understand how people use the site so I can improve it. No ads. The site works the
-            same either way.{' '}
-            {/* This site has no privacy page of its own: n8builds.dev's covers both sites. */}
-            <a
-              href="https://n8builds.dev/privacy#cookies"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-cyan-300 underline underline-offset-2 hover:text-cyan-200"
-            >
-              Privacy<span className="sr-only"> (opens in a new tab)</span>
-            </a>
+      <div className="min-w-0 flex-1">
+        <h2 id={titleId} className="flex items-center gap-2 text-[1.05rem] font-bold text-slate-50">
+          <LuCookie aria-hidden="true" className="h-5 w-5 shrink-0 text-cyan-300" />
+          Cookies
+        </h2>
+        <p id={bodyId} className="mt-1.5 text-[0.92rem] leading-relaxed text-slate-400">
+          I use cookies to understand how people use the site so I can improve it. No ads. The site works the
+          same either way.{' '}
+          {/* This site has no privacy page of its own: n8builds.dev's covers both sites. */}
+          <a
+            href="https://n8builds.dev/privacy#cookies"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-cyan-300 underline underline-offset-2 hover:text-cyan-200"
+          >
+            Privacy<span className="sr-only"> (opens in a new tab)</span>
+          </a>
+        </p>
+        {fromSettings && current && current !== 'pending' && (
+          <p className="mt-1.5 font-mono text-[0.75rem] text-slate-400">
+            Currently: {current === 'granted' ? 'accepted' : 'declined'}
+            {consent?.gpc && ' (Global Privacy Control)'}
           </p>
-          {fromSettings && current && current !== 'pending' && (
-            <p className="mt-1 font-mono text-[0.72rem] text-slate-400">
-              Currently: {current === 'granted' ? 'accepted' : 'declined'}
-              {consent?.gpc && ' (Global Privacy Control)'}
-            </p>
-          )}
-        </div>
+        )}
       </div>
-      <div className="mt-3.5 flex shrink-0 gap-2.5 sm:mt-0">
+      {/* Accept is the inviting one (the owner's call); Decline stays a real,
+          readable button right beside it. */}
+      <div className="mt-4 flex shrink-0 items-center gap-3 sm:mt-0">
         <button
           type="button"
-          className={`${button} border border-slate-500/60 bg-slate-700 hover:bg-slate-600`}
+          className={`cursor-pointer rounded-xl border border-slate-500/70 bg-slate-800 px-4 py-2.5 text-sm font-semibold text-slate-100 transition-colors hover:bg-slate-700 ${focusRing}`}
           onClick={() => choose('denied')}
         >
           Decline
         </button>
         <button
           type="button"
-          className={`${button} border border-cyan-400/30 bg-gradient-to-r from-blue-600 to-cyan-700 hover:from-blue-700 hover:to-cyan-800`}
+          className={`flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl border border-cyan-300/40 bg-gradient-to-r from-blue-600 to-cyan-700 px-7 py-3 text-base font-bold text-white shadow-lg shadow-cyan-950/60 transition-colors hover:from-blue-700 hover:to-cyan-800 sm:flex-none ${focusRing}`}
           onClick={() => choose('granted')}
         >
+          <FiCheck aria-hidden="true" className="h-5 w-5" />
           Accept
         </button>
       </div>
