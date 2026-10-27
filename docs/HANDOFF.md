@@ -1,6 +1,6 @@
 # HANDOFF - dev-portfolio
 
-Last updated: 2026-10-25.
+Last updated: 2026-10-27.
 
 ## What this is
 
@@ -24,7 +24,7 @@ It funnels visitors to the two other sites:
 - `npm test` runs Playwright against a production build on port 4829 (it builds first, or reuses a server already running there locally).
   `E2E_PORT=4839 npm test` uses another port, so a running `npm run dev` on 4829 is not mistaken for the test build.
   No retries: a flaky test gets fixed.
-- Specs: `tests/consent.spec.ts` (the analytics consent banner), `tests/home.spec.ts` (the n8builds card, and the n8builds.dev teaser's links), `tests/projects.spec.ts` (status pills, project rows and pages), `tests/seo.spec.ts` (titles, share cards, no em dashes, no Sentry example routes), `tests/web-vitals.spec.ts` (Web Vitals budgets and axe accessibility).
+- Specs: `tests/consent.spec.ts` (the analytics consent banner), `tests/dino.spec.ts` (the dino game on the tech stack card: n8builds.dev's dino tests, kept in step with its `tests/e2e/ai-kit.spec.ts`), `tests/home.spec.ts` (the n8builds card, and the n8builds.dev teaser's links), `tests/projects.spec.ts` (status pills, project rows and pages), `tests/seo.spec.ts` (titles, share cards, no em dashes, no Sentry example routes), `tests/web-vitals.spec.ts` (Web Vitals budgets and axe accessibility).
 - The site scrolls smoothly (`scroll-smooth` on every element), so a test that scrolls must wait for the scroll to stop before hovering or clicking.
 - GitHub Actions (`.github/workflows/ci.yml`): lint, types and build, then the Playwright suite in Chromium inside Playwright's Docker image (its version read from `package-lock.json`).
   Docs-only changes skip both.
@@ -52,6 +52,17 @@ It funnels visitors to the two other sites:
 - **The n8builds.dev card sells how the work is built** (2026-10-25): every pull request tested on five browsers, an hourly build log, weekly releases, both sites open source; it links to the case study at n8builds.dev/builds/n8builds.
 - **MIT for the code, not the personal content** (2026-10-25): see `LICENSE`; photos, screenshots, the resume and the copy about Nathan stay his.
 - **No reCAPTCHA and no contact form backend**: reCAPTCHA was purged in 2026-06; the contact section links out and shows an email address.
+
+## The 2026-10-27 refresh (owner's calls)
+
+- The hero's two cards (n8builds.dev, Appturnity) live in `components/ui/SiteDoors.tsx` and repeat in the footer, beside a site map.
+- About fades in once scrolling starts; only its heading shows on the first screen.
+- Projects show four AI features each; Net-Trailer has no payments copy; screenshots glow in the project's colour on hover (no zoom) and their dots are buttons.
+- Experience hover images are framed per item (`hoverFrame` in `data/experience.tsx`) with one even glow (`hoverGlow`).
+- The workshop section is "Beyond the resume / My workshop", one name line per card.
+- Contact: the address, LinkedIn and X, then "Or message me through n8builds.dev" (its contact form).
+- The tech stack tiles are still (like n8builds.dev's AI kit), so the dino stands out; the dino and its 30-second catch game are byte-identical with n8builds.dev's.
+- Twitch and YouTube stay hidden until streaming starts (`STREAMING` in `components/layout/Footer.tsx`).
 
 ## Live-demo status (OpenPing)
 
