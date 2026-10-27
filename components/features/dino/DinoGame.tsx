@@ -614,7 +614,14 @@ export default function DinoGame() {
         walked += speed * dt
         if (commit) {
           commit.left -= dt
-          if (commit.left <= 0 || (commit.dir > 0 ? x >= commit.to : x <= commit.to)) commit = null
+          // Done once it gets there, or once it has turned round (at an edge,
+          // say), when the spot ahead of it no longer is.
+          if (
+            commit.left <= 0 ||
+            dir !== commit.dir ||
+            (commit.dir > 0 ? x >= commit.to : x <= commit.to)
+          )
+            commit = null
         }
         stayLeft -= dt * pace
         if (walked >= STEP_EVERY) {
