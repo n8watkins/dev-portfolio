@@ -342,10 +342,14 @@ export default function DinoGame() {
         return next
       }
     })()
-    // Once it has come in from a side (or dropped in), how far it walks into
-    // the panel before it may turn round or choose to leave, px: it never
-    // peeks in and straight back out.
-    let commit = 0
+    // Once it has come in from a side (or dropped in), where in the panel it
+    // walks to before it may turn round or choose to leave (panel x, in its
+    // walking direction), so it never peeks in and straight back out. Panel
+    // position, not distance walked: a row moving against it carries it back,
+    // and on a narrow panel distance alone let it choose barely inside. A
+    // time cap lets it go on if a row holds it in place.
+    let commit: { to: number; dir: 1 | -1; left: number } | null = null
+    const COMMIT_FOR = 6 // s at most
     let hue = 210 // the body's last random hue
     // The game (see ROUND): a round's time left and catches, the best so far,
     // and how long the final score has left on screen.
@@ -426,7 +430,7 @@ export default function DinoGame() {
       if (entry === 'drop' || !floors.length) {
         x = panelW * (0.25 + Math.random() * 0.5)
         dir = Math.random() < 0.5 ? 1 : -1
-        commit = panelW * 0.2
+        commit = { to: x + dir * panelW * 0.2, dir, left: COMMIT_FOR }
         return
       }
       level = floors[Math.floor(Math.random() * floors.length)]
@@ -436,7 +440,7 @@ export default function DinoGame() {
       mode = 'walk'
       reentering = true
       // From the side it walks over a third of the way in first.
-      commit = W + panelW * 0.35
+      commit = { to: entry === 'left' ? panelW * 0.35 : panelW * 0.65 - W, dir, left: COMMIT_FOR }
     }
 
     const goAway = () => {
@@ -608,7 +612,10 @@ export default function DinoGame() {
         dashLeft = Math.max(0, dashLeft - dt)
         x += dir * speed * dt
         walked += speed * dt
-        commit = Math.max(0, commit - speed * dt)
+        if (commit) {
+          commit.left -= dt
+          if (commit.left <= 0 || (commit.dir > 0 ? x >= commit.to : x <= commit.to)) commit = null
+        }
         stayLeft -= dt * pace
         if (walked >= STEP_EVERY) {
           walked = 0
@@ -650,7 +657,7 @@ export default function DinoGame() {
                 mode = 'miss'
                 carry = current.row?.velocity ?? 0
                 missPending = false
-              } else if (roam && stayLeft <= 0 && !leaving && !reentering && commit <= 0) {
+              } else if (roam && stayLeft <= 0 && !leaving && !reentering && !commit) {
                 // Been here a while: it does something else.
                 stayLeft = between(stayFor)
                 const choice = nextChoice()

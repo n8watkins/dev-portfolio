@@ -1,13 +1,19 @@
 import { test, expect } from '@playwright/test'
 
-/** The n8builds.dev card: it sells how the work is built, and links to the case study. */
-test('the n8builds card shows how I build and links to the case study', async ({ page }) => {
+/**
+ * The n8builds.dev card in "My workshop": where I build in public, all open
+ * source, with the case study and the source a click away (owner, 2026-10-27).
+ */
+test('the n8builds card says where I build and links to the case study and the source', async ({ page }) => {
   await page.goto('/')
-  const link = page.getByRole('link', { name: "How it's built and tested" })
+  const card = page.getByRole('article', { name: 'Where I build in public' })
+  const link = card.getByRole('link', { name: "How it's built and tested" })
   await link.scrollIntoViewIfNeeded()
   await expect(link).toHaveAttribute('href', 'https://n8builds.dev/builds/n8builds')
-  await expect(page.getByText('See how I build')).toBeVisible()
-  await expect(page.getByText(/test suite on five browsers/)).toBeVisible()
+  await expect(card.getByRole('link', { name: /Source code/ })).toHaveAttribute('href', 'https://github.com/n8watkins/n8builds-web')
+  await expect(card.getByText(/All open source, this portfolio included/)).toBeVisible()
+  // It talks about where I build, not the CI behind it.
+  await expect(card).not.toContainText('five browsers')
 })
 
 /**
