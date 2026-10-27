@@ -617,8 +617,10 @@ export default function DinoGame() {
         if (frame !== 'stepA' && frame !== 'stepB') frame = 'stepA'
         // Roaming, it only leaves the panel when it has chosen to: heading
         // into a side fade otherwise, it turns back (a tile can reach past
-        // the panel's side, so this can't wait for a tile's edge).
-        if (roam && !leaving && !reentering && (dir > 0 ? x + W > panelW * 0.85 : x < panelW * 0.15))
+        // the panel's side, so this can't wait for a tile's edge). Not while
+        // its row has just been paused: it walks on to its next jump and
+        // misses it, even on a narrow panel where that gap is in the fade.
+        if (roam && !leaving && !reentering && !missPending && (dir > 0 ? x + W > panelW * 0.85 : x < panelW * 0.15))
           dir = dir > 0 ? -1 : 1
         if (spans) {
           const under = support(foot, spans)
