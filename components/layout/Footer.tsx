@@ -1,27 +1,67 @@
 import { FaXTwitter, FaTwitch, FaYoutube } from 'react-icons/fa6'
 import { motion } from 'framer-motion'
 import Image from 'next/image'
-import { FiGithub, FiArrowUpRight, FiMail } from 'react-icons/fi'
+import Link from 'next/link'
+import { FiGithub, FiMail } from 'react-icons/fi'
 import { CiLinkedin } from 'react-icons/ci'
-import {
-  fadeInVariants,
-  staggerContainerVariants,
-  staggerItemVariants,
-  defaultAnimationConfig,
-} from '@/lib/animations'
+import { fadeInVariants, defaultAnimationConfig } from '@/lib/animations'
 import SectionHeading from '@/components/ui/SectionHeading'
+import SiteDoors from '@/components/ui/SiteDoors'
+import { projects } from '@/data/projects'
+import { RESUME_VIEW_URL } from '@/lib/resume'
 
 const EMAIL = 'contact@n8builds.dev'
+const CONTACT_FORM = 'https://n8builds.dev/#contact-form'
 
-const BUTTON =
-  'inline-flex items-center justify-center gap-2 h-10 px-3.5 text-sm sm:h-11 sm:px-5 sm:text-base rounded-full border font-semibold transition-all duration-200'
-const OUTLINE = 'border-slate-600 text-slate-200 hover:border-sky-400/60 hover:text-sky-300'
+const ICON_BUTTON =
+  'inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-600 text-slate-200 transition-all duration-200 hover:border-sky-400/60 hover:text-sky-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 sm:h-11 sm:w-11'
+const LINK = 'text-sm text-slate-400 transition-colors duration-200 hover:text-sky-300'
 
 /**
  * The streaming links (Twitch, YouTube) stay hidden until streaming starts,
  * as on n8builds.dev; flip this then.
  */
 const STREAMING = false
+
+const socials = [
+  { href: 'https://github.com/n8watkins', label: 'GitHub', Icon: FiGithub, pad: 'p-3' },
+  { href: 'https://www.linkedin.com/in/n8watkins/', label: 'LinkedIn', Icon: CiLinkedin, pad: 'p-2' },
+  { href: 'https://x.com/n8watkins', label: 'X', Icon: FaXTwitter, pad: 'p-3' },
+  ...(STREAMING
+    ? [
+        { href: 'https://youtube.com/@n8builds', label: 'YouTube', Icon: FaYoutube, pad: 'p-3' },
+        { href: 'https://twitch.tv/n8builds', label: 'Twitch', Icon: FaTwitch, pad: 'p-3' },
+      ]
+    : []),
+]
+
+/** The site map: this page's sections, the project pages, and the rest of me online. */
+const sitemap = [
+  {
+    title: 'On this page',
+    links: [
+      { label: 'About', href: '/#about' },
+      { label: 'Projects', href: '/#projects' },
+      { label: 'Experience', href: '/#experience' },
+      { label: 'My workshop', href: '/#appturnity' },
+      { label: 'Contact', href: '/#contact' },
+    ],
+  },
+  {
+    title: 'Projects',
+    links: projects.map((p) => ({ label: p.title, href: `/projects/${p.slug}` })),
+  },
+  {
+    title: 'Elsewhere',
+    links: [
+      { label: 'Resume', href: RESUME_VIEW_URL, external: true },
+      { label: 'n8builds.dev', href: 'https://n8builds.dev', external: true },
+      { label: 'Build log', href: 'https://n8builds.dev/builds', external: true },
+      { label: 'Appturnity', href: 'https://appturnity.com', external: true },
+      { label: 'Source on GitHub', href: 'https://github.com/n8watkins/dev-portfolio', external: true },
+    ],
+  },
+]
 
 const Footer = () => {
   return (
@@ -46,12 +86,11 @@ const Footer = () => {
             </>
           }
         >
-          Hiring a full-stack developer, or have a project in mind? Reach me directly, or send a
-          message through the form on n8builds.dev.
+          Hiring a full-stack developer, or have a project in mind? Reach out!
         </SectionHeading>
 
         {/* One centred block, framed in the site's cyan-to-blue like the hero's
-            cards: the direct connections, then the form for a longer message. */}
+            cards: email, LinkedIn and X, the address, then the form on n8builds.dev. */}
         <motion.div
           variants={fadeInVariants}
           {...defaultAnimationConfig}
@@ -63,15 +102,12 @@ const Footer = () => {
               className="pointer-events-none absolute -top-24 left-1/2 h-48 w-[28rem] -translate-x-1/2 rounded-full bg-cyan-500/[0.12] blur-3xl"
             />
             <div className="relative flex flex-col items-center gap-5">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-sky-300">
-                Reach me directly
-              </p>
-              <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-2.5">
+              <div className="flex flex-wrap items-center justify-center gap-2.5">
                 <a
                   href={`mailto:${EMAIL}`}
-                  className={`${BUTTON} border-transparent text-white bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 hover:shadow-lg hover:shadow-sky-500/30`}
+                  className="inline-flex h-10 items-center justify-center gap-2 rounded-full bg-gradient-to-r from-cyan-500 to-blue-600 px-4 text-sm font-semibold text-white transition-all duration-200 hover:from-cyan-400 hover:to-blue-500 hover:shadow-lg hover:shadow-sky-500/30 sm:h-11 sm:px-5 sm:text-base"
                 >
-                  <FiMail className="w-4 h-4" aria-hidden="true" />
+                  <FiMail className="h-4 w-4" aria-hidden="true" />
                   Email me
                 </a>
                 <a
@@ -79,10 +115,10 @@ const Footer = () => {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="LinkedIn (new tab)"
-                  className={`${BUTTON} ${OUTLINE}`}
+                  title="LinkedIn"
+                  className={ICON_BUTTON}
                 >
-                  <CiLinkedin className="w-5 h-5" aria-hidden="true" />
-                  LinkedIn
+                  <CiLinkedin className="h-6 w-6" aria-hidden="true" />
                 </a>
                 <a
                   href="https://x.com/n8watkins"
@@ -90,9 +126,9 @@ const Footer = () => {
                   rel="noopener noreferrer"
                   aria-label="X (new tab)"
                   title="X"
-                  className={`inline-flex items-center justify-center h-10 w-10 sm:h-11 sm:w-11 rounded-full border transition-all duration-200 ${OUTLINE}`}
+                  className={ICON_BUTTON}
                 >
-                  <FaXTwitter className="w-4 h-4" aria-hidden="true" />
+                  <FaXTwitter className="h-4 w-4" aria-hidden="true" />
                 </a>
               </div>
               <a
@@ -101,120 +137,78 @@ const Footer = () => {
               >
                 {EMAIL}
               </a>
-              <div className="my-1 h-px w-full max-w-sm bg-gradient-to-r from-transparent via-white/15 to-transparent" />
-              <p className="text-sm text-slate-300">
-                <span className="font-semibold text-slate-100">Have a longer message?</span> Send it
-                through the form on n8builds.dev.
+              <div className="h-px w-full max-w-sm bg-gradient-to-r from-transparent via-white/15 to-transparent" />
+              <p className="text-sm text-slate-300 sm:text-base">
+                Or message me through{' '}
+                <a
+                  href={CONTACT_FORM}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-semibold text-sky-300 underline decoration-sky-300/40 underline-offset-4 transition-colors hover:text-sky-200 hover:decoration-sky-200"
+                >
+                  n8builds.dev
+                  <span className="sr-only"> (its contact form, in a new tab)</span>
+                </a>
+                .
               </p>
-              <a
-                href="https://n8builds.dev/#contact"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Open the contact form on n8builds.dev (new tab)"
-                className={`${BUTTON} ${OUTLINE} border-sky-400/40 text-sky-200`}
-              >
-                Open the contact form
-                <FiArrowUpRight className="w-4 h-4" aria-hidden="true" />
-              </a>
             </div>
           </div>
         </motion.div>
       </div>
-      <motion.div
-        variants={staggerContainerVariants}
-        {...defaultAnimationConfig}
-        className="flex mt-8 lg:flex-row flex-col-reverse justify-center xl:justify-between items-center gap-8 lg:mx-10"
-      >
-        <motion.p
-          variants={staggerItemVariants}
-          className="lg:text-base text-sm lg:font-normal font-light"
-        >
-          Copyright © 2026 Nathan Watkins
-        </motion.p>
 
-        <motion.nav
-          variants={staggerItemVariants}
-          aria-label="Footer social media links"
-          className="flex flex-wrap items-center justify-center pb-4 gap-x-3 gap-y-1 z-50"
-        >
-          <div className="flex items-center gap-3">
-            <a
-              href="https://n8builds.dev"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="Visit my main site, n8builds.dev"
-              className="flex items-center gap-1 text-sm text-slate-600 dark:text-slate-400 hover:text-sky-500 dark:hover:text-sky-400 transition-colors duration-200"
-            >
-              n8builds.dev
-              <FiArrowUpRight className="w-4 h-4" aria-hidden="true" />
-            </a>
-            <a
-              href="https://appturnity.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="Visit Appturnity, my consulting company"
-              className="flex items-center gap-1 text-sm text-slate-600 dark:text-slate-400 hover:text-sky-500 dark:hover:text-sky-400 transition-colors duration-200"
-            >
-              Appturnity
-              <FiArrowUpRight className="w-4 h-4" aria-hidden="true" />
-            </a>
+      {/* The site footer: the two other sites as the hero's cards, a site map, then the fine print. */}
+      <motion.div {...defaultAnimationConfig} variants={fadeInVariants} className="mt-14 px-4">
+        <div className="grid gap-10 border-t border-white/[0.08] pt-10 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:gap-14">
+          <div className="flex flex-col gap-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-300">
+              Where else I build
+            </p>
+            <SiteDoors />
           </div>
-          <span
-            className="hidden sm:block w-px h-6 bg-slate-300 dark:bg-slate-700"
-            aria-hidden="true"
-          />
-          <div className="flex items-center gap-1 sm:gap-3">
-            <a
-              href="https://github.com/n8watkins"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="View Nathan's GitHub profile"
-              className="w-12 h-12 rounded-full hover:bg-blue-500/60 dark:hover:bg-slate-700/70 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:ring-offset-2 focus-visible:ring-offset-darkBlue transition-all duration-200"
-            >
-              <FiGithub className="w-full h-full p-3" aria-hidden="true" />
-            </a>
-            <a
-              href="https://www.linkedin.com/in/n8watkins/"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="View Nathan's LinkedIn profile"
-              className="w-12 h-12 rounded-full hover:bg-blue-500/60 dark:hover:bg-slate-700/70 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:ring-offset-2 focus-visible:ring-offset-darkBlue transition-all duration-200"
-            >
-              <CiLinkedin className="w-full h-full p-2" aria-hidden="true" />
-            </a>
-            <a
-              href="https://x.com/n8watkins"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="View Nathan's X (Twitter) profile"
-              className="w-12 h-12 rounded-full hover:bg-blue-500/60 dark:hover:bg-slate-700/70 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:ring-offset-2 focus-visible:ring-offset-darkBlue transition-all duration-200"
-            >
-              <FaXTwitter className="w-full h-full p-3" aria-hidden="true" />
-            </a>
-            {STREAMING && (
-              <>
-                <a
-                  href="https://twitch.tv/n8builds"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="Follow Nathan on Twitch"
-                  className="w-12 h-12 rounded-full hover:bg-blue-500/60 dark:hover:bg-slate-700/70 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:ring-offset-2 focus-visible:ring-offset-darkBlue transition-all duration-200"
-                >
-                  <FaTwitch className="w-full h-full p-3" aria-hidden="true" />
-                </a>
-                <a
-                  href="https://youtube.com/@n8builds"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="Follow Nathan on YouTube"
-                  className="w-12 h-12 rounded-full hover:bg-blue-500/60 dark:hover:bg-slate-700/70 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:ring-offset-2 focus-visible:ring-offset-darkBlue transition-all duration-200"
-                >
-                  <FaYoutube className="w-full h-full p-3" aria-hidden="true" />
-                </a>
-              </>
-            )}
-          </div>
-        </motion.nav>
+          <nav aria-label="Site map" className="grid grid-cols-2 gap-8 sm:grid-cols-3">
+            {sitemap.map((col) => (
+              <div key={col.title} className="flex flex-col gap-2.5">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-300">
+                  {col.title}
+                </p>
+                <ul className="flex flex-col gap-2">
+                  {col.links.map((l) => (
+                    <li key={l.label}>
+                      {'external' in l && l.external ? (
+                        <a href={l.href} target="_blank" rel="noopener noreferrer" className={LINK}>
+                          {l.label}
+                          <span className="sr-only"> (opens in a new tab)</span>
+                        </a>
+                      ) : (
+                        <Link href={l.href} className={LINK}>
+                          {l.label}
+                        </Link>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </nav>
+        </div>
+
+        <div className="mt-10 flex flex-col-reverse items-center justify-between gap-4 border-t border-white/[0.06] pt-6 sm:flex-row">
+          <p className="text-sm text-slate-400">Copyright © 2026 Nathan Watkins</p>
+          <nav aria-label="Footer social media links" className="flex items-center gap-1">
+            {socials.map(({ href, label, Icon, pad }) => (
+              <a
+                key={href}
+                href={href}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={`View Nathan's ${label} profile`}
+                className="h-11 w-11 rounded-full transition-all duration-200 hover:bg-slate-700/70 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+              >
+                <Icon className={`h-full w-full ${pad}`} aria-hidden="true" />
+              </a>
+            ))}
+          </nav>
+        </div>
       </motion.div>
     </footer>
   )

@@ -15,6 +15,8 @@ export type WorkExperienceItem = {
    * blue; a card with no image glows light blue all round, so it has none.
    */
   hoverGlow?: string
+  /** The hover image's zoom (at rest, then on hover), when it needs more than the default. */
+  hoverZoom?: string
   additional?: boolean
 }
 
@@ -82,5 +84,6 @@ export const workExperience: WorkExperienceItem[] = [
       'Teach full-stack development with JavaScript and Python, including LLM-assisted coding and debugging.',
     ],
     hoverImage: '/experience/coderschool.webp',
+    hoverZoom: 'scale-[1.5] group-hover:scale-[1.4]',
   },
 ]

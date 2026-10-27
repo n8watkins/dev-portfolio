@@ -30,15 +30,17 @@ export const gridItem4: GridItemConfig = {
   imgClassName,
   img: '/bento/resume.svg',
 
+  // At rest the title sits centred in the card; on hover it rises to make
+  // room for the buttons.
   textContainerClassName:
-    'flex items-center justify-start xs:pl-10 1sm:pl-5  w-full h-full whitespace-nowrap dark:via-[#0d304c]/90 dark:to-[#0d304c]/0 ',
+    'flex items-center justify-center w-full h-full whitespace-nowrap dark:via-[#0d304c]/90 dark:to-[#0d304c]/0 ',
 
   // Keyboard focus on a button reveals them like hover does; the title steps aside.
   textOrder:
-    'group-focus-within:opacity-0 group-hover:opacity-100 group-hover:-translate-y-20 group-hover:translate-x-[3.5rem] 1sm:group-hover:translate-x-[0rem] sm:group-hover:translate-x-[5.5rem] duration-200 md:group-hover:translate-x-[1rem] xl:group-hover:translate-x-[3rem] ',
+    'group-focus-within:opacity-0 group-hover:opacity-100 group-hover:-translate-y-12 duration-200',
 
   titleClassName:
-    'flex transition duration-300 pt-[3.25rem] z-30 font-sans font-bold   select-none text-slate-200 dark:text-neutral-200  text-2xl lg:text-3xl text-start w-full',
+    'flex justify-center transition duration-300 z-30 font-sans font-bold select-none text-slate-200 dark:text-neutral-200 text-2xl lg:text-3xl text-center w-full',
 
   buttonContainer,
   buttonClass,

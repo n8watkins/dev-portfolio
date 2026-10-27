@@ -26,6 +26,8 @@ interface Build {
   desc: string
   tags: string[]
   liveSite?: string
+  /** A screenshot beside the copy (contain: a small popup, shown whole on a dark frame). */
+  shot?: { src: string; alt: string; contain?: boolean }
   /** The accent: the product's own colour (text and the card's glow). */
   accent: { text: string; glow: string; bar: string }
 }
@@ -33,6 +35,10 @@ interface Build {
 const BUILDS: Build[] = [
   {
     slug: 'scribe',
+    shot: {
+      src: '/builds/scribe/shot-2026-10.webp',
+      alt: "Scribe's site: hold a hotkey, talk, and it types",
+    },
     name: 'Scribe',
     icon: '/builds/scribe/icon.png',
     kind: 'Desktop app',
@@ -44,6 +50,10 @@ const BUILDS: Build[] = [
   },
   {
     slug: 'openping',
+    shot: {
+      src: '/builds/openping/shot-2026-10.webp',
+      alt: "OpenPing's status page, watching the live demos",
+    },
     name: 'OpenPing',
     icon: '/builds/openping/icon.svg',
     kind: 'Web tool',
@@ -55,6 +65,7 @@ const BUILDS: Build[] = [
   },
   {
     slug: 'solara',
+    shot: { src: '/builds/solara/shot-2026-10.webp', alt: 'Solara: know your sun window' },
     name: 'Solara',
     icon: '/builds/solara/icon.png',
     kind: 'Web app',
@@ -66,6 +77,10 @@ const BUILDS: Build[] = [
   },
   {
     slug: 'portfolio-rank',
+    shot: {
+      src: '/builds/portfolio-rank/shot-2026-10.webp',
+      alt: 'Portfolio Rank: the top developer portfolios, ranked by votes',
+    },
     name: 'Portfolio Rank',
     wordmark: (
       <>
@@ -82,6 +97,11 @@ const BUILDS: Build[] = [
   },
   {
     slug: 'tubevault',
+    shot: {
+      src: '/builds/tubevault/shot-2026-10.webp',
+      alt: "TubeVault's popup, archiving a YouTube video",
+      contain: true,
+    },
     name: 'TubeVault',
     icon: '/builds/tubevault/icon.png',
     kind: 'Chrome extension',
@@ -92,6 +112,11 @@ const BUILDS: Build[] = [
   },
   {
     slug: 'piper-tts',
+    shot: {
+      src: '/builds/piper-tts/shot-2026-10.webp',
+      alt: "Piper TTS's popup, reading text aloud",
+      contain: true,
+    },
     name: 'Piper TTS',
     icon: '/builds/piper-tts/icon.png',
     kind: 'Chrome extension',
@@ -198,24 +223,29 @@ export default function BuildsTeaser() {
         />
         <div
           key={build.slug}
-          className={`${dir > 0 ? 'teaser-in-r' : 'teaser-in-l'} relative flex items-start gap-4`}
+          className={`${dir > 0 ? 'teaser-in-r' : 'teaser-in-l'} relative grid items-center gap-6 md:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)]`}
         >
-          <Image
-            src={build.icon}
-            alt=""
-            width={48}
-            height={48}
-            unoptimized={build.icon.endsWith('.svg')}
-            className="h-12 w-12 shrink-0 rounded-xl"
-          />
-          <div className="min-w-0 flex-1">
-            <h3 className="text-2xl font-bold tracking-tight text-slate-50">
-              {build.wordmark ?? build.name}
-            </h3>
-            <p className={`text-sm font-semibold ${build.accent.text}`}>
-              {build.kind} · {build.tagline}
-            </p>
-            <p className="mt-2 max-w-2xl text-[0.95rem] leading-relaxed text-slate-300">
+          <div className="min-w-0">
+            {/* Its icon beside its name, as on the project rows; the copy runs full width under them. */}
+            <div className="flex items-center gap-3">
+              <Image
+                src={build.icon}
+                alt=""
+                width={44}
+                height={44}
+                unoptimized={build.icon.endsWith('.svg')}
+                className="h-11 w-11 shrink-0 rounded-xl"
+              />
+              <div className="min-w-0">
+                <h3 className="text-2xl font-bold tracking-tight text-slate-50">
+                  {build.wordmark ?? build.name}
+                </h3>
+                <p className={`text-sm font-semibold ${build.accent.text}`}>
+                  {build.kind} · {build.tagline}
+                </p>
+              </div>
+            </div>
+            <p className="mt-3 max-w-2xl text-[0.95rem] leading-relaxed text-slate-300">
               {build.desc}
             </p>
             <ul aria-label={`${build.name} is built with`} className="mt-3 flex flex-wrap gap-1.5">
@@ -259,6 +289,28 @@ export default function BuildsTeaser() {
                 <FiArrowUpRight className="h-4 w-4" aria-hidden="true" />
               </a>
             </div>
+          </div>
+          {/* The screenshot, or the icon on its own frame when there is none */}
+          <div className="relative hidden aspect-[16/10] overflow-hidden rounded-xl border border-white/10 bg-[#0a1322] shadow-2xl shadow-black/40 md:block">
+            {build.shot ? (
+              <Image
+                src={build.shot.src}
+                alt={build.shot.alt}
+                fill
+                sizes="(max-width: 1024px) 40vw, 440px"
+                className={build.shot.contain ? 'object-contain p-4' : 'object-cover object-top'}
+              />
+            ) : (
+              <div className="flex h-full items-center justify-center">
+                <Image
+                  src={build.icon}
+                  alt=""
+                  width={96}
+                  height={96}
+                  className="h-24 w-24 rounded-3xl"
+                />
+              </div>
+            )}
           </div>
         </div>
 

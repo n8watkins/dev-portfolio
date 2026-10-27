@@ -25,7 +25,6 @@ interface Shot {
 
 interface Door {
   id: string
-  eyebrow: string
   title: string
   name: string
   icon: string
@@ -40,7 +39,7 @@ interface Door {
   phone: Shot
   /** true: the screenshots hold still (top of the page) instead of scrolling. */
   still?: boolean
-  accent: { eyebrow: string; check: string; button: string; glow: string; ring: string }
+  accent: { check: string; button: string; glow: string; ring: string }
 }
 
 const BROWSER_ASPECT = 16 / 10
@@ -124,12 +123,11 @@ const Showcase = ({ desktop, phone, still }: { desktop: Shot; phone: Shot; still
 const doors: Door[] = [
   {
     id: 'appturnity',
-    eyebrow: 'My company',
     name: 'Appturnity',
     icon: '/brands/appturnity.png',
-    title: 'Websites and AI for service businesses',
+    title: 'Web services for service businesses',
     blurb:
-      'Appturnity is my company. We launch pool, HVAC, landscaping and other service businesses a modern website for free, then build the AI automations that take busywork off their plate, with AI voice agents next.',
+      'My company. We launch pool, HVAC, landscaping and other service businesses a modern website for free, then automate their busywork with AI.',
     pointsLabel: 'Today',
     points: [
       'A website built and launched for you, free',
@@ -152,8 +150,7 @@ const doors: Door[] = [
       duration: 40,
     },
     accent: {
-      // Appturnity's brand: white to light blue, and its own blue (#1066f4) on the button.
-      eyebrow: 'from-white to-sky-300',
+      // Appturnity's own blue (#1066f4) on the button.
       check: 'text-sky-300',
       button: 'from-[#1066f4] to-[#1066f4] hover:from-[#3b82f6] hover:to-[#3b82f6]',
       glow: 'bg-[radial-gradient(closest-side,rgba(56,189,248,0.12),transparent)]',
@@ -162,7 +159,6 @@ const doors: Door[] = [
   },
   {
     id: 'n8builds',
-    eyebrow: 'See how I build',
     name: 'n8builds.dev',
     icon: '/tab/n8-icon.png',
     title: 'Where I build in public',
@@ -171,7 +167,7 @@ const doors: Door[] = [
     points: [
       'Tools I use every day, free to try',
       'Web apps and Chrome extensions',
-      'Nearly all open source, this portfolio included: use it as a template or fork it',
+      'All open source, this portfolio included: use it as a template or fork it',
     ],
     cta: { label: 'Visit n8builds.dev', href: 'https://n8builds.dev' },
     secondary: { label: "How it's built and tested", href: 'https://n8builds.dev/builds/n8builds' },
@@ -192,7 +188,6 @@ const doors: Door[] = [
       duration: 30,
     },
     accent: {
-      eyebrow: 'from-emerald-300 to-cyan-300',
       check: 'text-emerald-400',
       button: 'from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500',
       glow: 'bg-[radial-gradient(closest-side,rgba(52,211,153,0.11),transparent)]',
@@ -242,14 +237,7 @@ const DoorCard = ({ door, index }: { door: Door; index: number }) => {
             height={36}
             className="h-9 w-9 rounded-xl object-contain"
           />
-          <div>
-            <p
-              className={`bg-gradient-to-r ${door.accent.eyebrow} bg-clip-text text-xs font-bold uppercase tracking-[0.14em] text-transparent`}
-            >
-              {door.eyebrow}
-            </p>
-            <p className="text-lg font-bold text-slate-100">{door.name}</p>
-          </div>
+          <p className="text-xl font-bold text-slate-100">{door.name}</p>
         </div>
 
         <h3
@@ -318,7 +306,7 @@ const AppturnityCard = () => {
     <div className="relative pb-10 px-4 select-none">
       <SectionHeading
         eyebrow="Beyond the resume"
-        title="My company and my workshop"
+        title="My workshop"
         className="mb-8"
       />
       <motion.div
