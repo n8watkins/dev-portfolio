@@ -34,6 +34,7 @@ export default function ProjectGallery({
   className = 'w-full shrink-0 md:w-1/2',
   sizes = '(max-width: 768px) 100vw, 50vw',
   frameClassName = 'border-white/[0.08]',
+  dotClassName = 'bg-cyan-300/70',
   onOpen,
 }: {
   title: string
@@ -43,8 +44,10 @@ export default function ProjectGallery({
   className?: string
   /** The images' `sizes`, for that box. */
   sizes?: string
-  /** The frame's border (the project's accent). */
+  /** The frame's border and hover glow (the project's accent). */
   frameClassName?: string
+  /** The current screenshot's dot (the project's accent). */
+  dotClassName?: string
   /** A single image's click (no arrows to take it): open the project. */
   onOpen?: () => void
 }) {
@@ -103,7 +106,7 @@ export default function ProjectGallery({
       className={`touch-pan-y ${className}`}
     >
       <div
-        className={`group relative aspect-[16/10] overflow-hidden rounded-2xl border bg-[#07101d] transition-colors duration-300 ${frameClassName} ${!many && onOpen ? 'cursor-pointer' : ''}`}
+        className={`group relative aspect-[16/10] overflow-hidden rounded-2xl border bg-[#07101d] transition-[border-color,box-shadow] duration-300 ${frameClassName} ${!many && onOpen ? 'cursor-pointer' : ''}`}
         onClick={!many ? onOpen : undefined}
       >
         {images.map((image, i) =>
@@ -158,17 +161,31 @@ export default function ProjectGallery({
       </div>
       {many && (
         <>
-          {/* Where you are: small dots just under the image, clear of its content; for sight only, the live region says it aloud. */}
-          <div aria-hidden="true" className="mt-2 flex justify-center gap-1.5">
+          {/* Where you are, just under the image: one dot per screenshot, in the
+              project's colour, each a button that shows its screenshot (the
+              padding gives a fingertip-sized target around the small dot). */}
+          <div className="mt-1 flex justify-center">
             {images.map((image, i) => (
-              <span
+              <button
                 key={image.src}
-                data-dot
-                data-active={i === active ? '' : undefined}
-                className={`h-1 rounded-full transition-[width,background-color] duration-200 motion-reduce:transition-none ${
-                  i === active ? 'w-4 bg-cyan-300/70' : 'w-1 bg-white/[0.25]'
-                }`}
-              />
+                type="button"
+                disabled={!hydrated}
+                onClick={() => {
+                  warmUp()
+                  setActive(i)
+                }}
+                aria-label={`Show ${title} screenshot ${i + 1} of ${count}`}
+                aria-current={i === active ? 'true' : undefined}
+                className="group/dot flex h-6 cursor-pointer items-center px-1 focus-visible:outline-none disabled:cursor-default"
+              >
+                <span
+                  data-dot
+                  data-active={i === active ? '' : undefined}
+                  className={`h-1.5 rounded-full transition-[width,background-color] duration-200 group-focus-visible/dot:ring-2 group-focus-visible/dot:ring-cyan-300 motion-reduce:transition-none ${
+                    i === active ? `w-5 ${dotClassName}` : 'w-1.5 bg-white/[0.25] group-hover/dot:bg-white/50'
+                  }`}
+                />
+              </button>
             ))}
           </div>
           <p className="sr-only" aria-live="polite">

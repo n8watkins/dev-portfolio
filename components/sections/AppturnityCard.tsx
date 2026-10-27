@@ -127,7 +127,7 @@ const doors: Door[] = [
     icon: '/brands/appturnity.png',
     title: 'Web services for service businesses',
     blurb:
-      'My company. We launch pool, HVAC, landscaping and other service businesses a modern website for free, then automate their busywork with AI.',
+      'We build pool, HVAC, landscaping and other service businesses a free website, then automate their busywork with AI.',
     pointsLabel: 'Today',
     points: [
       'A website built and launched for you, free',
@@ -163,7 +163,7 @@ const doors: Door[] = [
     icon: '/tab/n8-icon.png',
     title: 'Where I build in public',
     blurb:
-      "Free tools, on a site that's a build in its own right: every pull request is tested on five browsers before it merges, and releases ship every week.",
+      'Everything I make outside client work lives here, free to try, each build with the story of how I made it.',
     points: [
       'Tools I use every day, free to try',
       'Web apps and Chrome extensions',

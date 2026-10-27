@@ -52,25 +52,13 @@ const Experience = () => {
                   <div className="absolute left-0 top-[14px] w-[19px] h-[19px] rounded-full bg-sky-500 border-[3px] border-slate-900 shadow-lg shadow-sky-500/40" />
 
                   {/* Card */}
-                  {/* On hover, a glow wraps the card: light blue around the text side and,
-                      around the image side, the image's own colours (item.hoverGlow); all
-                      light blue on a card with no image. Blurred layers behind the card, so
-                      they show past its edges. */}
+                  {/* On hover, one soft glow wraps the whole card evenly, in its hover
+                      image's colour (item.hoverGlow), light blue on a card with no image.
+                      Kept tight, so it never reaches the cards next to it. */}
                   <div
                     aria-hidden="true"
-                    className="pointer-events-none absolute inset-y-0 left-10 right-0 md:left-12 opacity-0 transition-opacity duration-500 group-hover/exp:opacity-100"
-                  >
-                    {item.hoverImage ? (
-                      <>
-                        <div className="absolute -inset-y-2 -left-2 w-[72%] rounded-2xl bg-sky-400/[0.24] blur-xl" />
-                        <div
-                          className={`absolute -inset-y-2 -right-3 w-[36%] rounded-2xl blur-xl ${item.hoverGlow}`}
-                        />
-                      </>
-                    ) : (
-                      <div className="absolute -inset-2 rounded-2xl bg-sky-400/[0.24] blur-xl" />
-                    )}
-                  </div>
+                    className={`pointer-events-none absolute -inset-y-1 -right-1 left-9 rounded-2xl opacity-0 blur-lg transition-opacity duration-500 group-hover/exp:opacity-100 md:left-11 ${item.hoverGlow ?? 'bg-sky-400/[0.16]'}`}
+                  />
                   <div
                     className={`group relative overflow-hidden rounded-xl p-5 md:p-6 bg-slate-900 border border-white/5 shadow-[0_20px_25px_-5px_rgba(0,0,0,0.3)] hover:border-sky-500/30 transition-all duration-300`}
                   >
@@ -86,7 +74,7 @@ const Experience = () => {
                           alt=""
                           fill
                           sizes="30vw"
-                          className={`object-cover object-right-top origin-top-right transition-transform duration-700 ${item.hoverZoom ?? 'scale-[1.18] group-hover:scale-110'}`}
+                          className={`object-cover transition-transform duration-700 ${item.hoverFrame ?? 'object-right-top origin-top-right scale-[1.18] group-hover:scale-110'}`}
                         />
                         {/* Dimmed, so a bright page (Appturnity's) doesn't wash out the card */}
                         <div className="absolute inset-0 bg-darkBlue/45" />

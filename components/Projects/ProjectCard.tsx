@@ -40,10 +40,11 @@ export default function ProjectCard({ project, index }: { project: Project; inde
       <ProjectGallery
         title={project.title}
         images={project.images}
-        frameClassName={accent.outline}
+        frameClassName={`${accent.outline} ${accent.shadow}`}
+        dotClassName={accent.dot}
         onOpen={open}
-        // The whole screenshot grows a touch on hover; nothing is cropped.
-        className="w-full shrink-0 md:w-1/2 transition-transform duration-500 group-hover:scale-[1.015] motion-reduce:transition-none"
+        // On hover the screenshot's frame lights up in the project's colour (no zoom).
+        className="w-full shrink-0 md:w-1/2"
         imageClassName="object-cover object-top"
       />
 

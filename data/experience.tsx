@@ -15,8 +15,11 @@ export type WorkExperienceItem = {
    * blue; a card with no image glows light blue all round, so it has none.
    */
   hoverGlow?: string
-  /** The hover image's zoom (at rest, then on hover), when it needs more than the default. */
-  hoverZoom?: string
+  /**
+   * Where the hover image sits in its frame and how far it is zoomed (at rest,
+   * then on hover): each picture framed on its own subject.
+   */
+  hoverFrame?: string
   additional?: boolean
 }
 
@@ -25,7 +28,7 @@ export const workExperience: WorkExperienceItem[] = [
     id: 1,
     company: 'Appturnity',
     // White, where Appturnity's white page shows
-    hoverGlow: 'bg-white/[0.24]',
+    hoverGlow: 'bg-white/[0.16]',
     companyUrl: 'https://appturnity.com',
     location: 'Los Angeles, CA',
     role: 'Full Stack Developer & Co-Founder',
@@ -42,12 +45,13 @@ export const workExperience: WorkExperienceItem[] = [
       { label: 'primeshows.live', url: 'https://primeshows.live/' },
     ],
     hoverImage: '/projects/Appturnity.webp',
+    hoverFrame: 'object-[70%_0%] origin-[70%_0%] scale-[1.18] group-hover:scale-110',
   },
   {
     id: 2,
     company: 'Donovan Golf Course Management',
     // A little of the course's green
-    hoverGlow: 'bg-green-400/[0.24]',
+    hoverGlow: 'bg-green-400/[0.14]',
     companyUrl: 'https://www.arroyosecogc.com/',
     location: 'Pasadena, CA',
     role: 'Web Developer',
@@ -58,6 +62,7 @@ export const workExperience: WorkExperienceItem[] = [
     ],
     links: [{ label: 'arroyosecogc.com', url: 'https://www.arroyosecogc.com/' }],
     hoverImage: '/experience/arroyoseco.webp',
+    hoverFrame: 'object-[60%_0%] origin-[60%_0%] scale-[1.18] group-hover:scale-110',
   },
   {
     id: 3,
@@ -74,7 +79,7 @@ export const workExperience: WorkExperienceItem[] = [
     id: 4,
     company: 'The Coder School',
     // Green, and white at the bottom
-    hoverGlow: 'bg-gradient-to-b from-green-400/[0.26] to-white/[0.24]',
+    hoverGlow: 'bg-gradient-to-b from-green-400/[0.16] to-white/[0.14]',
     companyUrl: 'https://www.thecoderschool.com/locations/santamonica/',
     location: 'Santa Monica, CA',
     role: 'Programming Instructor',
@@ -84,6 +89,6 @@ export const workExperience: WorkExperienceItem[] = [
       'Teach full-stack development with JavaScript and Python, including LLM-assisted coding and debugging.',
     ],
     hoverImage: '/experience/coderschool.webp',
-    hoverZoom: 'scale-[1.5] group-hover:scale-[1.4]',
+    hoverFrame: 'object-[50%_30%] origin-[50%_35%] scale-[1.45] group-hover:scale-[1.35]',
   },
 ]

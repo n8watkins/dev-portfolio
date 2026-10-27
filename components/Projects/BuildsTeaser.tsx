@@ -139,6 +139,22 @@ const BUILDS: Build[] = [
 
 const INTERVAL_MS = 7000
 
+/** A step back or forward through the builds. */
+const ArrowButton = ({ side, onClick }: { side: 'prev' | 'next'; onClick: () => void }) => (
+  <button
+    type="button"
+    onClick={onClick}
+    aria-label={side === 'prev' ? 'Previous build' : 'Next build'}
+    className="flex h-8 w-8 items-center justify-center rounded-full border border-white/12 text-slate-300 hover:bg-white/[0.08] hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+  >
+    {side === 'prev' ? (
+      <FiChevronLeft className="h-4 w-4" aria-hidden="true" />
+    ) : (
+      <FiChevronRight className="h-4 w-4" aria-hidden="true" />
+    )}
+  </button>
+)
+
 const BUTTON =
   'inline-flex items-center gap-1.5 h-9 rounded-lg px-3.5 text-sm font-semibold transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400'
 
@@ -206,7 +222,7 @@ export default function BuildsTeaser() {
           </span>
         </a>
         <p className="max-w-2xl text-sm text-slate-400 sm:text-base">
-          Beyond these projects, I ship tools in public. Here is more of what I&apos;m building.
+          More of what I&apos;m building in public.
         </p>
       </div>
 
@@ -223,7 +239,7 @@ export default function BuildsTeaser() {
         />
         <div
           key={build.slug}
-          className={`${dir > 0 ? 'teaser-in-r' : 'teaser-in-l'} relative grid items-center gap-6 md:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)]`}
+          className={`${dir > 0 ? 'teaser-in-r' : 'teaser-in-l'} relative grid items-center gap-6 md:grid-cols-[minmax(0,1.45fr)_minmax(0,1fr)] md:gap-8`}
         >
           <div className="min-w-0">
             {/* Its icon beside its name, as on the project rows; the copy runs full width under them. */}
@@ -314,8 +330,9 @@ export default function BuildsTeaser() {
           </div>
         </div>
 
-        {/* Where you are, and the controls */}
-        <div className="relative mt-5 flex items-center justify-between gap-3">
+        {/* The controls, centred: back, where you are, forward */}
+        <div className="relative mt-6 flex items-center justify-center gap-4">
+          <ArrowButton side="prev" onClick={() => go(-1)} />
           <div className="flex items-center gap-1.5">
             {BUILDS.map((b, i) => (
               <button
@@ -333,23 +350,7 @@ export default function BuildsTeaser() {
               />
             ))}
           </div>
-          <div className="flex items-center gap-1.5">
-            {(['prev', 'next'] as const).map((side) => (
-              <button
-                key={side}
-                type="button"
-                onClick={() => go(side === 'prev' ? -1 : 1)}
-                aria-label={side === 'prev' ? 'Previous build' : 'Next build'}
-                className="flex h-8 w-8 items-center justify-center rounded-full border border-white/12 text-slate-300 hover:bg-white/[0.08] hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
-              >
-                {side === 'prev' ? (
-                  <FiChevronLeft className="h-4 w-4" aria-hidden="true" />
-                ) : (
-                  <FiChevronRight className="h-4 w-4" aria-hidden="true" />
-                )}
-              </button>
-            ))}
-          </div>
+          <ArrowButton side="next" onClick={() => go(1)} />
         </div>
         <p
           className="sr-only"

@@ -33,7 +33,13 @@ const doors = [
     eyebrow: 'My company',
     name: 'Appturnity',
     icon: '/brands/appturnity.png',
-    pitch: "Run a service business? We'll do your website and automate the busywork.",
+    pitch: (
+      <>
+        Run a service business?
+        <br />
+        We&apos;ll do your website and automate the busywork.
+      </>
+    ),
     detail: 'Free websites and AI automations',
     frame:
       'from-white/40 via-sky-300/25 to-[#1066f4]/50 group-hover:from-white/80 group-hover:to-[#1066f4]',
