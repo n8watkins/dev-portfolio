@@ -158,7 +158,7 @@ const Footer = () => {
 
       {/* The site footer: the two other sites as the hero's cards, a site map, then the fine print. */}
       <motion.div {...defaultAnimationConfig} variants={fadeInVariants} className="mt-14 px-4">
-        <div className="grid gap-10 border-t border-white/[0.08] pt-10 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:gap-14">
+        <div className="grid gap-10 border-t border-white/[0.08] pt-10 lg:grid-cols-[minmax(0,1.45fr)_minmax(0,1fr)] lg:gap-12">
           <div className="flex flex-col gap-4">
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-300">
               Where else I build

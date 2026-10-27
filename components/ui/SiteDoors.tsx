@@ -93,7 +93,7 @@ export default function SiteDoors({
             <span className="relative mt-2.5 block flex-1 text-pretty text-sm leading-snug text-slate-300">
               {door.pitch}
             </span>
-            <span className="relative mt-3 inline-flex w-fit items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-0.5 text-xs font-medium text-slate-300">
+            <span className="relative mt-3 inline-flex w-fit items-center gap-1.5 whitespace-nowrap rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-0.5 text-xs font-medium text-slate-300">
               <span className={`h-1.5 w-1.5 rounded-full ${door.dot}`} aria-hidden="true" />
               {door.detail}
             </span>
