@@ -314,6 +314,8 @@ test.describe('dino easter egg (motion allowed)', () => {
     // and the dino's per-frame step cap (so a stall can't fling it) then slows
     // its clock far below the test's, so a 45s wait can pass with few moves.
     test.skip(browserName !== 'chromium', 'game logic, checked in Chromium (slow CI frames elsewhere)')
+    // Its polls allow up to a minute; the 30s default test timeout would cut them short.
+    test.setTimeout(90_000)
     // Short stays, so it would turn or leave at once if it could: it leaves,
     // comes back in from a side, and wants to turn straight away.
     await dinoTiming(page, {
@@ -420,6 +422,8 @@ test.describe('dino easter egg (motion allowed)', () => {
     // and the dino's per-frame step cap (so a stall can't fling it) then slows
     // its clock far below the test's, so a 45s wait can pass with few moves.
     test.skip(browserName !== 'chromium', 'game logic, checked in Chromium (slow CI frames elsewhere)')
+    // Its polls allow up to a minute; the 30s default test timeout would cut them short.
+    test.setTimeout(90_000)
     // Short stays so it chooses often; no lines to stop it. Its choices and
     // ways back in go round in a fixed order (change rows, turn, change, turn,
     // leave; in from the left, the right, then above), so every move comes up
