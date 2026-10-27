@@ -74,10 +74,11 @@ const Experience = () => {
                   <div
                     className={`group relative overflow-hidden rounded-xl p-5 md:p-6 bg-slate-900 border border-white/5 shadow-[0_20px_25px_-5px_rgba(0,0,0,0.3)] hover:border-sky-500/30 transition-all duration-300`}
                   >
-                    {/* Hover image reveal (desktop only) */}
+                    {/* Hover image reveal (desktop only): its frame fades in from the left, so
+                        the picture never hard-cuts against the copy */}
                     {item.hoverImage && (
                       <div
-                        className="absolute inset-y-0 right-0 w-[30%] opacity-0 group-hover:opacity-80 transition-opacity duration-500 pointer-events-none hidden md:block"
+                        className="absolute inset-y-0 right-0 w-[30%] overflow-hidden [mask-image:linear-gradient(to_left,black_45%,transparent)] opacity-0 group-hover:opacity-80 transition-opacity duration-500 pointer-events-none hidden md:block"
                         aria-hidden="true"
                       >
                         <Image
@@ -85,10 +86,8 @@ const Experience = () => {
                           alt=""
                           fill
                           sizes="30vw"
-                          className="object-cover object-left-top [mask-image:linear-gradient(to_left,black_55%,transparent_98%)] origin-right scale-[1.18] group-hover:scale-110 transition-transform duration-700"
+                          className="object-cover object-left-top origin-right scale-[1.18] group-hover:scale-110 transition-transform duration-700"
                         />
-                        {/* Fade the left edge into the page background so it doesn't hard-cut */}
-                        <div className="absolute inset-0 bg-gradient-to-r from-slate-900 via-slate-900/30 to-transparent" />
                         {/* Dimmed, so a bright page (Appturnity's) doesn't wash out the card */}
                         <div className="absolute inset-0 bg-darkBlue/45" />
                       </div>
