@@ -42,6 +42,11 @@ const GRAVITY = 1800 // px/s²
 const STEP_EVERY = 12 // px walked per leg swap
 const STILL = 2 // px/s: a row moving slower than this is paused
 const LANDING = 20 // px past the far edge of a gap that a hop lands
+// Faster than any marquee row ever scrolls, px/s. A row "moving" faster than
+// this in a frame has been laid out again (the window was resized, a font
+// loaded): its tiles jumped, they didn't travel, so the dino doesn't ride the
+// jump (it never teleports) and the rows are measured afresh.
+const MAX_ROW_SPEED = 600
 
 // 'drop' is a jump down through a gap on purpose (a 'miss' is a mistimed
 // one), 'climb' a leap up to the row above, 'away' the moment off the panel
@@ -102,10 +107,11 @@ const ROUND = 30
 // What a click makes it do (from a shuffled bag, so each one comes round
 // soon): a backflip on the spot; a fall straight through its row (to the row
 // below, or off the bottom, coming back in somewhere else); a leap up to the
-// row above; a dash the other way; or a blink to another spot. In the air it
-// only roars.
-type Reaction = 'flip' | 'fall' | 'leap' | 'dash' | 'blink'
-const REACTIONS: Reaction[] = ['flip', 'fall', 'leap', 'dash', 'blink']
+// row above; or a dash the other way. Every one moves it in plain sight: it
+// never vanishes and reappears elsewhere (the owner's call, 2026-10-27). In
+// the air it only roars.
+type Reaction = 'flip' | 'fall' | 'leap' | 'dash'
+const REACTIONS: Reaction[] = ['flip', 'fall', 'leap', 'dash']
 const DASH_T = 0.7 // s of dashing
 const DASH_SPEED = 3 // times its walking speed
 const PACE_PER_CATCH = 0.06
@@ -263,6 +269,11 @@ export default function DinoGame() {
   const roarsRef = useRef<HTMLDivElement>(null)
   const linesRef = useRef<HTMLDivElement>(null)
   const scoreRef = useRef<HTMLDivElement>(null)
+  const bestRef = useRef<HTMLDivElement>(null)
+  // The dino and its bubbles live in a stage that starts below the scoreboards'
+  // band, so the dino can never cross a scoreboard (see measure()).
+  const stageRef = useRef<HTMLDivElement>(null)
+  const bandRef = useRef<HTMLDivElement>(null)
   // The rainbow's gradient id, unique per dino (useId's colons don't belong in url()).
   const rainbowId = `dino-rainbow-${useId().replace(/[^a-zA-Z0-9]/g, '')}`
 
@@ -270,19 +281,28 @@ export default function DinoGame() {
     const dino = dinoRef.current
     const roarEls = [...(roarsRef.current?.children ?? [])] as HTMLElement[]
     const score = scoreRef.current
+    const bestEl = bestRef.current
+    const stage = stageRef.current
+    const band = bandRef.current
     const lineEls = [...(linesRef.current?.children ?? [])] as HTMLElement[]
     const panel = dino?.closest<HTMLElement>('[data-dino-panel]')
-    if (!dino || !roarEls.length || !score || !panel) return
+    if (!dino || !roarEls.length || !score || !bestEl || !stage || !band || !panel) return
 
     let rows: Row[] = []
     let levels: Level[] = []
     let panelW = 0
     let panelH = 0
+    // The top of the play area, panel px: just under the scoreboards' band.
+    // Nothing of the dino shows above it (the stage is clipped there), and its
+    // arcs and bubbles stay below it.
+    let ceiling = 0
 
     const measure = () => {
       const box = panel.getBoundingClientRect()
       panelW = box.width
       panelH = box.height
+      ceiling = band.getBoundingClientRect().bottom - box.top + 4
+      stage.style.clipPath = `inset(${ceiling.toFixed(0)}px 0 0 0)`
       rows = [...panel.querySelectorAll<HTMLElement>('[data-marquee-row]')].flatMap((el): Row[] => {
         const tracks = [...el.children] as HTMLElement[]
         const first = tracks[0]
@@ -302,6 +322,17 @@ export default function DinoGame() {
         const bottom = rows[0].el.getBoundingClientRect().bottom - box.top
         levels.push({ y: Math.min(bottom + 4, panelH - 6), row: null })
       }
+    }
+
+    // Measure again after the layout changed, and keep the dino on its feet:
+    // standing on a row (or flipping on it), it moves with the row's new top
+    // rather than hanging where the row used to be.
+    const remeasure = () => {
+      measure()
+      const here = levels[level]
+      if (!here) return
+      if (mode === 'walk') y = here.y
+      else if (mode === 'flip') flip.floor = here.y
     }
 
     // Tile intervals of a row right now, in panel coordinates.
@@ -358,28 +389,34 @@ export default function DinoGame() {
     let resultLeft = 0
     let pace = 1
     let best = 0
+    let beatBest = false // this round's catches went past the best so far
     try {
       best = Number(localStorage.getItem(BEST_KEY)) || 0
     } catch {
       // Storage blocked: the best score lasts this page view only.
     }
-    // The scoreboard's text, written straight to the DOM (no re-render per frame).
-    let scoreText = ''
-    const showScore = (text: string) => {
-      if (text === scoreText) return
-      scoreText = text
-      score.textContent = text
-      score.dataset.shown = text ? 'true' : 'false'
+    // The scoreboards' text, written straight to the DOM (no re-render per
+    // frame): the round at the top, the best score at the bottom.
+    const texts = new Map<HTMLElement, string>()
+    const show = (el: HTMLElement, text: string) => {
+      if (texts.get(el) === text) return
+      texts.set(el, text)
+      el.textContent = text
+      el.dataset.shown = text ? 'true' : 'false'
     }
     const scoreboard = () => {
+      const playing = roundLeft > 0 || resultLeft > 0
       if (roundLeft > 0) {
         const secs = Math.ceil(roundLeft)
-        showScore(`Catches ${catches} · 0:${String(secs).padStart(2, '0')}${best ? ` · Best ${best}` : ''}`)
+        show(score, `Catches ${catches} · 0:${String(secs).padStart(2, '0')}`)
       } else if (resultLeft > 0) {
-        showScore(`Time! ${catches} ${catches === 1 ? 'catch' : 'catches'} · Best ${best}`)
+        show(score, `Time! ${catches} ${catches === 1 ? 'catch' : 'catches'}${beatBest ? ' · New best!' : ''}`)
       } else {
-        showScore('')
+        show(score, '')
       }
+      // During a round the best counts this round's catches as they pass it.
+      show(bestEl, playing ? `Best ${Math.max(best, catches)}` : '')
+      bestEl.dataset.new = playing && catches > 0 && (beatBest || catches > best) ? 'true' : 'false'
     }
     // What it says now and then (DINO_LINES), each once per visit.
     let nextLine = 0
@@ -463,7 +500,7 @@ export default function DinoGame() {
         const p = Math.min((4 * hh + d) / (8 * hh), 1)
         return from - d * p - hh * 4 * p * (1 - p)
       }
-      while (h > d / 4 + 1 && peak(h) - H < 2) h -= 2
+      while (h > d / 4 + 1 && peak(h) - H < ceiling) h -= 2
       // Aim for a tile of the row above where it will be on landing (that
       // row moves too), as near as possible to an ordinary forward leap.
       const row = levels[target].row
@@ -487,6 +524,10 @@ export default function DinoGame() {
       climb = { t: 0, from, to, h, vx: (spotX - foot) / CLIMB_T, target }
       mode = 'climb'
     }
+
+    // A row's speed for a fall to carry, never more than a row can move.
+    const rowSpeed = (row: Row | null | undefined) =>
+      Math.max(-MAX_ROW_SPEED, Math.min(MAX_ROW_SPEED, row?.velocity ?? 0))
 
     const support = (foot: number, spans: [number, number][]) =>
       spans.find(([a, b]) => foot >= a && foot <= b)
@@ -528,7 +569,7 @@ export default function DinoGame() {
       if (side === 'right' && x + W + 2 + b.w > panelW - 4) side = 'left'
       else if (side === 'left' && x - 2 - b.w < 4) side = 'right'
       const bx = side === 'right' ? x + W + 2 : x - 2 - b.w
-      const by = Math.max(floor - H - b.h + 12, 2)
+      const by = Math.max(floor - H - b.h + 12, ceiling)
       const scale = Math.max(Math.min(1, 0.5 + (total - left) * 6, left * 8), 0)
       el.dataset.tail = side === 'right' ? 'left' : 'right'
       el.style.transformOrigin = side === 'right' ? 'bottom left' : 'bottom right'
@@ -551,6 +592,7 @@ export default function DinoGame() {
           roundLeft = 0
           resultLeft = RESULT_FOR
           pace = 1
+          beatBest = catches > best
           if (catches > best) {
             best = catches
             try {
@@ -569,11 +611,11 @@ export default function DinoGame() {
       const panelBox = panel.getBoundingClientRect()
       const panelLeft = panelBox.left
 
-      const current = levels[level]
-
       // Row speeds, and whether the visitor just paused the one the dino is
       // on. A pause of any other row (hovered, tapped or focused) leaves its
       // jumps alone: the row under its feet is still moving.
+      const onRow = levels[level]?.row
+      let relaidOut = false
       for (const row of rows) {
         const left = row.tracks[0].getBoundingClientRect().left
         row.delta = 0
@@ -585,15 +627,22 @@ export default function DinoGame() {
           let delta = left - row.lastLeft
           if (delta > period / 2) delta -= period
           else if (delta < -period / 2) delta += period
-          row.delta = delta
-          row.velocity = delta / realDt
-          const paused = Math.abs(row.velocity) < STILL
-          if (paused && !row.paused && settled > 10 && row === current?.row) missPending = true
-          row.paused = paused
+          if (Math.abs(delta) > Math.max(MAX_ROW_SPEED * realDt, 4)) {
+            // Laid out again, not moved: nothing rides the jump.
+            relaidOut = true
+          } else {
+            row.delta = delta
+            row.velocity = delta / realDt
+            const paused = Math.abs(row.velocity) < STILL
+            if (paused && !row.paused && settled > 10 && row === onRow) missPending = true
+            row.paused = paused
+          }
         }
         row.lastLeft = left
       }
       settled++
+      if (relaidOut) remeasure()
+      const current = levels[level]
 
       const spans = current?.row ? intervals(current.row, panelLeft) : null
       // On a row (walking, hopping off it, flipping), the dino rides along
@@ -643,7 +692,7 @@ export default function DinoGame() {
             // Still off the edge: keep walking.
           } else if (!under) {
             mode = 'fall'
-            carry = current.row?.velocity ?? 0
+            carry = rowSpeed(current.row)
           } else {
             const edge = dir > 0 ? under[1] : under[0]
             const ahead = (edge - foot) * dir
@@ -662,7 +711,7 @@ export default function DinoGame() {
                 const target = edge + dir * gap * 0.5
                 hop = { t: 0, T, h: 6, floor: current.y, vx: (target - foot) / T }
                 mode = 'miss'
-                carry = current.row?.velocity ?? 0
+                carry = rowSpeed(current.row)
                 missPending = false
               } else if (roam && stayLeft <= 0 && !leaving && !reentering && !commit) {
                 // Been here a while: it does something else.
@@ -678,7 +727,7 @@ export default function DinoGame() {
                   const target = edge + dir * gap * 0.5
                   hop = { t: 0, T, h: 10, floor: current.y, vx: (target - foot) / T }
                   mode = 'drop'
-                  carry = current.row?.velocity ?? 0
+                  carry = rowSpeed(current.row)
                 } else if (choice === 'turn') {
                   dir = dir > 0 ? -1 : 1
                 } else {
@@ -692,7 +741,7 @@ export default function DinoGame() {
                 const reach = gap + LANDING
                 const T = Math.min(Math.max(reach / (SPEED * 1.4), 0.26), 0.6)
                 // The top row's arc stays inside the panel (which clips).
-                const h = Math.min(8 + gap * 0.4, current.y - H - 2)
+                const h = Math.max(0, Math.min(8 + gap * 0.4, current.y - H - ceiling))
                 hop = { t: 0, T, h, floor: current.y, vx: (dir * reach) / T }
                 mode = 'hop'
               }
@@ -713,7 +762,7 @@ export default function DinoGame() {
           } else {
             // A miss already carries the row's speed; a hop that came up
             // short drifts with the row it left.
-            if (mode === 'hop') carry = current?.row?.velocity ?? 0
+            if (mode === 'hop') carry = rowSpeed(current?.row)
             mode = 'fall'
             vy = 0
           }
@@ -868,6 +917,7 @@ export default function DinoGame() {
       } else if (resultLeft < RESULT_FOR - 1.5) {
         roundLeft = ROUND
         resultLeft = 0
+        beatBest = false
         catches = 1
         dino.dataset.game = 'on'
       }
@@ -891,12 +941,12 @@ export default function DinoGame() {
       const current = levels[level]
       if (mode === 'walk' && current) {
         let reaction = nextReaction()
-        // On the top row there is nothing to leap up to: it blinks instead.
-        if (reaction === 'leap' && !levels[level - 1]?.row) reaction = 'blink'
+        // On the top row there is nothing to leap up to: it dashes instead.
+        if (reaction === 'leap' && !levels[level - 1]?.row) reaction = 'dash'
         dino.dataset.reaction = reaction
         if (reaction === 'flip') {
           // The arc stays inside the panel on the top row.
-          flip = { t: 0, h: Math.min(44, current.y - H - 2), floor: current.y }
+          flip = { t: 0, h: Math.max(0, Math.min(44, current.y - H - ceiling)), floor: current.y }
           mode = 'flip'
         } else if (reaction === 'fall') {
           // A startled little pop, then straight down through its row.
@@ -906,28 +956,9 @@ export default function DinoGame() {
           missPending = false
         } else if (reaction === 'leap') {
           startClimb(level - 1)
-        } else if (reaction === 'dash') {
+        } else {
           dir = dir > 0 ? -1 : 1
           dashLeft = DASH_T
-        } else {
-          // Gone and back in a blink, somewhere else on a row.
-          const floors = levels.flatMap((l, i) => (l.row ? [i] : []))
-          if (floors.length) {
-            level = floors[Math.floor(Math.random() * floors.length)]
-            const spans = intervals(levels[level].row!, panel.getBoundingClientRect().left).filter(
-              ([a, b]) => a > panelW * 0.2 && b < panelW * 0.8
-            )
-            const [a, b] = spans.length
-              ? spans[Math.floor(Math.random() * spans.length)]
-              : [panelW * 0.3, panelW * 0.7]
-            x = a + (b - a) / 2 - W / 2
-            y = levels[level].y
-            dir = Math.random() < 0.5 ? 1 : -1
-            stayLeft = between(stayFor)
-            reentering = false
-            leaving = false
-            dino.animate?.([{ opacity: 0 }, { opacity: 1 }], { duration: 260, easing: 'ease-out' })
-          }
         }
       }
     }
@@ -936,7 +967,7 @@ export default function DinoGame() {
     measure()
     respawn()
     const resize = new ResizeObserver(() => {
-      measure()
+      remeasure()
       if (mode !== 'away' && x > panelW) respawn()
     })
     resize.observe(panel)
@@ -958,70 +989,88 @@ export default function DinoGame() {
 
   return (
     <>
-      <div
-        ref={dinoRef}
-        data-dino
-        data-frame="fall"
-        // Its own small box takes clicks (the easter egg); the layer around it
-        // lets everything else through to the tiles.
-        className="group/dino pointer-events-auto absolute top-0 left-0 cursor-pointer will-change-transform"
-        style={{
-          width: W,
-          height: H,
-          transform: `translate3d(-${W * 2}px, -${H * 2}px, 0)`,
-          ['--dino-body' as string]: COLORS.body,
-        }}
-      >
-        <svg
-          viewBox={`0 0 ${DINO_COLS} ${DINO_ROWS}`}
-          width={W}
-          height={H}
-          shapeRendering="crispEdges"
-          className="block overflow-visible"
+      {/* The stage: the dino and its bubbles, clipped below the scoreboards' band. */}
+      <div ref={stageRef} className="absolute inset-0">
+        <div
+          ref={dinoRef}
+          data-dino
+          data-frame="fall"
+          // Its own small box takes clicks (the easter egg); the layer around it
+          // lets everything else through to the tiles.
+          className="group/dino pointer-events-auto absolute top-0 left-0 cursor-pointer will-change-transform"
+          style={{
+            width: W,
+            height: H,
+            transform: `translate3d(-${W * 2}px, -${H * 2}px, 0)`,
+            ['--dino-body' as string]: COLORS.body,
+          }}
         >
-          {/* The rainbow body, its bands turning slowly. */}
-          <defs>
-            <linearGradient id={rainbowId} x1="0" y1="0" x2="1" y2="1">
-              {RAINBOW.map((c, i) => (
-                <stop key={c} offset={i / (RAINBOW.length - 1)} stopColor={c} />
-              ))}
-              <animateTransform
-                attributeName="gradientTransform"
-                type="rotate"
-                from="0 0.5 0.5"
-                to="360 0.5 0.5"
-                dur="3s"
-                repeatCount="indefinite"
-              />
-            </linearGradient>
-          </defs>
-          {FRAMES.map(({ name, paths }) => (
-            <g key={name} className={FRAME_CLASS[name]}>
-              <path d={paths.body} fill="var(--dino-body)" />
-              <path d={paths.eye} fill={COLORS.eye} />
-              <path d={paths.shine} fill={COLORS.shine} />
-            </g>
+          <svg
+            viewBox={`0 0 ${DINO_COLS} ${DINO_ROWS}`}
+            width={W}
+            height={H}
+            shapeRendering="crispEdges"
+            className="block overflow-visible"
+          >
+            {/* The rainbow body, its bands turning slowly. */}
+            <defs>
+              <linearGradient id={rainbowId} x1="0" y1="0" x2="1" y2="1">
+                {RAINBOW.map((c, i) => (
+                  <stop key={c} offset={i / (RAINBOW.length - 1)} stopColor={c} />
+                ))}
+                <animateTransform
+                  attributeName="gradientTransform"
+                  type="rotate"
+                  from="0 0.5 0.5"
+                  to="360 0.5 0.5"
+                  dur="3s"
+                  repeatCount="indefinite"
+                />
+              </linearGradient>
+            </defs>
+            {FRAMES.map(({ name, paths }) => (
+              <g key={name} className={FRAME_CLASS[name]}>
+                <path d={paths.body} fill="var(--dino-body)" />
+                <path d={paths.eye} fill={COLORS.eye} />
+                <path d={paths.shine} fill={COLORS.shine} />
+              </g>
+            ))}
+          </svg>
+        </div>
+        <div ref={roarsRef} className="contents">
+          {ROARS.map((b, i) => (
+            <BubbleView key={ROAR_WORDS[i]} bubble={b} name={`roar-${i}`} />
           ))}
-        </svg>
+        </div>
+        <div ref={linesRef} className="contents">
+          {LINES.map((b, i) => (
+            <BubbleView key={DINO_LINES[i]} bubble={b} name={`line-${i}`} className="opacity-90" />
+          ))}
+        </div>
       </div>
-      <div ref={roarsRef} className="contents">
-        {ROARS.map((b, i) => (
-          <BubbleView key={ROAR_WORDS[i]} bubble={b} name={`roar-${i}`} />
-        ))}
-      </div>
-      {/* The game's scoreboard, top centre of the panel (clear of its side fades): shown during a round and
-          for a moment after it. Decorative, like the dino. */}
+      {/* The scoreboards, in a band across the top of the panel that the dino
+          never enters: the round (catches and clock) and the best score. Shown
+          during a round and for a moment after it. A fixed height, so the band
+          measures the same empty or full. Decorative, like the dino. */}
       <div
-        ref={scoreRef}
-        data-dino-score
-        data-shown="false"
+        ref={bandRef}
         aria-hidden="true"
-        className="pointer-events-none absolute top-2.5 left-1/2 z-10 -translate-x-1/2 rounded-full whitespace-nowrap border border-white/10 bg-[#081427]/85 px-3 py-1 font-mono text-xs font-semibold text-cyan-200 tabular-nums opacity-0 backdrop-blur-sm transition-opacity duration-300 data-[shown=true]:opacity-100"
-      />
-      <div ref={linesRef} className="contents">
-        {LINES.map((b, i) => (
-          <BubbleView key={DINO_LINES[i]} bubble={b} name={`line-${i}`} className="opacity-90" />
-        ))}
+        className="pointer-events-none absolute inset-x-0 top-2.5 z-10 flex justify-center gap-2"
+      >
+        <div
+          ref={scoreRef}
+          data-dino-score
+          data-shown="false"
+          className="flex h-[1.625rem] items-center rounded-full whitespace-nowrap border border-white/10 bg-[#081427]/85 px-3 font-mono text-xs font-semibold text-cyan-200 tabular-nums opacity-0 backdrop-blur-sm transition-opacity duration-300 data-[shown=true]:opacity-100"
+        />
+        {/* A new best lights up. */}
+        <div
+          ref={bestRef}
+          data-dino-best
+          data-shown="false"
+          data-new="false"
+          className="flex h-[1.625rem] items-center rounded-full whitespace-nowrap border border-white/10 bg-[#081427]/85 px-3 font-mono text-xs font-semibold text-slate-300 tabular-nums opacity-0 backdrop-blur-sm transition-[opacity,color,border-color] duration-300 data-[new=true]:border-amber-300/40 data-[new=true]:text-amber-200 data-[shown=true]:opacity-100"
+        />
       </div>
     </>
   )

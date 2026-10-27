@@ -68,7 +68,7 @@ interface DinoTiming {
   lineGap?: [number, number]
   stay?: [number, number]
   roam?: boolean
-  reactions?: ('flip' | 'fall' | 'leap' | 'dash' | 'blink')[]
+  reactions?: ('flip' | 'fall' | 'leap' | 'dash')[]
   choices?: ('change' | 'turn' | 'exit')[]
   entries?: ('drop' | 'left' | 'right')[]
 }
@@ -258,8 +258,8 @@ test.describe('dino easter egg (motion allowed)', () => {
     await expect(dino(page)).toHaveAttribute('data-roars', '2')
   })
 
-  test('each click does something different: falls, leaps, dashes, blinks', async ({ page }) => {
-    await dinoTiming(page, { reactions: ['fall', 'dash', 'blink'] })
+  test('each click does something different: falls, then dashes the other way', async ({ page }) => {
+    await dinoTiming(page, { reactions: ['fall', 'dash'] })
     await onTopRow(page)
     // Falls straight through its row.
     await pokeWalking(page)
@@ -272,10 +272,70 @@ test.describe('dino easter egg (motion allowed)', () => {
     await pokeWalking(page)
     await expect(dino(page)).toHaveAttribute('data-reaction', 'dash')
     await expect(dino(page)).not.toHaveAttribute('data-dir', dir!)
-    // Blinks to another spot on a row, still walking.
-    await pokeWalking(page)
-    await expect(dino(page)).toHaveAttribute('data-reaction', 'blink')
-    await expect(dino(page)).toHaveAttribute('data-mode', 'walk')
+  })
+
+  // Every frame's position in the panel, recorded in the page, and the frames
+  // where it moved further than it ever can in one frame: a teleport. Only
+  // moves seen inside the panel count (its comings and goings off the sides,
+  // the drop-in from above and its time away are out of sight). Up and down
+  // it is measured from the top of the row it is on, so a row that moves (a
+  // card resized around rows anchored to its bottom) carries it fairly.
+  const recordMoves = (page: Page) =>
+    dino(page).evaluate((el) => {
+      const panel = el.closest('[data-dino-panel]')!
+      const moves: { x: number; y: number; w: number; h: number; mode: string; level: string; row: number | null }[] = []
+      ;(window as unknown as { dinoMoves: typeof moves }).dinoMoves = moves
+      const step = () => {
+        const m = new DOMMatrix(getComputedStyle(el).transform)
+        const box = panel.getBoundingClientRect()
+        const tile = panel.querySelectorAll('[data-marquee-row]')[Number(el.dataset.level)]?.querySelector('figure')
+        const row = tile ? tile.getBoundingClientRect().top - box.top : null
+        moves.push({ x: m.m41, y: m.m42, w: box.width, h: box.height, mode: el.dataset.mode!, level: el.dataset.level!, row })
+        requestAnimationFrame(step)
+      }
+      requestAnimationFrame(step)
+    })
+  const teleports = async (page: Page) => {
+    const moves = await page.evaluate(
+      () =>
+        (window as unknown as { dinoMoves: { x: number; y: number; w: number; h: number; mode: string; level: string; row: number | null }[] })
+          .dinoMoves
+    )
+    const seen = (m: (typeof moves)[number]) => m.mode !== 'away' && m.level !== '-1' && m.x >= 0 && m.x <= m.w - 48 && m.y >= 0 && m.y <= m.h
+    const jumps: string[] = []
+    for (let i = 1; i < moves.length; i++) {
+      const [a, b] = [moves[i - 1], moves[i]]
+      if (!seen(a) || !seen(b)) continue
+      // Its fastest move (a dash on a slow frame) is under 50px a frame.
+      const sameRow = a.level === b.level && a.row !== null && b.row !== null
+      const dy = sameRow ? b.y - b.row! - (a.y - a.row!) : b.y - a.y
+      if (Math.abs(b.x - a.x) > 60 || Math.abs(dy) > 60)
+        jumps.push(`${a.mode}@${a.level} (${a.x.toFixed(0)}, ${a.y.toFixed(0)}) -> ${b.mode}@${b.level} (${b.x.toFixed(0)}, ${b.y.toFixed(0)})`)
+    }
+    return jumps
+  }
+
+  test('never teleports when clicked: every reaction moves it in plain sight', async ({ page }) => {
+    await onTopRow(page)
+    await recordMoves(page)
+    const reactions = new Set<string>()
+    for (let i = 0; i < 10; i++) {
+      await pokeWalking(page)
+      reactions.add((await dino(page).getAttribute('data-reaction'))!)
+      await page.waitForTimeout(700)
+    }
+    expect([...reactions].filter((r) => !['flip', 'fall', 'leap', 'dash'].includes(r))).toEqual([])
+    expect(await teleports(page)).toEqual([])
+  })
+
+  test('never teleports or gets flung when the window is resized', async ({ page }) => {
+    await onTopRow(page)
+    await recordMoves(page)
+    for (const width of [1100, 1440, 1000, 1440, 1200, 1440]) {
+      await page.setViewportSize({ width, height: 900 })
+      await page.waitForTimeout(700)
+    }
+    expect(await teleports(page)).toEqual([])
   })
 
   test('leaps up to the row above when clicked on the lower row', async ({ page }) => {
@@ -371,6 +431,32 @@ test.describe('dino easter egg (motion allowed)', () => {
     }
   })
 
+  test('the scoreboards sit in a band the dino never enters, even mid-flip during a round', async ({ page }) => {
+    await dinoTiming(page, { reactions: ['flip', 'dash', 'flip', 'fall'] })
+    await onTopRow(page)
+    await recordMoves(page)
+    for (let i = 0; i < 8; i++) {
+      await pokeWalking(page)
+      await page.waitForTimeout(800)
+    }
+    await expect(page.locator('[data-dino-score]')).toHaveAttribute('data-shown', 'true')
+    await expect(page.locator('[data-dino-best]')).toHaveAttribute('data-shown', 'true')
+    const band = await page.evaluate(() => {
+      const panel = document.querySelector('[data-dino-panel]')!.getBoundingClientRect()
+      const box = document.querySelector('[data-dino-score]')!.parentElement!.getBoundingClientRect()
+      return box.bottom - panel.top
+    })
+    const moves = await page.evaluate(
+      () => (window as unknown as { dinoMoves: { y: number; mode: string; level: string }[] }).dinoMoves
+    )
+    // Its top edge (the transform's y) while it is on, or leaping between, the rows.
+    const inBand = moves.filter((m) => m.level !== '-1' && m.mode !== 'away' && m.y < band)
+    expect(inBand.map((m) => `${m.mode}@${m.level} top ${m.y.toFixed(0)} above ${band.toFixed(0)}`)).toEqual([])
+    // And nothing of it can show up there anyway: the stage is clipped below the band.
+    const clip = await dino(page).evaluate((el) => getComputedStyle(el.parentElement!).clipPath)
+    expect(Number(clip.match(/inset\((\d+)/)?.[1])).toBeGreaterThanOrEqual(band)
+  })
+
   test('the first click starts a catch round with a scoreboard', async ({ page }) => {
     await dinoTiming(page, { reactions: ['flip'] })
     await onTopRow(page)
@@ -381,6 +467,10 @@ test.describe('dino easter egg (motion allowed)', () => {
     await expect(dino(page)).toHaveAttribute('data-catches', '1')
     await expect(score).toHaveAttribute('data-shown', 'true')
     await expect(score).toHaveText(/^Catches 1 · 0:(30|29)/)
+    // The best score shows beside it while a round is on, lit as this round passes it.
+    const best = page.locator('[data-dino-best]')
+    await expect(best).toHaveAttribute('data-shown', 'true')
+    await expect(best).toHaveText(/^Best \d+$/)
     await expect(dino(page)).toHaveAttribute('data-mode', 'walk')
     await pokeDino(page)
     await expect(dino(page)).toHaveAttribute('data-catches', '2')
@@ -469,6 +559,37 @@ test.describe('dino easter egg (motion allowed)', () => {
     await pokeDino(page)
     await expect(dino(page)).toHaveAttribute('data-roars', '1')
     await expect(dino(page)).toHaveAttribute('data-line', '1', { timeout: 15_000 })
+  })
+
+  test('the tiles cannot be selected by a double or triple click, and still take keyboard focus', async ({ page }) => {
+    await page.goto('/')
+    await showKit(page, '[data-dino-panel]')
+    // Hovering the middle of a row pauses it (it never holds still otherwise),
+    // then a double click there, which would select a word anywhere else.
+    const row = (await page.locator('[data-dino-panel] [data-marquee-row]').first().boundingBox())!
+    await page.mouse.move(row.x + row.width / 2, row.y + row.height / 2)
+    await page.waitForTimeout(300)
+    // The tile nearest the middle of the paused row, and the middle of its name.
+    const [cx, cy] = await page.evaluate(() => {
+      const names = [...document.querySelectorAll<HTMLElement>('[data-dino-panel] [data-marquee-row] [data-tile-name]')]
+      const mid = innerWidth / 2
+      const box = names
+        .map((el) => el.getBoundingClientRect())
+        .sort((a, b) => Math.abs(a.x + a.width / 2 - mid) - Math.abs(b.x + b.width / 2 - mid))[0]
+      return [box.x + box.width / 2, box.y + box.height / 2]
+    })
+    // Set on the whole panel (Firefox and WebKit report a child's own value as
+    // "auto" even though the panel's applies to it, so what counts is below:
+    // nothing gets selected).
+    expect(await page.locator('[data-dino-panel]').evaluate((el) => getComputedStyle(el).userSelect)).toBe('none')
+    // A double and a triple click would select a word, then the whole line, anywhere else.
+    await page.mouse.dblclick(cx, cy)
+    expect(await page.evaluate(() => String(getSelection()))).toBe('')
+    await page.mouse.click(cx, cy, { clickCount: 3 })
+    expect(await page.evaluate(() => String(getSelection()))).toBe('')
+    const tile = page.locator('[data-dino-panel] figure[tabindex="0"]').first()
+    await tile.focus()
+    await expect(tile).toBeFocused()
   })
 
   test('the gaps it hops and falls through are clearly wider than it is', async ({ page }) => {
