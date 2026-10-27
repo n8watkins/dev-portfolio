@@ -15,12 +15,6 @@ const nextConfig = {
         port: '',
         pathname: '/**',
       },
-      {
-        protocol: 'https',
-        hostname: 'n8sportfolio.vercel.app',
-        port: '',
-        pathname: '/**',
-      },
     ],
     formats: ['image/avif', 'image/webp'],
     minimumCacheTTL: 86400, // 24 hours for better caching
@@ -48,12 +42,12 @@ const nextConfig = {
   // Redirect common routes to home page
   async redirects() {
     return [
-      // Canonicalize the old default Vercel URL → the real domain (preserves path).
-      // Only fires when the Host is n8sportfolio.vercel.app; portfolio.n8builds.dev
-      // and preview deploys are unaffected.
+      // The old vercel.app addresses → the real domain (keeps the path). Only
+      // fires for those hosts; portfolio.n8builds.dev and preview deploys are
+      // unaffected.
       {
         source: '/:path*',
-        has: [{ type: 'host', value: 'n8sportfolio.vercel.app' }],
+        has: [{ type: 'host', value: '(?:n8s|nathans)portfolio\\.vercel\\.app' }],
         destination: 'https://portfolio.n8builds.dev/:path*',
         permanent: true,
       },

@@ -68,3 +68,16 @@ test("the Sentry wizard's example page and API are not deployed", async ({ reque
   expect((await request.get('/sentry-example-page')).status()).toBe(404)
   expect((await request.get('/api/sentry-example-api')).status()).toBe(404)
 })
+
+test('the old vercel.app addresses redirect to portfolio.n8builds.dev, keeping the path', async ({
+  request,
+}) => {
+  for (const host of ['nathansportfolio.vercel.app', 'n8sportfolio.vercel.app']) {
+    const res = await request.get('/projects/scribe?x=1', { headers: { host }, maxRedirects: 0 })
+    expect(res.status(), host).toBe(308)
+    expect(res.headers().location, host).toBe('https://portfolio.n8builds.dev/projects/scribe?x=1')
+  }
+  // The real address and preview deploys are served as they are.
+  const own = await request.get('/', { maxRedirects: 0 })
+  expect(own.status()).toBe(200)
+})
