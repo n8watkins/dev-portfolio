@@ -50,10 +50,10 @@ export default function ProjectCard({ project, index }: { project: Project; inde
           <Image
             src={project.icon}
             alt=""
-            width={44}
-            height={44}
+            width={56}
+            height={56}
             unoptimized={project.icon.endsWith('.svg')}
-            className="h-10 w-10 shrink-0 rounded-xl sm:h-11 sm:w-11"
+            className="h-12 w-12 shrink-0 rounded-2xl shadow-lg shadow-black/40 sm:h-14 sm:w-14"
           />
           <div className="min-w-0">
             <h3 className="text-2xl font-bold tracking-tight text-slate-50 sm:text-3xl">

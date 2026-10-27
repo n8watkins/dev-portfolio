@@ -21,7 +21,7 @@ const Grid = () => {
   return (
     <section className="mb-10">
       {/* About intro - the copy beside the portrait, above the bento grid and aligned with it */}
-      <div className="max-w-md sm:max-w-lg md:max-w-3xl lg:max-w-4xl xl:max-w-5xl mx-auto px-4 pt-10 md:pt-12 pb-14">
+      <div className="max-w-md sm:max-w-lg md:max-w-3xl lg:max-w-4xl xl:max-w-5xl mx-auto px-4 pt-10 md:pt-24 pb-14">
         <div className="flex flex-col-reverse md:flex-row md:items-start gap-8 md:gap-12">
           <SectionHeading eyebrow="Get to know me" title="About me" className="md:flex-1">
             <div className="space-y-4 text-slate-300">

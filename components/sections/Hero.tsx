@@ -40,39 +40,30 @@ const socials = [
 ]
 
 /**
- * The hero's two doors, each with a line on what it is: the resume (the
- * hiring path, opened as the resume card opens it) and n8builds.dev.
- * Appturnity is in the cards, the contact section and the footer.
+ * The two sites this one leads to, each with a line on what it is and why to
+ * go. The resume is a button beside the socials (and top right in the navbar).
  */
 const doors = [
   {
-    href: RESUME_VIEW_URL,
-    name: 'Resume',
-    icon: (
-      <span className="flex h-7 w-7 items-center justify-center rounded-md bg-gradient-to-br from-cyan-500 to-blue-600 text-white">
-        <FiFileText className="h-4 w-4" />
-      </span>
-    ),
-    line: 'My experience and skills, on one page.',
-    look: 'border-sky-400/40 bg-sky-500/[0.08] hover:border-sky-300/70 hover:bg-sky-500/[0.14]',
-    onClick: () => trackResumeEvent('view'),
-  },
-  {
     href: 'https://n8builds.dev',
     name: 'n8builds.dev',
-    icon: (
-      <Image src="/tab/n8-icon.png" alt="" width={28} height={28} className="h-7 w-7 rounded-md" />
-    ),
+    icon: '/tab/n8-icon.png',
     line: 'Where I build in public: free, open-source tools.',
-    look: 'border-white/10 bg-white/[0.03] hover:border-sky-400/50 hover:bg-white/[0.06]',
-    onClick: undefined,
+    ring: 'hover:border-sky-400/50',
+  },
+  {
+    href: 'https://appturnity.com',
+    name: 'Appturnity',
+    icon: '/brands/appturnity.png',
+    line: 'My company: free websites for local businesses.',
+    ring: 'hover:border-[#1066f4]/70',
   },
 ]
 
 const Hero = () => {
   return (
     <div
-      className="relative flex flex-col items-center bg-darkBlue overflow-hidden select-none pt-24 md:pt-[6.5rem] pb-10 md:pb-8"
+      className="relative flex flex-col items-center bg-darkBlue overflow-hidden select-none pt-28 md:pt-[9.5rem] pb-10 md:pb-8"
       id="home"
     >
       <HeroGrid />
@@ -120,6 +111,18 @@ const Hero = () => {
                   <Icon className={`w-full h-full ${pad}`} aria-hidden="true" />
                 </a>
               ))}
+              {/* The resume, opened as the resume card opens it */}
+              <a
+                href={RESUME_VIEW_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => trackResumeEvent('view')}
+                style={delay(480)}
+                className="hero-in ml-1 inline-flex h-10 items-center gap-2 rounded-xl border border-sky-400/40 bg-sky-500/10 px-3.5 text-sm font-semibold text-sky-100 transition-colors duration-200 hover:border-sky-300/70 hover:bg-sky-500/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+              >
+                <FiFileText className="h-4 w-4" aria-hidden="true" />
+                Resume<span className="sr-only"> (opens in a new tab)</span>
+              </a>
             </nav>
 
             {/* The two sites this one funnels to, each saying what it is. */}
@@ -133,12 +136,15 @@ const Hero = () => {
                   href={door.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  onClick={door.onClick}
-                  className={`group flex items-start gap-3 rounded-xl border p-3.5 text-left transition-all duration-200 hover:shadow-lg hover:shadow-sky-500/10 ${door.look}`}
+                  className={`group flex items-start gap-3 rounded-xl border border-white/10 bg-white/[0.03] p-3.5 text-left transition-all duration-200 hover:bg-white/[0.06] hover:shadow-lg hover:shadow-sky-500/10 ${door.ring}`}
                 >
-                  <span className="mt-0.5 shrink-0" aria-hidden="true">
-                    {door.icon}
-                  </span>
+                  <Image
+                    src={door.icon}
+                    alt=""
+                    width={28}
+                    height={28}
+                    className="mt-0.5 h-7 w-7 shrink-0 rounded-md object-contain"
+                  />
                   <span className="min-w-0">
                     <span className="flex items-center gap-1 text-base font-semibold text-slate-100">
                       {door.name}

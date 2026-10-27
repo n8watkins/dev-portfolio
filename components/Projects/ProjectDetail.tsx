@@ -168,10 +168,10 @@ export default function ProjectDetail({ project }: { project: Project }) {
             <Image
               src={project.icon}
               alt=""
-              width={56}
-              height={56}
+              width={64}
+              height={64}
               unoptimized={project.icon.endsWith('.svg')}
-              className="h-14 w-14 shrink-0 rounded-2xl"
+              className="h-14 w-14 shrink-0 rounded-2xl shadow-lg shadow-black/40 sm:h-16 sm:w-16"
             />
             <div className="min-w-0">
               <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-slate-50">
