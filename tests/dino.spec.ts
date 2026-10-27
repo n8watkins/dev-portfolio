@@ -69,6 +69,7 @@ interface DinoTiming {
   stay?: [number, number]
   roam?: boolean
   reactions?: ('flip' | 'fall' | 'leap' | 'dash')[]
+  round?: number
   choices?: ('change' | 'turn' | 'exit')[]
   entries?: ('drop' | 'left' | 'right')[]
 }
@@ -457,6 +458,41 @@ test.describe('dino easter egg (motion allowed)', () => {
     expect(Number(clip.match(/inset\((\d+)/)?.[1])).toBeGreaterThanOrEqual(band)
   })
 
+  test('a click is a catch: it never shouts that it was missed', async ({ page }) => {
+    await dinoTiming(page, { reactions: ['dash'] })
+    await onTopRow(page)
+    const words = new Set<string>()
+    for (let i = 0; i < 12; i++) {
+      await pokeDino(page)
+      await expect(dino(page)).toHaveAttribute('data-roars', String(i + 1))
+      words.add((await dino(page).getAttribute('data-roar'))!)
+    }
+    expect([...words].filter((w) => /MISS|SLOW|NOPE|CATCH ME/.test(w))).toEqual([])
+    // Nearly all of them came round (a shuffled bag of six over twelve clicks;
+    // one can be skipped to avoid saying the same word twice in a row).
+    expect(words.size).toBeGreaterThanOrEqual(5)
+  })
+
+  test('the countdown drains, turns red for the last seconds, and gives way to the result', async ({ page }) => {
+    await dinoTiming(page, { reactions: ['dash'], round: 7 })
+    await onTopRow(page)
+    const timer = page.locator('[data-dino-timer]')
+    const scale = () =>
+      page.locator('[data-dino-timer] span[aria-hidden]').evaluate((el) => new DOMMatrix(getComputedStyle(el).transform).a)
+    await expect(timer).toHaveAttribute('data-shown', 'false')
+    await pokeDino(page)
+    await expect(timer).toHaveAttribute('data-shown', 'true')
+    await expect(page.locator('[data-dino-timer-text]')).toHaveText(/^0:0[67]$/)
+    await expect(timer).toHaveAttribute('data-urgent', 'false')
+    const full = await scale()
+    // The last five seconds: red, and the bar keeps draining.
+    await expect(timer).toHaveAttribute('data-urgent', 'true', { timeout: 6_000 })
+    expect(await scale()).toBeLessThan(full)
+    // Time: the countdown goes, the result shows.
+    await expect(timer).toHaveAttribute('data-shown', 'false', { timeout: 10_000 })
+    await expect(page.locator('[data-dino-score]')).toHaveText(/^Time! 1 catch/)
+  })
+
   test('the first click starts a catch round with a scoreboard', async ({ page }) => {
     await dinoTiming(page, { reactions: ['flip'] })
     await onTopRow(page)
@@ -466,7 +502,9 @@ test.describe('dino easter egg (motion allowed)', () => {
     await expect(dino(page)).toHaveAttribute('data-game', 'on')
     await expect(dino(page)).toHaveAttribute('data-catches', '1')
     await expect(score).toHaveAttribute('data-shown', 'true')
-    await expect(score).toHaveText(/^Catches 1 · 0:(30|29)/)
+    await expect(score).toHaveText('Catches 1')
+    await expect(page.locator('[data-dino-timer]')).toHaveAttribute('data-shown', 'true')
+    await expect(page.locator('[data-dino-timer-text]')).toHaveText(/^0:(30|29)$/)
     // The best score shows beside it while a round is on, lit as this round passes it.
     const best = page.locator('[data-dino-best]')
     await expect(best).toHaveAttribute('data-shown', 'true')
@@ -474,7 +512,7 @@ test.describe('dino easter egg (motion allowed)', () => {
     await expect(dino(page)).toHaveAttribute('data-mode', 'walk')
     await pokeDino(page)
     await expect(dino(page)).toHaveAttribute('data-catches', '2')
-    await expect(score).toHaveText(/^Catches 2 /)
+    await expect(score).toHaveText('Catches 2')
   })
 
   test('says its lines now and then, each once per visit', async ({ page }) => {
@@ -583,10 +621,12 @@ test.describe('dino easter egg (motion allowed)', () => {
     // nothing gets selected).
     expect(await page.locator('[data-dino-panel]').evaluate((el) => getComputedStyle(el).userSelect)).toBe('none')
     // A double and a triple click would select a word, then the whole line, anywhere else.
+    // (A triple click can leave an empty line break selected in the card around
+    // the panel: no text, nothing highlighted.)
     await page.mouse.dblclick(cx, cy)
-    expect(await page.evaluate(() => String(getSelection()))).toBe('')
+    expect(await page.evaluate(() => String(getSelection()).trim())).toBe('')
     await page.mouse.click(cx, cy, { clickCount: 3 })
-    expect(await page.evaluate(() => String(getSelection()))).toBe('')
+    expect(await page.evaluate(() => String(getSelection()).trim())).toBe('')
     const tile = page.locator('[data-dino-panel] figure[tabindex="0"]').first()
     await tile.focus()
     await expect(tile).toBeFocused()
