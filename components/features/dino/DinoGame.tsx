@@ -28,7 +28,9 @@ import { DINO_COLS, DINO_FRAMES, DINO_ROWS, framePaths, type DinoFrame } from '.
 const PX = 2 // screen pixels per sprite pixel
 const W = DINO_COLS * PX
 const H = DINO_ROWS * PX
-const SPEED = 165 // walking speed, px/s on screen
+// Walking speed relative to the tiles underfoot, px/s. The rows carry the
+// dino along (they move the way it walks), so on screen it goes about 165.
+const SPEED = 140
 const GRAVITY = 1800 // px/s²
 const STEP_EVERY = 12 // px walked per leg swap
 const STILL = 2 // px/s: a row moving slower than this is paused
@@ -46,6 +48,8 @@ interface Row {
   top: number
   /** Last frame's position of the first track (to measure the row's speed). */
   lastLeft: number | null
+  /** How far the row moved this frame, px (measured, so exact at any frame rate). */
+  delta: number
   velocity: number
   paused: boolean
 }
@@ -207,7 +211,7 @@ export default function DinoGame() {
           return [r.left - trackLeft, r.right - trackLeft]
         })
         const top = figures[0].getBoundingClientRect().top - box.top
-        return [{ el, tracks, tiles, top, lastLeft: null, velocity: 0, paused: false }]
+        return [{ el, tracks, tiles, top, lastLeft: null, delta: 0, velocity: 0, paused: false }]
       })
       levels = rows.map((row) => ({ y: row.top, row }))
       // One row: a ground line under it is the second level.
@@ -320,7 +324,10 @@ export default function DinoGame() {
 
     const tick = (now: number) => {
       raf = requestAnimationFrame(tick)
-      const dt = last ? Math.min((now - last) / 1000, 0.05) : 0
+      // The dino's own clock is capped (a long stall doesn't fling it); the
+      // rows are measured, so they always count in full.
+      const realDt = last ? (now - last) / 1000 : 0
+      const dt = Math.min(realDt, 0.05)
       last = now
       if (!dt) return
       const panelLeft = panel.getBoundingClientRect().left
@@ -332,8 +339,17 @@ export default function DinoGame() {
       // jumps alone: the row under its feet is still moving.
       for (const row of rows) {
         const left = row.tracks[0].getBoundingClientRect().left
+        row.delta = 0
         if (row.lastLeft !== null) {
-          row.velocity = (left - row.lastLeft) / dt
+          // The loop jumps the track back by one copy each time round: take
+          // the step that is less than half a copy.
+          const period =
+            row.tracks.length > 1 ? row.tracks[1].getBoundingClientRect().left - left : Infinity
+          let delta = left - row.lastLeft
+          if (delta > period / 2) delta -= period
+          else if (delta < -period / 2) delta += period
+          row.delta = delta
+          row.velocity = delta / realDt
           const paused = Math.abs(row.velocity) < STILL
           if (paused && !row.paused && settled > 10 && row === current?.row) missPending = true
           row.paused = paused
@@ -343,12 +359,16 @@ export default function DinoGame() {
       settled++
 
       const spans = current?.row ? intervals(current.row, panelLeft) : null
+      // On a row (walking, hopping off it, flipping), the dino rides along
+      // with it: moved by exactly what the tiles moved this frame, so a slow
+      // frame can never slide the tile out from under its feet.
+      if (current?.row && (mode === 'walk' || mode === 'hop' || mode === 'miss' || mode === 'flip'))
+        x += current.row.delta
       const foot = x + W / 2
 
       if (mode === 'walk' && current && line >= 0 && spans && support(foot, spans)) {
         // Saying something: it stops to talk, riding along on its tile, so
         // the line stays put long enough to read (on a phone too).
-        x += (current.row?.velocity ?? 0) * dt
         frame = 'stepA'
       } else if (mode === 'walk' && current) {
         x += dir * SPEED * dt
@@ -378,25 +398,23 @@ export default function DinoGame() {
                 .sort((p, q) => (p - edge) * dir - (q - edge) * dir)[0]
               const gap = next === undefined ? 16 : Math.abs(next - edge)
               if (missPending) {
-                // Mistimed: a late little hop that comes down in the gap.
-                const v = current.row?.velocity ?? 0
+                // Mistimed: a late little hop that comes down in the gap
+                // (relative to the row, which carries it along meanwhile).
                 const T = 0.24
-                const target = edge + dir * gap * 0.5 + v * T
+                const target = edge + dir * gap * 0.5
                 hop = { t: 0, T, h: 6, floor: current.y, vx: (target - foot) / T }
                 mode = 'miss'
-                carry = v
+                carry = current.row?.velocity ?? 0
                 missPending = false
               } else {
                 // A lunge sized to the gap: it clears it and lands a little
                 // way onto the next tile (relative to the row, which carries
-                // the tiles along meanwhile), in an arc that grows with it.
-                const v = current.row?.velocity ?? 0
-                const rel = Math.max(SPEED - dir * v, 30)
+                // it along meanwhile), in an arc that grows with it.
                 const reach = gap + LANDING
-                const T = Math.min(Math.max(reach / (rel * 1.4), 0.26), 0.6)
+                const T = Math.min(Math.max(reach / (SPEED * 1.4), 0.26), 0.6)
                 // The top row's arc stays inside the panel (which clips).
                 const h = Math.min(8 + gap * 0.4, current.y - H - 2)
-                hop = { t: 0, T, h, floor: current.y, vx: v + (dir * reach) / T }
+                hop = { t: 0, T, h, floor: current.y, vx: (dir * reach) / T }
                 mode = 'hop'
               }
             }
@@ -425,7 +443,6 @@ export default function DinoGame() {
         // Rides along with its tile while it spins.
         flip.t += dt
         const p = Math.min(flip.t / FLIP_T, 1)
-        x += (current?.row?.velocity ?? 0) * dt
         y = flip.floor - flip.h * 4 * p * (1 - p)
         // Eased so it tucks fast at the top and lands upright.
         angle = -360 * (p < 0.5 ? 2 * p * p : 1 - 2 * (1 - p) * (1 - p))
