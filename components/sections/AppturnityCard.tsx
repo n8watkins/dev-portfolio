@@ -289,7 +289,7 @@ const DoorCard = ({ door, index }: { door: Door; index: number }) => {
             {door.github && (
               <a href={door.github} target="_blank" rel="noopener noreferrer" className={SECONDARY}>
                 <FiGithub aria-hidden className="h-4 w-4" />
-                Source on GitHub
+                Source code
                 <span className="sr-only"> (opens in a new tab)</span>
               </a>
             )}

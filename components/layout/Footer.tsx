@@ -164,10 +164,10 @@ const Footer = () => {
             </p>
             <SiteDoors />
           </div>
-          <nav aria-label="Site map" className="grid grid-cols-2 gap-8 sm:grid-cols-3">
+          <nav aria-label="Site map" className="grid grid-cols-2 gap-x-6 gap-y-8 sm:grid-cols-3">
             {sitemap.map((col) => (
               <div key={col.title} className="flex flex-col gap-2.5">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-300">
+                <p className="whitespace-nowrap text-xs font-semibold uppercase tracking-[0.18em] text-slate-300">
                   {col.title}
                 </p>
                 <ul className="flex flex-col gap-2">
