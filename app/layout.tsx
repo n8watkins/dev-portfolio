@@ -65,7 +65,6 @@ export default function RootLayout({
         {/* Project external links */}
         <link rel="dns-prefetch" href="//github.com" />
         <link rel="dns-prefetch" href="//web.app" />
-        <link rel="dns-prefetch" href="//vercel.app" />
         <link rel="dns-prefetch" href="//firebase.google.com" />
 
         {/* Google Analytics with Consent Mode v2 (lib/consent.ts, shared with
