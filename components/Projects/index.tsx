@@ -9,11 +9,11 @@ import { DemoSleepNote } from './StatusPill'
 import SectionHeading from '@/components/ui/SectionHeading'
 
 const BLURB =
-  'Generative AI is changing what software can be - and how it gets built. These are the projects where I explore that shift hands-on.'
+  'AI is changing what software can do and how it gets made. Each project here puts a different kind of it to work: a voice agent you can talk over, a research agent that cites its sources, a chat platform with memory, and a recommender that learns your taste.'
 
 const Projects: React.FC = () => {
   return (
-    <div className="flex flex-col my-20 items-center justify-center gap-5 w-full text-slate-200 mb-16">
+    <div className="flex flex-col my-20 items-center justify-center gap-5 w-full text-slate-200 mb-6 md:mb-16">
       <SectionHeading
         eyebrow="Selected projects"
         title={

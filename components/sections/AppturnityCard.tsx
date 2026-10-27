@@ -38,6 +38,8 @@ interface Door {
   github?: string
   desktop: Shot
   phone: Shot
+  /** true: the screenshots hold still (top of the page) instead of scrolling. */
+  still?: boolean
   accent: { eyebrow: string; check: string; button: string; glow: string; ring: string }
 }
 
@@ -45,10 +47,20 @@ const BROWSER_ASPECT = 16 / 10
 const PHONE_ASPECT = 9 / 19.5
 
 /** The screen inside a frame: a fixed aspect ratio, and a tall shot scrolls in it. */
-const Screen = ({ shot, aspect, sizes }: { shot: Shot; aspect: number; sizes: string }) => {
+const Screen = ({
+  shot,
+  aspect,
+  sizes,
+  still,
+}: {
+  shot: Shot
+  aspect: number
+  sizes: string
+  still?: boolean
+}) => {
   // How much of the image the frame shows, as a share of the image's height.
   const shown = shot.width / aspect / shot.height
-  const scrolls = shown < 0.98
+  const scrolls = !still && shown < 0.98
   return (
     <div
       className="relative overflow-hidden [transform:translateZ(0)]"
@@ -75,7 +87,7 @@ const Screen = ({ shot, aspect, sizes }: { shot: Shot; aspect: number; sizes: st
 }
 
 /** A browser window and a phone, mostly side by side with a small overlap. */
-const Showcase = ({ desktop, phone }: { desktop: Shot; phone: Shot }) => (
+const Showcase = ({ desktop, phone, still }: { desktop: Shot; phone: Shot; still?: boolean }) => (
   <PauseOffscreen className="relative flex items-center">
     <div className="w-[78%] overflow-hidden rounded-xl border border-white/10 bg-[#0a1322] shadow-2xl shadow-black/40">
       <div
@@ -86,11 +98,21 @@ const Showcase = ({ desktop, phone }: { desktop: Shot; phone: Shot }) => (
         <span className="h-2 w-2 rounded-full bg-white/20" />
         <span className="h-2 w-2 rounded-full bg-white/20" />
       </div>
-      <Screen shot={desktop} aspect={BROWSER_ASPECT} sizes="(max-width: 1024px) 72vw, 400px" />
+      <Screen
+        shot={desktop}
+        aspect={BROWSER_ASPECT}
+        sizes="(max-width: 1024px) 72vw, 400px"
+        still={still}
+      />
     </div>
     <div className="relative -ml-[4%] w-[26%] shrink-0 overflow-hidden rounded-[1rem] border-[4px] border-[#0b1220] bg-[#0b1220] shadow-2xl shadow-black/60 ring-1 ring-white/[0.12]">
       <div className="overflow-hidden rounded-[0.7rem]">
-        <Screen shot={phone} aspect={PHONE_ASPECT} sizes="(max-width: 1024px) 26vw, 140px" />
+        <Screen
+          shot={phone}
+          aspect={PHONE_ASPECT}
+          sizes="(max-width: 1024px) 26vw, 140px"
+          still={still}
+        />
       </div>
     </div>
   </PauseOffscreen>
@@ -105,9 +127,9 @@ const doors: Door[] = [
     eyebrow: 'My company',
     name: 'Appturnity',
     icon: '/brands/appturnity.png',
-    title: 'Websites for local service businesses',
+    title: 'Websites and AI for service businesses',
     blurb:
-      'Appturnity is my company. We build pool, HVAC, landscaping and other local service businesses a modern website and launch it for free. Next come the tools that run the rest of the business.',
+      'Appturnity is my company. We launch pool, HVAC, landscaping and other service businesses a modern website for free, then build the AI automations that take busywork off their plate, with AI voice agents next.',
     pointsLabel: 'Today',
     points: [
       'A website built and launched for you, free',
@@ -145,15 +167,16 @@ const doors: Door[] = [
     icon: '/tab/n8-icon.png',
     title: 'Where I build in public',
     blurb:
-      'The tools I make, free and open source, and a build in its own right: every pull request runs its test suite on five browsers before it merges, a build log updates from GitHub every hour, and releases go out on a weekly schedule.',
+      "Free tools, on a site that's a build in its own right: every pull request is tested on five browsers before it merges, and releases ship every week.",
     points: [
-      'Scribe and OpenPing, tools I use every day',
-      'Solara, Portfolio Rank and Chrome extensions',
-      'Both sites open source, to use as a template',
+      'Tools I use every day, free to try',
+      'Web apps and Chrome extensions',
+      'Nearly all open source, this portfolio included: use it as a template or fork it',
     ],
     cta: { label: 'Visit n8builds.dev', href: 'https://n8builds.dev' },
     secondary: { label: "How it's built and tested", href: 'https://n8builds.dev/builds/n8builds' },
     github: 'https://github.com/n8watkins/n8builds-web',
+    still: true,
     desktop: {
       src: '/work/n8builds-desktop.webp',
       alt: 'The n8builds.dev home page',
@@ -206,7 +229,7 @@ const DoorCard = ({ door, index }: { door: Door; index: number }) => {
         aria-hidden
         className={`relative block transition-transform duration-500 group-hover:-translate-y-1 ${flip ? 'lg:order-first' : 'lg:order-last'}`}
       >
-        <Showcase desktop={door.desktop} phone={door.phone} />
+        <Showcase desktop={door.desktop} phone={door.phone} still={door.still} />
       </a>
 
       {/* Copy */}
@@ -251,7 +274,8 @@ const DoorCard = ({ door, index }: { door: Door; index: number }) => {
           ))}
         </ul>
 
-        <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-3">
+        {/* The main button, then the smaller links together on one line */}
+        <div className="mt-6 flex flex-col items-start gap-4">
           <a
             href={door.cta.href}
             target="_blank"
@@ -262,24 +286,26 @@ const DoorCard = ({ door, index }: { door: Door; index: number }) => {
             <FiArrowUpRight aria-hidden className="h-4 w-4" />
             <span className="sr-only"> (opens in a new tab)</span>
           </a>
-          {door.secondary && (
-            <a
-              href={door.secondary.href}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={SECONDARY}
-            >
-              {door.secondary.label}
-              <FiArrowUpRight aria-hidden className="h-3.5 w-3.5" />
-            </a>
-          )}
-          {door.github && (
-            <a href={door.github} target="_blank" rel="noopener noreferrer" className={SECONDARY}>
-              <FiGithub aria-hidden className="h-4 w-4" />
-              Source on GitHub
-              <span className="sr-only"> (opens in a new tab)</span>
-            </a>
-          )}
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+            {door.secondary && (
+              <a
+                href={door.secondary.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={SECONDARY}
+              >
+                {door.secondary.label}
+                <FiArrowUpRight aria-hidden className="h-3.5 w-3.5" />
+              </a>
+            )}
+            {door.github && (
+              <a href={door.github} target="_blank" rel="noopener noreferrer" className={SECONDARY}>
+                <FiGithub aria-hidden className="h-4 w-4" />
+                Source on GitHub
+                <span className="sr-only"> (opens in a new tab)</span>
+              </a>
+            )}
+          </div>
         </div>
       </div>
     </motion.article>

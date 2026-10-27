@@ -18,7 +18,7 @@ export const projects: Project[] = [
     icon: '/projects/icons/echo.svg',
     accent: 'echo',
     tags: ['Next.js', 'Gemini', 'Web Speech API', 'SSE', 'WebSocket'],
-    features: ['Real-time voice', 'Interrupt it anytime', 'Speaks as it thinks', 'Voice tools mid-reply', 'Six personas', 'Hands-free wake word'],
+    features: ['Real-time voice chat', 'Interrupt it anytime', 'Speaks while it thinks', 'Calls tools mid-reply'],
     technologies: {
       Frontend: {
         descriptionParts: [
@@ -94,7 +94,7 @@ export const projects: Project[] = [
     icon: '/projects/icons/scout.svg',
     accent: 'scout',
     tags: ['Next.js', 'Gemini', 'ReAct agent', 'SSE', 'SQLite'],
-    features: ['Live web research', 'Visible agent loop', 'Cited reports', 'Guardrails on every fetch', 'Free to try, BYOK optional', 'Open source'],
+    features: ['Plans its own research', 'Reads the live web', 'Writes cited reports', 'Streams every step'],
     technologies: {
       Frontend: {
         descriptionParts: [
@@ -168,7 +168,7 @@ export const projects: Project[] = [
     icon: '/projects/icons/geminigpt.svg',
     accent: 'geminigpt',
     tags: ['Next.js', 'Gemini', 'Socket.IO', 'LanceDB', 'SQLite'],
-    features: ['Cross-chat memory', 'Multi-chat sessions', 'PDF and DOCX analysis', 'Real-time streaming', 'Free to try, BYOK optional', 'Open source'],
+    features: ['Memory across chats', 'Semantic chat search', 'Reads PDFs and DOCX', 'Streaming replies'],
     technologies: {
       Frontend: {
         descriptionParts: [
@@ -237,7 +237,7 @@ export const projects: Project[] = [
     slug: 'net-trailer',
     title: 'Net-Trailer',
     subTitle: 'AI-Powered Netflix Clone',
-    des: `A Netflix-style streaming app with an AI brain. Describe what you're in the mood for in plain language and Gemini turns it into tailored picks, while a personalized "Recommended For You" engine learns from your watch history and feedback. Plus TMDB-powered browsing and trailers, secure auth, full Stripe and PayPal subscription checkout, and Firebase-backed persistence.`,
+    des: `A Netflix-style streaming app with an AI brain. Describe what you're in the mood for in plain language and Gemini turns it into tailored picks, while a personalized "Recommended For You" engine learns from your watch history and feedback. Plus TMDB-powered browsing and trailers, secure auth, and Firebase-backed persistence.`,
     images: [
       { src: '/projects/net-trailer/1-app.webp', alt: 'Net-Trailer: a featured title with Play and More Info' },
       { src: '/projects/net-trailer/2-rows.webp', alt: 'Net-Trailer: Trending and Top Rated rows from TMDB' },
@@ -245,8 +245,8 @@ export const projects: Project[] = [
     ],
     icon: '/projects/icons/net-trailer.png',
     accent: 'net-trailer',
-    tags: ['Next.js', 'Gemini', 'TMDB', 'Stripe', 'Firebase'],
-    features: ['Describe a mood, get picks', 'Recommended For You', 'Trailers and TMDB browsing', 'Voice search', 'Stripe and PayPal checkout', 'Watchlists that sync'],
+    tags: ['Next.js', 'Gemini', 'TMDB', 'Firebase'],
+    features: ['Describe a mood, get picks', 'Learns your taste', 'Explains every pick', 'Voice search'],
     technologies: {
       Frontend: {
         descriptionParts: [
@@ -269,10 +269,6 @@ export const projects: Project[] = [
           {
             text: 'AI recommendations powered by Gemini - natural-language search that reads your intent, plus a personalized engine that learns from your history with a feedback loop',
             icons: [{ icon: 'gemini.svg' }],
-          },
-          {
-            text: 'Integrated payment gateways for secure transactions',
-            icons: [{ icon: 'paypal.png' }, { icon: 'stripe.png' }],
           },
           {
             text: 'Implemented secure authentication and authorization',
@@ -301,8 +297,7 @@ export const projects: Project[] = [
       'Tell it what you’re in the mood for in plain English - a Gemini-powered analyzer reads your intent (media type, genres, vibe) and builds a matching suggestion row on the fly, with a multi-model router that falls back automatically.',
       'A personalized “Recommended For You” engine learns from your full watch and rating history with a real-time feedback loop - dislikes and skips reshape future picks, and each suggestion can explain why it surfaced.',
       'Browses live TMDB data - trending titles, genre rows, and trailer playback - with a cinematic, Netflix-style UI built in React and Tailwind CSS.',
-      'Secure sign-in with NextAuth; sessions gate the watchlist and checkout flows.',
-      'Full subscription checkout implemented twice over: both Stripe and PayPal payment flows, end to end.',
+      'Secure sign-in with NextAuth; sessions gate the watchlist and profile.',
       'Your watchlist and profile persist in Firebase, syncing in real time across sessions.',
       'Server-rendered with Next.js and deployed on Vercel, with Cloudinary handling optimized image delivery.',
     ],

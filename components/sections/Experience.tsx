@@ -14,7 +14,7 @@ import {
 
 const Experience = () => {
   return (
-    <div className="relative pt-8 pb-20 xl:max-w-6xl 2xl:max-w-7xl m-auto select-none">
+    <div className="relative pt-0 md:pt-8 pb-12 md:pb-20 xl:max-w-6xl 2xl:max-w-7xl m-auto select-none">
       <SectionHeading
         eyebrow="Experience"
         title="Where I've built"
@@ -52,17 +52,24 @@ const Experience = () => {
                   <div className="absolute left-0 top-[14px] w-[19px] h-[19px] rounded-full bg-sky-500 border-[3px] border-slate-900 shadow-lg shadow-sky-500/40" />
 
                   {/* Card */}
-                  {/* On hover, a glow wraps the card: a light blue around the text side
-                      and, around the image side, the image's own colours (item.hoverGlow).
-                      Blurred layers behind the card, so they show past its edges. */}
+                  {/* On hover, a glow wraps the card: light blue around the text side and,
+                      around the image side, the image's own colours (item.hoverGlow); all
+                      light blue on a card with no image. Blurred layers behind the card, so
+                      they show past its edges. */}
                   <div
                     aria-hidden="true"
                     className="pointer-events-none absolute inset-y-0 left-10 right-0 md:left-12 opacity-0 transition-opacity duration-500 group-hover/exp:opacity-100"
                   >
-                    <div className="absolute -inset-y-2 -left-2 w-[60%] rounded-2xl bg-sky-400/[0.14] blur-xl" />
-                    <div
-                      className={`absolute -inset-y-2 -right-3 w-[48%] rounded-2xl blur-xl ${item.hoverGlow}`}
-                    />
+                    {item.hoverImage ? (
+                      <>
+                        <div className="absolute -inset-y-2 -left-2 w-[72%] rounded-2xl bg-sky-400/[0.24] blur-xl" />
+                        <div
+                          className={`absolute -inset-y-2 -right-3 w-[36%] rounded-2xl blur-xl ${item.hoverGlow}`}
+                        />
+                      </>
+                    ) : (
+                      <div className="absolute -inset-2 rounded-2xl bg-sky-400/[0.24] blur-xl" />
+                    )}
                   </div>
                   <div
                     className={`group relative overflow-hidden rounded-xl p-5 md:p-6 bg-slate-900 border border-white/5 shadow-[0_20px_25px_-5px_rgba(0,0,0,0.3)] hover:border-sky-500/30 transition-all duration-300`}
@@ -70,24 +77,25 @@ const Experience = () => {
                     {/* Hover image reveal (desktop only) */}
                     {item.hoverImage && (
                       <div
-                        className="absolute inset-y-0 right-0 w-[45%] opacity-0 group-hover:opacity-80 transition-opacity duration-500 pointer-events-none hidden md:block"
+                        className="absolute inset-y-0 right-0 w-[30%] opacity-0 group-hover:opacity-80 transition-opacity duration-500 pointer-events-none hidden md:block"
                         aria-hidden="true"
                       >
                         <Image
                           src={item.hoverImage}
                           alt=""
                           fill
-                          sizes="40vw"
-                          className="object-cover object-center [mask-image:linear-gradient(to_left,black_42%,transparent_98%)] scale-105 group-hover:scale-100 transition-transform duration-700"
+                          sizes="30vw"
+                          className="object-cover object-left-top [mask-image:linear-gradient(to_left,black_55%,transparent_98%)] origin-right scale-[1.18] group-hover:scale-110 transition-transform duration-700"
                         />
                         {/* Fade the left edge into the page background so it doesn't hard-cut */}
-                        <div className="absolute inset-0 bg-gradient-to-r from-darkBlue via-darkBlue/15 to-transparent" />
+                        <div className="absolute inset-0 bg-gradient-to-r from-slate-900 via-slate-900/30 to-transparent" />
                         {/* Dimmed, so a bright page (Appturnity's) doesn't wash out the card */}
                         <div className="absolute inset-0 bg-darkBlue/45" />
                       </div>
                     )}
 
-                    <div className="relative z-10">
+                    {/* With an image, the copy stops short of it, so it never sits on the picture */}
+                    <div className={`relative z-10 ${item.hoverImage ? 'md:max-w-[68%]' : ''}`}>
                       {/* Period + location */}
                       <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mb-2">
                         <span className="text-xs font-semibold tracking-wider uppercase text-sky-400 bg-sky-500/10 px-2.5 py-0.5 rounded-full border border-sky-500/20">

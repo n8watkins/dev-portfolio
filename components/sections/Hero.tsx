@@ -43,7 +43,8 @@ const socials = [
  * The two sites this one leads to, each in its own brand: n8builds.dev's
  * cyan-to-blue and its N8 mark, Appturnity's white-to-light-blue and its A.
  * A gradient hairline frames each card; on hover (or keyboard focus) the
- * brand's colour washes in, the mark lifts and the arrow nudges out. CSS only.
+ * brand's colour washes in, the glow around it brightens, the mark grows a
+ * touch and the arrow nudges out. CSS only.
  */
 const doors = [
   {
@@ -51,28 +52,29 @@ const doors = [
     eyebrow: 'I build in public',
     name: 'n8builds.dev',
     icon: '/tab/n8-icon.png',
-    pitch: 'Free tools I ship every week. Try one, or fork it.',
+    pitch: 'Try my free tools, or fork one and make it yours.',
     detail: '7 builds · all open source',
     frame:
       'from-cyan-400/50 via-blue-500/30 to-blue-600/50 group-hover:from-cyan-300 group-hover:to-blue-500',
     wash: 'from-cyan-500/25 via-blue-600/10',
     eyebrowText: 'from-cyan-300 to-blue-400',
     dot: 'bg-emerald-400',
-    glow: 'hover:shadow-xl hover:shadow-cyan-500/25',
+    glow: 'shadow-[0_0_28px_-6px_rgba(34,211,238,0.35)] hover:shadow-[0_0_36px_-4px_rgba(34,211,238,0.5)]',
   },
   {
     href: 'https://appturnity.com',
     eyebrow: 'My company',
     name: 'Appturnity',
     icon: '/brands/appturnity.png',
-    pitch: 'Run a local business? We build your site and launch it free.',
-    detail: 'Free website for local businesses',
+    pitch:
+      'Run a service business? We launch your website free, then automate the busywork with AI.',
+    detail: 'Free websites and AI automations',
     frame:
       'from-white/40 via-sky-300/25 to-[#1066f4]/50 group-hover:from-white/80 group-hover:to-[#1066f4]',
     wash: 'from-sky-300/20 via-[#1066f4]/15',
     eyebrowText: 'from-white to-sky-300',
     dot: 'bg-[#1066f4]',
-    glow: 'hover:shadow-xl hover:shadow-[#1066f4]/30',
+    glow: 'shadow-[0_0_28px_-6px_rgba(16,102,244,0.45)] hover:shadow-[0_0_36px_-4px_rgba(16,102,244,0.6)]',
   },
 ]
 
@@ -152,7 +154,7 @@ const Hero = () => {
                   href={door.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className={`group relative block rounded-2xl bg-gradient-to-br p-px text-left shadow-lg shadow-black/30 transition-all duration-300 hover:-translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 ${door.frame} ${door.glow}`}
+                  className={`group relative block rounded-2xl bg-gradient-to-br p-px text-left transition-all duration-300 hover:-translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 ${door.frame} ${door.glow}`}
                 >
                   <span className="relative flex h-full flex-col overflow-hidden rounded-[15px] bg-[#0b1324] p-4">
                     {/* The brand's colour, washing in from the top left on hover */}
@@ -166,7 +168,7 @@ const Hero = () => {
                         alt=""
                         width={36}
                         height={36}
-                        className="h-9 w-9 shrink-0 rounded-lg object-contain transition-transform duration-300 group-hover:-rotate-6 group-hover:scale-110"
+                        className="h-9 w-9 shrink-0 rounded-lg object-contain transition-transform duration-300 group-hover:scale-110"
                       />
                       <span className="min-w-0 flex-1">
                         <span

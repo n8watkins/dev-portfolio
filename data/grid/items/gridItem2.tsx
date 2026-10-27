@@ -29,7 +29,7 @@ export const gridItem2: GridItemConfig = {
   titleClassName:
     'relative z-30 font-sans font-bold dark:text-neutral-200 flex  items-center  xs:pl-10 1sm:pl-5 pt-28 w-full h-[5rem] select-none text-2xl lg:text-4xl',
 
-  textOrder: '',
+  textOrder: 'group-hover:translate-x-2 duration-200',
 
   buttonContainer: '',
   buttonClass: '',
@@ -53,6 +53,5 @@ export const gridItem2: GridItemConfig = {
     </div>
   ),
 
-  hover: false,
   renderContent: () => <MapDetails />,
 }

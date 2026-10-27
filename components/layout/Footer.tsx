@@ -17,6 +17,12 @@ const BUTTON =
   'inline-flex items-center justify-center gap-2 h-10 px-3.5 text-sm sm:h-11 sm:px-5 sm:text-base rounded-full border font-semibold transition-all duration-200'
 const OUTLINE = 'border-slate-600 text-slate-200 hover:border-sky-400/60 hover:text-sky-300'
 
+/**
+ * The streaming links (Twitch, YouTube) stay hidden until streaming starts,
+ * as on n8builds.dev; flip this then.
+ */
+const STREAMING = false
+
 const Footer = () => {
   return (
     <footer className="xl:max-w-5xl pt-0 pb-20 lg:pb-12">
@@ -31,7 +37,7 @@ const Footer = () => {
         />
       </div>
 
-      <div className="px-4 pt-20">
+      <div className="px-4 pt-6 md:pt-20">
         <SectionHeading
           eyebrow="Contact"
           title={
@@ -49,7 +55,7 @@ const Footer = () => {
         <motion.div
           variants={fadeInVariants}
           {...defaultAnimationConfig}
-          className="mx-auto mt-8 mb-8 max-w-2xl rounded-3xl bg-gradient-to-br from-cyan-400/40 via-blue-500/20 to-blue-600/40 p-px shadow-xl shadow-black/30"
+          className="mx-auto mt-8 mb-8 w-full rounded-3xl bg-gradient-to-br from-cyan-400/40 via-blue-500/20 to-blue-600/40 p-px shadow-xl shadow-black/30"
         >
           <div className="relative overflow-hidden rounded-[23px] bg-[#0b1324] px-5 py-8 text-center sm:px-10 sm:py-10">
             <div
@@ -185,24 +191,28 @@ const Footer = () => {
             >
               <FaXTwitter className="w-full h-full p-3" aria-hidden="true" />
             </a>
-            <a
-              href="https://twitch.tv/n8builds"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="Follow Nathan on Twitch"
-              className="w-12 h-12 rounded-full hover:bg-blue-500/60 dark:hover:bg-slate-700/70 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:ring-offset-2 focus-visible:ring-offset-darkBlue transition-all duration-200"
-            >
-              <FaTwitch className="w-full h-full p-3" aria-hidden="true" />
-            </a>
-            <a
-              href="https://youtube.com/@n8builds"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="Follow Nathan on YouTube"
-              className="w-12 h-12 rounded-full hover:bg-blue-500/60 dark:hover:bg-slate-700/70 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:ring-offset-2 focus-visible:ring-offset-darkBlue transition-all duration-200"
-            >
-              <FaYoutube className="w-full h-full p-3" aria-hidden="true" />
-            </a>
+            {STREAMING && (
+              <>
+                <a
+                  href="https://twitch.tv/n8builds"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Follow Nathan on Twitch"
+                  className="w-12 h-12 rounded-full hover:bg-blue-500/60 dark:hover:bg-slate-700/70 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:ring-offset-2 focus-visible:ring-offset-darkBlue transition-all duration-200"
+                >
+                  <FaTwitch className="w-full h-full p-3" aria-hidden="true" />
+                </a>
+                <a
+                  href="https://youtube.com/@n8builds"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Follow Nathan on YouTube"
+                  className="w-12 h-12 rounded-full hover:bg-blue-500/60 dark:hover:bg-slate-700/70 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:ring-offset-2 focus-visible:ring-offset-darkBlue transition-all duration-200"
+                >
+                  <FaYoutube className="w-full h-full p-3" aria-hidden="true" />
+                </a>
+              </>
+            )}
           </div>
         </motion.nav>
       </motion.div>

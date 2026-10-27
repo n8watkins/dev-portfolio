@@ -237,10 +237,26 @@
   }
 }
 
-/* The n8builds.dev teaser's build fades in as it changes (BuildsTeaser.tsx). */
+/* The n8builds.dev teaser's build slides in sideways as it changes
+   (BuildsTeaser.tsx): from the right going forward, from the left going back. */
+@keyframes teaser-from-r {
+  from {
+    opacity: 0;
+    transform: translateX(32px);
+  }
+}
+@keyframes teaser-from-l {
+  from {
+    opacity: 0;
+    transform: translateX(-32px);
+  }
+}
 @media (prefers-reduced-motion: no-preference) {
-  .teaser-in {
-    animation: hero-in 0.4s cubic-bezier(0.25, 0.1, 0.25, 1) both;
+  .teaser-in-r {
+    animation: teaser-from-r 0.45s cubic-bezier(0.25, 0.1, 0.25, 1) both;
+  }
+  .teaser-in-l {
+    animation: teaser-from-l 0.45s cubic-bezier(0.25, 0.1, 0.25, 1) both;
   }
 }
 

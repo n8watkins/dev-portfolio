@@ -37,7 +37,7 @@ const BUILDS: Build[] = [
     icon: '/builds/scribe/icon.png',
     kind: 'Desktop app',
     tagline: 'Local dictation for Windows',
-    desc: 'Hold a hotkey, talk and let go, and your words land at the cursor, transcribed on your own PC.',
+    desc: 'Hold a hotkey, talk and let go: your words land at the cursor in any app, transcribed by Whisper on your own PC.',
     tags: ['Tauri', 'Rust', 'whisper.cpp'],
     liveSite: 'https://scribe.n8builds.dev',
     accent: { text: 'text-sky-300', glow: 'from-sky-400/[0.14]', bar: 'bg-sky-400' },
@@ -86,7 +86,7 @@ const BUILDS: Build[] = [
     icon: '/builds/tubevault/icon.png',
     kind: 'Chrome extension',
     tagline: 'Local-first YouTube archiver',
-    desc: 'Archive YouTube videos, playlists and channels locally with a yt-dlp helper. Your library, on your disk.',
+    desc: 'Archive YouTube videos, playlists and whole channels with a local yt-dlp helper. Your library, on your own disk.',
     tags: ['Chrome MV3', 'yt-dlp', 'React'],
     accent: { text: 'text-rose-300', glow: 'from-rose-400/[0.14]', bar: 'bg-rose-400' },
   },
@@ -119,14 +119,22 @@ const BUTTON =
 
 export default function BuildsTeaser() {
   const [index, setIndex] = useState(0)
+  // 1 when moving forward (the next build slides in from the right), -1 back
+  const [dir, setDir] = useState<1 | -1>(1)
   const [paused, setPaused] = useState(false)
   const reduceMotion = usePrefersReducedMotion()
   const build = BUILDS[index]
-  const go = (step: number) => setIndex((i) => (i + step + BUILDS.length) % BUILDS.length)
+  const go = (step: number) => {
+    setDir(step < 0 ? -1 : 1)
+    setIndex((i) => (i + step + BUILDS.length) % BUILDS.length)
+  }
 
   useEffect(() => {
     if (reduceMotion || paused) return
-    const id = setTimeout(() => setIndex((i) => (i + 1) % BUILDS.length), INTERVAL_MS)
+    const id = setTimeout(() => {
+      setDir(1)
+      setIndex((i) => (i + 1) % BUILDS.length)
+    }, INTERVAL_MS)
     return () => clearTimeout(id)
   }, [reduceMotion, paused, index])
 
@@ -188,7 +196,10 @@ export default function BuildsTeaser() {
           aria-hidden="true"
           className={`pointer-events-none absolute -left-24 -top-24 h-72 w-72 rounded-full bg-[radial-gradient(closest-side,var(--tw-gradient-from),transparent)] ${build.accent.glow}`}
         />
-        <div key={build.slug} className="teaser-in relative flex items-start gap-4">
+        <div
+          key={build.slug}
+          className={`${dir > 0 ? 'teaser-in-r' : 'teaser-in-l'} relative flex items-start gap-4`}
+        >
           <Image
             src={build.icon}
             alt=""
@@ -260,7 +271,10 @@ export default function BuildsTeaser() {
                 type="button"
                 aria-label={`Show ${b.name}`}
                 aria-current={i === index}
-                onClick={() => setIndex(i)}
+                onClick={() => {
+                  setDir(i < index ? -1 : 1)
+                  setIndex(i)
+                }}
                 className={`h-1.5 rounded-full transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 ${
                   i === index ? `w-6 ${build.accent.bar}` : 'w-1.5 bg-white/30 hover:bg-white/60'
                 }`}
