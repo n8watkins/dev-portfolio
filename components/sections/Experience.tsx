@@ -49,9 +49,9 @@ const Experience = () => {
                   <div className="absolute left-0 top-[14px] w-[19px] h-[19px] rounded-full bg-sky-500 border-[3px] border-slate-900 shadow-lg shadow-sky-500/40" />
 
                   {/* Card */}
-                  <div // A card like the hero's: a see-through fill over the page, a hairline
-                    // and a soft white glow that brightens on hover.
-                    className="group relative overflow-hidden rounded-2xl p-5 md:p-6 bg-gradient-to-br from-white/[0.07] to-white/[0.02] backdrop-blur-sm border border-white/[0.14] shadow-[0_0_28px_rgba(255,255,255,0.08)] hover:shadow-[0_0_40px_rgba(255,255,255,0.14)] hover:border-sky-400/30 hover:-translate-y-0.5 transition-all duration-300"
+                  {/* The card's own glow off its right side, on hover only (item.hoverGlow) */}
+                  <div
+                    className={`group relative overflow-hidden rounded-xl p-5 md:p-6 bg-slate-900/30 border border-white/5 shadow-[0_20px_25px_-5px_rgba(0,0,0,0.3)] hover:border-sky-500/30 transition-all duration-300 ${item.hoverGlow}`}
                   >
                     {/* Hover image reveal (desktop only) */}
                     {item.hoverImage && (
