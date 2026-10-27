@@ -117,6 +117,7 @@ const DASH_SPEED = 3 // times its walking speed
 const PACE_PER_CATCH = 0.06
 const MAX_PACE = 2.2
 const RESULT_FOR = 5 // s the final score shows
+const URGENT = 5 // s left when the countdown turns red
 const BEST_KEY = 'n8-dino-best'
 const ROAR_FOR = 1.1 // s the bubble stays up
 const FLIP_T = 0.7 // s per backflip
@@ -197,8 +198,10 @@ function makeBubble(text: string, px: number) {
 type Bubble = ReturnType<typeof makeBubble>
 // The roar is a touch chunkier than the dino, so the word reads. Each click
 // shouts the next of these, from a shuffled bag, never the same twice in a
-// row (letters, ! ? . ' and spaces: the pixel font has no digits).
-export const ROAR_WORDS = ['RAWR!', 'TOO SLOW!', 'MISSED ME!', 'NOPE!', 'CATCH ME!', 'HEY!']
+// row (letters, ! ? . ' and spaces: the pixel font has no digits). Every
+// click on it is a catch (only its own box takes the pointer), so every word
+// reacts to being caught: none claims a miss (the owner's call, 2026-10-27).
+export const ROAR_WORDS = ['RAWR!', 'OUCH!', 'GOT ME!', 'NO FAIR!', 'AGAIN?!', 'HEY!']
 const ROARS = ROAR_WORDS.map((word) => makeBubble(word, 3))
 
 /**
@@ -227,6 +230,8 @@ interface DinoTiming {
   roam?: boolean
   /** Click reactions in this order, round and round, instead of shuffled. */
   reactions?: readonly Reaction[]
+  /** A catch round's length, s (the tests shorten it). */
+  round?: number
   /** Roaming choices and ways back in, the same way. */
   choices?: readonly Choice[]
   entries?: readonly Entry[]
@@ -270,6 +275,8 @@ export default function DinoGame() {
   const linesRef = useRef<HTMLDivElement>(null)
   const scoreRef = useRef<HTMLDivElement>(null)
   const bestRef = useRef<HTMLDivElement>(null)
+  const timerRef = useRef<HTMLDivElement>(null)
+  const timerBarRef = useRef<HTMLSpanElement>(null)
   // The dino and its bubbles live in a stage that starts below the scoreboards'
   // band, so the dino can never cross a scoreboard (see measure()).
   const stageRef = useRef<HTMLDivElement>(null)
@@ -282,11 +289,13 @@ export default function DinoGame() {
     const roarEls = [...(roarsRef.current?.children ?? [])] as HTMLElement[]
     const score = scoreRef.current
     const bestEl = bestRef.current
+    const timer = timerRef.current
+    const timerBar = timerBarRef.current
     const stage = stageRef.current
     const band = bandRef.current
     const lineEls = [...(linesRef.current?.children ?? [])] as HTMLElement[]
     const panel = dino?.closest<HTMLElement>('[data-dino-panel]')
-    if (!dino || !roarEls.length || !score || !bestEl || !stage || !band || !panel) return
+    if (!dino || !roarEls.length || !score || !bestEl || !timer || !timerBar || !stage || !band || !panel) return
 
     let rows: Row[] = []
     let levels: Level[] = []
@@ -396,7 +405,7 @@ export default function DinoGame() {
       // Storage blocked: the best score lasts this page view only.
     }
     // The scoreboards' text, written straight to the DOM (no re-render per
-    // frame): the round at the top, the best score at the bottom.
+    // frame): the catches, the round's countdown and the best score.
     const texts = new Map<HTMLElement, string>()
     const show = (el: HTMLElement, text: string) => {
       if (texts.get(el) === text) return
@@ -404,11 +413,23 @@ export default function DinoGame() {
       el.textContent = text
       el.dataset.shown = text ? 'true' : 'false'
     }
+    const timerText = timer.querySelector<HTMLElement>('[data-dino-timer-text]')!
+    let timerShown = ''
     const scoreboard = () => {
       const playing = roundLeft > 0 || resultLeft > 0
+      // The countdown: big digits over a bar that drains with the round, red
+      // and pulsing for the last URGENT seconds.
+      const secs = Math.ceil(roundLeft)
+      const clock = roundLeft > 0 ? `0:${String(secs).padStart(2, '0')}` : ''
+      if (clock !== timerShown) {
+        timerShown = clock
+        timerText.textContent = clock
+        timer.dataset.shown = clock ? 'true' : 'false'
+        timer.dataset.urgent = roundLeft > 0 && roundLeft <= URGENT ? 'true' : 'false'
+      }
+      timerBar.style.transform = `scaleX(${Math.max(0, roundLeft / roundFor).toFixed(3)})`
       if (roundLeft > 0) {
-        const secs = Math.ceil(roundLeft)
-        show(score, `Catches ${catches} · 0:${String(secs).padStart(2, '0')}`)
+        show(score, `Catches ${catches}`)
       } else if (resultLeft > 0) {
         show(score, `Time! ${catches} ${catches === 1 ? 'catch' : 'catches'}${beatBest ? ' · New best!' : ''}`)
       } else {
@@ -426,6 +447,7 @@ export default function DinoGame() {
       // Storage blocked: start from the first line on every page view.
     }
     const timing = (window as { __n8DinoTiming?: DinoTiming }).__n8DinoTiming
+    const roundFor = timing?.round ?? ROUND
     const lineGap = timing?.lineGap ?? LINE_GAP
     let lineWait = timing?.firstLineAfter ?? FIRST_LINE_AFTER
     let line = -1 // the line showing, if any
@@ -915,7 +937,7 @@ export default function DinoGame() {
       if (roundLeft > 0) {
         catches += 1
       } else if (resultLeft < RESULT_FOR - 1.5) {
-        roundLeft = ROUND
+        roundLeft = roundFor
         resultLeft = 0
         beatBest = false
         catches = 1
@@ -1063,6 +1085,22 @@ export default function DinoGame() {
           data-shown="false"
           className="flex h-[1.625rem] items-center rounded-full whitespace-nowrap border border-white/10 bg-[#081427]/85 px-3 font-mono text-xs font-semibold text-cyan-200 tabular-nums opacity-0 backdrop-blur-sm transition-opacity duration-300 data-[shown=true]:opacity-100"
         />
+        {/* The countdown: bigger digits over a bar that drains with the round; red and pulsing near the end. */}
+        <div
+          ref={timerRef}
+          data-dino-timer
+          data-shown="false"
+          data-urgent="false"
+          className="group/timer relative flex h-[1.625rem] items-center overflow-hidden rounded-full border border-cyan-300/30 bg-[#081427]/85 px-3.5 font-mono text-sm font-bold text-cyan-100 tabular-nums opacity-0 backdrop-blur-sm transition-[opacity,color,border-color] duration-300 data-[shown=true]:opacity-100 data-[urgent=true]:animate-pulse data-[urgent=true]:border-rose-400/60 data-[urgent=true]:text-rose-200"
+        >
+          <span data-dino-timer-text />
+          <span
+            ref={timerBarRef}
+            aria-hidden="true"
+            className="absolute inset-x-0 bottom-0 h-[3px] origin-left bg-gradient-to-r from-cyan-400 to-blue-500 group-data-[urgent=true]/timer:from-rose-500 group-data-[urgent=true]/timer:to-orange-400"
+            style={{ transform: 'scaleX(1)' }}
+          />
+        </div>
         {/* A new best lights up. */}
         <div
           ref={bestRef}
