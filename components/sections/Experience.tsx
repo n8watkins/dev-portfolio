@@ -44,19 +44,33 @@ const Experience = () => {
                   </div>
                 )}
 
-                <motion.div variants={staggerItemVariants} className="relative pl-10 md:pl-12">
+                <motion.div
+                  variants={staggerItemVariants}
+                  className="group/exp relative pl-10 md:pl-12"
+                >
                   {/* Timeline dot */}
                   <div className="absolute left-0 top-[14px] w-[19px] h-[19px] rounded-full bg-sky-500 border-[3px] border-slate-900 shadow-lg shadow-sky-500/40" />
 
                   {/* Card */}
-                  {/* The card's own glow off its right side, on hover only (item.hoverGlow) */}
+                  {/* On hover, a glow wraps the card: a light blue around the text side
+                      and, around the image side, the image's own colours (item.hoverGlow).
+                      Blurred layers behind the card, so they show past its edges. */}
                   <div
-                    className={`group relative overflow-hidden rounded-xl p-5 md:p-6 bg-slate-900/30 border border-white/5 shadow-[0_20px_25px_-5px_rgba(0,0,0,0.3)] hover:border-sky-500/30 transition-all duration-300 ${item.hoverGlow}`}
+                    aria-hidden="true"
+                    className="pointer-events-none absolute inset-y-0 left-10 right-0 md:left-12 opacity-0 transition-opacity duration-500 group-hover/exp:opacity-100"
+                  >
+                    <div className="absolute -inset-y-2 -left-2 w-[60%] rounded-2xl bg-sky-400/[0.14] blur-xl" />
+                    <div
+                      className={`absolute -inset-y-2 -right-3 w-[48%] rounded-2xl blur-xl ${item.hoverGlow}`}
+                    />
+                  </div>
+                  <div
+                    className={`group relative overflow-hidden rounded-xl p-5 md:p-6 bg-slate-900 border border-white/5 shadow-[0_20px_25px_-5px_rgba(0,0,0,0.3)] hover:border-sky-500/30 transition-all duration-300`}
                   >
                     {/* Hover image reveal (desktop only) */}
                     {item.hoverImage && (
                       <div
-                        className="absolute inset-y-0 right-0 w-[45%] opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none hidden md:block"
+                        className="absolute inset-y-0 right-0 w-[45%] opacity-0 group-hover:opacity-80 transition-opacity duration-500 pointer-events-none hidden md:block"
                         aria-hidden="true"
                       >
                         <Image
@@ -68,6 +82,8 @@ const Experience = () => {
                         />
                         {/* Fade the left edge into the page background so it doesn't hard-cut */}
                         <div className="absolute inset-0 bg-gradient-to-r from-darkBlue via-darkBlue/15 to-transparent" />
+                        {/* Dimmed, so a bright page (Appturnity's) doesn't wash out the card */}
+                        <div className="absolute inset-0 bg-darkBlue/45" />
                       </div>
                     )}
 

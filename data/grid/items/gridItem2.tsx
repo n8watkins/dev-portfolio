@@ -22,12 +22,14 @@ export const gridItem2: GridItemConfig = {
   img: '/bento/globe.jpeg',
 
   textContainerClassName:
-    'bottom-0 w-full h-32 left-0  pt-10 h-52 bg-gradient-to-t rounded-b-3xl from-blue-500 via-blue-500 to-blue-500/0 dark:from-[#0d304c] dark:via-[#0d304c] dark:to-[#0d304c]/0 text-slate-200',
+    // The box keeps its height (the map's pin and arcs are placed from its
+    // top); only its gradient is shorter, so more of the globe shows.
+    'bottom-0 w-full left-0 pt-10 h-52 bg-gradient-to-t rounded-b-3xl from-blue-500 via-blue-500 to-blue-500/0 dark:from-[#0d304c] dark:from-25% dark:via-[#0d304c]/70 dark:via-45% dark:to-[#0d304c]/0 dark:to-75% text-slate-200',
 
   titleClassName:
     'relative z-30 font-sans font-bold dark:text-neutral-200 flex  items-center  xs:pl-10 1sm:pl-5 pt-28 w-full h-[5rem] select-none text-2xl lg:text-4xl',
 
-  textOrder: 'group-hover:translate-x-2 duration-200',
+  textOrder: '',
 
   buttonContainer: '',
   buttonClass: '',
@@ -51,5 +53,6 @@ export const gridItem2: GridItemConfig = {
     </div>
   ),
 
+  hover: false,
   renderContent: () => <MapDetails />,
 }

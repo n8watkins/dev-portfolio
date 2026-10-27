@@ -3,7 +3,7 @@
 import React from 'react'
 import Image from 'next/image'
 import { motion } from 'framer-motion'
-import { FiArrowUpRight, FiCheck } from 'react-icons/fi'
+import { FiArrowUpRight, FiCheck, FiGithub } from 'react-icons/fi'
 import PauseOffscreen from '@/components/ui/PauseOffscreen'
 import SectionHeading from '@/components/ui/SectionHeading'
 import {
@@ -34,6 +34,8 @@ interface Door {
   points: string[]
   cta: { label: string; href: string }
   secondary?: { label: string; href: string }
+  /** The site's source on GitHub, as a third, quieter link. */
+  github?: string
   desktop: Shot
   phone: Shot
   accent: { eyebrow: string; check: string; button: string; glow: string; ring: string }
@@ -151,6 +153,7 @@ const doors: Door[] = [
     ],
     cta: { label: 'Visit n8builds.dev', href: 'https://n8builds.dev' },
     secondary: { label: "How it's built and tested", href: 'https://n8builds.dev/builds/n8builds' },
+    github: 'https://github.com/n8watkins/n8builds-web',
     desktop: {
       src: '/work/n8builds-desktop.webp',
       alt: 'The n8builds.dev home page',
@@ -268,6 +271,13 @@ const DoorCard = ({ door, index }: { door: Door; index: number }) => {
             >
               {door.secondary.label}
               <FiArrowUpRight aria-hidden className="h-3.5 w-3.5" />
+            </a>
+          )}
+          {door.github && (
+            <a href={door.github} target="_blank" rel="noopener noreferrer" className={SECONDARY}>
+              <FiGithub aria-hidden className="h-4 w-4" />
+              Source on GitHub
+              <span className="sr-only"> (opens in a new tab)</span>
             </a>
           )}
         </div>

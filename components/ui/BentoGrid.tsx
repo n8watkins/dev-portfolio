@@ -90,17 +90,19 @@ export const BentoGridItem = ({
   renderContent,
   renderForeground,
   entrance,
+  hover = true,
 }: GridItemConfig) => {
   const { glowRef, onMouseEnter, onMouseMove, onMouseLeave } = useCursorGlow()
 
   return (
     <motion.div
       variants={entrance === 'fade' ? FADE_ONLY : staggerItemVariants}
-      onMouseEnter={onMouseEnter}
-      onMouseMove={onMouseMove}
-      onMouseLeave={onMouseLeave}
+      onMouseEnter={hover ? onMouseEnter : undefined}
+      onMouseMove={hover ? onMouseMove : undefined}
+      onMouseLeave={hover ? onMouseLeave : undefined}
       className={cn(
-        'flex w-full h-full rounded-3xl relative group  dark:border-white/[0.2]  bg-gradient-to-br from-blue-400 via-blue-500 to-blue-400 border dark:from-[#0c4a6e] dark:via-[#0f172a] dark:to-[#0f172a] overflow-hidden  select-none',
+        hover && 'group',
+        'flex w-full h-full rounded-3xl relative dark:border-white/[0.2]  bg-gradient-to-br from-blue-400 via-blue-500 to-blue-400 border dark:from-[#0c4a6e] dark:via-[#0f172a] dark:to-[#0f172a] overflow-hidden  select-none',
         gridItemContainer
       )}
     >

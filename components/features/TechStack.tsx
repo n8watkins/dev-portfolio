@@ -24,7 +24,7 @@ export function TechStack() {
   return (
     <div
       data-dino-panel
-      className="absolute inset-0 flex w-full flex-col items-center justify-end overflow-hidden rounded-3xl bg-gradient-to-br from-[#0d304c] to-[#0d304c] pb-[5.5rem] sm:pb-[6.5rem] motion-safe:gap-2 motion-reduce:justify-start motion-reduce:overflow-y-auto"
+      className="absolute inset-0 flex w-full flex-col items-center justify-end overflow-hidden rounded-3xl bg-gradient-to-br from-[#0d304c] to-[#0d304c] pb-[5rem] sm:pb-[7rem] motion-safe:gap-5 motion-reduce:justify-start motion-reduce:overflow-y-auto"
     >
       <Marquee
         label="Libraries and frameworks"

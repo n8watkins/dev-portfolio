@@ -7,6 +7,7 @@ import { resolve } from 'node:path'
 
 export const SHARED = [
   'components/magicui/marquee.tsx',
+  'components/Projects/TechStackCycle.tsx',
   'components/ui/StackTile.tsx',
   'components/features/dino/DinoEasterEgg.tsx',
   'components/features/dino/DinoGame.tsx',

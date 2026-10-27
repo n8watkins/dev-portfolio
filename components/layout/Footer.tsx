@@ -44,65 +44,73 @@ const Footer = () => {
           message through the form on n8builds.dev.
         </SectionHeading>
 
-        {/* One block: the direct connections, then the n8builds.dev form for a longer message. */}
+        {/* One centred block, framed in the site's cyan-to-blue like the hero's
+            cards: the direct connections, then the form for a longer message. */}
         <motion.div
           variants={fadeInVariants}
           {...defaultAnimationConfig}
-          className="mt-8 mb-8 flex flex-col gap-5 rounded-2xl border border-white/10 bg-slate-900/90 p-5 sm:p-8 shadow-xl"
+          className="mx-auto mt-8 mb-8 max-w-2xl rounded-3xl bg-gradient-to-br from-cyan-400/40 via-blue-500/20 to-blue-600/40 p-px shadow-xl shadow-black/30"
         >
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
-            Reach me directly
-          </p>
-          <div className="flex flex-wrap items-center gap-2 sm:gap-2.5">
-            <a
-              href={`mailto:${EMAIL}`}
-              className={`${BUTTON} border-transparent text-white bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 hover:shadow-lg hover:shadow-sky-500/30`}
-            >
-              <FiMail className="w-4 h-4" aria-hidden="true" />
-              Email me
-            </a>
-            <a
-              href="https://www.linkedin.com/in/n8watkins/"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="LinkedIn (new tab)"
-              className={`${BUTTON} ${OUTLINE}`}
-            >
-              <CiLinkedin className="w-5 h-5" aria-hidden="true" />
-              LinkedIn
-            </a>
-            <a
-              href="https://x.com/n8watkins"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="X (new tab)"
-              title="X"
-              className={`inline-flex items-center justify-center h-10 w-10 sm:h-11 sm:w-11 rounded-full border transition-all duration-200 ${OUTLINE}`}
-            >
-              <FaXTwitter className="w-4 h-4" aria-hidden="true" />
-            </a>
-          </div>
-          <a
-            href={`mailto:${EMAIL}`}
-            className="w-fit text-sm text-slate-400 hover:text-sky-400 transition-colors duration-200 break-all"
-          >
-            {EMAIL}
-          </a>
-          <div className="flex flex-col gap-3 border-t border-white/10 pt-5 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-base text-slate-300 leading-relaxed">
-              Have a longer message? Tell me about the role or the project in the contact form on
-              n8builds.dev.
-            </p>
-            <a
-              href="https://n8builds.dev/#contact"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="Open the contact form on n8builds.dev (new tab)"
-              className={`${BUTTON} ${OUTLINE} w-fit shrink-0 border-sky-400/40 text-sky-200`}
-            >
-              Open the contact form
-              <FiArrowUpRight className="w-4 h-4" aria-hidden="true" />
-            </a>
+          <div className="relative overflow-hidden rounded-[23px] bg-[#0b1324] px-5 py-8 text-center sm:px-10 sm:py-10">
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute -top-24 left-1/2 h-48 w-[28rem] -translate-x-1/2 rounded-full bg-cyan-500/[0.12] blur-3xl"
+            />
+            <div className="relative flex flex-col items-center gap-5">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-sky-300">
+                Reach me directly
+              </p>
+              <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-2.5">
+                <a
+                  href={`mailto:${EMAIL}`}
+                  className={`${BUTTON} border-transparent text-white bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 hover:shadow-lg hover:shadow-sky-500/30`}
+                >
+                  <FiMail className="w-4 h-4" aria-hidden="true" />
+                  Email me
+                </a>
+                <a
+                  href="https://www.linkedin.com/in/n8watkins/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="LinkedIn (new tab)"
+                  className={`${BUTTON} ${OUTLINE}`}
+                >
+                  <CiLinkedin className="w-5 h-5" aria-hidden="true" />
+                  LinkedIn
+                </a>
+                <a
+                  href="https://x.com/n8watkins"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="X (new tab)"
+                  title="X"
+                  className={`inline-flex items-center justify-center h-10 w-10 sm:h-11 sm:w-11 rounded-full border transition-all duration-200 ${OUTLINE}`}
+                >
+                  <FaXTwitter className="w-4 h-4" aria-hidden="true" />
+                </a>
+              </div>
+              <a
+                href={`mailto:${EMAIL}`}
+                className="text-sm text-slate-400 transition-colors duration-200 hover:text-sky-400"
+              >
+                {EMAIL}
+              </a>
+              <div className="my-1 h-px w-full max-w-sm bg-gradient-to-r from-transparent via-white/15 to-transparent" />
+              <p className="text-sm text-slate-300">
+                <span className="font-semibold text-slate-100">Have a longer message?</span> Send it
+                through the form on n8builds.dev.
+              </p>
+              <a
+                href="https://n8builds.dev/#contact"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Open the contact form on n8builds.dev (new tab)"
+                className={`${BUTTON} ${OUTLINE} border-sky-400/40 text-sky-200`}
+              >
+                Open the contact form
+                <FiArrowUpRight className="w-4 h-4" aria-hidden="true" />
+              </a>
+            </div>
           </div>
         </motion.div>
       </div>

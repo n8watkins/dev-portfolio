@@ -85,4 +85,6 @@ export interface GridItemConfig {
    * scaling entrance would throw off.
    */
   entrance?: 'fade'
+  /** false: no hover effects (no cursor glow, no group-hover in its content). */
+  hover?: boolean
 }

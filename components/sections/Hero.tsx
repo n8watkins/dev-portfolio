@@ -79,11 +79,11 @@ const doors = [
 const Hero = () => {
   return (
     <div
-      className="relative flex flex-col items-center bg-darkBlue overflow-hidden select-none pt-28 md:pt-[9.5rem] pb-10 md:pb-8"
+      className="relative flex flex-col items-center justify-center bg-darkBlue overflow-hidden select-none pt-28 pb-10 md:min-h-[calc(100svh-7rem)] md:pt-28 md:pb-10"
       id="home"
     >
       <HeroGrid />
-      <div className="relative z-10 w-full max-w-5xl px-4 flex flex-col items-center">
+      <div className="relative z-10 w-full max-w-5xl 2xl:max-w-6xl px-4 flex flex-col items-center">
         <p className="uppercase tracking-widest pb-6 md:pb-6 text-base md:text-lg text-center text-white font-normal">
           <span className="hero-in inline-block">Code.</span>{' '}
           <span className="hero-in inline-block" style={delay(80)}>
@@ -95,7 +95,7 @@ const Hero = () => {
         </p>
         <div className="flex flex-col-reverse md:flex-row items-center justify-center w-full gap-8 md:gap-14">
           <div className="flex w-full md:w-auto flex-col items-start gap-3 md:gap-4">
-            <h1 className="hero-slide-l text-center md:text-start w-full text-5xl lg:text-6xl font-semibold">
+            <h1 className="hero-slide-l text-center md:text-start w-full text-5xl lg:text-6xl 2xl:text-7xl font-semibold">
               Hi, I&apos;m <span className="text-sky-400">Nathan</span>
             </h1>
             <p
@@ -198,7 +198,7 @@ const Hero = () => {
           </div>
           <div
             data-hero-portrait=""
-            className="hero-slide-r w-[15rem] h-[15rem] 1sm:w-[17rem] 1sm:h-[17rem] 1lg:w-[19rem] 1lg:h-[19rem] sm:w-[20rem] sm:h-[20rem] relative shrink-0"
+            className="hero-slide-r w-[15rem] h-[15rem] 1sm:w-[17rem] 1sm:h-[17rem] 1lg:w-[19rem] 1lg:h-[19rem] sm:w-[20rem] sm:h-[20rem] 2xl:w-[26rem] 2xl:h-[26rem] relative shrink-0"
           >
             <div className="aspect-square w-full h-full relative">
               <div className="absolute inset-0 dark:bg-black/20 rounded-full z-10"></div>

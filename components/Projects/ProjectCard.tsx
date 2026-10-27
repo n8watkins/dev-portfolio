@@ -42,7 +42,9 @@ export default function ProjectCard({ project, index }: { project: Project; inde
         images={project.images}
         frameClassName={accent.outline}
         onOpen={open}
-        imageClassName="object-cover object-top transition-transform duration-500 group-hover:scale-[1.02] motion-reduce:transition-none"
+        // The whole screenshot grows a touch on hover; nothing is cropped.
+        className="w-full shrink-0 md:w-1/2 transition-transform duration-500 group-hover:scale-[1.015] motion-reduce:transition-none"
+        imageClassName="object-cover object-top"
       />
 
       <div className="flex w-full flex-col md:w-1/2">
@@ -70,7 +72,7 @@ export default function ProjectCard({ project, index }: { project: Project; inde
           </div>
         )}
 
-        <p className="mt-3 text-sm leading-relaxed text-[#9cadc5] sm:text-[0.95rem]">
+        <p className="mt-3 line-clamp-4 text-sm leading-relaxed text-[#9cadc5] sm:text-[0.95rem]">
           {project.des}
         </p>
 

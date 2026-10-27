@@ -2,7 +2,14 @@
 
 import { useEffect, useState } from 'react'
 import Image from 'next/image'
-import { STATUS_PAGE, describe, type StatusMap } from '@/lib/status'
+import {
+  DEMO_HOURS,
+  OPENPING_BUILD,
+  OPENPING_SITE,
+  STATUS_PAGE,
+  describe,
+  type StatusMap,
+} from '@/lib/status'
 
 // One request per page view, shared by every pill on the page.
 let statuses: Promise<StatusMap> | null = null
@@ -71,9 +78,13 @@ export default function StatusPill({ name, className = '' }: { name: string; cla
   )
 }
 
+const OPENPING_LINK =
+  'font-semibold text-emerald-300 underline decoration-emerald-300/40 underline-offset-4 transition-colors hover:text-emerald-200 hover:decoration-emerald-200'
+
 /**
- * The demos are kept awake on weekdays only; this says so once, near the pills,
- * so "Asleep" reads as expected rather than broken.
+ * When the demos run (kept awake on weekdays only, on purpose), said once near
+ * the pills so "Asleep" reads as expected, and who watches them: OpenPing, one
+ * of the owner's builds, linked to its own site and its page on n8builds.dev.
  */
 export function DemoSleepNote({ className = '' }: { className?: string }) {
   return (
@@ -84,31 +95,40 @@ export function DemoSleepNote({ className = '' }: { className?: string }) {
           aria-hidden="true"
         />
         <span>
-          Live demos sleep on weekends; the first visit then may take up to a minute to wake.
+          Live demos run {DEMO_HOURS} and sleep on weekends; the first visit then may take up to a
+          minute to wake.
         </span>
       </p>
-      {/* The monitor is one of the owner's builds: a small ad for it on n8builds.dev. */}
-      <p className="flex items-center gap-2">
+      <p className="flex items-start gap-2">
         <Image
           src="/builds/openping/icon.svg"
           alt=""
           width={16}
           height={16}
           unoptimized
-          className="h-4 w-4 shrink-0 rounded"
+          className="mt-0.5 h-4 w-4 shrink-0 rounded"
         />
         <span>
           Status by{' '}
           <a
-            href="https://n8builds.dev/builds/openping"
+            href={OPENPING_SITE}
             target="_blank"
             rel="noopener noreferrer"
-            className="font-semibold text-emerald-300 underline decoration-emerald-300/40 underline-offset-4 transition-colors hover:text-emerald-200 hover:decoration-emerald-200"
+            className={OPENPING_LINK}
           >
             OpenPing
             <span className="sr-only"> (opens in a new tab)</span>
           </a>
-          , my open-source uptime monitor.
+          , my open-source uptime monitor.{' '}
+          <a
+            href={OPENPING_BUILD}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={OPENPING_LINK}
+          >
+            How I built it
+            <span className="sr-only"> on n8builds.dev (opens in a new tab)</span>
+          </a>
         </span>
       </p>
     </div>

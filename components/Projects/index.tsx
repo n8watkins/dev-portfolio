@@ -23,7 +23,7 @@ const Projects: React.FC = () => {
         }
         className="px-2 md:px-4 pt-14 md:pt-16 mb-4"
       >
-        {/* Blurb streams in word-by-word like LLM token generation */}
+        {/* Blurb streams in word by word, like LLM token generation */}
         <motion.p
           initial="hidden"
           whileInView="visible"
@@ -45,12 +45,6 @@ const Projects: React.FC = () => {
               {word}{' '}
             </motion.span>
           ))}
-          <motion.span
-            animate={{ opacity: [1, 0, 1] }}
-            transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
-            className="inline-block w-[0.55em] h-[1.1em] align-text-bottom bg-sky-400 rounded-[2px]"
-            aria-hidden="true"
-          />
         </motion.p>
         <DemoSleepNote className="mt-4" />
       </SectionHeading>

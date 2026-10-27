@@ -140,7 +140,7 @@ export default function BuildsTeaser() {
       onBlur={() => setPaused(false)}
     >
       {/* The site, then what it is: its icon with the small label together. */}
-      <div className="flex flex-wrap items-end justify-between gap-3">
+      <div className="flex flex-col gap-2">
         <a
           href="https://n8builds.dev"
           target="_blank"
@@ -172,7 +172,7 @@ export default function BuildsTeaser() {
             </span>
           </span>
         </a>
-        <p className="max-w-md text-sm text-slate-400">
+        <p className="max-w-2xl text-sm text-slate-400 sm:text-base">
           Beyond these projects, I ship tools in public. Here is more of what I&apos;m building.
         </p>
       </div>

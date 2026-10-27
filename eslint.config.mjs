@@ -3,7 +3,23 @@ import nextCoreWebVitals from 'eslint-config-next/core-web-vitals'
 /** @type {import('eslint').Linter.Config[]} */
 const config = [
   {
-    ignores: ['.next/**', 'node_modules/**', 'out/**', 'playwright-report/**', 'test-results/**'],
+    ignores: [
+      '.next/**',
+      'node_modules/**',
+      'out/**',
+      'playwright-report/**',
+      'test-results/**',
+      // Kept byte-identical with n8builds-web, linted there (npm run check:sync).
+      'components/magicui/marquee.tsx',
+      'components/Projects/TechStackCycle.tsx',
+      'components/ui/StackTile.tsx',
+      'components/features/dino/DinoEasterEgg.tsx',
+      'components/features/dino/DinoGame.tsx',
+      'components/features/dino/sprite.ts',
+      'hooks/usePrefersReducedMotion.ts',
+      'hooks/useHydrated.ts',
+      'lib/utils.ts',
+    ],
   },
   ...nextCoreWebVitals,
   {

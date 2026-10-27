@@ -398,12 +398,34 @@ select:focus-visible {
 }
 
 /* Tailwind 4 syntax used by the files kept byte-identical with n8builds-web
-   (components/magicui/marquee.tsx, components/ui/StackTile.tsx), which this
-   site's Tailwind 3 doesn't generate. Keep in sync with those files. */
+   (components/magicui/marquee.tsx, components/ui/StackTile.tsx,
+   components/Projects/TechStackCycle.tsx), which this site's Tailwind 3
+   doesn't generate. Keep in sync with those files (npm run check:sync). */
 .gap-\(--gap\) {
   gap: var(--gap);
 }
 .\*\:size-full\! > * {
   width: 100% !important;
   height: 100% !important;
+}
+.min-h-26 {
+  min-height: 6.5rem;
+}
+@keyframes slide-in {
+  from {
+    opacity: 0;
+    translate: var(--slide-from, 24px) 0;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+.slide-in {
+  animation: slide-in 0.3s ease-out both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .slide-in {
+    animation: none;
+  }
 }

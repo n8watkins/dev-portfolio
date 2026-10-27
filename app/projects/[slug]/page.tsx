@@ -2,6 +2,8 @@ import { shareSummary, summarize } from '@/lib/seo'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { projects } from '@/data/projects'
+import CornerLinks from '@/components/layout/CornerLinks'
+import PageFooter from '@/components/layout/PageFooter'
 import ProjectDetail from '@/components/Projects/ProjectDetail'
 
 export function generateStaticParams() {
@@ -33,5 +35,11 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
   const { slug } = await params
   const project = projects.find((p) => p.slug === slug)
   if (!project) notFound()
-  return <ProjectDetail project={project} />
+  return (
+    <>
+      <CornerLinks />
+      <ProjectDetail project={project} />
+      <PageFooter />
+    </>
+  )
 }

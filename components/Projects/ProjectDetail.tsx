@@ -3,11 +3,12 @@
 import React from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { FiArrowLeft, FiArrowUpRight, FiCheck, FiExternalLink, FiGithub } from 'react-icons/fi'
-import { Project, Technologies } from '@/lib/types'
-import { techNameMapping } from '@/data/projects'
+import { FiArrowUpRight, FiCheck, FiExternalLink, FiGithub } from 'react-icons/fi'
+import { Project } from '@/lib/types'
 import { accents } from '@/lib/accents'
 import ProjectGallery from './ProjectGallery'
+import TechStackCycle from './TechStackCycle'
+import BackToProjects from './BackToProjects'
 import StatusPill, { DemoSleepNote } from './StatusPill'
 
 function Heading({ id, children }: { id: string; children: React.ReactNode }) {
@@ -79,52 +80,6 @@ function ProjectLinks({ project, stacked = false }: { project: Project; stacked?
   )
 }
 
-/** The stack in its three groups, each line with its tech's marks. */
-function Stack({ technologies }: { technologies: Technologies }) {
-  const names = techNameMapping as Record<string, string>
-  return (
-    <div className="grid gap-4 md:grid-cols-3">
-      {(Object.keys(technologies) as (keyof Technologies)[]).map((group) => (
-        <section
-          key={group}
-          aria-labelledby={`stack-${group}`}
-          className="rounded-2xl border border-white/10 bg-white/[0.03] p-5"
-        >
-          <h3 id={`stack-${group}`} className="text-base font-bold text-slate-100">
-            {group}
-          </h3>
-          <ul className="mt-3 flex flex-col gap-3">
-            {technologies[group].descriptionParts.map((part) => (
-              <li key={part.text} className="text-sm leading-relaxed text-slate-300">
-                {part.icons?.length > 0 && (
-                  <span className="mb-1.5 flex items-center gap-1.5">
-                    {part.icons.map(({ icon }) => (
-                      <span
-                        key={icon}
-                        title={names[icon] ?? icon}
-                        className="flex h-7 w-7 items-center justify-center rounded-full border border-white/10 bg-slate-900/80"
-                      >
-                        <Image
-                          src={`/projectIcons/${icon}`}
-                          alt={names[icon] ?? ''}
-                          width={16}
-                          height={16}
-                          className="h-4 w-4 object-contain"
-                        />
-                      </span>
-                    ))}
-                  </span>
-                )}
-                {part.text}
-              </li>
-            ))}
-          </ul>
-        </section>
-      ))}
-    </div>
-  )
-}
-
 /**
  * A project's page, read like a short blog post: the header with its icon,
  * buttons and status; the screenshots (a gallery with left/right, smaller than
@@ -150,17 +105,8 @@ export default function ProjectDetail({ project }: { project: Project }) {
         className="lab-row-wash pointer-events-none absolute inset-x-0 top-0 h-[40rem]"
         style={{ '--lab-from': accent.rgb, '--lab-x': '0%' } as React.CSSProperties}
       />
-      <div className="relative max-w-5xl mx-auto px-4 sm:px-6 py-12 md:py-16">
-        <Link
-          href="/#projects"
-          className="group inline-flex items-center gap-2 text-sm text-slate-400 hover:text-sky-400 transition-colors mb-10 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 rounded"
-        >
-          <FiArrowLeft
-            className="group-hover:-translate-x-0.5 transition-transform"
-            aria-hidden="true"
-          />
-          Back to projects
-        </Link>
+      <div className="relative max-w-5xl xl:max-w-6xl 2xl:max-w-7xl mx-auto px-4 sm:px-6 pt-24 pb-12 md:pt-28 md:pb-16">
+        <BackToProjects />
 
         {/* Header */}
         <header className="mb-8">
@@ -304,10 +250,13 @@ export default function ProjectDetail({ project }: { project: Project }) {
           </aside>
         </div>
 
-        {/* The stack, in its three groups */}
+        {/* The stack: Frontend / Backend / Cloud, cycling through what each
+            part uses (n8builds.dev's TechStackCycle, kept in sync) */}
         <section className="mt-16">
           <Heading id="stack">The stack</Heading>
-          <Stack technologies={project.technologies} />
+          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 sm:p-8">
+            <TechStackCycle technologies={project.technologies} />
+          </div>
         </section>
       </div>
     </main>

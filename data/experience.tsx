@@ -9,8 +9,10 @@ export type WorkExperienceItem = {
   links?: { label: string; url: string }[]
   hoverImage?: string
   /**
-   * The card's hover glow, off its right side, in the colours of its hover
-   * image (a full Tailwind class, so the build sees it).
+   * The glow around the card's right (image) side on hover, in the colours of
+   * its hover image: a background class for a blurred layer behind the card
+   * (a full Tailwind class, so the build sees it). The other side glows a light
+   * blue on every card.
    */
   hoverGlow: string
   additional?: boolean
@@ -20,9 +22,8 @@ export const workExperience: WorkExperienceItem[] = [
   {
     id: 1,
     company: 'Appturnity',
-    // Appturnity's blue and white
-    hoverGlow:
-      'hover:shadow-[22px_0_28px_-14px_rgba(59,130,246,0.75),34px_0_40px_-20px_rgba(255,255,255,0.45)]',
+    // White, where Appturnity's white page shows
+    hoverGlow: 'bg-white/[0.16]',
     companyUrl: 'https://appturnity.com',
     location: 'Los Angeles, CA',
     role: 'Full Stack Developer & Co-Founder',
@@ -44,7 +45,7 @@ export const workExperience: WorkExperienceItem[] = [
     id: 2,
     company: 'Donovan Golf Course Management',
     // A little of the course's green
-    hoverGlow: 'hover:shadow-[22px_0_28px_-14px_rgba(74,222,128,0.6)]',
+    hoverGlow: 'bg-green-400/[0.16]',
     companyUrl: 'https://www.arroyosecogc.com/',
     location: 'Pasadena, CA',
     role: 'Web Developer',
@@ -60,7 +61,7 @@ export const workExperience: WorkExperienceItem[] = [
     id: 3,
     company: 'Realtek Solutions',
     // White (no hover image)
-    hoverGlow: 'hover:shadow-[22px_0_28px_-14px_rgba(255,255,255,0.5)]',
+    hoverGlow: 'bg-white/[0.14]',
     location: 'Los Angeles, CA',
     role: 'Frontend Developer',
     period: 'July 2021 – May 2022',
@@ -73,8 +74,7 @@ export const workExperience: WorkExperienceItem[] = [
     id: 4,
     company: 'The Coder School',
     // Green, and white at the bottom
-    hoverGlow:
-      'hover:shadow-[22px_-6px_28px_-14px_rgba(74,222,128,0.6),22px_12px_28px_-14px_rgba(255,255,255,0.5)]',
+    hoverGlow: 'bg-gradient-to-b from-green-400/[0.18] to-white/[0.16]',
     companyUrl: 'https://www.thecoderschool.com/locations/santamonica/',
     location: 'Santa Monica, CA',
     role: 'Programming Instructor',
