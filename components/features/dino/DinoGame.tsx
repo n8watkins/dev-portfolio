@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useId, useRef } from 'react'
 import { DINO_COLS, DINO_FRAMES, DINO_ROWS, framePaths, type DinoFrame } from './sprite'
 
 /**
@@ -82,9 +82,33 @@ interface Level {
 }
 
 const COLORS = { body: '#cfdbe9', eye: '#081427', shine: '#ffffff' } as const
-// Each roar moves the body on to the next colour (blue/cyan family and warm
-// accents, no purple).
-const BODY_COLORS = ['#cfdbe9', '#67e8f9', '#fbbf24', '#86efac', '#fb923c', '#38bdf8'] as const
+// Each roar gives the body a new random colour: a bright, light hue at least
+// 60 degrees round the wheel from the last one, so the change always shows.
+// Now and then (1 in 12, and every 10th catch in a round) it turns rainbow.
+const RAINBOW_ODDS = 1 / 12
+const RAINBOW = ['#f87171', '#fb923c', '#facc15', '#4ade80', '#22d3ee', '#818cf8', '#e879f9']
+function randomHue(last: number) {
+  const hue = (last + 60 + Math.random() * 240) % 360
+  return { hue, color: `hsl(${hue.toFixed(0)} 85% 70%)` }
+}
+// The game: the first click starts a round of ROUND seconds (counted only
+// while the dino is on screen); every click in it is a catch, and each catch
+// makes it walk faster and choose its next move sooner. The best score stays
+// in this browser (localStorage).
+const ROUND = 30
+// What a click makes it do (from a shuffled bag, so each one comes round
+// soon): a backflip on the spot; a fall straight through its row (to the row
+// below, or off the bottom, coming back in somewhere else); a leap up to the
+// row above; a dash the other way; or a blink to another spot. In the air it
+// only roars.
+type Reaction = 'flip' | 'fall' | 'leap' | 'dash' | 'blink'
+const REACTIONS: Reaction[] = ['flip', 'fall', 'leap', 'dash', 'blink']
+const DASH_T = 0.7 // s of dashing
+const DASH_SPEED = 3 // times its walking speed
+const PACE_PER_CATCH = 0.06
+const MAX_PACE = 2.2
+const RESULT_FOR = 5 // s the final score shows
+const BEST_KEY = 'n8-dino-best'
 const ROAR_FOR = 1.1 // s the bubble stays up
 const FLIP_T = 0.7 // s per backflip
 
@@ -189,6 +213,8 @@ interface DinoTiming {
   lineGap?: readonly [number, number]
   stay?: readonly [number, number]
   roam?: boolean
+  /** Click reactions in this order, round and round, instead of shuffled. */
+  reactions?: readonly Reaction[]
 }
 const between = ([a, b]: readonly [number, number]) => a + Math.random() * (b - a)
 // Hands out a shuffled bag's items one by one, reshuffling when it is empty.
@@ -222,13 +248,17 @@ export default function DinoGame() {
   const dinoRef = useRef<HTMLDivElement>(null)
   const bubbleRef = useRef<HTMLDivElement>(null)
   const linesRef = useRef<HTMLDivElement>(null)
+  const scoreRef = useRef<HTMLDivElement>(null)
+  // The rainbow's gradient id, unique per dino (useId's colons don't belong in url()).
+  const rainbowId = `dino-rainbow-${useId().replace(/[^a-zA-Z0-9]/g, '')}`
 
   useEffect(() => {
     const dino = dinoRef.current
     const bubble = bubbleRef.current
+    const score = scoreRef.current
     const lineEls = [...(linesRef.current?.children ?? [])] as HTMLElement[]
     const panel = dino?.closest<HTMLElement>('[data-dino-panel]')
-    if (!dino || !bubble || !panel) return
+    if (!dino || !bubble || !score || !panel) return
 
     let rows: Row[] = []
     let levels: Level[] = []
@@ -289,6 +319,37 @@ export default function DinoGame() {
     // The click easter egg.
     let roars = 0
     let roarLeft = 0 // s the bubble has left
+    let hue = 210 // the body's last random hue
+    // The game (see ROUND): a round's time left and catches, the best so far,
+    // and how long the final score has left on screen.
+    let roundLeft = 0
+    let catches = 0
+    let resultLeft = 0
+    let pace = 1
+    let best = 0
+    try {
+      best = Number(localStorage.getItem(BEST_KEY)) || 0
+    } catch {
+      // Storage blocked: the best score lasts this page view only.
+    }
+    // The scoreboard's text, written straight to the DOM (no re-render per frame).
+    let scoreText = ''
+    const showScore = (text: string) => {
+      if (text === scoreText) return
+      scoreText = text
+      score.textContent = text
+      score.dataset.shown = text ? 'true' : 'false'
+    }
+    const scoreboard = () => {
+      if (roundLeft > 0) {
+        const secs = Math.ceil(roundLeft)
+        showScore(`Catches ${catches} · 0:${String(secs).padStart(2, '0')}${best ? ` · Best ${best}` : ''}`)
+      } else if (resultLeft > 0) {
+        showScore(`Time! ${catches} ${catches === 1 ? 'catch' : 'catches'} · Best ${best}`)
+      } else {
+        showScore('')
+      }
+    }
     // What it says now and then (DINO_LINES), each once per visit.
     let nextLine = 0
     try {
@@ -311,6 +372,14 @@ export default function DinoGame() {
     let awayLeft = 0
     let climb = { t: 0, from: 0, to: 0, h: 0, vx: 0, target: 0 }
     const nextChoice = bag(CHOICES)
+    const nextReaction = timing?.reactions?.length
+      ? (() => {
+          let i = 0
+          const order = timing.reactions!
+          return () => order[i++ % order.length]
+        })()
+      : bag(REACTIONS)
+    let dashLeft = 0 // s of dashing left
     const nextEntry = bag(ENTRIES)
 
     // The first time in (and without roaming, every time): it drops onto the
@@ -447,6 +516,28 @@ export default function DinoGame() {
       const dt = Math.min(realDt, 0.05)
       last = now
       if (!dt) return
+      // The round's clock, and the final score's time on screen.
+      if (roundLeft > 0) {
+        roundLeft -= dt
+        if (roundLeft <= 0) {
+          roundLeft = 0
+          resultLeft = RESULT_FOR
+          pace = 1
+          if (catches > best) {
+            best = catches
+            try {
+              localStorage.setItem(BEST_KEY, String(best))
+            } catch {
+              // Storage blocked: the best score lasts this page view only.
+            }
+          }
+          dino.dataset.game = 'over'
+        }
+      } else if (resultLeft > 0) {
+        resultLeft -= dt
+        if (resultLeft <= 0) dino.dataset.game = 'idle'
+      }
+      scoreboard()
       const panelBox = panel.getBoundingClientRect()
       const panelLeft = panelBox.left
 
@@ -489,9 +580,11 @@ export default function DinoGame() {
         // the line stays put long enough to read (on a phone too).
         frame = 'stepA'
       } else if (mode === 'walk' && current) {
-        x += dir * SPEED * dt
-        walked += SPEED * dt
-        stayLeft -= dt
+        const speed = SPEED * pace * (dashLeft > 0 ? DASH_SPEED : 1)
+        dashLeft = Math.max(0, dashLeft - dt)
+        x += dir * speed * dt
+        walked += speed * dt
+        stayLeft -= dt * pace
         if (walked >= STEP_EVERY) {
           walked = 0
           frame = frame === 'stepA' ? 'stepB' : 'stepA'
@@ -723,14 +816,73 @@ export default function DinoGame() {
       event.preventDefault()
       roars += 1
       roarLeft = ROAR_FOR
-      dino.style.setProperty('--dino-body', BODY_COLORS[roars % BODY_COLORS.length])
+      // A catch: the first click starts a round (or a new one once the last
+      // score has had a moment on screen), then every click counts.
+      if (roundLeft > 0) {
+        catches += 1
+      } else if (resultLeft < RESULT_FOR - 1.5) {
+        roundLeft = ROUND
+        resultLeft = 0
+        catches = 1
+        dino.dataset.game = 'on'
+      }
+      pace = roundLeft > 0 ? Math.min(1 + catches * PACE_PER_CATCH, MAX_PACE) : 1
+      dino.dataset.catches = String(catches)
+      scoreboard()
+      // A new colour every time; sometimes a rainbow.
+      const rainbow = Math.random() < RAINBOW_ODDS || (roundLeft > 0 && catches % 10 === 0)
+      if (rainbow) {
+        dino.style.setProperty('--dino-body', `url(#${rainbowId})`)
+        dino.dataset.rainbow = 'true'
+      } else {
+        const next = randomHue(hue)
+        hue = next.hue
+        dino.style.setProperty('--dino-body', next.color)
+        delete dino.dataset.rainbow
+      }
       dino.dataset.roars = String(roars)
-      // A backflip on the spot, if it is walking (mid-jump or falling, it
-      // only roars). The arc stays inside the panel on the top row.
+      // A reaction, if it is walking (mid-jump or falling, it only roars).
       const current = levels[level]
       if (mode === 'walk' && current) {
-        flip = { t: 0, h: Math.min(44, current.y - H - 2), floor: current.y }
-        mode = 'flip'
+        let reaction = nextReaction()
+        // On the top row there is nothing to leap up to: it blinks instead.
+        if (reaction === 'leap' && !levels[level - 1]?.row) reaction = 'blink'
+        dino.dataset.reaction = reaction
+        if (reaction === 'flip') {
+          // The arc stays inside the panel on the top row.
+          flip = { t: 0, h: Math.min(44, current.y - H - 2), floor: current.y }
+          mode = 'flip'
+        } else if (reaction === 'fall') {
+          // A startled little pop, then straight down through its row.
+          mode = 'fall'
+          vy = -90
+          carry = 0
+          missPending = false
+        } else if (reaction === 'leap') {
+          startClimb(level - 1)
+        } else if (reaction === 'dash') {
+          dir = dir > 0 ? -1 : 1
+          dashLeft = DASH_T
+        } else {
+          // Gone and back in a blink, somewhere else on a row.
+          const floors = levels.flatMap((l, i) => (l.row ? [i] : []))
+          if (floors.length) {
+            level = floors[Math.floor(Math.random() * floors.length)]
+            const spans = intervals(levels[level].row!, panel.getBoundingClientRect().left).filter(
+              ([a, b]) => a > panelW * 0.2 && b < panelW * 0.8
+            )
+            const [a, b] = spans.length
+              ? spans[Math.floor(Math.random() * spans.length)]
+              : [panelW * 0.3, panelW * 0.7]
+            x = a + (b - a) / 2 - W / 2
+            y = levels[level].y
+            dir = Math.random() < 0.5 ? 1 : -1
+            stayLeft = between(stayFor)
+            reentering = false
+            leaving = false
+            dino.animate?.([{ opacity: 0 }, { opacity: 1 }], { duration: 260, easing: 'ease-out' })
+          }
+        }
       }
     }
     dino.addEventListener('click', roar)
@@ -756,7 +908,7 @@ export default function DinoGame() {
       document.removeEventListener('visibilitychange', update)
       dino.removeEventListener('click', roar)
     }
-  }, [])
+  }, [rainbowId])
 
   return (
     <>
@@ -781,6 +933,22 @@ export default function DinoGame() {
           shapeRendering="crispEdges"
           className="block overflow-visible"
         >
+          {/* The rainbow body, its bands turning slowly. */}
+          <defs>
+            <linearGradient id={rainbowId} x1="0" y1="0" x2="1" y2="1">
+              {RAINBOW.map((c, i) => (
+                <stop key={c} offset={i / (RAINBOW.length - 1)} stopColor={c} />
+              ))}
+              <animateTransform
+                attributeName="gradientTransform"
+                type="rotate"
+                from="0 0.5 0.5"
+                to="360 0.5 0.5"
+                dur="3s"
+                repeatCount="indefinite"
+              />
+            </linearGradient>
+          </defs>
           {FRAMES.map(({ name, paths }) => (
             <g key={name} className={FRAME_CLASS[name]}>
               <path d={paths.body} fill="var(--dino-body)" />
@@ -791,6 +959,15 @@ export default function DinoGame() {
         </svg>
       </div>
       <BubbleView ref={bubbleRef} bubble={ROAR} name="roar" />
+      {/* The game's scoreboard, top centre of the panel (clear of its side fades): shown during a round and
+          for a moment after it. Decorative, like the dino. */}
+      <div
+        ref={scoreRef}
+        data-dino-score
+        data-shown="false"
+        aria-hidden="true"
+        className="pointer-events-none absolute top-2.5 left-1/2 z-10 -translate-x-1/2 rounded-full whitespace-nowrap border border-white/10 bg-[#081427]/85 px-3 py-1 font-mono text-xs font-semibold text-cyan-200 tabular-nums opacity-0 backdrop-blur-sm transition-opacity duration-300 data-[shown=true]:opacity-100"
+      />
       <div ref={linesRef} className="contents">
         {LINES.map((b, i) => (
           <BubbleView key={DINO_LINES[i]} bubble={b} name={`line-${i}`} className="opacity-90" />

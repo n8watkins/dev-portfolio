@@ -13,19 +13,42 @@ import { cn } from '@/lib/utils'
 // name sits alone in the middle; revealing it opens the row to its natural
 // height (1fr) while the name shrinks, and the block stays centred whatever
 // the description's length.
+//
+// `still`: a calm tile, icon and name only, that doesn't react to the pointer
+// (the homepage's AI kit, so the dino is what stands out). It stays in the tab
+// order with a keyboard focus ring: focusing (or tapping) a tile pauses its
+// row (WCAG 2.2.2), which the dino game uses too.
 export default function StackTile({
   name,
   icon,
   description,
   iconClassName,
+  still = false,
 }: {
   name: string
   icon?: string | ReactElement
   description: string
   iconClassName?: string
+  still?: boolean
 }) {
   // Duplicate marquee copies stay tappable but out of the tab order.
   const isCopy = useContext(MarqueeCopyContext)
+  if (still) {
+    return (
+      <figure
+        tabIndex={isCopy ? -1 : 0}
+        className="relative flex h-28 w-52 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-white/8 bg-white/4 px-2 outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
+      >
+        <figcaption className="flex items-center gap-2 text-xl font-medium text-white">
+          <span className={cn('flex size-7 shrink-0 items-center justify-center *:size-full!', iconClassName)}>{icon}</span>
+          <span data-tile-name className="whitespace-nowrap">
+            {name}
+          </span>
+          <span className="sr-only">: {description}</span>
+        </figcaption>
+      </figure>
+    )
+  }
   return (
     <figure
       tabIndex={isCopy ? -1 : 0}

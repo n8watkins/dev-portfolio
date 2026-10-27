@@ -39,6 +39,7 @@ export function TechStack() {
             name={tech.name}
             icon={tech.icon}
             description={tech.description}
+            still
           />
         ))}
       </Marquee>
@@ -54,6 +55,7 @@ export function TechStack() {
             name={tech.name}
             icon={tech.icon}
             description={tech.description}
+            still
           />
         ))}
       </Marquee>
