@@ -7,7 +7,7 @@ import { useHydrated } from '@/hooks/useHydrated'
 /**
  * A project's screenshots with left/right, ported from n8builds-web's Lab
  * rows (components/sections/FeaturedProjectIslands.tsx, ProjectGallery),
- * with Tailwind 3 class names and an accent outline.
+ * with an accent outline.
  */
 
 export interface GalleryImage {
@@ -33,7 +33,7 @@ export default function ProjectGallery({
   imageClassName,
   className = 'w-full shrink-0 md:w-1/2',
   sizes = '(max-width: 768px) 100vw, 50vw',
-  frameClassName = 'border-white/[0.08]',
+  frameClassName = 'border-white/8',
   dotClassName = 'bg-cyan-300/70',
   onOpen,
 }: {
@@ -106,7 +106,7 @@ export default function ProjectGallery({
       className={`touch-pan-y ${className}`}
     >
       <div
-        className={`group relative aspect-[16/10] overflow-hidden rounded-2xl border bg-[#07101d] transition-[border-color,box-shadow] duration-300 ${frameClassName} ${!many && onOpen ? 'cursor-pointer' : ''}`}
+        className={`group relative aspect-16/10 overflow-hidden rounded-2xl border bg-[#07101d] transition-[border-color,box-shadow] duration-300 ${frameClassName} ${!many && onOpen ? 'cursor-pointer' : ''}`}
         onClick={!many ? onOpen : undefined}
       >
         {images.map((image, i) =>
@@ -123,7 +123,7 @@ export default function ProjectGallery({
           ) : null
         )}
         {/* Subtle overlay */}
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-darkBlue/40 to-transparent" />
+        <div className="pointer-events-none absolute inset-0 bg-linear-to-t from-darkBlue/40 to-transparent" />
 
         {many && (
           <>
@@ -142,11 +142,11 @@ export default function ProjectGallery({
                   go(side === 'prev' ? -1 : 1)
                 }}
                 aria-label={`${side === 'prev' ? 'Previous' : 'Next'} ${title} screenshot`}
-                className={`group/side absolute inset-y-0 ${side === 'prev' ? 'left-0 justify-start' : 'right-0 justify-end'} flex w-1/2 cursor-pointer items-center px-3 focus-visible:outline-none disabled:cursor-default`}
+                className={`group/side absolute inset-y-0 ${side === 'prev' ? 'left-0 justify-start' : 'right-0 justify-end'} flex w-1/2 cursor-pointer items-center px-3 focus-visible:outline-hidden disabled:cursor-default`}
               >
                 <span
                   aria-hidden="true"
-                  className="flex h-9 w-9 items-center justify-center rounded-full border border-white/[0.15] bg-[#07101d]/75 text-slate-100 opacity-0 shadow-lg shadow-black/40 backdrop-blur-sm transition-opacity duration-150 group-hover/side:opacity-100 group-focus-visible/side:opacity-100 group-focus-visible/side:ring-2 group-focus-visible/side:ring-cyan-300 motion-reduce:transition-none"
+                  className="flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-[#07101d]/75 text-slate-100 opacity-0 shadow-lg shadow-black/40 backdrop-blur-xs transition-opacity duration-150 group-hover/side:opacity-100 group-focus-visible/side:opacity-100 group-focus-visible/side:ring-2 group-focus-visible/side:ring-cyan-300 motion-reduce:transition-none"
                 >
                   {side === 'prev' ? (
                     <FiChevronLeft className="h-5 w-5" />
@@ -176,13 +176,13 @@ export default function ProjectGallery({
                 }}
                 aria-label={`Show ${title} screenshot ${i + 1} of ${count}`}
                 aria-current={i === active ? 'true' : undefined}
-                className="group/dot flex h-6 cursor-pointer items-center px-1 focus-visible:outline-none disabled:cursor-default"
+                className="group/dot flex h-6 cursor-pointer items-center px-1 focus-visible:outline-hidden disabled:cursor-default"
               >
                 <span
                   data-dot
                   data-active={i === active ? '' : undefined}
                   className={`h-1.5 rounded-full transition-[width,background-color] duration-200 group-focus-visible/dot:ring-2 group-focus-visible/dot:ring-cyan-300 motion-reduce:transition-none ${
-                    i === active ? `w-5 ${dotClassName}` : 'w-1.5 bg-white/[0.25] group-hover/dot:bg-white/50'
+                    i === active ? `w-5 ${dotClassName}` : 'w-1.5 bg-white/25 group-hover/dot:bg-white/50'
                   }`}
                 />
               </button>

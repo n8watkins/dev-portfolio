@@ -27,7 +27,7 @@ const Experience = () => {
         className="relative mt-4 px-2 md:px-4"
       >
         {/* Vertical timeline line */}
-        <div className="absolute left-[9px] md:left-[11px] top-2 bottom-4 w-px bg-gradient-to-b from-sky-500 via-sky-400/40 to-transparent" />
+        <div className="absolute left-[9px] md:left-[11px] top-2 bottom-4 w-px bg-linear-to-b from-sky-500 via-sky-400/40 to-transparent" />
 
         <div className="space-y-6">
           {workExperience.map((item, index) => {
@@ -57,7 +57,7 @@ const Experience = () => {
                       Kept tight, so it never reaches the cards next to it. */}
                   <div
                     aria-hidden="true"
-                    className={`pointer-events-none absolute -inset-y-1 -right-1 left-9 rounded-2xl opacity-0 blur-lg transition-opacity duration-500 group-hover/exp:opacity-100 md:left-11 ${item.hoverGlow ?? 'bg-sky-400/[0.16]'}`}
+                    className={`pointer-events-none absolute -inset-y-1 -right-1 left-9 rounded-2xl opacity-0 blur-lg transition-opacity duration-500 group-hover/exp:opacity-100 md:left-11 ${item.hoverGlow ?? 'bg-sky-400/16'}`}
                   />
                   <div
                     className={`group relative overflow-hidden rounded-xl p-5 md:p-6 bg-slate-900 border border-white/5 shadow-[0_20px_25px_-5px_rgba(0,0,0,0.3)] hover:border-sky-500/30 transition-all duration-300`}
@@ -66,7 +66,7 @@ const Experience = () => {
                         the picture never hard-cuts against the copy */}
                     {item.hoverImage && (
                       <div
-                        className="absolute inset-y-0 right-0 w-[30%] overflow-hidden [mask-image:linear-gradient(to_left,black_45%,transparent)] opacity-0 group-hover:opacity-80 transition-opacity duration-500 pointer-events-none hidden md:block"
+                        className="absolute inset-y-0 right-0 w-[30%] overflow-hidden mask-[linear-gradient(to_left,black_45%,transparent)] opacity-0 group-hover:opacity-80 transition-opacity duration-500 pointer-events-none hidden md:block"
                         aria-hidden="true"
                       >
                         <Image
@@ -74,7 +74,7 @@ const Experience = () => {
                           alt=""
                           fill
                           sizes="30vw"
-                          className={`object-cover transition-transform duration-700 ${item.hoverFrame ?? 'object-right-top origin-top-right scale-[1.18] group-hover:scale-110'}`}
+                          className={`object-cover transition-transform duration-700 ${item.hoverFrame ?? 'object-top-right origin-top-right scale-[1.18] group-hover:scale-110'}`}
                         />
                         {/* Dimmed, so a bright page (Appturnity's) doesn't wash out the card */}
                         <div className="absolute inset-0 bg-darkBlue/45" />
@@ -92,7 +92,7 @@ const Experience = () => {
                       </div>
 
                       {/* Role */}
-                      <h3 className="text-xl md:text-2xl font-bold text-slate-100 leading-snug">
+                      <h3 className="text-xl md:text-2xl/8 font-bold text-slate-100 leading-snug">
                         {item.role}
                       </h3>
 
@@ -117,9 +117,9 @@ const Experience = () => {
                         {item.bullets.map((bullet, i) => (
                           <li
                             key={i}
-                            className="flex items-start gap-3 text-sm md:text-base text-slate-400 leading-relaxed"
+                            className="flex items-start gap-3 text-sm md:text-base/6 text-slate-400 leading-relaxed"
                           >
-                            <span className="mt-[9px] flex-shrink-0 w-[5px] h-[5px] rounded-full bg-sky-400/60" />
+                            <span className="mt-[9px] shrink-0 w-[5px] h-[5px] rounded-full bg-sky-400/60" />
                             <span>{bullet}</span>
                           </li>
                         ))}

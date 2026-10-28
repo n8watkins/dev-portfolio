@@ -37,7 +37,7 @@ export const accents: Record<
     shadow: 'group-hover:shadow-[0_10px_30px_-16px_rgba(192,132,252,0.4)]',
     dot: 'bg-fuchsia-400',
     primary:
-      'bg-gradient-to-r from-violet-600 to-fuchsia-700 text-white hover:from-violet-700 hover:to-fuchsia-800',
+      'bg-linear-to-r from-violet-600 to-fuchsia-700 text-white hover:from-violet-700 hover:to-fuchsia-800',
     subtitle: 'text-fuchsia-300',
   },
   geminigpt: {

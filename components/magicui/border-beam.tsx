@@ -44,10 +44,10 @@ export const BorderBeam = ({
         '[border:calc(var(--border-width))_solid_transparent]',
 
         // Adjusted to include offset in rem
-        '[inset:calc(var(--offset)*-1)]',
+        'inset-[calc(var(--offset)*-1)]',
 
         // mask styles
-        '![mask-clip:padding-box,border-box] ![mask-composite:intersect] [mask:linear-gradient(transparent,transparent),linear-gradient(white,white)]',
+        '[mask-clip:padding-box,border-box]! mask-intersect! [mask:linear-gradient(transparent,transparent),linear-gradient(white,white)]',
 
         // pseudo styles
         'after:absolute after:aspect-square after:w-[calc(var(--size))] after:animate-border-beam after:[animation-delay:var(--delay)]',

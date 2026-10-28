@@ -1,6 +1,256 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
+@import 'tailwindcss-animated';
+
+@plugin 'tailwindcss-animate';
+
+@custom-variant dark (&:is(.dark *));
+
+@utility container {
+  margin-inline: auto;
+  padding-inline: 2rem;
+  @media (width >= --theme(--breakpoint-1sm)) {
+    max-width: none;
+  }
+  @media (width >= 1400px) {
+    max-width: 1400px;
+  }
+}
+
+@theme {
+  --scale-103: 1.03;
+
+  --breakpoint-1sm: 320px;
+  --breakpoint-1md: 375px;
+  --breakpoint-1lg: 425px;
+
+  --color-darkBlue: #0f172a;
+
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+
+  --animate-accordion-down: accordion-down 0.2s ease-out;
+  --animate-accordion-up: accordion-up 0.2s ease-out;
+  --animate-spotlight: spotlight 2s ease 0.75s 1 forwards;
+  --animate-shimmer: shimmer 2s linear infinite;
+  --animate-first: moveVertical 30s ease infinite;
+  --animate-second: moveInCircle 20s reverse infinite;
+  --animate-third: moveInCircle 40s linear infinite;
+  --animate-fourth: moveHorizontal 40s ease infinite;
+  --animate-fifth: moveInCircle 20s ease infinite;
+  --animate-aurora: aurora 35s linear infinite;
+
+  @keyframes border-beam {
+    100% {
+      offset-distance: 100%;
+    }
+  }
+  @keyframes marquee {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(calc(-100% - var(--gap)));
+    }
+  }
+  @keyframes marquee-vertical {
+    from {
+      transform: translateY(0);
+    }
+    to {
+      transform: translateY(calc(-100% - var(--gap)));
+    }
+  }
+  @keyframes accordion-down {
+    from {
+      height: 0;
+    }
+    to {
+      height: var(--radix-accordion-content-height);
+    }
+  }
+  @keyframes accordion-up {
+    from {
+      height: var(--radix-accordion-content-height);
+    }
+    to {
+      height: 0;
+    }
+  }
+  @keyframes spotlight {
+    0% {
+      opacity: 0;
+      transform: translate(-72%, -62%) scale(0.5);
+    }
+    100% {
+      opacity: 1;
+      transform: translate(-50%, -40%) scale(1);
+    }
+  }
+  @keyframes aurora {
+    from {
+      background-position:
+        50% 50%,
+        50% 50%;
+    }
+    to {
+      background-position:
+        350% 50%,
+        350% 50%;
+    }
+  }
+  @keyframes shimmer {
+    from {
+      background-position: 0 0;
+    }
+    to {
+      background-position: -200% 0;
+    }
+  }
+  @keyframes moveHorizontal {
+    0% {
+      transform: translateX(-50%) translateY(-10%);
+    }
+    50% {
+      transform: translateX(50%) translateY(10%);
+    }
+    100% {
+      transform: translateX(-50%) translateY(-10%);
+    }
+  }
+  @keyframes moveInCircle {
+    0% {
+      transform: rotate(0deg);
+    }
+    50% {
+      transform: rotate(180deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+  @keyframes moveVertical {
+    0% {
+      transform: translateY(-50%);
+    }
+    50% {
+      transform: translateY(50%);
+    }
+    100% {
+      transform: translateY(-50%);
+    }
+  }
+  @keyframes scroll {
+    to {
+      transform: translate(calc(-50% - 0.5rem));
+    }
+  }
+  @keyframes shine {
+    0% {
+      background-position: 0% 0%;
+    }
+    50% {
+      background-position: 100% 100%;
+    }
+    to {
+      background-position: 0% 0%;
+    }
+  }
+}
+
+/* Inline, so each utility carries its own `var(--duration)` and the variable
+   resolves on the animated element. A plain @theme variable is set on :root,
+   where --duration doesn't exist, which makes the animation value invalid (as
+   n8builds-web's globals.css explains). */
+@theme inline {
+  --animate-scroll: scroll var(--animation-duration, 40s) var(--animation-direction, forwards) linear infinite;
+  --animate-marquee: marquee var(--duration) linear infinite;
+  --animate-marquee-vertical: marquee-vertical var(--duration) linear infinite;
+  --animate-border-beam: border-beam calc(var(--duration) * 1s) infinite linear;
+  --animate-shine: shine var(--duration) infinite linear;
+}
+
+/*
+  The default border color has changed to `currentcolor` in Tailwind CSS v4,
+  so we've added these compatibility styles to make sure everything still
+  looks the same as it did with Tailwind CSS v3.
+
+  If we ever want to remove these styles, we need to add an explicit border
+  color utility to any element that depends on these defaults.
+*/
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentcolor);
+  }
+
+  /* Tailwind 4 gives buttons the default cursor; keep v3's pointer (as n8builds-web). */
+  button:not(:disabled),
+  [role='button']:not(:disabled) {
+    cursor: pointer;
+  }
+}
+
+@utility custom-scrollbar {
+  &::-webkit-scrollbar-track {
+    background-color: var(--scrollbar-track);
+  }
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-thumb);
+    border-radius: 10px;
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background: var(--color-blue-500);
+  }
+}
+
+@utility heading {
+  @apply font-bold text-4xl md:text-5xl xl:text-3xl text-center;
+}
+
+@utility black-gradient {
+  background: linear-gradient(90deg, #161a31 0%, #06091f 100%);
+}
+
+@utility breakpoint-display {
+  @apply fixed top-10 right-10 m-2 p-2 z-6000 text-lg rounded shadow-md bg-blue-800! text-white dark:bg-white dark:text-blue-800;
+}
 
 @layer base {
   html {
@@ -26,15 +276,15 @@
     font-size: 16px;
   }
 
-  @media (min-width: theme('screens.xl')) {
+  @media (min-width: --theme(--breakpoint-xl)) {
     #sentry-feedback button::after {
       content: '🐛 Report a bug';
     }
   }
 
   :root {
-    --scrollbar-track: theme('colors.blue.400');
-    --scrollbar-thumb: theme('colors.blue.600');
+    --scrollbar-track: var(--color-blue-400);
+    --scrollbar-thumb: var(--color-blue-600);
     --background: 0 0% 100%;
     --foreground: 240 10% 3.9%;
 
@@ -67,8 +317,8 @@
   }
 
   .dark {
-    --scrollbar-thumb: theme('colors.blue.600');
-    --scrollbar-track: theme('colors.darkBlue.DEFAULT');
+    --scrollbar-thumb: var(--color-blue-600);
+    --scrollbar-track: var(--color-darkBlue);
     --background: 240 10% 3.9%;
     --foreground: 0 0% 98%;
 
@@ -101,96 +351,66 @@
 
 @layer base {
   * {
-    @apply border-border !scroll-smooth;
+    @apply border-border scroll-smooth!;
   }
   body {
     @apply bg-background text-foreground;
   }
   button {
-    @apply active:outline-none;
+    @apply active:outline-hidden;
   }
-}
-
-@layer components {
-  .custom-scrollbar::-webkit-scrollbar-track {
-    background-color: var(--scrollbar-track);
-  }
-
-  .custom-scrollbar::-webkit-scrollbar {
-    width: 6px;
-  }
-
-  .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: var(--scrollbar-thumb);
-    border-radius: 10px;
-  }
-
-  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: theme('colors.blue.500');
-  }
-}
-
-.hover-underline-animation {
-  position: relative;
-  text-decoration: none !important; /* Prevent default underline */
-}
-
-.hover-underline-animation::after {
-  content: '';
-  position: absolute;
-  width: 100%;
-  left: 0;
-  bottom: 0;
-  background-color: currentColor;
-  transform: scaleX(0);
-  transform-origin: left;
-  transition: transform 0.3s ease-out;
-}
-
-/* Default thickness if no Tailwind class is specified */
-.hover-underline-animation::after {
-  height: 1px;
-}
-
-.group:hover .hover-underline-animation-trigger::after {
-  transform: scaleX(1);
-}
-
-/* Respect Tailwind's decoration thickness classes */
-.decoration-1.hover-underline-animation::after {
-  height: 1px;
-}
-.decoration-2.hover-underline-animation::after {
-  height: 2px;
-}
-.decoration-3.hover-underline-animation::after {
-  height: 3px;
-}
-.decoration-4.hover-underline-animation::after {
-  height: 4px;
-}
-.decoration-6.hover-underline-animation::after {
-  height: 6px;
-}
-.decoration-8.hover-underline-animation::after {
-  height: 8px;
-}
-
-.hover-underline-animation:hover::after,
-*:hover > .hover-underline-animation::after {
-  transform: scaleX(1);
 }
 
 @layer utilities {
-  .heading {
-    @apply font-bold text-4xl md:text-5xl xl:text-3xl text-center;
+  .hover-underline-animation {
+    position: relative;
+    text-decoration: none !important; /* Prevent default underline */
   }
 
-  .black-gradient {
-    background: linear-gradient(90deg, #161a31 0%, #06091f 100%);
+  .hover-underline-animation::after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    left: 0;
+    bottom: 0;
+    background-color: currentColor;
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.3s ease-out;
   }
-  .breakpoint-display {
-    @apply fixed top-10 right-10 m-2 p-2 z-[6000] text-lg rounded shadow-md !bg-blue-800 text-white dark:bg-white dark:text-blue-800;
+
+  /* Default thickness if no Tailwind class is specified */
+  .hover-underline-animation::after {
+    height: 1px;
+  }
+
+  .group:hover .hover-underline-animation-trigger::after {
+    transform: scaleX(1);
+  }
+
+  /* Respect Tailwind's decoration thickness classes */
+  .decoration-1.hover-underline-animation::after {
+    height: 1px;
+  }
+  .decoration-2.hover-underline-animation::after {
+    height: 2px;
+  }
+  .decoration-3.hover-underline-animation::after {
+    height: 3px;
+  }
+  .decoration-4.hover-underline-animation::after {
+    height: 4px;
+  }
+  .decoration-6.hover-underline-animation::after {
+    height: 6px;
+  }
+  .decoration-8.hover-underline-animation::after {
+    height: 8px;
+  }
+
+  .hover-underline-animation:hover::after,
+  *:hover > .hover-underline-animation::after {
+    transform: scaleX(1);
   }
 }
 .flip-horizontal {
@@ -198,7 +418,7 @@
 }
 
 .breakpoint-display {
-  background-color: theme('colors.blue.800') !important;
+  background-color: var(--color-blue-800) !important;
 }
 
 /* Hide the Google reCAPTCHA badge */
@@ -384,7 +604,7 @@ button:focus-visible,
 input:focus-visible,
 textarea:focus-visible,
 select:focus-visible {
-  outline: 2px solid theme('colors.sky.400');
+  outline: 2px solid var(--color-sky-400);
   outline-offset: 2px;
   border-radius: 0.25rem;
 }
@@ -413,20 +633,8 @@ select:focus-visible {
   }
 }
 
-/* Tailwind 4 syntax used by the files kept byte-identical with n8builds-web
-   (components/magicui/marquee.tsx, components/ui/StackTile.tsx,
-   components/Projects/TechStackCycle.tsx), which this site's Tailwind 3
-   doesn't generate. Keep in sync with those files (npm run check:sync). */
-.gap-\(--gap\) {
-  gap: var(--gap);
-}
-.\*\:size-full\! > * {
-  width: 100% !important;
-  height: 100% !important;
-}
-.min-h-26 {
-  min-height: 6.5rem;
-}
+/* The step-in for the files shared with n8builds-web (StackTile, TechStackCycle),
+   as its @utility slide-in. */
 @keyframes slide-in {
   from {
     opacity: 0;

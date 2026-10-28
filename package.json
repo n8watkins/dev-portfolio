@@ -10,7 +10,7 @@
     "dev": "next dev --port 4829",
     "build": "next build --webpack",
     "start": "next start",
-    "lint": "eslint .",
+    "lint": "eslint . --max-warnings 0",
     "lint:fix": "eslint . --fix",
     "type-check": "tsc --noEmit",
     "clean": "rm -rf .next && rm -rf out",
@@ -36,7 +36,6 @@
     "gsap": "^3.12.5",
     "lottie-react": "^2.4.1",
     "lucide-react": "^1.18.0",
-    "mini-svg-data-uri": "^1.4.4",
     "motion": "^14.7.1",
     "next": "^16.4.3",
     "next-themes": "^0.4.6",
@@ -53,6 +52,7 @@
     "@axe-core/playwright": "^4.10.2",
     "@next/bundle-analyzer": "^16.4.3",
     "@playwright/test": "^1.64.1",
+    "@tailwindcss/postcss": "^4.3.3",
     "@types/node": "^24.19.2",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
@@ -66,7 +66,7 @@
     "postcss": "^8",
     "release-kit": "github:n8watkins/release-kit#v2.0.0",
     "svgo": "^4.1.0",
-    "tailwindcss": "^3.4.1",
+    "tailwindcss": "^4.3.3",
     "typescript": "^5"
   },
   "lint-staged": {

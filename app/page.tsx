@@ -57,7 +57,7 @@ export default function Home() {
     <main
       id="main-content"
       tabIndex={-1}
-      className="relative w-full bg-blue-400 dark:bg-darkBlue flex overflow-hidden focus:outline-none"
+      className="relative w-full bg-blue-400 dark:bg-darkBlue flex overflow-hidden focus:outline-hidden"
     >
       <div className="w-full m-auto">
         <SectionErrorBoundary sectionName="Hero Section">

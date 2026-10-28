@@ -33,7 +33,7 @@ const Grid = () => {
           transition={{ duration: 0.5 }}
           className="mt-4 flex flex-col-reverse gap-8 md:flex-row md:items-center md:gap-12"
         >
-          <div className="max-w-3xl space-y-4 text-pretty text-base leading-relaxed text-slate-300 md:flex-1 md:text-lg">
+          <div className="max-w-3xl space-y-4 text-pretty text-base leading-relaxed text-slate-300 md:flex-1 md:text-lg/7">
             <p>
               I&apos;m Nathan, a full-stack developer in Los Angeles, and I&apos;m all in on AI.
               Building things people actually find useful has always mattered most to me, and
@@ -55,8 +55,8 @@ const Grid = () => {
             </p>
           </div>
           <figure className="relative mx-auto w-48 shrink-0 sm:w-56 md:mx-0 md:w-64">
-            <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-cyan-500/25 to-blue-600/25 blur-xl scale-105" />
-            <div className="relative aspect-[4/5] overflow-hidden rounded-3xl ring-1 ring-white/10 shadow-xl shadow-black/40">
+            <div className="absolute inset-0 rounded-3xl bg-linear-to-br from-cyan-500/25 to-blue-600/25 blur-xl scale-105" />
+            <div className="relative aspect-4/5 overflow-hidden rounded-3xl ring-1 ring-white/10 shadow-xl shadow-black/40">
               <Image
                 src="/hero/portrait-watercolor.jpg"
                 alt="Watercolor portrait of Nathan"

@@ -14,7 +14,7 @@ The build-in-public workshop (every build, the build log, notes and streams) is 
 
 ## Stack
 
-Next.js 16 (App Router, webpack build), React 19, TypeScript, Tailwind CSS 3.4, Framer Motion 12, Sentry, Google Analytics 4, Vercel Speed Insights.
+Next.js 16 (App Router, webpack build), React 19, TypeScript, Tailwind CSS 4, Motion 14, Sentry, Google Analytics 4, Vercel Speed Insights.
 Dark only.
 Inter is bundled (`app/fonts/`), so a build never fetches fonts from Google.
 

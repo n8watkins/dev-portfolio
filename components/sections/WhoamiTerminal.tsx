@@ -42,7 +42,7 @@ export default function WhoamiTerminal({
 }) {
   return (
     <div
-      className={`overflow-hidden rounded-2xl border border-white/10 bg-black/30 backdrop-blur-sm text-left ${className}`}
+      className={`overflow-hidden rounded-2xl border border-white/10 bg-black/30 backdrop-blur-xs text-left ${className}`}
       style={style}
     >
       <div className="flex items-center gap-2 border-b border-white/5 px-4 py-2.5">

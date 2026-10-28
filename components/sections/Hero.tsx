@@ -85,7 +85,7 @@ const Hero = () => {
                   rel="noopener noreferrer"
                   aria-label={label}
                   style={delay(300 + i * 60)}
-                  className="hero-in w-12 h-12 rounded-full hover:bg-slate-700/70 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 transition-colors duration-200"
+                  className="hero-in w-12 h-12 rounded-full hover:bg-slate-700/70 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-sky-400 transition-colors duration-200"
                 >
                   <Icon className={`w-full h-full ${pad}`} aria-hidden="true" />
                 </a>
@@ -97,7 +97,7 @@ const Hero = () => {
                 rel="noopener noreferrer"
                 onClick={() => trackResumeEvent('view')}
                 style={delay(480)}
-                className="hero-in ml-1 inline-flex h-10 items-center gap-2 rounded-xl border border-sky-400/40 bg-sky-500/10 px-3.5 text-sm font-semibold text-sky-100 transition-colors duration-200 hover:border-sky-300/70 hover:bg-sky-500/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+                className="hero-in ml-1 inline-flex h-10 items-center gap-2 rounded-xl border border-sky-400/40 bg-sky-500/10 px-3.5 text-sm font-semibold text-sky-100 transition-colors duration-200 hover:border-sky-300/70 hover:bg-sky-500/20 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-sky-400"
               >
                 <FiFileText className="h-4 w-4" aria-hidden="true" />
                 Resume<span className="sr-only"> (opens in a new tab)</span>
@@ -112,7 +112,7 @@ const Hero = () => {
           </div>
           <div
             data-hero-portrait=""
-            className="hero-slide-r w-[15rem] h-[15rem] 1sm:w-[17rem] 1sm:h-[17rem] 1lg:w-[19rem] 1lg:h-[19rem] sm:w-[20rem] sm:h-[20rem] 2xl:w-[26rem] 2xl:h-[26rem] relative shrink-0"
+            className="hero-slide-r w-60 h-60 1sm:w-68 1sm:h-68 1lg:w-76 1lg:h-76 sm:w-[20rem] sm:h-80 2xl:w-104 2xl:h-104 relative shrink-0"
           >
             <div className="aspect-square w-full h-full relative">
               <div className="absolute inset-0 dark:bg-black/20 rounded-full z-10"></div>

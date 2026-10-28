@@ -62,7 +62,7 @@ const Screen = ({
   const scrolls = !still && shown < 0.98
   return (
     <div
-      className="relative overflow-hidden [transform:translateZ(0)]"
+      className="relative overflow-hidden transform-[translateZ(0)]"
       style={{ aspectRatio: aspect }}
     >
       <Image
@@ -91,7 +91,7 @@ const Showcase = ({ desktop, phone, still }: { desktop: Shot; phone: Shot; still
     <div className="w-[78%] overflow-hidden rounded-xl border border-white/10 bg-[#0a1322] shadow-2xl shadow-black/40">
       <div
         aria-hidden
-        className="flex items-center gap-1.5 border-b border-white/[0.08] bg-white/[0.04] px-3 py-1.5"
+        className="flex items-center gap-1.5 border-b border-white/8 bg-white/4 px-3 py-1.5"
       >
         <span className="h-2 w-2 rounded-full bg-white/20" />
         <span className="h-2 w-2 rounded-full bg-white/20" />
@@ -104,7 +104,7 @@ const Showcase = ({ desktop, phone, still }: { desktop: Shot; phone: Shot; still
         still={still}
       />
     </div>
-    <div className="relative -ml-[4%] w-[26%] shrink-0 overflow-hidden rounded-[1rem] border-[4px] border-[#0b1220] bg-[#0b1220] shadow-2xl shadow-black/60 ring-1 ring-white/[0.12]">
+    <div className="relative ml-[-4%] w-[26%] shrink-0 overflow-hidden rounded-2xl border-4 border-[#0b1220] bg-[#0b1220] shadow-2xl shadow-black/60 ring-1 ring-white/12">
       <div className="overflow-hidden rounded-[0.7rem]">
         <Screen
           shot={phone}
@@ -209,7 +209,7 @@ const DoorCard = ({ door, index }: { door: Door; index: number }) => {
       variants={staggerItemVariants}
       aria-labelledby={`door-${door.id}`}
       // The portfolio's card gradient and hover lift, in n8builds.dev's layout.
-      className={`group relative grid items-center gap-7 overflow-hidden rounded-3xl border border-white/[0.08] bg-gradient-to-br from-[#0c4a6e]/40 via-[#0f172a] to-[#0f172a] p-5 shadow-xl shadow-black/30 transition-all duration-300 hover:shadow-2xl sm:p-7 lg:grid-cols-[1.05fr_1fr] lg:gap-10 lg:px-10 lg:py-8 ${door.accent.ring}`}
+      className={`group relative grid items-center gap-7 overflow-hidden rounded-3xl border border-white/8 bg-linear-to-br from-[#0c4a6e]/40 via-darkBlue to-darkBlue p-5 shadow-xl shadow-black/30 transition-all duration-300 hover:shadow-2xl sm:p-7 lg:grid-cols-[1.05fr_1fr] lg:gap-10 lg:px-10 lg:py-8 ${door.accent.ring}`}
     >
       <div
         aria-hidden
@@ -269,7 +269,7 @@ const DoorCard = ({ door, index }: { door: Door; index: number }) => {
             href={door.cta.href}
             target="_blank"
             rel="noopener noreferrer"
-            className={`inline-flex items-center gap-2 rounded-xl bg-gradient-to-r ${door.accent.button} px-5 py-2.5 text-sm font-bold text-white transition-all duration-200 hover:scale-[1.02] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-400`}
+            className={`inline-flex items-center gap-2 rounded-xl bg-linear-to-r ${door.accent.button} px-5 py-2.5 text-sm font-bold text-white transition-all duration-200 hover:scale-[1.02] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-400`}
           >
             {door.cta.label}
             <FiArrowUpRight aria-hidden className="h-4 w-4" />
