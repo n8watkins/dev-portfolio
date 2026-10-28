@@ -15,8 +15,9 @@ test('the page sends its CSP and nothing on it breaks the policy', async ({ page
   })
   const response = await page.goto('/')
   expect(response?.headers()['content-security-policy']).toContain("object-src 'none'")
-  for (let y = 0; y < 12; y++) {
-    await page.mouse.wheel(0, 900)
+  // Scrolled from script: mobile WebKit has no mouse wheel.
+  for (let y = 1; y <= 12; y++) {
+    await page.evaluate((top) => window.scrollTo({ top, behavior: 'instant' }), y * 900)
     await page.waitForTimeout(250)
   }
   await page.waitForLoadState('networkidle').catch(() => {})
