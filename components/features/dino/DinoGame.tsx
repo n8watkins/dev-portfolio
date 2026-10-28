@@ -72,6 +72,8 @@ interface Row {
   tiles: [number, number][]
   /** The tiles' top edge, relative to the panel: the level's floor. */
   top: number
+  /** The first track's top edge, relative to the panel (to notice the row moving up or down). */
+  trackTop: number
   /** Last frame's position of the first track (to measure the row's speed). */
   lastLeft: number | null
   /** How far the row moved this frame, px (measured, so exact at any frame rate). */
@@ -118,6 +120,8 @@ const PACE_PER_CATCH = 0.06
 const MAX_PACE = 2.2
 const RESULT_FOR = 5 // s the final score shows
 const URGENT = 5 // s left when the countdown turns red
+// The most a round can score in the stats (the server checks it too).
+const MAX_STATS_SCORE = 60
 const BEST_KEY = 'n8-dino-best'
 const ROAR_FOR = 1.1 // s the bubble stays up
 const FLIP_T = 0.7 // s per backflip
@@ -323,7 +327,8 @@ export default function DinoGame() {
           return [r.left - trackLeft, r.right - trackLeft]
         })
         const top = figures[0].getBoundingClientRect().top - box.top
-        return [{ el, tracks, tiles, top, lastLeft: null, delta: 0, velocity: 0, paused: false }]
+        const trackTop = first.getBoundingClientRect().top - box.top
+        return [{ el, tracks, tiles, top, trackTop, lastLeft: null, delta: 0, velocity: 0, paused: false }]
       })
       levels = rows.map((row) => ({ y: row.top, row }))
       // One row: a ground line under it is the second level.
@@ -339,9 +344,16 @@ export default function DinoGame() {
     const remeasure = () => {
       measure()
       const here = levels[level]
+      // Mid-leap, it lands on the row it is leaping to, wherever that is now.
+      if (mode === 'climb' && levels[climb.target]) climb.to = levels[climb.target].y
       if (!here) return
       if (mode === 'walk') y = here.y
       else if (mode === 'flip') flip.floor = here.y
+      // A hop, a drop or a miss starts from (and comes down to) its row.
+      else if (mode === 'hop' || mode === 'drop' || mode === 'miss') {
+        y += here.y - hop.floor
+        hop.floor = here.y
+      }
     }
 
     // Tile intervals of a row right now, in panel coordinates.
@@ -436,7 +448,8 @@ export default function DinoGame() {
         show(score, '')
       }
       // During a round the best counts this round's catches as they pass it.
-      show(bestEl, playing ? `Best ${Math.max(best, catches)}` : '')
+      const mine = Math.max(best, catches)
+      show(bestEl, playing ? `Best ${mine}${allTime > mine ? ` · Record ${allTime}` : ''}` : '')
       bestEl.dataset.new = playing && catches > 0 && (beatBest || catches > best) ? 'true' : 'false'
     }
     // What it says now and then (DINO_LINES), each once per visit.
@@ -448,6 +461,23 @@ export default function DinoGame() {
     }
     const timing = (window as { __n8DinoTiming?: DinoTiming }).__n8DinoTiming
     const roundFor = timing?.round ?? ROUND
+    // Game stats (lib/game/stats.ts in n8builds-web): a round's start and its
+    // score go to the endpoint the panel names in data-dino-stats, without
+    // cookies; the answer brings the all-time record. No endpoint, no stats.
+    const statsUrl = panel.dataset.dinoStats
+    let statsRound: string | null = null
+    let allTime = 0
+    const sendStats = (body: object) =>
+      statsUrl
+        ? fetch(statsUrl, {
+            method: 'POST',
+            body: JSON.stringify(body),
+            // Plain text: a cross-site send without a preflight.
+            headers: { 'Content-Type': 'text/plain' },
+            credentials: 'omit',
+            keepalive: true,
+          }).catch(() => null)
+        : Promise.resolve(null)
     const lineGap = timing?.lineGap ?? LINE_GAP
     let lineWait = timing?.firstLineAfter ?? FIRST_LINE_AFTER
     let line = -1 // the line showing, if any
@@ -615,6 +645,10 @@ export default function DinoGame() {
           resultLeft = RESULT_FOR
           pace = 1
           beatBest = catches > best
+          if (statsRound) {
+            void sendStats({ type: 'end', round: statsRound, score: Math.min(catches, MAX_STATS_SCORE) })
+            statsRound = null
+          }
           if (catches > best) {
             best = catches
             try {
@@ -639,7 +673,11 @@ export default function DinoGame() {
       const onRow = levels[level]?.row
       let relaidOut = false
       for (const row of rows) {
-        const left = row.tracks[0].getBoundingClientRect().left
+        const trackBox = row.tracks[0].getBoundingClientRect()
+        const left = trackBox.left
+        // Moved up or down (a card resized around rows anchored to its
+        // bottom): laid out again, so the dino moves with it this frame.
+        if (Math.abs(trackBox.top - panelBox.top - row.trackTop) > 1) relaidOut = true
         row.delta = 0
         if (row.lastLeft !== null) {
           // The loop jumps the track back by one copy each time round: take
@@ -938,6 +976,13 @@ export default function DinoGame() {
         catches += 1
       } else if (resultLeft < RESULT_FOR - 1.5) {
         roundLeft = roundFor
+        statsRound = null
+        void sendStats({ type: 'start' }).then(async (response) => {
+          if (!response?.ok) return
+          const answer = (await response.json().catch(() => null)) as { round?: string; record?: number } | null
+          if (answer?.round && roundLeft > 0) statsRound = answer.round
+          if (typeof answer?.record === 'number') allTime = answer.record
+        })
         resultLeft = 0
         beatBest = false
         catches = 1
