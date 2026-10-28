@@ -14,11 +14,8 @@ Last updated: 2026-10-27.
 
 ### Next
 
-1. **Deploy first:** `vercel deploy --prod --yes` from a clean `main` (or push any commit to `main`) once the account's 24-hour window has room, then check the dino pills and the "We help!" card are live.
-2. Change OpenPing's line in `components/Projects/BuildsTeaser.tsx` from "Self-hosted uptime monitoring" to "Uptime monitoring on your own Cloudflare".
-3. When GeminiGPT moves to Gemini 3.5 Flash Lite (GeminiGPT #3, waiting on the owner's key), change this site's "Gemini 3.1 Flash Lite" copy to match.
-4. Keep the dino files in sync with n8builds-web after any change there (`npm run check:sync`).
-5. Optional: drop `@lhci/cli` and run it with `npx` (its last 5 dev-only alerts).
+1. When GeminiGPT moves to Gemini 3.5 Flash Lite (GeminiGPT #3, waiting on the owner's key), change this site's "Gemini 3.1 Flash Lite" copy to match.
+2. Keep the dino files in sync with n8builds-web after any change there (`npm run check:sync`).
 
 ### Blocked on the owner
 
@@ -129,4 +126,4 @@ Under the projects, `components/Projects/BuildsTeaser.tsx` shows n8builds.dev's 
 - `components/Projects/BuildsTeaser.tsx`: the n8builds.dev teaser. `components/sections/HeroGrid.tsx`: the hero grid (from n8builds.dev).
 - `components/sections/Grid.tsx` (About and the bento), `AppturnityCard.tsx`, `Experience.tsx`, `Hero.tsx`.
 - `data/projects.tsx`: project copy.
-- `components/ErrorBoundary.tsx`, `SectionErrorBoundary.tsx` report to `app/api/health/error`.
+- `components/ErrorBoundary.tsx`, `SectionErrorBoundary.tsx` report to Sentry.
