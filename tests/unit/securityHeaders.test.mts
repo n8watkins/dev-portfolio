@@ -15,6 +15,8 @@ test('production policy: no eval, no frames, no plugins, and the dino stats orig
   assert.deepEqual(directive(policy, 'frame-ancestors'), ["'none'"])
   assert.ok(directive(policy, 'connect-src').includes('https://n8builds.dev'))
   assert.ok(directive(policy, 'script-src').includes('https://www.googletagmanager.com'))
+  // GA4's /g/collect hits on www.google.com (seen on n8builds.dev, Sentry N8BUILDS-3).
+  assert.ok(directive(policy, 'connect-src').includes('https://www.google.com'))
   assert.ok(!policy.includes('vercel.live'))
 })
 
