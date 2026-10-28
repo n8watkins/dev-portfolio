@@ -1,7 +1,10 @@
 'use client'
 import { cn } from '@/lib/utils'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useSyncExternalStore } from 'react'
 import { useTheme } from 'next-themes'
+
+// The user agent never changes, so there is nothing to subscribe to.
+const subscribeToNothing = () => () => {}
 
 export const BackgroundGradientAnimation = ({
   gradientBackgroundStart = 'rgb(190, 140, 220)', // Light purple
@@ -102,10 +105,11 @@ export const BackgroundGradientAnimation = ({
     tgY.current = event.clientY - rect.top
   }
 
-  const [isSafari, setIsSafari] = useState(false)
-  useEffect(() => {
-    setIsSafari(/^((?!chrome|android).)*safari/i.test(navigator.userAgent))
-  }, [])
+  const isSafari = useSyncExternalStore(
+    subscribeToNothing,
+    () => /^((?!chrome|android).)*safari/i.test(navigator.userAgent),
+    () => false
+  )
 
   return (
     <div

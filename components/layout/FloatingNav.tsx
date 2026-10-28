@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react'
+import React, { useState } from 'react'
 import { motion } from 'framer-motion'
 import { Link } from 'react-scroll'
 import CornerLinks from './CornerLinks'
@@ -19,19 +19,8 @@ export const FloatingNav = ({
   navItems: NavItem[]
   className?: string
 }) => {
-  const [activeIndex, setActiveIndex] = useState<number | null>(null)
-  const navRef = useRef<HTMLDivElement>(null)
-
-  const getItemPosition = (index: number) => {
-    if (navRef.current) {
-      const navItem = navRef.current.children[index] as HTMLElement
-      return {
-        left: navItem.offsetLeft,
-        width: navItem.offsetWidth,
-      }
-    }
-    return { left: 0, width: 0 }
-  }
+  // The hovered item's box, measured on hover so render never reads the DOM.
+  const [hovered, setHovered] = useState<{ left: number; width: number } | null>(null)
 
   return (
     <>
@@ -48,15 +37,17 @@ export const FloatingNav = ({
           className
         )}
       >
-        <div ref={navRef} className="flex items-center relative px-1 sm:px-2 lg:px-1">
+        <div className="flex items-center relative px-1 sm:px-2 lg:px-1">
           {navItems.map((item, idx) => (
             <div
               key={`nav-${item.name}-${idx}`}
               className={cn(
                 'relative dark:text-neutral-50 items-center flex space-x-0 font-semibold dark:font-normal text-black dark:hover:text-neutral-300 hover:text-slate-800 cursor-pointer px-2 sm:px-4 lg:px-6 py-0.5 sm:py-1 lg:py-2.5 z-10 select-none'
               )}
-              onMouseEnter={() => setActiveIndex(idx)}
-              onMouseLeave={() => setActiveIndex(null)}
+              onMouseEnter={(e) =>
+                setHovered({ left: e.currentTarget.offsetLeft, width: e.currentTarget.offsetWidth })
+              }
+              onMouseLeave={() => setHovered(null)}
             >
               <Link
                 to={item.link}
@@ -76,10 +67,10 @@ export const FloatingNav = ({
             className="absolute top-0 bottom-0 rounded-full bg-white/20 dark:bg-white/10 backdrop-blur-sm"
             initial={false}
             animate={
-              activeIndex !== null
+              hovered
                 ? {
-                    left: getItemPosition(activeIndex).left,
-                    width: getItemPosition(activeIndex).width,
+                    left: hovered.left,
+                    width: hovered.width,
                     opacity: 1,
                   }
                 : { opacity: 0 }
