@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useMemo, useSyncExternalStore } from 'react'
 import { gsap } from 'gsap'
+import { useReducedMotion } from 'motion/react'
 
 interface MapAnimationProps {
   imgClassName?: string
@@ -62,6 +63,8 @@ const MapAnimation: React.FC<MapAnimationProps> = ({ imgClassName, imgContainerC
   // null during server render and hydration, so the animation mounts on the client only
   const screenSize = useSyncExternalStore(subscribeToResize, getScreenSize, () => null)
   const paths = screenSize ? getPathsForSize(screenSize) : []
+  // Under reduced motion the arcs are drawn once and hold still.
+  const reducedMotion = useReducedMotion()
 
   useEffect(() => {
     if (!screenSize) return
@@ -69,6 +72,10 @@ const MapAnimation: React.FC<MapAnimationProps> = ({ imgClassName, imgContainerC
     // Clear existing animations
     timelinesRef.current.forEach((timeline) => timeline.kill())
     timelinesRef.current = []
+    if (reducedMotion) {
+      pathRefs.forEach((pathRef) => pathRef.current && gsap.set(pathRef.current, { clearProps: 'strokeDasharray,strokeDashoffset' }))
+      return
+    }
 
     pathRefs.forEach((pathRef, index) => {
       const path = pathRef.current
@@ -107,7 +114,7 @@ const MapAnimation: React.FC<MapAnimationProps> = ({ imgClassName, imgContainerC
     return () => {
       timelinesRef.current.forEach((timeline) => timeline.kill())
     }
-  }, [screenSize, pathRefs])
+  }, [screenSize, pathRefs, reducedMotion])
 
   if (!screenSize) return null
 

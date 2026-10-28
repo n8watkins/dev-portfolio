@@ -39,3 +39,35 @@ test('the n8builds.dev teaser links each build to its n8builds.dev page', async 
     else await expect(site).toHaveCount(0)
   }
 })
+
+/**
+ * The map card's arcs (components/ui/BentoComponents/MapAnimations.tsx) draw
+ * themselves in a GSAP loop. Under reduced motion they show fully drawn and
+ * hold still; otherwise they keep drawing.
+ */
+test.describe('the map arcs', () => {
+  const offsets = (page: import('@playwright/test').Page) =>
+    page.locator('.neon-path').evaluateAll((paths) => paths.map((p) => getComputedStyle(p).strokeDashoffset))
+
+  test('hold still, fully drawn, under reduced motion', async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+    await page.goto('/')
+    const arcs = page.locator('.neon-path')
+    await arcs.first().scrollIntoViewIfNeeded()
+    await expect(arcs).toHaveCount(3)
+    const before = await offsets(page)
+    await page.waitForTimeout(1500)
+    expect(await offsets(page)).toEqual(before)
+    expect(before.every((o) => parseFloat(o) === 0), `offsets ${before}`).toBe(true)
+  })
+
+  test('keep drawing when motion is allowed', async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'no-preference' })
+    await page.goto('/')
+    const arcs = page.locator('.neon-path')
+    await arcs.first().scrollIntoViewIfNeeded()
+    await expect(arcs).toHaveCount(3)
+    const before = await offsets(page)
+    await expect.poll(() => offsets(page)).not.toEqual(before)
+  })
+})
