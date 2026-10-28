@@ -5,7 +5,7 @@ import { FaXTwitter } from 'react-icons/fa6'
 const EMAIL = 'contact@n8builds.dev'
 
 const ICON =
-  'flex h-10 w-10 items-center justify-center rounded-full text-slate-400 transition-colors hover:bg-white/[0.08] hover:text-slate-100'
+  'flex h-10 w-10 items-center justify-center rounded-full text-slate-400 transition-colors hover:bg-white/8 hover:text-slate-100'
 
 /**
  * A compact footer for the project pages: who this is, a way to get in touch,
@@ -20,7 +20,7 @@ export default function PageFooter() {
           <p className="text-sm text-slate-400">Full-stack developer in Los Angeles. Open to full-time roles.</p>
           <a
             href={`mailto:${EMAIL}`}
-            className="mt-3 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-cyan-500 to-blue-600 px-4 py-2 text-sm font-semibold text-white transition-all hover:from-cyan-400 hover:to-blue-500"
+            className="mt-3 inline-flex items-center gap-2 rounded-full bg-linear-to-r from-cyan-500 to-blue-600 px-4 py-2 text-sm font-semibold text-white transition-all hover:from-cyan-400 hover:to-blue-500"
           >
             <FiMail className="h-4 w-4" aria-hidden="true" />
             {EMAIL}

@@ -13,7 +13,7 @@ import type { Project } from '@/lib/types'
 
 /** A row button. None grows on hover, so the row's buttons sit level. */
 const BUTTON =
-  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl px-3 sm:px-4 py-2 text-sm font-semibold transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:ring-offset-2 focus-visible:ring-offset-darkBlue'
+  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl px-3 sm:px-4 py-2 text-sm font-semibold transition-colors duration-200 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:ring-offset-2 focus-visible:ring-offset-darkBlue'
 
 /**
  * A project as a Lab row, after n8builds.dev's (components/sections/
@@ -81,7 +81,7 @@ export default function ProjectCard({ project, index }: { project: Project; inde
           {project.tags.map((tag) => (
             <li
               key={tag}
-              className="rounded-md border border-white/10 bg-white/[0.04] px-2 py-1 font-mono text-xs text-slate-300"
+              className="rounded-md border border-white/10 bg-white/4 px-2 py-1 font-mono text-xs text-slate-300"
             >
               {tag}
             </li>
@@ -123,7 +123,7 @@ export default function ProjectCard({ project, index }: { project: Project; inde
               rel="noopener noreferrer"
               aria-label={`View ${project.title} source on GitHub (new tab)`}
               onClick={() => trackProjectEvent('github_click', project.title, { source: 'grid' })}
-              className={`${BUTTON} border border-white/[0.12] bg-white/[0.04] text-slate-200 hover:bg-white/[0.08]`}
+              className={`${BUTTON} border border-white/12 bg-white/4 text-slate-200 hover:bg-white/8`}
             >
               <FiGithub className="h-4 w-4" aria-hidden="true" />
               Source
@@ -133,7 +133,7 @@ export default function ProjectCard({ project, index }: { project: Project; inde
             href={`/projects/${project.slug}`}
             aria-label={`View ${project.title} details`}
             onClick={() => trackProjectEvent('view', project.title, { source: 'grid' })}
-            className={`${BUTTON} border border-white/[0.12] bg-white/[0.04] text-slate-200 hover:bg-white/[0.08]`}
+            className={`${BUTTON} border border-white/12 bg-white/4 text-slate-200 hover:bg-white/8`}
           >
             <FiFileText className="h-4 w-4" aria-hidden="true" />
             Details

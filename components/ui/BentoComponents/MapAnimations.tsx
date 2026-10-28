@@ -113,7 +113,7 @@ const MapAnimation: React.FC<MapAnimationProps> = ({ imgClassName, imgContainerC
 
   return (
     <div
-      className={`absolute -top-[15.5rem] -left-8 z-30 flex items-center justify-center w-[30rem] h-[40rem] animate-fade duration-500`}>
+      className={`absolute -top-62 -left-8 z-30 flex items-center justify-center w-120 h-160 animate-fade duration-500`}>
       <svg className="absolute top-0 left-0 w-full h-full pointer-events-none">
         <defs>
           <marker

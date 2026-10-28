@@ -28,7 +28,7 @@ export const workExperience: WorkExperienceItem[] = [
     id: 1,
     company: 'Appturnity',
     // White, where Appturnity's white page shows
-    hoverGlow: 'bg-white/[0.16]',
+    hoverGlow: 'bg-white/16',
     companyUrl: 'https://appturnity.com',
     location: 'Los Angeles, CA',
     role: 'Full Stack Developer & Co-Founder',
@@ -79,7 +79,7 @@ export const workExperience: WorkExperienceItem[] = [
     id: 4,
     company: 'The Coder School',
     // Green, and white at the bottom
-    hoverGlow: 'bg-gradient-to-b from-green-400/[0.16] to-white/[0.14]',
+    hoverGlow: 'bg-linear-to-b from-green-400/16 to-white/[0.14]',
     companyUrl: 'https://www.thecoderschool.com/locations/santamonica/',
     location: 'Santa Monica, CA',
     role: 'Programming Instructor',

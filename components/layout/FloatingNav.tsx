@@ -33,7 +33,7 @@ export const FloatingNav = ({
         role="navigation"
         aria-label="Main navigation"
         className={cn(
-          'flex max-w-fit fixed top-2 1lg:top-4  xl:top-6 inset-x-0 mx-auto border dark:border-white/[0.2] rounded-2xl bg-gradient-to-r from-sky-200 to-blue-300 dark:from-gray-900 dark:to-blue-950 shadow-[0px_2px_3px_-1px_rgba(0,0,0,0.1),5px_0px_0px_0px_rgba(25,28,33,0.02),0px_0px_0px_1px_rgba(25,28,33,0.08)] py-0.5 sm:py-1 lg:py-2 lg:px-1 items-center justify-center z-[9999]',
+          'flex max-w-fit fixed top-2 1lg:top-4  xl:top-6 inset-x-0 mx-auto border dark:border-white/20 rounded-2xl bg-linear-to-r from-sky-200 to-blue-300 dark:from-gray-900 dark:to-blue-950 shadow-[0px_2px_3px_-1px_rgba(0,0,0,0.1),5px_0px_0px_0px_rgba(25,28,33,0.02),0px_0px_0px_1px_rgba(25,28,33,0.08)] py-0.5 sm:py-1 lg:py-2 lg:px-1 items-center justify-center z-9999',
           className
         )}
       >
@@ -56,7 +56,7 @@ export const FloatingNav = ({
                 smooth={true}
                 offset={-80}
                 duration={300}
-                className="flex items-center rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+                className="flex items-center rounded focus:outline-hidden focus-visible:ring-2 focus-visible:ring-sky-400"
                 aria-label={`Navigate to ${item.name} section`}
               >
                 <span className="text-xs sm:text-sm lg:text-base">{item.name}</span>
@@ -64,7 +64,7 @@ export const FloatingNav = ({
             </div>
           ))}
           <motion.div
-            className="absolute top-0 bottom-0 rounded-full bg-white/20 dark:bg-white/10 backdrop-blur-sm"
+            className="absolute top-0 bottom-0 rounded-full bg-white/20 dark:bg-white/10 backdrop-blur-xs"
             initial={false}
             animate={
               hovered

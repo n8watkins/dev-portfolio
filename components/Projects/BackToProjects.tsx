@@ -23,7 +23,7 @@ export default function BackToProjects() {
           // Storage blocked: the link still goes home, to the top.
         }
       }}
-      className="group mb-10 inline-flex items-center gap-2.5 rounded-xl border border-white/[0.12] bg-white/[0.04] px-4 py-2.5 text-base font-semibold text-slate-200 transition-colors hover:border-sky-400/50 hover:bg-white/[0.08] hover:text-sky-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+      className="group mb-10 inline-flex items-center gap-2.5 rounded-xl border border-white/12 bg-white/4 px-4 py-2.5 text-base font-semibold text-slate-200 transition-colors hover:border-sky-400/50 hover:bg-white/8 hover:text-sky-200 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-sky-400"
     >
       <FiArrowLeft
         className="h-5 w-5 transition-transform group-hover:-translate-x-1"

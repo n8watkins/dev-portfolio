@@ -1,6 +1,6 @@
 # HANDOFF - dev-portfolio
 
-Last updated: 2026-10-27.
+Last updated: 2026-10-28.
 
 ## Current state and open work (2026-10-27): start here
 
@@ -33,7 +33,7 @@ It funnels visitors to the two other sites:
 | appturnity.com | Consulting | separate |
 
 - The repo was renamed from `Portfolio2.0` to `dev-portfolio` on 2026-10-25 (GitHub redirects the old URL), and the folder moved from `~/n8builds/portfolio/portfolio2.0` to `~/n8builds/dev-portfolio`.
-- Stack: Next.js 16 (App Router, webpack build), React 19, TypeScript, Tailwind 3.4, Motion 14, Sentry, GA4, Vercel Speed Insights.
+- Stack: Next.js 16 (App Router, webpack build), React 19, TypeScript, Tailwind 4, Motion 14, Sentry, GA4, Vercel Speed Insights.
   Dark only (`forcedTheme="dark"`), slate + sky-blue.
 - Vercel project `portfolio`, git-connected: every push to `main` deploys; pull requests get previews.
 
@@ -71,6 +71,10 @@ It funnels visitors to the two other sites:
 - **The n8builds.dev card sells how the work is built** (2026-10-25): every pull request tested on five browsers, an hourly build log, weekly releases, both sites open source; it links to the case study at n8builds.dev/builds/n8builds.
 - **MIT for the code, not the personal content** (2026-10-25): see `LICENSE`; photos, screenshots, the resume and the copy about Nathan stay his.
 - **No reCAPTCHA and no contact form backend**: reCAPTCHA was purged in 2026-06; the contact section links out and shows an email address.
+- **Tailwind 4, as n8builds.dev** (2026-10-28): the theme lives in `app/globals.css` (`@theme`; there is no `tailwind.config.ts`), with `tailwindcss-animated` imported and `tailwindcss-animate` as a `@plugin`.
+  Animations whose value reads an element's own variable (`--duration`) sit in `@theme inline`, or the marquees stop.
+  Tailwind 4 lets `leading-*` win over a responsive `md:text-*`, so where both are set the size carries its v3 line height (`md:text-lg/7`).
+  It also brought Tailwind 4's OKLCH colours (slightly more vivid), oklab gradients and its `font-sans` stack, the same as n8builds.dev.
 
 ## The 2026-10-27 refresh (owner's calls)
 
@@ -108,14 +112,10 @@ Under the projects, `components/Projects/BuildsTeaser.tsx` shows n8builds.dev's 
 
 ## Backlog
 
-1. **Adopt release-kit** (https://github.com/n8watkins/release-kit) for commit checks and releases; the owner applies it.
-2. **Lint warnings:** 9 React Compiler warnings in `FloatingNav.tsx`, `grid-pattern.tsx`, `MapAnimations.tsx`, `BentoGrid.tsx` and `background-gradient-animation.tsx` (refs read during render, setState in effects, variables used before declaration).
-   Then make CI fail on warnings.
-3. **Sentry's feedback button** is dark and hidden below 768px; decide whether to keep it at all.
-4. **Streaming links** once streaming starts (see Conventions).
-5. **Branch protection** on `main` requiring "CI result", once CI has run green on `main`.
-6. GeminiGPT placeholder screenshots; the Appturnity "A" monogram; the resume PDF's old portfolio URL (owner).
-7. Deferred dependency majors: Tailwind 4, TypeScript 6, `@types/node` 25.
+1. **Sentry's feedback button** is dark and hidden below 768px; decide whether to keep it at all.
+2. **Streaming links** once streaming starts (see Conventions).
+3. GeminiGPT placeholder screenshots; the Appturnity "A" monogram; the resume PDF's old portfolio URL (owner).
+4. Deferred dependency major: TypeScript 6.
 
 ## File map
 

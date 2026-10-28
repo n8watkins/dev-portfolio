@@ -31,7 +31,7 @@ export function TechStack() {
       // The dino game sends its rounds to n8builds.dev (app/api/game there):
       // counts only, no cookies; n8builds.dev's privacy page covers both sites.
       data-dino-stats="https://n8builds.dev/api/game"
-      className="absolute inset-0 flex w-full flex-col items-center justify-end overflow-hidden rounded-3xl bg-gradient-to-br from-[#0d304c] to-[#0d304c] pb-[4.5rem] select-none [-webkit-tap-highlight-color:transparent] sm:pb-[6rem] motion-safe:gap-5 motion-reduce:justify-start motion-reduce:overflow-y-auto motion-safe:[&_figure]:h-24"
+      className="absolute inset-0 flex w-full flex-col items-center justify-end overflow-hidden rounded-3xl bg-linear-to-br from-[#0d304c] to-[#0d304c] pb-18 select-none [-webkit-tap-highlight-color:transparent] sm:pb-24 motion-safe:gap-5 motion-reduce:justify-start motion-reduce:overflow-y-auto motion-safe:[&_figure]:h-24"
     >
       <Marquee
         label="Libraries and frameworks"
@@ -67,8 +67,8 @@ export function TechStack() {
         ))}
       </Marquee>
       <DinoEasterEgg />
-      <div className="pointer-events-none absolute left-0 h-full w-1/4 bg-gradient-to-r from-[#0d304c] to-transparent motion-reduce:hidden" />
-      <div className="pointer-events-none absolute right-0 h-full w-1/4 bg-gradient-to-l from-[#0d304c] to-transparent motion-reduce:hidden" />
+      <div className="pointer-events-none absolute left-0 h-full w-1/4 bg-linear-to-r from-[#0d304c] to-transparent motion-reduce:hidden" />
+      <div className="pointer-events-none absolute right-0 h-full w-1/4 bg-linear-to-l from-[#0d304c] to-transparent motion-reduce:hidden" />
     </div>
   )
 }

@@ -61,7 +61,7 @@ export default function StatusPill({ name, className = '' }: { name: string; cla
       title={`${status.detail} Monitored by OpenPing; click for the status page.`}
       aria-label={`Live demo: ${status.label}. ${status.detail} Open the status page (new tab)`}
       data-status={status.tone}
-      className={`inline-flex w-fit items-center gap-1.5 h-6 rounded-full border bg-slate-900/60 px-2.5 text-xs font-medium transition-colors hover:bg-slate-800/80 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 ${tone.ring} ${className}`}
+      className={`inline-flex w-fit items-center gap-1.5 h-6 rounded-full border bg-slate-900/60 px-2.5 text-xs font-medium transition-colors hover:bg-slate-800/80 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-sky-400 ${tone.ring} ${className}`}
     >
       <span className="relative flex h-2 w-2" aria-hidden="true">
         {status.tone === 'up' && (

@@ -19,7 +19,7 @@ export const BentoGrid = ({
   return (
     <div
       className={cn(
-        'grid grid-cols-2 auto-rows-[5rem] md:grid-cols-4 md:auto-rows-[9rem] lg:auto-rows-[8rem] xl:auto-rows-[5rem] gap-5 md:gap-6 lg:gap-7 max-w-md sm:max-w-lg md:max-w-3xl lg:max-w-4xl xl:max-w-5xl lg:m-auto mx-auto px-4',
+        'grid grid-cols-2 auto-rows-20 md:grid-cols-4 md:auto-rows-36 lg:auto-rows-32 xl:auto-rows-20 gap-5 md:gap-6 lg:gap-7 max-w-md sm:max-w-lg md:max-w-3xl lg:max-w-4xl xl:max-w-5xl lg:m-auto mx-auto px-4',
         className
       )}
     >
@@ -45,7 +45,7 @@ export const BentoGridItem = ({
     <motion.div
       variants={entrance === 'fade' ? FADE_ONLY : staggerItemVariants}
       className={cn(
-        'group flex w-full h-full rounded-3xl relative dark:border-white/[0.2] transition-colors duration-300 dark:hover:border-sky-300/40  bg-gradient-to-br from-blue-400 via-blue-500 to-blue-400 border dark:from-[#0c4a6e] dark:via-[#0f172a] dark:to-[#0f172a] overflow-hidden  select-none',
+        'group flex w-full h-full rounded-3xl relative dark:border-white/20 transition-colors duration-300 dark:hover:border-sky-300/40  bg-linear-to-br from-blue-400 via-blue-500 to-blue-400 border dark:from-[#0c4a6e] dark:via-darkBlue dark:to-darkBlue overflow-hidden  select-none',
         gridItemContainer
       )}
     >
@@ -53,7 +53,7 @@ export const BentoGridItem = ({
       {renderBackground?.()}
 
       {/* Content layer - data-driven */}
-      <div className={`absolute z-[500]   ${textContainerClassName}`}>
+      <div className={`absolute z-500   ${textContainerClassName}`}>
         {renderContent?.()}
 
         <div className={` ${textOrder}  `}>

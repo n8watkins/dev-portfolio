@@ -65,13 +65,13 @@ export default function SiteDoors({
           href={door.href}
           target="_blank"
           rel="noopener noreferrer"
-          className={`group relative block rounded-2xl bg-gradient-to-br p-px text-left transition-all duration-300 hover:-translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 ${door.frame} ${door.glow}`}
+          className={`group relative block rounded-2xl bg-linear-to-br p-px text-left transition-all duration-300 hover:-translate-y-0.5 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-sky-400 ${door.frame} ${door.glow}`}
         >
           <span className="relative flex h-full flex-col overflow-hidden rounded-[15px] bg-[#0b1324] p-4">
             {/* The brand's colour, washing in from the top left on hover */}
             <span
               aria-hidden="true"
-              className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${door.wash} to-transparent opacity-30 transition-opacity duration-300 group-hover:opacity-100 group-focus-visible:opacity-100`}
+              className={`pointer-events-none absolute inset-0 bg-linear-to-br ${door.wash} to-transparent opacity-30 transition-opacity duration-300 group-hover:opacity-100 group-focus-visible:opacity-100`}
             />
             <span className="relative flex items-center gap-3">
               <Image
@@ -83,13 +83,13 @@ export default function SiteDoors({
               />
               <span className="min-w-0 flex-1">
                 <span
-                  className={`block bg-gradient-to-r ${door.eyebrowText} bg-clip-text text-[0.65rem] font-bold uppercase tracking-[0.14em] text-transparent`}
+                  className={`block bg-linear-to-r ${door.eyebrowText} bg-clip-text text-[0.65rem] font-bold uppercase tracking-[0.14em] text-transparent`}
                 >
                   {door.eyebrow}
                 </span>
                 <span className="block text-base font-bold text-slate-50">{door.name}</span>
               </span>
-              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-slate-300 transition-all duration-300 group-hover:border-white/30 group-hover:bg-white/10 group-hover:text-white">
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/4 text-slate-300 transition-all duration-300 group-hover:border-white/30 group-hover:bg-white/10 group-hover:text-white">
                 <FiArrowUpRight
                   className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
                   aria-hidden="true"
@@ -99,7 +99,7 @@ export default function SiteDoors({
             <span className="relative mt-2.5 block flex-1 text-pretty text-sm leading-snug text-slate-300">
               {door.pitch}
             </span>
-            <span className="relative mt-3 inline-flex w-fit items-center gap-1.5 whitespace-nowrap rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-0.5 text-xs font-medium text-slate-300">
+            <span className="relative mt-3 inline-flex w-fit items-center gap-1.5 whitespace-nowrap rounded-full border border-white/10 bg-white/4 px-2.5 py-0.5 text-xs font-medium text-slate-300">
               <span className={`h-1.5 w-1.5 rounded-full ${door.dot}`} aria-hidden="true" />
               {door.detail}
             </span>

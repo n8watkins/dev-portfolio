@@ -180,7 +180,7 @@ const ArrowButton = ({ side, onClick }: { side: 'prev' | 'next'; onClick: () => 
     type="button"
     onClick={onClick}
     aria-label={side === 'prev' ? 'Previous build' : 'Next build'}
-    className="flex h-8 w-8 items-center justify-center rounded-full border border-white/12 text-slate-300 hover:bg-white/[0.08] hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+    className="flex h-8 w-8 items-center justify-center rounded-full border border-white/12 text-slate-300 hover:bg-white/8 hover:text-white focus:outline-hidden focus-visible:ring-2 focus-visible:ring-sky-400"
   >
     {side === 'prev' ? (
       <FiChevronLeft className="h-4 w-4" aria-hidden="true" />
@@ -191,7 +191,7 @@ const ArrowButton = ({ side, onClick }: { side: 'prev' | 'next'; onClick: () => 
 )
 
 const BUTTON =
-  'inline-flex items-center gap-1.5 h-9 rounded-lg px-3.5 text-sm font-semibold transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400'
+  'inline-flex items-center gap-1.5 h-9 rounded-lg px-3.5 text-sm font-semibold transition-colors duration-200 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-sky-400'
 
 export default function BuildsTeaser() {
   const [index, setIndex] = useState(0)
@@ -229,7 +229,7 @@ export default function BuildsTeaser() {
           href="https://n8builds.dev"
           target="_blank"
           rel="noopener noreferrer"
-          className="group flex items-center gap-3 rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+          className="group flex items-center gap-3 rounded-lg focus:outline-hidden focus-visible:ring-2 focus-visible:ring-sky-400"
         >
           <Image
             src="/tab/n8-icon.png"
@@ -264,7 +264,7 @@ export default function BuildsTeaser() {
       {/* One build at a time, in its own colour */}
       <div
         // On hover the card's edge and a soft glow pick up the current build's colour.
-        className="relative mt-5 overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] p-5 transition-[border-color,box-shadow] duration-300 hover:border-[rgb(var(--build)/0.4)] hover:shadow-[0_0_44px_-16px_rgb(var(--build)/0.5)] sm:p-6"
+        className="relative mt-5 overflow-hidden rounded-2xl border border-white/10 bg-white/3 p-5 transition-[border-color,box-shadow] duration-300 hover:border-[rgb(var(--build)/0.4)] hover:shadow-[0_0_44px_-16px_rgb(var(--build)/0.5)] sm:p-6"
         style={{ '--build': build.accent.rgb } as React.CSSProperties}
         role="group"
         aria-roledescription="carousel"
@@ -305,7 +305,7 @@ export default function BuildsTeaser() {
               {build.tags.map((tag) => (
                 <li
                   key={tag}
-                  className="rounded-md border border-white/10 bg-white/[0.04] px-2 py-1 font-mono text-xs text-slate-300"
+                  className="rounded-md border border-white/10 bg-white/4 px-2 py-1 font-mono text-xs text-slate-300"
                 >
                   {tag}
                 </li>
@@ -320,7 +320,7 @@ export default function BuildsTeaser() {
                   onClick={() =>
                     trackProjectEvent('more_builds_click', build.name, { url: build.liveSite })
                   }
-                  className={`${BUTTON} bg-gradient-to-r from-blue-600 to-cyan-700 text-white hover:from-blue-700 hover:to-cyan-800`}
+                  className={`${BUTTON} bg-linear-to-r from-blue-600 to-cyan-700 text-white hover:from-blue-700 hover:to-cyan-800`}
                 >
                   <FiExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
                   Live site<span className="sr-only"> of {build.name} (opens in a new tab)</span>
@@ -336,7 +336,7 @@ export default function BuildsTeaser() {
                     url: `https://n8builds.dev/builds/${build.slug}`,
                   })
                 }
-                className={`${BUTTON} border border-white/12 bg-white/[0.04] text-slate-200 hover:bg-white/[0.08]`}
+                className={`${BUTTON} border border-white/12 bg-white/4 text-slate-200 hover:bg-white/8`}
               >
                 See the build
                 <FiArrowUpRight className="h-4 w-4" aria-hidden="true" />
@@ -344,7 +344,7 @@ export default function BuildsTeaser() {
             </div>
           </div>
           {/* The screenshot, or the icon on its own frame when there is none */}
-          <div className="relative hidden aspect-[16/10] overflow-hidden rounded-xl border border-white/10 bg-[#0a1322] shadow-2xl shadow-black/40 md:block">
+          <div className="relative hidden aspect-16/10 overflow-hidden rounded-xl border border-white/10 bg-[#0a1322] shadow-2xl shadow-black/40 md:block">
             {build.shot ? (
               <Image
                 src={build.shot.src}
@@ -381,7 +381,7 @@ export default function BuildsTeaser() {
                   setDir(i < index ? -1 : 1)
                   setIndex(i)
                 }}
-                className={`h-1.5 rounded-full transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 ${
+                className={`h-1.5 rounded-full transition-all duration-300 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-sky-400 ${
                   i === index ? `w-6 ${build.accent.bar}` : 'w-1.5 bg-white/30 hover:bg-white/60'
                 }`}
               />

@@ -15,7 +15,7 @@ const EMAIL = 'contact@n8builds.dev'
 const CONTACT_FORM = 'https://n8builds.dev/#contact-form'
 
 const ICON_BUTTON =
-  'inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-600 text-slate-200 transition-all duration-200 hover:border-sky-400/60 hover:text-sky-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 sm:h-11 sm:w-11'
+  'inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-600 text-slate-200 transition-all duration-200 hover:border-sky-400/60 hover:text-sky-300 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-sky-400 sm:h-11 sm:w-11'
 const LINK = 'text-sm text-slate-400 transition-colors duration-200 hover:text-sky-300'
 
 /**
@@ -100,18 +100,18 @@ const Footer = () => {
         <motion.div
           variants={fadeInVariants}
           {...defaultAnimationConfig}
-          className="mx-auto mt-8 mb-8 w-full rounded-3xl bg-gradient-to-br from-cyan-400/40 via-blue-500/20 to-blue-600/40 p-px shadow-xl shadow-black/30"
+          className="mx-auto mt-8 mb-8 w-full rounded-3xl bg-linear-to-br from-cyan-400/40 via-blue-500/20 to-blue-600/40 p-px shadow-xl shadow-black/30"
         >
           <div className="relative overflow-hidden rounded-[23px] bg-[#0b1324] px-5 py-8 text-center sm:px-10 sm:py-10">
             <div
               aria-hidden="true"
-              className="pointer-events-none absolute -top-24 left-1/2 h-48 w-[28rem] -translate-x-1/2 rounded-full bg-cyan-500/[0.12] blur-3xl"
+              className="pointer-events-none absolute -top-24 left-1/2 h-48 w-md -translate-x-1/2 rounded-full bg-cyan-500/12 blur-3xl"
             />
             <div className="relative flex flex-col items-center gap-5">
               <div className="flex flex-wrap items-center justify-center gap-2.5">
                 <a
                   href={`mailto:${EMAIL}`}
-                  className="inline-flex h-10 items-center justify-center gap-2 rounded-full bg-gradient-to-r from-cyan-500 to-blue-600 px-4 text-sm font-semibold text-white transition-all duration-200 hover:from-cyan-400 hover:to-blue-500 hover:shadow-lg hover:shadow-sky-500/30 sm:h-11 sm:px-5 sm:text-base"
+                  className="inline-flex h-10 items-center justify-center gap-2 rounded-full bg-linear-to-r from-cyan-500 to-blue-600 px-4 text-sm font-semibold text-white transition-all duration-200 hover:from-cyan-400 hover:to-blue-500 hover:shadow-lg hover:shadow-sky-500/30 sm:h-11 sm:px-5 sm:text-base"
                 >
                   <FiMail className="h-4 w-4" aria-hidden="true" />
                   {EMAIL}
@@ -137,7 +137,7 @@ const Footer = () => {
                   <FaXTwitter className="h-4 w-4" aria-hidden="true" />
                 </a>
               </div>
-              <div className="h-px w-full max-w-sm bg-gradient-to-r from-transparent via-white/15 to-transparent" />
+              <div className="h-px w-full max-w-sm bg-linear-to-r from-transparent via-white/15 to-transparent" />
               <p className="text-sm text-slate-300 sm:text-base">
                 Or message me through{' '}
                 <a
@@ -158,7 +158,7 @@ const Footer = () => {
 
       {/* The site footer: the two other sites as the hero's cards, a site map, then the fine print. */}
       <motion.div {...defaultAnimationConfig} variants={fadeInVariants} className="mt-14 px-4">
-        <div className="grid gap-10 border-t border-white/[0.08] pt-10 lg:grid-cols-[minmax(0,1.45fr)_minmax(0,1fr)] lg:gap-12">
+        <div className="grid gap-10 border-t border-white/8 pt-10 lg:grid-cols-[minmax(0,1.45fr)_minmax(0,1fr)] lg:gap-12">
           <div className="flex flex-col gap-4">
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-300">
               Where else I build
@@ -192,7 +192,7 @@ const Footer = () => {
           </nav>
         </div>
 
-        <div className="mt-10 flex flex-col-reverse items-center justify-between gap-4 border-t border-white/[0.06] pt-6 sm:flex-row">
+        <div className="mt-10 flex flex-col-reverse items-center justify-between gap-4 border-t border-white/6 pt-6 sm:flex-row">
           <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
             <p className="text-sm text-slate-400">Copyright © 2026 Nathan Watkins</p>
             {/* Reopens the analytics consent banner (components/consent). */}
@@ -206,7 +206,7 @@ const Footer = () => {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label={`View Nathan's ${label} profile`}
-                className="h-11 w-11 rounded-full transition-all duration-200 hover:bg-slate-700/70 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+                className="h-11 w-11 rounded-full transition-all duration-200 hover:bg-slate-700/70 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-sky-400"
               >
                 <Icon className={`h-full w-full ${pad}`} aria-hidden="true" />
               </a>

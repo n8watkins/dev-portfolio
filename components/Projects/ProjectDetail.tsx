@@ -24,8 +24,8 @@ function Heading({ id, children }: { id: string; children: React.ReactNode }) {
 
 /** The row buttons from the home page's project rows. */
 const BUTTON =
-  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl px-4 py-2 text-sm font-semibold transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:ring-offset-2 focus-visible:ring-offset-darkBlue'
-const QUIET = 'border border-white/[0.12] bg-white/[0.04] text-slate-200 hover:bg-white/[0.08]'
+  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl px-4 py-2 text-sm font-semibold transition-colors duration-200 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:ring-offset-2 focus-visible:ring-offset-darkBlue'
+const QUIET = 'border border-white/12 bg-white/4 text-slate-200 hover:bg-white/8'
 
 /**
  * Live demo (in the project's colour) and Source as buttons, then the status
@@ -102,7 +102,7 @@ export default function ProjectDetail({ project }: { project: Project }) {
       {/* The project's colour, glowing in from the top */}
       <div
         aria-hidden="true"
-        className="lab-row-wash pointer-events-none absolute inset-x-0 top-0 h-[40rem]"
+        className="lab-row-wash pointer-events-none absolute inset-x-0 top-0 h-160"
         style={{ '--lab-from': accent.rgb, '--lab-x': '0%' } as React.CSSProperties}
       />
       <div className="relative max-w-5xl xl:max-w-6xl 2xl:max-w-7xl mx-auto px-4 sm:px-6 pt-24 pb-12 md:pt-28 md:pb-16">
@@ -170,7 +170,7 @@ export default function ProjectDetail({ project }: { project: Project }) {
               {project.tags.map((tag) => (
                 <li
                   key={tag}
-                  className="rounded-md border border-white/10 bg-white/[0.04] px-2 py-1 font-mono text-xs text-slate-300"
+                  className="rounded-md border border-white/10 bg-white/4 px-2 py-1 font-mono text-xs text-slate-300"
                 >
                   {tag}
                 </li>
@@ -185,7 +185,7 @@ export default function ProjectDetail({ project }: { project: Project }) {
             {project.purpose && (
               <section>
                 <Heading id="goal">The goal - what I&apos;m exploring</Heading>
-                <p className="text-lg md:text-xl leading-relaxed text-slate-300">
+                <p className="text-lg md:text-xl/7 leading-relaxed text-slate-300">
                   {project.purpose}
                 </p>
               </section>
@@ -194,7 +194,7 @@ export default function ProjectDetail({ project }: { project: Project }) {
             {project.aiUsage && (
               <section>
                 <Heading id="ai">How it uses AI</Heading>
-                <p className="text-lg md:text-xl leading-relaxed text-slate-300">
+                <p className="text-lg md:text-xl/7 leading-relaxed text-slate-300">
                   {project.aiUsage}
                 </p>
               </section>
@@ -207,7 +207,7 @@ export default function ProjectDetail({ project }: { project: Project }) {
                   {project.highlights.map((highlight, i) => (
                     <li
                       key={i}
-                      className="flex gap-3 text-lg md:text-xl leading-relaxed text-slate-300"
+                      className="flex gap-3 text-lg md:text-xl/7 leading-relaxed text-slate-300"
                     >
                       <FiCheck
                         className={`mt-1.5 h-5 w-5 shrink-0 ${accent.check}`}
@@ -254,7 +254,7 @@ export default function ProjectDetail({ project }: { project: Project }) {
             part uses (n8builds.dev's TechStackCycle, kept in sync) */}
         <section className="mt-16">
           <Heading id="stack">The stack</Heading>
-          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 sm:p-8">
+          <div className="rounded-2xl border border-white/10 bg-white/3 p-5 sm:p-8">
             <TechStackCycle technologies={project.technologies} />
           </div>
         </section>

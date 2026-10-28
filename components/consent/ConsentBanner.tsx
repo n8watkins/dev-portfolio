@@ -104,7 +104,7 @@ export default function ConsentBanner({
 
   const choose = (choice: ConsentChoice) => close(choice)
 
-  const focusRing = 'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300'
+  const focusRing = 'focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300'
 
   return (
     <div
@@ -117,7 +117,7 @@ export default function ConsentBanner({
       inert={closing}
       data-closing={closing || undefined}
       onAnimationEnd={onAnimationEnd}
-      className={`${closing ? 'consent-out' : 'consent-in'} outline-none fixed inset-x-3 bottom-[calc(0.75rem+env(safe-area-inset-bottom,0px))] z-[60] mx-auto max-w-[62rem] rounded-2xl border border-cyan-400/25 bg-[#07101f]/95 p-5 text-slate-300 shadow-[0_22px_60px_-12px_rgba(0,0,0,0.85)] backdrop-blur-md sm:bottom-6 sm:flex sm:items-center sm:gap-8 sm:px-7 sm:py-6`}
+      className={`${closing ? 'consent-out' : 'consent-in'} outline-hidden fixed inset-x-3 bottom-[calc(0.75rem+env(safe-area-inset-bottom,0px))] z-60 mx-auto max-w-248 rounded-2xl border border-cyan-400/25 bg-[#07101f]/95 p-5 text-slate-300 shadow-[0_22px_60px_-12px_rgba(0,0,0,0.85)] backdrop-blur-md sm:bottom-6 sm:flex sm:items-center sm:gap-8 sm:px-7 sm:py-6`}
     >
       <div className="min-w-0 flex-1">
         <h2 id={titleId} className="flex items-center gap-2 text-[1.05rem] font-bold text-slate-50">
@@ -156,7 +156,7 @@ export default function ConsentBanner({
         </button>
         <button
           type="button"
-          className={`flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl border border-cyan-300/40 bg-gradient-to-r from-blue-600 to-cyan-700 px-7 py-3 text-base font-bold text-white shadow-lg shadow-cyan-950/60 transition-colors hover:from-blue-700 hover:to-cyan-800 sm:flex-none ${focusRing}`}
+          className={`flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl border border-cyan-300/40 bg-linear-to-r from-blue-600 to-cyan-700 px-7 py-3 text-base font-bold text-white shadow-lg shadow-cyan-950/60 transition-colors hover:from-blue-700 hover:to-cyan-800 sm:flex-none ${focusRing}`}
           onClick={() => choose('granted')}
         >
           <FiCheck aria-hidden="true" className="h-5 w-5" />
