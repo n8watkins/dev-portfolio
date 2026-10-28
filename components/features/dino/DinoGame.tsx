@@ -637,9 +637,10 @@ export default function DinoGame() {
       const dt = Math.min(realDt, 0.05)
       last = now
       if (!dt) return
-      // The round's clock, and the final score's time on screen.
+      // The round's clock, and the final score's time on screen, run on real
+      // time: on a device that can't keep up, a 30 s round still lasts 30 s.
       if (roundLeft > 0) {
-        roundLeft -= dt
+        roundLeft -= realDt
         if (roundLeft <= 0) {
           roundLeft = 0
           resultLeft = RESULT_FOR
@@ -660,7 +661,7 @@ export default function DinoGame() {
           dino.dataset.game = 'over'
         }
       } else if (resultLeft > 0) {
-        resultLeft -= dt
+        resultLeft -= realDt
         if (resultLeft <= 0) dino.dataset.game = 'idle'
       }
       scoreboard()
@@ -693,9 +694,13 @@ export default function DinoGame() {
           } else {
             row.delta = delta
             row.velocity = delta / realDt
-            const paused = Math.abs(row.velocity) < STILL
-            if (paused && !row.paused && settled > 10 && row === onRow) missPending = true
-            row.paused = paused
+            // Pauses count once the rows have been measured a while: one
+            // seen sooner (the row held from the start) counts then.
+            if (settled > 10) {
+              const paused = Math.abs(row.velocity) < STILL
+              if (paused && !row.paused && row === onRow) missPending = true
+              row.paused = paused
+            }
           }
         }
         row.lastLeft = left
@@ -837,8 +842,10 @@ export default function DinoGame() {
         frame = 'hop'
         if (p >= 1) {
           level = climb.target
-          missPending = false
           const target = levels[level]
+          // A miss meant for the row it left doesn't carry over, but a row
+          // already paused under it trips it at its next gap.
+          missPending = !!target.row?.paused
           const up = target.row ? intervals(target.row, panelLeft) : null
           land(target, up)
           if (up && !support(x + W / 2, up)) {
@@ -872,8 +879,11 @@ export default function DinoGame() {
         const target = levels[level + 1]
         if (target && y >= target.y) {
           level += 1
-          // A miss meant for the row it left doesn't carry over.
-          missPending = false
+          // A miss meant for the row it left doesn't carry over, but a row
+          // already paused under it (landing on it, or dropping back in after
+          // walking off the panel before it reached a gap) trips it at its
+          // next gap: it stays paused, so it never pauses again to say so.
+          missPending = !!target.row?.paused
           // Every level after the first walks the other way.
           if (level > 0) dir = dir > 0 ? -1 : 1
           land(target, target.row ? intervals(target.row, panelLeft) : null)

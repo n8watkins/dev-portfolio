@@ -164,6 +164,11 @@ test.describe('elsewhere (America/Los_Angeles)', () => {
     await page.goto('/')
     const settings = page.getByRole('button', { name: 'Cookie settings' })
     await settings.scrollIntoViewIfNeeded()
+    // A press before React has hydrated the footer does nothing (Firefox in CI
+    // can still be hydrating at load): wait until the button has its handler.
+    await expect
+      .poll(() => settings.evaluate((el) => Object.keys(el).some((key) => key.startsWith('__reactProps'))))
+      .toBe(true)
     await settings.focus()
     await page.keyboard.press('Enter')
 

@@ -26,8 +26,8 @@ export default defineConfig({
   // No retries: a flaky test gets fixed, not retried until it passes.
   retries: 0,
 
-  // Opt out of parallel tests on CI
-  workers: process.env.CI ? 1 : undefined,
+  // Two per CI job, as on n8builds-web (the WebKit jobs pass --workers=1).
+  workers: process.env.CI ? 2 : undefined,
 
   // Reporter to use
   reporter: [
@@ -54,32 +54,14 @@ export default defineConfig({
     timezoneId: 'America/Los_Angeles',
   },
 
-  // Configure projects for major browsers
+  // The same five browsers as n8builds-web, so the shared dino and its tests
+  // are checked on every one of them here too.
   projects: [
-    {
-      name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
-    },
-
-    {
-      name: 'firefox',
-      use: { ...devices['Desktop Firefox'] },
-    },
-
-    {
-      name: 'webkit',
-      use: { ...devices['Desktop Safari'] },
-    },
-
-    // Test against mobile viewports
-    {
-      name: 'Mobile Chrome',
-      use: { ...devices['Pixel 5'] },
-    },
-    {
-      name: 'Mobile Safari',
-      use: { ...devices['iPhone 12'] },
-    },
+    { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
+    { name: 'firefox', use: { ...devices['Desktop Firefox'] } },
+    { name: 'webkit', use: { ...devices['Desktop Safari'] } },
+    { name: 'mobile-chrome', use: { ...devices['Pixel 7'] } },
+    { name: 'mobile-safari', use: { ...devices['iPhone 14'] } },
   ],
 
   // A production build, like the live site: the Web Vitals checks mean nothing

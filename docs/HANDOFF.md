@@ -45,9 +45,11 @@ It funnels visitors to the two other sites:
   No retries: a flaky test gets fixed.
 - Specs: `tests/consent.spec.ts` (the analytics consent banner), `tests/dino.spec.ts` (the dino game on the tech stack card: n8builds.dev's dino tests, kept in step with its `tests/e2e/ai-kit.spec.ts`), `tests/home.spec.ts` (the n8builds card, and the n8builds.dev teaser's links), `tests/projects.spec.ts` (status pills, project rows and pages), `tests/seo.spec.ts` (titles, share cards, no em dashes, no Sentry example routes), `tests/web-vitals.spec.ts` (Web Vitals budgets and axe accessibility).
 - The site scrolls smoothly (`scroll-smooth` on every element), so a test that scrolls must wait for the scroll to stop before hovering or clicking.
-- GitHub Actions (`.github/workflows/ci.yml`): lint, types and build, then the Playwright suite in Chromium inside Playwright's Docker image (its version read from `package-lock.json`).
+- GitHub Actions (`.github/workflows/ci.yml`): lint, types and build, then the Playwright suite on the same five browsers as n8builds.dev (chromium, firefox, webkit, mobile-chrome, mobile-safari) inside Playwright's Docker image (its version read from `package-lock.json`).
+  WebKit and mobile Safari each run as two shards with one worker: they have no GPU in CI, so their frames come slowly (about 10 fps on this page), and competing workers make that worse.
   Docs-only changes skip both.
   "CI result" is the single summary check for branch protection.
+- To kill a local test server, find it by port (`ss -ltnp | grep :4829`) and kill that PID: `lsof` can miss it, and `pkill -f` matches its own shell.
 
 ## Decisions (do not re-ask)
 

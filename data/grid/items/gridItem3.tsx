@@ -19,8 +19,10 @@ export const gridItem3: GridItemConfig = {
   imgClassName: '',
   img: '',
 
+  // The title's gradient overlaps the bottom row of tiles; it lets the pointer
+  // through, so those tiles can still be hovered or tapped (pausing their row).
   textContainerClassName:
-    'absolute bottom-0 pt-10 h-32 w-full bg-linear-to-t rounded-b-3xl from-blue-500 via-blue-500 to-blue-500/0 dark:from-[#0d304c] dark:via-[#0d304c]/90 dark:to-[#0d304c]/0 z-30 text-slate-200 dark:text-white  ',
+    'pointer-events-none absolute bottom-0 pt-10 h-32 w-full bg-linear-to-t rounded-b-3xl from-blue-500 via-blue-500 to-blue-500/0 dark:from-[#0d304c] dark:via-[#0d304c]/90 dark:to-[#0d304c]/0 z-30 text-slate-200 dark:text-white  ',
 
   textOrder: 'flex flex-col-reverse xs:pl-10 1sm:pl-5 group-hover:translate-x-2 duration-200',
 
