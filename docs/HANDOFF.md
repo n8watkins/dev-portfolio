@@ -33,7 +33,7 @@ It funnels visitors to the two other sites:
 | appturnity.com | Consulting | separate |
 
 - The repo was renamed from `Portfolio2.0` to `dev-portfolio` on 2026-10-25 (GitHub redirects the old URL), and the folder moved from `~/n8builds/portfolio/portfolio2.0` to `~/n8builds/dev-portfolio`.
-- Stack: Next.js 16 (App Router, webpack build), React 19, TypeScript, Tailwind 3.4, Framer Motion 12, Sentry, GA4, Vercel Speed Insights.
+- Stack: Next.js 16 (App Router, webpack build), React 19, TypeScript, Tailwind 3.4, Motion 14, Sentry, GA4, Vercel Speed Insights.
   Dark only (`forcedTheme="dark"`), slate + sky-blue.
 - Vercel project `portfolio`, git-connected: every push to `main` deploys; pull requests get previews.
 

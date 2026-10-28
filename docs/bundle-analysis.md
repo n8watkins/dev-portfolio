@@ -52,7 +52,7 @@ The portfolio application is optimized with Next.js 16 App Router features and k
 
 2. **Package Import Optimization** (Experimental):
    - `lucide-react`
-   - `framer-motion`
+   - `motion/react`
    - `react-icons`
    - `@radix-ui/react-dropdown-menu`
    - `@radix-ui/react-icons`

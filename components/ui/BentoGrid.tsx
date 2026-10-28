@@ -1,6 +1,6 @@
 'use client'
 import { cn } from '@/lib/utils'
-import { motion } from 'framer-motion'
+import { motion } from 'motion/react'
 import { staggerItemVariants } from '@/lib/animations'
 import type { GridItemConfig } from '@/lib/types/gridItem'
 

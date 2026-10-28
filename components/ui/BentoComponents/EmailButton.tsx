@@ -3,7 +3,7 @@ import { MdContentCopy } from 'react-icons/md'
 import { BackgroundGradientAnimation } from '../background-gradient-animation'
 import Lottie from 'lottie-react'
 import animationData from '../../../data/confetti.json'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence } from 'motion/react'
 
 interface ResumeButtonsProps {
   buttonContainer?: string
