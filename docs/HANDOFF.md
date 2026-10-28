@@ -35,7 +35,7 @@ It funnels visitors to the two other sites:
 - The repo was renamed from `Portfolio2.0` to `dev-portfolio` on 2026-10-25 (GitHub redirects the old URL), and the folder moved from `~/n8builds/portfolio/portfolio2.0` to `~/n8builds/dev-portfolio`.
 - Stack: Next.js 16 (App Router, webpack build), React 19, TypeScript, Tailwind 4, Motion 14, Sentry, GA4, Vercel Speed Insights.
   Dark only (`forcedTheme="dark"`), slate + sky-blue.
-- Vercel project `portfolio`, git-connected: every push to `main` deploys; pull requests get previews.
+- Vercel project `portfolio`, git-connected: every push to `main` deploys. Other branches get no automatic preview (2026-10-28, `git.deploymentEnabled` in `vercel.json`): previews used about half of the 100 deployments a day the whole account shares. Run `vercel deploy` from a branch for one.
 
 ## Running and testing
 
