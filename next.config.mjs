@@ -1,5 +1,7 @@
 import { withSentryConfig } from '@sentry/nextjs/config'
 import bundleAnalyzer from '@next/bundle-analyzer'
+import { securityHeaders } from './lib/security/headers.mjs'
+import { SENTRY_DSN } from './lib/sentryDsn.mjs'
 
 const withBundleAnalyzer = bundleAnalyzer({
   enabled: process.env.ANALYZE === 'true',
@@ -78,33 +80,16 @@ const nextConfig = {
       },
     ]
   },
-  // Security headers
+  // Security headers, including the CSP (lib/security/headers.mjs)
   async headers() {
     return [
       {
         source: '/:path*',
-        headers: [
-          {
-            key: 'X-Frame-Options',
-            value: 'DENY',
-          },
-          {
-            key: 'X-Content-Type-Options',
-            value: 'nosniff',
-          },
-          {
-            key: 'Referrer-Policy',
-            value: 'strict-origin-when-cross-origin',
-          },
-          {
-            key: 'Permissions-Policy',
-            value: 'camera=(), microphone=(), geolocation=()',
-          },
-          {
-            key: 'X-XSS-Protection',
-            value: '1; mode=block',
-          },
-        ],
+        headers: securityHeaders({
+          dev: process.env.NODE_ENV !== 'production',
+          preview: process.env.VERCEL_ENV === 'preview',
+          sentryDsn: SENTRY_DSN,
+        }),
       },
     ]
   },

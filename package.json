@@ -19,7 +19,6 @@
     "test:ui": "playwright test --ui",
     "test:chromium": "playwright test --project=chromium",
     "test:report": "playwright show-report",
-    "lighthouse": "lhci autorun",
     "analyze": "ANALYZE=true npm run build",
     "prepare": "husky",
     "check:sync": "node scripts/check-n8builds-sync.mjs",
@@ -52,7 +51,6 @@
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.10.2",
-    "@lhci/cli": "^0.15.1",
     "@next/bundle-analyzer": "^16.4.3",
     "@playwright/test": "^1.56.1",
     "@types/node": "^20",

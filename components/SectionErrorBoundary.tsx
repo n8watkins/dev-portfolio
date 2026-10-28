@@ -1,5 +1,6 @@
 'use client'
 import React, { Component, ErrorInfo, ReactNode } from 'react'
+import * as Sentry from '@sentry/nextjs'
 import { logger } from '@/lib/logger'
 
 interface Props {
@@ -47,22 +48,10 @@ class SectionErrorBoundary extends Component<Props, State> {
     // Log error with section context
     logger.error(`❌ Error in ${sectionName}:`, error, errorInfo)
 
-    // Report to health endpoint (non-blocking)
-    if (typeof window !== 'undefined') {
-      fetch('/api/health/error', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          section: sectionName,
-          error: error.message,
-          stack: error.stack?.substring(0, 1000),
-          timestamp: new Date().toISOString(),
-          url: window.location.href,
-        }),
-      }).catch(() => {
-        // Silently fail if health endpoint is unavailable
-      })
-    }
+    Sentry.captureException(error, {
+      tags: { section: sectionName },
+      contexts: { react: { componentStack: errorInfo.componentStack } },
+    })
   }
 
   public render() {

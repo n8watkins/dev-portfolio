@@ -1,5 +1,6 @@
 'use client'
 import React, { Component, ErrorInfo, ReactNode } from 'react'
+import * as Sentry from '@sentry/nextjs'
 
 interface Props {
   children: ReactNode
@@ -22,21 +23,7 @@ class ErrorBoundary extends Component<Props, State> {
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('Portfolio Error:', error, errorInfo)
 
-    // Report error to health endpoint (non-blocking)
-    if (typeof window !== 'undefined') {
-      fetch('/api/health/error', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          error: error.message,
-          stack: error.stack?.substring(0, 1000), // Limit stack trace size
-          timestamp: new Date().toISOString(),
-          url: window.location.href,
-        }),
-      }).catch(() => {
-        // Silently fail if health endpoint is unavailable
-      })
-    }
+    Sentry.captureException(error, { contexts: { react: { componentStack: errorInfo.componentStack } } })
   }
 
   public render() {
