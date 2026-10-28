@@ -1,0 +1,7 @@
+# `vercel deploy` from a local checkout uploads the working tree; Vercel builds from source,
+# so local build caches and test output only add size (.next-e2e's cache passes the 100 MB file limit).
+.next
+.next-e2e
+.lighthouse
+test-results
+playwright-report
