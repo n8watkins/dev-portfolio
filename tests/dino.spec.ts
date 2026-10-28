@@ -55,7 +55,7 @@ const roarBubble = (page: Page) =>
 
 // Click it while it walks (a click in the air only roars, without a reaction).
 // After a fall off the bottom row it drops back in from the top first, which
-// on a busy machine can take a while.
+// on a busy machine (or where frames come slowly) can take a while.
 const pokeWalking = (page: Page) =>
   expect
     .poll(() =>
@@ -67,7 +67,7 @@ const pokeWalking = (page: Page) =>
         ;(el as HTMLElement).click()
         return true
       }),
-      { timeout: 15_000 }
+      { timeout: 30_000 }
     )
     .toBe(true)
 
@@ -158,7 +158,9 @@ test.describe('dino easter egg (motion allowed)', () => {
     // Hovering the top row pauses it: the dino misses, lands on the bottom
     // row and turns around.
     await hoverRow(page, 0)
-    await expect(dino(page)).toHaveAttribute('data-level', '1', { timeout: 10_000 })
+    // It misses at the next gap it reaches, walking on its capped clock: a
+    // few seconds, or more where frames come slowly (WebKit without a GPU).
+    await expect(dino(page)).toHaveAttribute('data-level', '1', { timeout: 20_000 })
     await expect(dino(page)).toHaveAttribute('data-dir', 'left')
     await expect(dino(page)).toHaveAttribute('data-mode', 'walk')
 
@@ -167,14 +169,16 @@ test.describe('dino easter egg (motion allowed)', () => {
     await page.mouse.move(5, 5)
     await page.waitForTimeout(300)
     await hoverRow(page, 1)
-    await expect(dino(page)).toHaveAttribute('data-level', '0', { timeout: 10_000 })
+    await expect(dino(page)).toHaveAttribute('data-level', '0', { timeout: 20_000 })
     await expect(dino(page)).toHaveAttribute('data-dir', 'right')
   })
 
   test('pausing a row it is not on leaves its jumps alone', async ({ page }) => {
     await onTopRow(page)
     await hoverRow(page, 0)
-    await expect(dino(page)).toHaveAttribute('data-level', '1', { timeout: 10_000 })
+    // It misses at the next gap it reaches, walking on its capped clock: a
+    // few seconds, or more where frames come slowly (WebKit without a GPU).
+    await expect(dino(page)).toHaveAttribute('data-level', '1', { timeout: 20_000 })
     await expect(dino(page)).toHaveAttribute('data-mode', 'walk')
 
     // Leave, then hover the top row again: it pauses, but the dino is on the
@@ -686,12 +690,16 @@ test.describe('dino easter egg (motion allowed)', () => {
   })
 
   test('skips the click hint once it has been clicked', async ({ page }) => {
-    // Long enough a first wait to click before it.
-    await dinoTiming(page, { firstLineAfter: 1.5, lineGap: [600, 600] })
+    // Long enough a first wait to click before it. The click flips it, so it
+    // stays on the top row: a fall or a dash can leave it walking against the
+    // bottom row near an edge, where it doesn't talk, and where frames come
+    // slowly (its walk is capped, the row's carry isn't) it can stay there.
+    await dinoTiming(page, { firstLineAfter: 1.5, lineGap: [600, 600], reactions: ['flip'] })
     await onTopRow(page)
     await pokeDino(page)
     await expect(dino(page)).toHaveAttribute('data-roars', '1')
-    await expect(dino(page)).toHaveAttribute('data-line', '1', { timeout: 15_000 })
+    // A second and a half of walking in clear view, on its capped clock.
+    await expect(dino(page)).toHaveAttribute('data-line', '1', { timeout: 30_000 })
   })
 
   test('the tiles cannot be selected by a double or triple click, and still take keyboard focus', async ({ page }) => {
