@@ -70,7 +70,7 @@ jobs:
       - run: npm run build
 
   e2e:
-    name: E2E (chromium)
+    name: E2E (${{ matrix.project }}${{ matrix.shard && format(' {0}', matrix.shard) || '' }})
     needs: changes
     if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
@@ -83,6 +83,20 @@ jobs:
     env:
       # Browsers refuse a HOME owned by another user (the container runs as root).
       HOME: /root
+    # The same matrix as n8builds-web. The WebKit projects are the slowest (no
+    # GPU, so their frames come slowly): each runs as two halves with one
+    # worker, so it doesn't compete with itself for CPU.
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { project: chromium }
+          - { project: firefox }
+          - { project: webkit, shard: 1/2, workers: 1 }
+          - { project: webkit, shard: 2/2, workers: 1 }
+          - { project: mobile-chrome }
+          - { project: mobile-safari, shard: 1/2, workers: 1 }
+          - { project: mobile-safari, shard: 2/2, workers: 1 }
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
@@ -90,12 +104,15 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
-      - run: npx playwright test --project=chromium
+      - run: npx playwright test --project=${{ matrix.project }} ${{ matrix.shard && format('--shard={0}', matrix.shard) || '' }} ${{ matrix.workers && format('--workers={0}', matrix.workers) || '' }}
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: failure()
         with:
-          name: playwright-report
-          path: playwright-report/
+          name: playwright-report-${{ matrix.project }}${{ matrix.shard && format('-{0}', strategy.job-index) || '' }}
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7
 
   # The one check branch protection requires: passes when every job passed or
   # was skipped on purpose (a docs-only change).
