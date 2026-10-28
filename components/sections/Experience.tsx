@@ -2,7 +2,7 @@
 
 import React from 'react'
 import Image from 'next/image'
-import { motion } from 'framer-motion'
+import { motion } from 'motion/react'
 import { FiArrowUpRight } from 'react-icons/fi'
 import { workExperience } from '@/data/experience'
 import SectionHeading from '@/components/ui/SectionHeading'

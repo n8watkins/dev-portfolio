@@ -1,4 +1,4 @@
-import { Variants } from 'framer-motion'
+import { Variants } from 'motion/react'
 
 // Common animation variants for fade-in effects
 export const fadeInVariants: Variants = {

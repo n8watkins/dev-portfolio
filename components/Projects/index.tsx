@@ -1,5 +1,5 @@
 import React from 'react'
-import { motion } from 'framer-motion'
+import { motion } from 'motion/react'
 import { fadeInUpVariants, defaultAnimationConfig } from '@/lib/animations'
 import { projects } from '@/data/projects'
 import { accents } from '@/lib/accents'

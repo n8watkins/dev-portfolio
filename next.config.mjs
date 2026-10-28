@@ -34,7 +34,7 @@ const nextConfig = {
   experimental: {
     optimizePackageImports: [
       'lucide-react',
-      'framer-motion',
+      'motion/react',
       'react-icons',
       '@radix-ui/react-dropdown-menu',
       '@radix-ui/react-icons',
