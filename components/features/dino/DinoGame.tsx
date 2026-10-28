@@ -637,9 +637,10 @@ export default function DinoGame() {
       const dt = Math.min(realDt, 0.05)
       last = now
       if (!dt) return
-      // The round's clock, and the final score's time on screen.
+      // The round's clock, and the final score's time on screen, run on real
+      // time: on a device that can't keep up, a 30 s round still lasts 30 s.
       if (roundLeft > 0) {
-        roundLeft -= dt
+        roundLeft -= realDt
         if (roundLeft <= 0) {
           roundLeft = 0
           resultLeft = RESULT_FOR
@@ -660,7 +661,7 @@ export default function DinoGame() {
           dino.dataset.game = 'over'
         }
       } else if (resultLeft > 0) {
-        resultLeft -= dt
+        resultLeft -= realDt
         if (resultLeft <= 0) dino.dataset.game = 'idle'
       }
       scoreboard()

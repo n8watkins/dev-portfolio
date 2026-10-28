@@ -105,7 +105,8 @@ test.describe('dino easter egg (motion allowed)', () => {
     await expect(dino(page)).toHaveCount(0)
 
     await showKit(page, '[data-dino-panel]')
-    await expect(dino(page)).toHaveCount(1)
+    // The game's code loads only now; a loaded CI machine can take several seconds.
+    await expect(dino(page)).toHaveCount(1, { timeout: 15_000 })
     // Decorative: hidden from assistive tech. Clicks pass through its layer;
     // only the dino's own small box takes them (the click easter egg).
     await expect(
@@ -218,8 +219,14 @@ test.describe('dino easter egg (motion allowed)', () => {
         return { at, x: box.x + box.width / 2, y: box.y + box.height / 2 }
       })
     const pick = async (index: number) => {
-      await expect.poll(() => findTile(index), { message: 'a tile fully on screen' }).not.toBeNull()
-      const target = (await findTile(index))!
+      // On a phone a tile is fully in view only part of the time as the row drifts: allow it a while.
+      // Use the tile the poll found: asked again a moment later, it may have drifted off the edge.
+      const found: { current: Awaited<ReturnType<typeof findTile>> } = { current: null }
+      await expect
+        .poll(async () => (found.current = await findTile(index)), { message: 'a tile fully on screen', timeout: 20_000 })
+        .not.toBeNull()
+      const target = found.current
+      if (!target) throw new Error('no tile fully on screen')
       if (hasTouch) await page.touchscreen.tap(target.x, target.y)
       else
         await rowsEl
@@ -344,6 +351,10 @@ test.describe('dino easter egg (motion allowed)', () => {
   })
 
   test('never teleports or gets flung when the window is resized', async ({ page }) => {
+    // A desktop window being resized, on every project: starting from a
+    // phone's width, the first resize would reflow the page and scroll the
+    // panel away, and the dino rightly stands still while out of sight.
+    await page.setViewportSize({ width: 1440, height: 900 })
     await onTopRow(page)
     await recordMoves(page)
     for (const width of [1100, 1440, 1000, 1440, 1200, 1440]) {
@@ -521,6 +532,32 @@ test.describe('dino easter egg (motion allowed)', () => {
     await expect(page.locator('[data-dino-score]')).toHaveText(/^Time! 1 catch/)
   })
 
+  test('a round lasts its full time and no longer, even when frames come slowly', async ({ page }) => {
+    // A device that can't keep up: every frame spends 150 ms of main-thread
+    // work, so frames come about three times slower than the dino's capped
+    // step. The round runs on real time, so 7 s is still 7 s.
+    await page.addInitScript(() => {
+      const hog = () => {
+        const end = performance.now() + 150
+        while (performance.now() < end) {
+          // Busy: a slow frame.
+        }
+        requestAnimationFrame(hog)
+      }
+      requestAnimationFrame(hog)
+    })
+    await dinoTiming(page, { reactions: ['dash'], round: 7 })
+    await onTopRow(page)
+    const timer = page.locator('[data-dino-timer]')
+    await pokeDino(page)
+    await expect(timer).toHaveAttribute('data-shown', 'true')
+    const started = Date.now()
+    await expect(timer).toHaveAttribute('data-shown', 'false', { timeout: 20_000 })
+    const took = (Date.now() - started) / 1000
+    expect(took, 'seconds the 7 s round took').toBeGreaterThan(6)
+    expect(took, 'seconds the 7 s round took').toBeLessThan(9)
+  })
+
   test("a round sends its start and score to the game stats, without cookies, and shows the record", async ({ page }) => {
     await dinoTiming(page, { reactions: ['dash'], round: 7 })
     const sent: { body: unknown; cookie: string | null }[] = []
@@ -590,9 +627,12 @@ test.describe('dino easter egg (motion allowed)', () => {
 
   test('says its first line soon after it comes into view', async ({ page }) => {
     // The real wait, not a shortened one: a visitor scrolling to it sees it.
+    // It talks after a second of walking in clear view, counted on its own
+    // capped clock, so where frames come slowly (WebKit without a GPU, about
+    // 10 fps) the walk in and that second take twice as long: allow 12 s.
     await page.goto('/')
     await showKit(page, '[data-dino-panel]')
-    await expect(dino(page)).toHaveAttribute('data-line', '0', { timeout: 6_000 })
+    await expect(dino(page)).toHaveAttribute('data-line', '0', { timeout: 12_000 })
     await expect(page.locator('[data-dino-bubble="line-0"]')).toBeVisible()
   })
 
