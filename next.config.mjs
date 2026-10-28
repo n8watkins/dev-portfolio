@@ -100,7 +100,7 @@ export default withBundleAnalyzer(withSentryConfig(nextConfig, {
   // https://github.com/getsentry/sentry-webpack-plugin#options
 
   org: 'nathan-watkins',
-  project: 'javascript-nextjs',
+  project: 'portfolio',
 
   // Only print logs for uploading source maps in CI
   silent: !process.env.CI,
