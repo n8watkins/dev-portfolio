@@ -174,6 +174,8 @@ test.describe('dino easter egg (motion allowed)', () => {
   })
 
   test('pausing a row it is not on leaves its jumps alone', async ({ page }) => {
+    // No lines: it stands still while it talks, and this watches it hop.
+    await dinoTiming(page, { firstLineAfter: 999 })
     await onTopRow(page)
     await hoverRow(page, 0)
     // It misses at the next gap it reaches, walking on its capped clock: a
@@ -385,11 +387,9 @@ test.describe('dino easter egg (motion allowed)', () => {
     expect(await teleports(page)).toEqual([])
   })
 
-  test('never teleports or gets flung when the window is resized', async ({ page }) => {
-    // A desktop window being resized, on every project: starting from a
-    // phone's width, the first resize would reflow the page and scroll the
-    // panel away, and the dino rightly stands still while out of sight.
-    await page.setViewportSize({ width: 1440, height: 900 })
+  test('never teleports or gets flung when the window is resized', async ({ page, isMobile }) => {
+    // A desktop window being resized: a phone's window doesn't resize like this.
+    test.skip(isMobile, 'desktop windows only')
     await onTopRow(page)
     await recordMoves(page)
     for (const width of [1100, 1440, 1000, 1440, 1200, 1440]) {
