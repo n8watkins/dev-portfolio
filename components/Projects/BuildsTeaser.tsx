@@ -62,8 +62,8 @@ const BUILDS: Build[] = [
     name: 'OpenPing',
     icon: '/builds/openping/icon.svg',
     kind: 'Web tool',
-    tagline: 'Self-hosted uptime monitoring',
-    desc: 'Watches live demos, the ones on this page included, from your own Cloudflare account; off-hours never count as downtime.',
+    tagline: 'Uptime monitoring on your own Cloudflare',
+    desc: 'Watches live demos, the ones on this page included, without counting off-hours as downtime.',
     tags: ['Cloudflare Workers', 'D1', 'Hono', 'React'],
     liveSite: 'https://openping.n8builds.dev',
     accent: {
