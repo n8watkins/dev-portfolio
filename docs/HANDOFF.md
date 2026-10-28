@@ -2,6 +2,28 @@
 
 Last updated: 2026-10-27.
 
+## Current state and open work (2026-10-27): start here
+
+### State
+
+- `main` matches n8builds.dev's copy (audit fixes #12) and its dino game files are byte-identical (`npm run check:sync`); dino stats post to `https://n8builds.dev/api/game` (#14).
+- **Production is behind `main`.** It's stuck at #10: #11 to #14 merged while Vercel's 100-deployments-per-24-hours limit was hit, so no production deploy was made for them. The live page doesn't show the "We help!" Appturnity card yet.
+- Vercel builds on Node 24.x; `nathansportfolio.vercel.app` and `n8sportfolio.vercel.app` redirect here (#9).
+- Echo's live title no longer has an em dash; Scout's and GeminiGPT's fixes are merged in their repos but not live, because Render auto-deploy is broken for both (owner step, tracked in those repos).
+- OpenPing has a bug: during scheduled off-hours its public feed reports monitors as "operational" (fix tracked in open-ping, `docs/BUG-public-scheduled-off.md`). This site already works around it: a feed older than 30 minutes reads as Asleep (see "Live-demo status" below). Once OpenPing reports `scheduled_off`, check `lib/status.ts` maps it to Asleep.
+
+### Next
+
+1. **Deploy first:** `vercel deploy --prod --yes` from a clean `main` (or push any commit to `main`) once the account's 24-hour window has room, then check the dino pills and the "We help!" card are live.
+2. Change OpenPing's line in `components/Projects/BuildsTeaser.tsx` from "Self-hosted uptime monitoring" to "Uptime monitoring on your own Cloudflare".
+3. When GeminiGPT moves to Gemini 3.5 Flash Lite (GeminiGPT #3, waiting on the owner's key), change this site's "Gemini 3.1 Flash Lite" copy to match.
+4. Keep the dino files in sync with n8builds-web after any change there (`npm run check:sync`).
+5. Optional: drop `@lhci/cli` and run it with `npx` (its last 5 dev-only alerts).
+
+### Blocked on the owner
+
+- Subdomain DNS (rank, trailers, echo); update project links when they exist.
+
 ## What this is
 
 Nathan Watkins' developer portfolio: the hire-me page, live at https://portfolio.n8builds.dev.
