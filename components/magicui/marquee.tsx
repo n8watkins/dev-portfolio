@@ -49,6 +49,9 @@ export default function Marquee({
   // every tile in the HTML made the page heavy to download and parse.
   const copies = useHydrated() ? repeat : 1
   const rowRef = useRef<HTMLDivElement>(null)
+  // The last pointer pressed on the row: a mouse click on an item does nothing
+  // (only hovering pauses), so it mustn't leave focus behind to hold the row.
+  const pointerType = useRef('')
 
   // The first copy started animating at first paint; the loop's copies join
   // after hydration. Line them up with it, or they run out of step and the
@@ -112,6 +115,14 @@ export default function Marquee({
         },
         className
       )}
+      onPointerDown={(e) => {
+        pointerType.current = e.pointerType
+      }}
+      onMouseDown={(e) => {
+        // Mouse and pen only: a tap still focuses an item, which pauses the row
+        // and shows its details on a touch screen (no hover there).
+        if (pointerType.current !== 'touch') e.preventDefault()
+      }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onFocus={() => setHasFocus(true)}

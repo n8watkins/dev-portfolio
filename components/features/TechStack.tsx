@@ -1,9 +1,9 @@
 'use client'
-import React from 'react'
+import React, { type CSSProperties } from 'react'
 import Marquee from '@/components/magicui/marquee'
 import StackTile from '@/components/ui/StackTile'
 import DinoEasterEgg from '@/components/features/dino/DinoEasterEgg'
-import { tech_libraries, tech_tools } from '@/data/techStack'
+import { ai_agents, ai_tools, dev_stack, rowDuration } from '@/data/stack'
 
 /**
  * The "My tech stack" bento card's marquee, with the dino easter egg.
@@ -12,9 +12,10 @@ import { tech_libraries, tech_tools } from '@/data/techStack'
  * (components/features/AITechStack.tsx there): the same structure, and the
  * marquee, tile and dino are byte-identical copies of n8builds-web's files
  * (see "Kept in sync with n8builds-web" in docs/HANDOFF.md and
- * `npm run check:sync`). Only this wrapper differs: the content (the tech
- * stack instead of the AI kit), the bento card's colours, and the rows sitting
- * low in the card (above its title) with headroom for the dino. The tiles are
+ * `npm run check:sync`), and so is the tile list (data/stack.tsx). Only this
+ * wrapper differs: two rows instead of three (the AI kit, then the dev stack),
+ * the bento card's colours, and the rows sitting low in the card (above its
+ * title) with headroom for the dino. The tiles are
  * a little shorter here (h-24, not the shared h-28), so
  * the card leaves about twice the room above them: the catch game's
  * scoreboards sit in a band there that the dino never enters. Nothing in the
@@ -24,6 +25,9 @@ import { tech_libraries, tech_tools } from '@/data/techStack'
  * read clearly wider than the dino that hops and falls through them. Under
  * reduced motion there is no dino and the tiles wrap into a grid the card scrolls.
  */
+// n8builds.dev's first two rows as one: the agents and models, then the AI tools.
+const ai_kit = [...ai_agents, ...ai_tools]
+
 export function TechStack() {
   return (
     <div
@@ -34,36 +38,26 @@ export function TechStack() {
       className="absolute inset-0 flex w-full flex-col items-center justify-end overflow-hidden rounded-3xl bg-linear-to-br from-[#0d304c] to-[#0d304c] pb-18 select-none [-webkit-tap-highlight-color:transparent] sm:pb-24 motion-safe:gap-5 motion-reduce:justify-start motion-reduce:overflow-y-auto motion-safe:[&_figure]:h-24"
     >
       <Marquee
-        label="Libraries and frameworks"
+        label="AI kit"
         reverse
         pauseOnHover
         data-marquee-row
-        className="[--duration:45s] motion-safe:[--gap:2.5rem]"
+        style={{ '--duration': rowDuration(ai_kit.length) } as CSSProperties}
+        className="motion-safe:[--gap:2.5rem]"
       >
-        {tech_libraries.map((tech) => (
-          <StackTile
-            key={tech.name}
-            name={tech.name}
-            icon={tech.icon}
-            description={tech.description}
-            still
-          />
+        {ai_kit.map((tech) => (
+          <StackTile key={tech.name} name={tech.name} icon={tech.icon} description={tech.description} />
         ))}
       </Marquee>
       <Marquee
-        label="Tools and services"
+        label="Dev stack"
         pauseOnHover
         data-marquee-row
-        className="[--duration:45s] motion-safe:[--gap:2.5rem]"
+        style={{ '--duration': rowDuration(dev_stack.length) } as CSSProperties}
+        className="motion-safe:[--gap:2.5rem]"
       >
-        {tech_tools.map((tech) => (
-          <StackTile
-            key={tech.name}
-            name={tech.name}
-            icon={tech.icon}
-            description={tech.description}
-            still
-          />
+        {dev_stack.map((tech) => (
+          <StackTile key={tech.name} name={tech.name} icon={tech.icon} description={tech.description} />
         ))}
       </Marquee>
       <DinoEasterEgg />

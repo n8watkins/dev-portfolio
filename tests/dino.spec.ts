@@ -771,6 +771,86 @@ test.describe('dino easter egg (motion allowed)', () => {
     await expect(tile).toBeFocused()
   })
 
+  // The middle of the tile nearest the middle of a row (paused by hovering it first).
+  const middleTile = async (page: Page, index: number) => {
+    await hoverRow(page, index)
+    await page.waitForTimeout(300)
+    return page.evaluate((index) => {
+      const row = document.querySelectorAll('[data-dino-panel] [data-marquee-row]')[index]
+      const mid = innerWidth / 2
+      const box = [...row.querySelectorAll('figure')]
+        .map((el) => el.getBoundingClientRect())
+        .sort((a, b) => Math.abs(a.x + a.width / 2 - mid) - Math.abs(b.x + b.width / 2 - mid))[0]
+      return { x: box.x + box.width / 2, y: box.y + box.height / 2 }
+    }, index)
+  }
+  const rowPlayStates = (page: Page, index: number) =>
+    page.evaluate(
+      (index) =>
+        [...document.querySelectorAll('[data-dino-panel] [data-marquee-row]')[index].children].map(
+          (track) => getComputedStyle(track).animationPlayState
+        ),
+      index
+    )
+
+  test('hovering a tile shows what it is for', async ({ page, hasTouch }) => {
+    test.skip(hasTouch, 'no hover on a touch screen (a tap shows it, below)')
+    await page.goto('/')
+    await showKit(page, '[data-dino-panel]')
+    const at = await middleTile(page, 1)
+    await page.mouse.move(at.x, at.y)
+    const description = page.locator('[data-dino-panel] figure:hover .description')
+    await expect(description).toHaveCSS('opacity', '1')
+    await expect(description).not.toBeEmpty()
+  })
+
+  test('clicking a tile does nothing: its row runs again once the pointer leaves', async ({ page, hasTouch }) => {
+    test.skip(hasTouch, 'a tap pauses the row on purpose (see above)')
+    await page.goto('/')
+    await showKit(page, '[data-dino-panel]')
+    const at = await middleTile(page, 0)
+    await page.mouse.click(at.x, at.y)
+    expect(await rowPlayStates(page, 0)).toContain('paused')
+    // The click left no focus behind to hold the row (or its description) open.
+    await page.mouse.move(5, 5)
+    await expect.poll(() => rowPlayStates(page, 0)).not.toContain('paused')
+    expect(await page.evaluate(() => document.activeElement?.tagName)).not.toBe('FIGURE')
+  })
+
+  test('a tapped tile shows what it is for and holds its row', async ({ page, hasTouch }) => {
+    test.skip(!hasTouch, 'touch screens only')
+    await page.goto('/')
+    await showKit(page, '[data-dino-panel]')
+    // The tile nearest the middle of the bottom row (copies included: any tile takes a tap).
+    const at = await page.evaluate(() => {
+      const row = document.querySelectorAll('[data-dino-panel] [data-marquee-row]')[1]
+      const mid = innerWidth / 2
+      const box = [...row.querySelectorAll('figure')]
+        .map((el) => el.getBoundingClientRect())
+        .sort((a, b) => Math.abs(a.x + a.width / 2 - mid) - Math.abs(b.x + b.width / 2 - mid))[0]
+      return { x: box.x + box.width / 2, y: box.y + box.height / 2 }
+    })
+    await page.touchscreen.tap(at.x, at.y)
+    await expect(page.locator('[data-dino-panel] figure:focus .description')).toHaveCSS('opacity', '1')
+    await expect.poll(() => rowPlayStates(page, 1)).not.toContain('running')
+  })
+
+  test('both rows move at the same pace, however many tiles each has', async ({ page }) => {
+    await page.goto('/')
+    const speeds = () =>
+      page.locator('[data-dino-panel] [data-marquee-row]').evaluateAll((rows) =>
+        rows.map((row) => {
+          const track = row.children[0] as HTMLElement
+          const gap = parseFloat(getComputedStyle(row).columnGap)
+          return (track.offsetWidth + gap) / parseFloat(getComputedStyle(track).animationDuration)
+        })
+      )
+    await expect.poll(async () => (await speeds()).length).toBe(2)
+    const pace = await speeds()
+    for (const speed of pace) expect(speed, `row speeds ${pace.map(Math.round).join(', ')} px/s`).toBeGreaterThan(18)
+    for (const speed of pace) expect(speed, `row speeds ${pace.map(Math.round).join(', ')} px/s`).toBeLessThan(26)
+  })
+
   test('the gaps it hops and falls through are clearly wider than it is', async ({ page }) => {
     await page.goto('/')
     await showKit(page, '[data-dino-panel]')
@@ -796,10 +876,26 @@ test.describe('dino easter egg (motion allowed)', () => {
 test.describe('dino easter egg (reduced motion)', () => {
   test.use({ contextOptions: { reducedMotion: 'reduce' } })
 
+  test("shows n8builds.dev's tiles: the AI kit, then the dev stack", async ({ page }) => {
+    await page.goto('/')
+    const ai = page.getByRole('region', { name: 'AI kit' })
+    for (const tool of ['Claude Code', 'Claude Opus 5.5', 'ChatGPT', 'whisper.cpp', 'Hugging Face']) {
+      await expect(ai.getByText(tool, { exact: true })).toHaveCount(1)
+    }
+    const dev = page.getByRole('region', { name: 'Dev stack' })
+    for (const tool of ['Next.js', 'React', 'Firebase', 'AWS', 'Playwright', 'GitHub Actions', 'Figma']) {
+      await expect(dev.getByText(tool, { exact: true })).toHaveCount(1)
+    }
+    // Dropped as filler or dated (the owner's call, 2026-10-29).
+    for (const dropped of ['HTML5', 'CSS3', 'ES6+', 'Recoil', 'Material-UI', 'Paypal API', 'Postman', 'Jest', 'MySQL', 'Stripe API', 'GraphQL', 'AWS Amplify', 'Prisma', 'REST APIs']) {
+      await expect(page.locator('[data-dino-panel]').getByText(dropped, { exact: true })).toHaveCount(0)
+    }
+  })
+
   test('the wrapped tiles keep the default spacing', async ({ page }) => {
     await page.goto('/')
     const gap = await page
-      .getByRole('region', { name: 'Libraries and frameworks' })
+      .getByRole('region', { name: 'AI kit' })
       .evaluate((row) => getComputedStyle(row).columnGap)
     expect(gap).toBe('16px')
   })

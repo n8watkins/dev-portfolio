@@ -7,6 +7,7 @@ import { resolve } from 'node:path'
 
 export const SHARED = [
   'components/magicui/marquee.tsx',
+  'data/stack.tsx',
   'components/Projects/TechStackCycle.tsx',
   'components/ui/StackTile.tsx',
   'components/features/dino/DinoEasterEgg.tsx',
@@ -20,7 +21,14 @@ export const SHARED = [
 const repo = resolve(process.argv[2] ?? '../n8builds-web')
 let drift = 0
 for (const file of SHARED) {
-  const theirs = execFileSync('git', ['-C', repo, 'show', `main:${file}`])
+  let theirs
+  try {
+    theirs = execFileSync('git', ['-C', repo, 'show', `main:${file}`], { stdio: ['ignore', 'pipe', 'ignore'] })
+  } catch {
+    drift++
+    console.log(`missing from n8builds-web main: ${file}`)
+    continue
+  }
   const ours = readFileSync(file)
   if (!theirs.equals(ours)) {
     drift++
