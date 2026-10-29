@@ -375,6 +375,11 @@ test.describe('dino easter egg (motion allowed)', () => {
   }
 
   test('never teleports when clicked: every reaction moves it in plain sight', async ({ page }) => {
+    // Ten reactions, each waited out in pokeWalking (up to 30s apiece: a fall
+    // off the bottom row drops it back in from the top). Where frames come
+    // slowly (WebKit under load) its capped clock runs far behind the test's,
+    // and ten of them don't fit the 30s default test timeout.
+    test.setTimeout(120_000)
     await onTopRow(page)
     await recordMoves(page)
     const reactions = new Set<string>()

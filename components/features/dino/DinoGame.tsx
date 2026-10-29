@@ -74,8 +74,10 @@ interface Row {
   top: number
   /** The first track's top edge, relative to the panel (to notice the row moving up or down). */
   trackTop: number
-  /** Last frame's position of the first track (to measure the row's speed). */
+  /** Last frame's position of the first track, relative to the panel (to measure the row's speed). */
   lastLeft: number | null
+  /** Last frame's distance from one loop copy to the next (to notice the tiles laid out again). */
+  lastPeriod: number | null
   /** How far the row moved this frame, px (measured, so exact at any frame rate). */
   delta: number
   velocity: number
@@ -328,7 +330,7 @@ export default function DinoGame() {
         })
         const top = figures[0].getBoundingClientRect().top - box.top
         const trackTop = first.getBoundingClientRect().top - box.top
-        return [{ el, tracks, tiles, top, trackTop, lastLeft: null, delta: 0, velocity: 0, paused: false }]
+        return [{ el, tracks, tiles, top, trackTop, lastLeft: null, lastPeriod: null, delta: 0, velocity: 0, paused: false }]
       })
       levels = rows.map((row) => ({ y: row.top, row }))
       // One row: a ground line under it is the second level.
@@ -672,19 +674,31 @@ export default function DinoGame() {
       // on. A pause of any other row (hovered, tapped or focused) leaves its
       // jumps alone: the row under its feet is still moving.
       const onRow = levels[level]?.row
-      let relaidOut = false
+      // Laid out again since the rows were measured: the panel changed size
+      // (the window was resized). Every track then jumps to its new place in
+      // the panel, and the jump is not the rows' travel, however slowly the
+      // frames come. (A speed limit alone can't tell: on a slow frame, as in
+      // WebKit while the window resizes, a 70px jump fits under it.)
+      let relaidOut = panelBox.width !== panelW || panelBox.height !== panelH
       for (const row of rows) {
         const trackBox = row.tracks[0].getBoundingClientRect()
-        const left = trackBox.left
+        // Relative to the panel, like the dino's own x: a window resize that
+        // re-centres the panel (wider than its max width, say) moves every
+        // track on screen without moving it under the dino. Measured on the
+        // screen, a slow frame let that shift through as the row's own
+        // travel, and the dino rode it, jumping 100px or more.
+        const left = trackBox.left - panelLeft
         // Moved up or down (a card resized around rows anchored to its
         // bottom): laid out again, so the dino moves with it this frame.
         if (Math.abs(trackBox.top - panelBox.top - row.trackTop) > 1) relaidOut = true
         row.delta = 0
-        if (row.lastLeft !== null) {
+        const period =
+          row.tracks.length > 1 ? row.tracks[1].getBoundingClientRect().left - trackBox.left : Infinity
+        // Its tiles changed width (a font loaded, a breakpoint): laid out again.
+        if (row.lastPeriod !== null && Math.abs(period - row.lastPeriod) > 1) relaidOut = true
+        if (row.lastLeft !== null && !relaidOut) {
           // The loop jumps the track back by one copy each time round: take
           // the step that is less than half a copy.
-          const period =
-            row.tracks.length > 1 ? row.tracks[1].getBoundingClientRect().left - left : Infinity
           let delta = left - row.lastLeft
           if (delta > period / 2) delta -= period
           else if (delta < -period / 2) delta += period
@@ -704,6 +718,7 @@ export default function DinoGame() {
           }
         }
         row.lastLeft = left
+        row.lastPeriod = period
       }
       settled++
       if (relaidOut) remeasure()
