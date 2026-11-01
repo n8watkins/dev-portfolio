@@ -4,5 +4,5 @@
 export { navItems } from './navigation'
 export { projects, techNameMapping } from './projects'
 export { workExperience } from './experience'
-export { tech_libraries, tech_tools } from './techStack'
+export { ai_agents, ai_tools, dev_stack } from './stack'
 export { gridItems } from './grid'

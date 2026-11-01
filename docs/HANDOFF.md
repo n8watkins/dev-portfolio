@@ -15,7 +15,7 @@ Last updated: 2026-10-28.
 ### Next
 
 1. When GeminiGPT moves to Gemini 3.5 Flash Lite (GeminiGPT #3, waiting on the owner's key), change this site's "Gemini 3.1 Flash Lite" copy to match.
-2. Keep the dino files in sync with n8builds-web after any change there (`npm run check:sync`).
+2. Keep the shared files in sync with n8builds-web after any change there (`npm run check:sync`): the dino, the marquee and its tiles, and the tile list `data/stack.tsx` (edit it in n8builds-web, then copy it here).
 
 ### Blocked on the owner
 
@@ -86,7 +86,10 @@ It funnels visitors to the two other sites:
 - Experience hover images are framed per item (`hoverFrame` in `data/experience.tsx`) with one even glow (`hoverGlow`).
 - The workshop section is "Beyond the resume / My workshop", one name line per card.
 - Contact: the address, LinkedIn and X, then "Or message me through n8builds.dev" (its contact form).
-- The tech stack tiles are still (like n8builds.dev's AI kit), so the dino stands out; the dino and its 30-second catch game are byte-identical with n8builds.dev's.
+- The tech stack card shows the same tiles as n8builds.dev's AI kit (`data/stack.tsx`, shared byte for byte), in two rows here: the AI kit, then the dev stack (three rows there) (owner, 2026-10-29).
+  Hovering a tile shows what it is for, a tap does on phones, and a mouse click does nothing (only hovering pauses a row).
+  Row loop times come from the tile count (`rowDuration`), so every row moves at the same pace.
+  The dino and its 30-second catch game are byte-identical with n8builds.dev's.
 - Twitch and YouTube stay hidden until streaming starts (`STREAMING` in `components/layout/Footer.tsx`).
 
 ## Live-demo status (OpenPing)

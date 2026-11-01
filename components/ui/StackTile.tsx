@@ -14,46 +14,27 @@ import { cn } from '@/lib/utils'
 // height (1fr) while the name shrinks, and the block stays centred whatever
 // the description's length.
 //
-// `still`: a calm tile, icon and name only, that doesn't react to the pointer
-// (the homepage's AI kit, so the dino is what stands out). It stays in the tab
-// order with a keyboard focus ring: focusing (or tapping) a tile pauses its
-// row (WCAG 2.2.2), which the dino game uses too.
+// Focusing (or tapping) a tile pauses its row (WCAG 2.2.2), which the dino
+// game uses too. A mouse click does nothing: the marquee keeps it from
+// focusing the tile, so only hovering pauses the row.
 export default function StackTile({
   name,
   icon,
   description,
   iconClassName,
-  still = false,
 }: {
   name: string
   icon?: string | ReactElement
   description: string
   iconClassName?: string
-  still?: boolean
 }) {
   // Duplicate marquee copies stay tappable but out of the tab order.
   const isCopy = useContext(MarqueeCopyContext)
-  if (still) {
-    return (
-      <figure
-        tabIndex={isCopy ? -1 : 0}
-        className="relative flex h-28 w-52 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-white/8 bg-white/4 px-2 outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
-      >
-        <figcaption className="flex items-center gap-2 text-xl font-medium text-white">
-          <span className={cn('flex size-7 shrink-0 items-center justify-center *:size-full!', iconClassName)}>{icon}</span>
-          <span data-tile-name className="whitespace-nowrap">
-            {name}
-          </span>
-          <span className="sr-only">: {description}</span>
-        </figcaption>
-      </figure>
-    )
-  }
   return (
     <figure
       tabIndex={isCopy ? -1 : 0}
       className={cn(
-        'group/tile relative flex h-28 w-52 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-xl border px-2',
+        'group/tile relative flex h-28 w-52 shrink-0 items-center justify-center overflow-hidden rounded-xl border px-2',
         'border-white/8 bg-white/4 transition-all duration-300 ease-in-out outline-none',
         'focus-visible:ring-2 focus-visible:ring-cyan-400',
         'hover:border-cyan-400/30 hover:bg-white/8 hover:shadow-lg hover:shadow-cyan-500/5',
