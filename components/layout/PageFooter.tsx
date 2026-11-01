@@ -1,7 +1,9 @@
 import { FiArrowUpRight, FiGithub, FiMail } from 'react-icons/fi'
 import { CiLinkedin } from 'react-icons/ci'
 import { FaXTwitter } from 'react-icons/fa6'
-import { TECH_FOR_PROS, techForProsHref } from '@/lib/techForPros'
+import BuiltInPublic from '@/components/ui/BuiltInPublic'
+import SiteIcon from '@/components/ui/SiteIcon'
+import { N8BUILDS, TECH_FOR_PROS } from '@/lib/sites'
 
 const EMAIL = 'contact@n8builds.dev'
 
@@ -27,19 +29,21 @@ export default function PageFooter() {
             {EMAIL}
           </a>
         </div>
-        <nav aria-label="Elsewhere" className="flex flex-wrap items-center gap-x-4 gap-y-2">
-          {[
-            { href: 'https://n8builds.dev', label: 'n8builds.dev' },
-            // Only once techforpros.com is live (lib/techForPros.ts).
-            ...(techForProsHref ? [{ href: techForProsHref, label: TECH_FOR_PROS.name }] : []),
-          ].map((l) => (
+        <nav aria-label="My sites" className="flex flex-wrap items-center gap-x-4 gap-y-2">
+          {(
+            [
+              { href: N8BUILDS.url, label: N8BUILDS.name, site: 'n8builds' },
+              { href: TECH_FOR_PROS.url, label: TECH_FOR_PROS.domain, site: 'techforpros' },
+            ] as const
+          ).map((l) => (
             <a
               key={l.href}
               href={l.href}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-sm text-slate-300 transition-colors hover:text-sky-300"
+              className="inline-flex items-center gap-1.5 text-sm text-slate-300 transition-colors hover:text-sky-300"
             >
+              <SiteIcon site={l.site} className="h-5 w-5" rounded="rounded-md" />
               {l.label}
               <FiArrowUpRight className="h-4 w-4" aria-hidden="true" />
             </a>
@@ -56,7 +60,10 @@ export default function PageFooter() {
           </a>
         </nav>
       </div>
-      <p className="pb-8 text-center text-xs text-slate-500">Copyright © 2026 Nathan Watkins</p>
+      <div className="flex flex-col items-center gap-3 pb-8">
+        <BuiltInPublic />
+        <p className="text-center text-xs text-slate-500">Copyright © 2026 Nathan Watkins</p>
+      </div>
     </footer>
   )
 }

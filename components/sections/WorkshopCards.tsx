@@ -4,7 +4,6 @@ import React from 'react'
 import Image from 'next/image'
 import { motion } from 'motion/react'
 import { FiArrowUpRight, FiCheck, FiGithub } from 'react-icons/fi'
-import { LuWrench } from 'react-icons/lu'
 import PauseOffscreen from '@/components/ui/PauseOffscreen'
 import SectionHeading from '@/components/ui/SectionHeading'
 import {
@@ -12,7 +11,8 @@ import {
   staggerItemVariants,
   defaultAnimationConfig,
 } from '@/lib/animations'
-import { TECH_FOR_PROS } from '@/lib/techForPros'
+import SiteIcon from '@/components/ui/SiteIcon'
+import { N8BUILDS, TECH_FOR_PROS } from '@/lib/sites'
 import styles from './Doors.module.css'
 
 /** A screenshot: when it is taller than its frame it scrolls (see Doors.module.css). */
@@ -29,8 +29,8 @@ interface Door {
   id: string
   title: string
   name: string
-  /** An image path, or an icon for a brand with no mark of its own. */
-  icon: string | React.ReactElement
+  /** Its mark (components/ui/SiteIcon.tsx). */
+  icon: 'n8builds' | 'techforpros'
   blurb: React.ReactNode
   pointsLabel?: string
   points: string[]
@@ -126,13 +126,8 @@ const Showcase = ({ desktop, phone, still }: { desktop: Shot; phone: Shot; still
 const doors: Door[] = [
   {
     id: 'techforpros',
-    name: TECH_FOR_PROS.name,
-    // No logo yet: a plain wrench, in the card's blue.
-    icon: (
-      <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#1066f4]/20 ring-1 ring-sky-300/25">
-        <LuWrench aria-hidden className="h-5 w-5 text-sky-300" />
-      </span>
-    ),
+    name: TECH_FOR_PROS.domain,
+    icon: 'techforpros',
     title: 'Run a service business? I built this for you.',
     blurb:
       'Tech for Pros turns a few details about your business into a launch-ready website, then takes the follow-up off your plate.',
@@ -143,7 +138,7 @@ const doors: Door[] = [
       'An instant site-health check: speed, mobile, SEO and accessibility',
       'Next: reminders, lead follow-up and missed-call text-back',
     ],
-    cta: { label: 'Visit Tech for Pros', href: TECH_FOR_PROS.url },
+    cta: { label: 'Visit techforpros.com', href: TECH_FOR_PROS.url },
     desktop: {
       src: '/work/landscaping-verdant.webp',
       alt: 'A landscaping website template',
@@ -167,8 +162,8 @@ const doors: Door[] = [
   },
   {
     id: 'n8builds',
-    name: 'n8builds.dev',
-    icon: '/tab/n8-icon.png',
+    name: N8BUILDS.name,
+    icon: 'n8builds',
     title: 'Where I build in public',
     blurb:
       'Everything I make outside client work lives here, free to try, each build with the story of how I made it.',
@@ -177,7 +172,7 @@ const doors: Door[] = [
       'Web apps and Chrome extensions',
       'All open source, this portfolio included: use it as a template or fork it',
     ],
-    cta: { label: 'Visit n8builds.dev', href: 'https://n8builds.dev' },
+    cta: { label: 'Visit n8builds.dev', href: N8BUILDS.url },
     secondary: { label: "How it's built and tested", href: 'https://n8builds.dev/builds/n8builds' },
     github: 'https://github.com/n8watkins/n8builds-web',
     still: true,
@@ -238,17 +233,7 @@ const DoorCard = ({ door, index }: { door: Door; index: number }) => {
       {/* Copy */}
       <div className="relative flex flex-col">
         <div className="flex items-center gap-3">
-          {typeof door.icon === 'string' ? (
-            <Image
-              src={door.icon}
-              alt=""
-              width={36}
-              height={36}
-              className="h-9 w-9 rounded-xl object-contain"
-            />
-          ) : (
-            door.icon
-          )}
+          <SiteIcon site={door.icon} rounded="rounded-xl" />
           <p className="text-xl font-bold text-slate-100">{door.name}</p>
         </div>
 

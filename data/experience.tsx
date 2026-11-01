@@ -27,25 +27,23 @@ export const workExperience: WorkExperienceItem[] = [
   {
     id: 5,
     company: 'Tech for Pros',
-    // No link or screenshot until techforpros.com is live.
+    companyUrl: 'https://techforpros.com',
     location: 'Los Angeles, CA',
-    role: 'Full Stack Engineer',
+    role: 'Full Stack Engineer and AI Consultant',
     period: 'January 2026 – Present',
     bullets: [
-      'Building a SaaS for service businesses: trade-specific Next.js templates and an intake-driven site generator that turns business details into launch-ready drafts in minutes.',
+      'Building Tech for Pros, a SaaS for service businesses: trade-specific Next.js templates and an intake-driven site generator that turns business details into launch-ready drafts in minutes.',
       'Architecting a shared delivery layer on Cloudflare for domains, hosting, forms, analytics, reviews and client content, so a new business launches without a rebuild.',
       'Shipped lead capture, review display and request flows, and an instant site-health check covering performance, mobile usability, SEO and accessibility.',
       'Developing automated follow-up for leads and quotes, appointment and maintenance reminders, referrals and missed-call text-back.',
+      'Consulting with businesses on AI alongside it: where it saves them time, and the tools and automations that put it to work.',
     ],
   },
   {
     id: 1,
-    company: 'Appturnity',
-    // White, where Appturnity's white page shows
-    hoverGlow: 'bg-white/16',
-    companyUrl: 'https://appturnity.com',
+    company: 'Freelance web development',
     location: 'Los Angeles, CA',
-    role: 'Full Stack Developer',
+    role: 'Full Stack Developer and Consultant',
     period: 'March 2023 – June 2026',
     bullets: [
       'Led end-to-end delivery of client apps: frontend and backend data flows, API boundaries, testing, code reviews and production releases.',
@@ -59,8 +57,6 @@ export const workExperience: WorkExperienceItem[] = [
       { label: 'comfort1hvac.com', url: 'https://comfort1hvac.com/' },
       { label: 'primeshows.live', url: 'https://primeshows.live/' },
     ],
-    hoverImage: '/projects/appturnity-home-2026-10.webp',
-    hoverFrame: 'object-[0%_40%] origin-[0%_40%] scale-100 group-hover:scale-[1.03]',
   },
   {
     id: 2,

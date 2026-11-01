@@ -76,7 +76,7 @@ const Experience = () => {
                           sizes="30vw"
                           className={`object-cover transition-transform duration-700 ${item.hoverFrame ?? 'object-top-right origin-top-right scale-[1.18] group-hover:scale-110'}`}
                         />
-                        {/* Dimmed, so a bright page (Appturnity's) doesn't wash out the card */}
+                        {/* Dimmed, so a bright page doesn't wash out the card */}
                         <div className="absolute inset-0 bg-darkBlue/45" />
                       </div>
                     )}

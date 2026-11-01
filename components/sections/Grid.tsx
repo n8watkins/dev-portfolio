@@ -6,6 +6,7 @@ import { BentoGrid, BentoGridItem } from '@/components/ui/BentoGrid'
 import { gridItems } from '@/data/grid'
 import { staggerContainerVariants, defaultAnimationConfig } from '@/lib/animations'
 import SectionHeading from '@/components/ui/SectionHeading'
+import { TECH_FOR_PROS } from '@/lib/sites'
 
 const LINK =
   'font-semibold text-sky-400 underline decoration-sky-400/40 underline-offset-4 hover:text-sky-300 hover:decoration-sky-300 transition-colors duration-200'
@@ -40,11 +41,12 @@ const Grid = () => {
               getting to do so much more of it with AI feels like a blessing.
             </p>
             <p>
-              Right now I&apos;m building Tech for Pros, a platform for service businesses: pool,
-              HVAC, landscaping and the like. It turns a few details about a business into a
-              launch-ready website, then takes the follow-up off their plate: lead capture, reviews,
-              reminders and missed-call text-back. Before that I spent three years building client
-              apps at <Out href="https://appturnity.com">Appturnity</Out>, a consulting firm.
+              These days I consult on AI and build{' '}
+              <Out href={TECH_FOR_PROS.url}>{TECH_FOR_PROS.name}</Out>, a platform for service
+              businesses: pool, HVAC, landscaping and the like. It turns a few details about a
+              business into a launch-ready website, then takes the follow-up off their plate: lead
+              capture, reviews, reminders and missed-call text-back. Before that I spent three years
+              freelancing as a web developer and consultant, building client apps end to end.
             </p>
             <p>
               In my free time I build in public on{' '}

@@ -83,24 +83,81 @@ test.describe('the map arcs', () => {
 })
 
 /**
- * Tech for Pros took over from Appturnity (owner, 2026-11-01): its buttons
- * take Appturnity's place in the hero and the workshop.
+ * Tech for Pros (techforpros.com) is where I work now (owner, 2026-11-01): the
+ * hero's card and the workshop's card name the site, show its mark and link
+ * to it, and the hero card's tag fits on one line.
  */
-test("Tech for Pros' buttons take Appturnity's place in the hero and the workshop", async ({
+test("Tech for Pros' cards name techforpros.com, show its mark and link to it", async ({
   page,
 }) => {
   await page.goto('/')
-  await expect(
-    page.getByRole('link', { name: /My company\s*Tech for Pros/ }).first()
-  ).toHaveAttribute('href', 'https://techforpros.com')
+  const door = page.getByRole('link', { name: /Where I work\s*techforpros\.com/ }).first()
+  await expect(door).toHaveAttribute('href', 'https://techforpros.com')
+  await expect(door.locator('img[src*="techforpros-icon"]')).toHaveCount(1)
+  // The tag is short enough to sit on one line, like n8builds.dev's.
+  const tag = door.getByText('For service businesses', { exact: true })
+  await expect(tag).toBeVisible()
+  const box = await tag.boundingBox()
+  expect(box!.height).toBeLessThan(30)
+
   const card = page.getByRole('article', { name: /Run a service business/ })
   await card.scrollIntoViewIfNeeded()
-  await expect(card.getByText('Tech for Pros', { exact: true })).toBeVisible()
-  await expect(card.getByRole('link', { name: /Visit Tech for Pros/ })).toHaveAttribute(
+  await expect(card.getByText('techforpros.com', { exact: true })).toBeVisible()
+  await expect(card.locator('img[src*="techforpros-icon"]')).toHaveCount(1)
+  await expect(card.getByRole('link', { name: /Visit techforpros\.com/ })).toHaveAttribute(
     'href',
     'https://techforpros.com'
   )
-  await expect(page.getByText('Appturnity', { exact: true }).first()).toBeAttached()
-  // Appturnity stays only as a past role, never as where to go now.
-  await expect(page.locator('a[href="https://appturnity.com"]')).toHaveCount(2)
+})
+
+/**
+ * My past work is freelance web development consulting, with no firm named or
+ * linked (owner, 2026-11-01): the page never mentions Appturnity.
+ */
+test('the page describes past work as consulting and never names Appturnity', async ({
+  page,
+}) => {
+  await page.goto('/')
+  await expect(page.locator('body')).not.toContainText(/appturnity/i)
+  await expect(page.locator('a[href*="appturnity"]')).toHaveCount(0)
+  const experience = page.locator('#experience')
+  await expect(experience.getByText('Full Stack Developer and Consultant')).toBeAttached()
+  await expect(experience.getByText('Freelance web development')).toBeAttached()
+  await expect(experience.getByRole('link', { name: 'Tech for Pros' })).toHaveAttribute(
+    'href',
+    'https://techforpros.com'
+  )
+  await expect(page.locator('#about').getByRole('link', { name: 'Tech for Pros' })).toHaveAttribute(
+    'href',
+    'https://techforpros.com'
+  )
+})
+
+/**
+ * The footer's "My sites" lists both sites with their marks, and its last
+ * line is "Built in public at n8builds.dev" (owner, 2026-11-01).
+ */
+test('the footer lists my sites with their marks and signs off with n8builds.dev', async ({
+  page,
+}) => {
+  await page.goto('/')
+  const sitemap = page.getByRole('navigation', { name: 'Site map' })
+  await sitemap.scrollIntoViewIfNeeded()
+  await expect(sitemap.getByText('My sites', { exact: true })).toBeVisible()
+  await expect(sitemap).not.toContainText('Elsewhere')
+  for (const [name, href, mark] of [
+    ['n8builds.dev', 'https://n8builds.dev', 'n8-icon'],
+    ['techforpros.com', 'https://techforpros.com', 'techforpros-icon'],
+  ]) {
+    const link = sitemap.getByRole('link', { name: new RegExp(`^${name.replace('.', '\\.')}`) })
+    await expect(link).toHaveAttribute('href', href)
+    await expect(link.locator(`img[src*="${mark}"]`)).toHaveCount(1)
+    // The link (with its mark) fits in its column, never cut off or wrapped.
+    const box = (await link.boundingBox())!
+    expect(box.height).toBeLessThan(30)
+    expect(box.x + box.width).toBeLessThanOrEqual(page.viewportSize()!.width)
+  }
+  const signOff = page.getByRole('link', { name: /Built in public at n8builds\.dev/ })
+  await expect(signOff).toBeVisible()
+  await expect(signOff).toHaveAttribute('href', 'https://n8builds.dev')
 })

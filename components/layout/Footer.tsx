@@ -10,14 +10,17 @@ import SiteDoors from '@/components/ui/SiteDoors'
 import { projects } from '@/data/projects'
 import { RESUME_VIEW_URL } from '@/lib/resume'
 import CookieSettingsButton from '@/components/consent/CookieSettingsButton'
-import { TECH_FOR_PROS, techForProsHref } from '@/lib/techForPros'
+import SiteIcon from '@/components/ui/SiteIcon'
+import BuiltInPublic from '@/components/ui/BuiltInPublic'
+import { N8BUILDS, TECH_FOR_PROS } from '@/lib/sites'
 
 const EMAIL = 'contact@n8builds.dev'
 const CONTACT_FORM = 'https://n8builds.dev/#contact-form'
 
 const ICON_BUTTON =
   'inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-600 text-slate-200 transition-all duration-200 hover:border-sky-400/60 hover:text-sky-300 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-sky-400 sm:h-11 sm:w-11'
-const LINK = 'text-sm text-slate-400 transition-colors duration-200 hover:text-sky-300'
+const LINK =
+  'inline-flex items-center gap-2 text-sm text-slate-400 transition-colors duration-200 hover:text-sky-300'
 
 /**
  * The streaming links (Twitch, YouTube) stay hidden until streaming starts,
@@ -42,8 +45,16 @@ const socials = [
     : []),
 ]
 
-/** The site map: this page's sections, the project pages, and the rest of me online. */
-const sitemap = [
+type SitemapLink = {
+  label: string
+  href: string
+  external?: boolean
+  /** A site of mine, shown with its mark. */
+  site?: 'n8builds' | 'techforpros'
+}
+
+/** The site map: this page's sections, the project pages, and my other sites. */
+const sitemap: { title: string; links: SitemapLink[] }[] = [
   {
     title: 'On this page',
     links: [
@@ -59,16 +70,13 @@ const sitemap = [
     links: projects.map((p) => ({ label: p.title, href: `/projects/${p.slug}` })),
   },
   {
-    title: 'Elsewhere',
+    title: 'My sites',
     links: [
-      { label: 'Resume', href: RESUME_VIEW_URL, external: true },
-      { label: 'n8builds.dev', href: 'https://n8builds.dev', external: true },
-      { label: 'Build log', href: 'https://n8builds.dev/builds', external: true },
-      // Only once techforpros.com is live (lib/techForPros.ts).
-      ...(techForProsHref
-        ? [{ label: TECH_FOR_PROS.name, href: techForProsHref, external: true }]
-        : []),
+      { label: N8BUILDS.name, href: N8BUILDS.url, external: true, site: 'n8builds' },
+      { label: TECH_FOR_PROS.domain, href: TECH_FOR_PROS.url, external: true, site: 'techforpros' },
+      { label: 'Build log', href: `${N8BUILDS.url}/builds`, external: true },
       { label: 'Source code', href: 'https://github.com/n8watkins/dev-portfolio', external: true },
+      { label: 'Resume', href: RESUME_VIEW_URL, external: true },
     ],
   },
 ]
@@ -169,7 +177,11 @@ const Footer = () => {
             </p>
             <SiteDoors />
           </div>
-          <nav aria-label="Site map" className="grid grid-cols-2 gap-x-6 gap-y-8 sm:grid-cols-3">
+          <nav
+            aria-label="Site map"
+            // Each column as wide as its longest link (techforpros.com, with its mark), spread across
+            className="grid grid-cols-2 gap-x-6 gap-y-8 sm:grid-cols-[repeat(3,auto)] sm:justify-between"
+          >
             {sitemap.map((col) => (
               <div key={col.title} className="flex flex-col gap-2.5">
                 <p className="whitespace-nowrap text-xs font-semibold uppercase tracking-[0.18em] text-slate-300">
@@ -178,8 +190,14 @@ const Footer = () => {
                 <ul className="flex flex-col gap-2">
                   {col.links.map((l) => (
                     <li key={l.label}>
-                      {'external' in l && l.external ? (
-                        <a href={l.href} target="_blank" rel="noopener noreferrer" className={LINK}>
+                      {l.external ? (
+                        <a
+                          href={l.href}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={LINK}
+                        >
+                          {l.site && <SiteIcon site={l.site} className="h-4 w-4" rounded="rounded" />}
                           {l.label}
                           <span className="sr-only"> (opens in a new tab)</span>
                         </a>
@@ -216,6 +234,11 @@ const Footer = () => {
               </a>
             ))}
           </nav>
+        </div>
+
+        {/* The sign-off: where this site (and everything else I make) is built */}
+        <div className="mt-8 flex justify-center">
+          <BuiltInPublic />
         </div>
       </motion.div>
     </footer>
