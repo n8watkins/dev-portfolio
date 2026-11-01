@@ -2,7 +2,7 @@
 
 **Date**: 2026-06-20 (structure refreshed; the byte counts below were measured on Next 14 in 2025-10 - **re-run `npm run analyze` to refresh them**)
 **Next.js Version**: 16.2.7
-**Analysis Tool**: @next/bundle-analyzer
+**Analysis Tool**: @next/bundle-analyzer (webpack; since 2026-11-01 `npm run analyze` is the Turbopack analyzer, `next analyze`)
 
 > 2026-10-25: `/sentry-example-page` and `/api/sentry-example-api` (Sentry wizard leftovers) were removed; ignore their rows below until the next `npm run analyze`.
 

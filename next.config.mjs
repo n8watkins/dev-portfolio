@@ -1,11 +1,6 @@
 import { withSentryConfig } from '@sentry/nextjs/config'
-import bundleAnalyzer from '@next/bundle-analyzer'
 import { securityHeaders } from './lib/security/headers.mjs'
 import { SENTRY_DSN } from './lib/sentryDsn.mjs'
-
-const withBundleAnalyzer = bundleAnalyzer({
-  enabled: process.env.ANALYZE === 'true',
-})
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -30,6 +25,12 @@ const nextConfig = {
   // Performance optimizations
   compress: true,
   poweredByHeader: false,
+  compiler: {
+    // Tree-shake the Sentry SDK's debug logging out of every bundle. Sentry's own
+    // option for this (webpack.treeshake.removeDebugLogging) reaches webpack
+    // builds only; Turbopack and webpack both inline this define.
+    define: { __SENTRY_DEBUG__: false },
+  },
   // Resource optimization
   experimental: {
     optimizePackageImports: [
@@ -40,7 +41,6 @@ const nextConfig = {
       '@radix-ui/react-icons',
     ],
   },
-  // Bundle analyzer configuration moved to withBundleAnalyzer wrapper below
   // Redirect common routes to home page
   async redirects() {
     return [
@@ -95,10 +95,7 @@ const nextConfig = {
   },
 }
 
-export default withBundleAnalyzer(withSentryConfig(nextConfig, {
-  // For all available options, see:
-  // https://github.com/getsentry/sentry-webpack-plugin#options
-
+export default withSentryConfig(nextConfig, {
   org: 'nathan-watkins',
   project: 'portfolio',
 
@@ -120,22 +117,8 @@ export default withBundleAnalyzer(withSentryConfig(nextConfig, {
   // Route browser requests to Sentry through a Next.js rewrite to circumvent ad-blockers.
   tunnelRoute: '/monitoring',
 
-  // Hides source maps from generated client bundles
-  hideSourceMaps: true,
-
-  // Webpack-specific options (moved under `webpack` in @sentry/nextjs v10).
-  webpack: {
-    // Automatically tree-shake Sentry logger statements to reduce bundle size
-    treeshake: {
-      removeDebugLogging: true,
-    },
-    // Enables automatic instrumentation of Vercel Cron Monitors. (Does not yet work with App Router route handlers.)
-    // See: https://docs.sentry.io/product/crons/ and https://vercel.com/docs/cron-jobs
-    automaticVercelMonitors: true,
-  },
-
   // Delete source maps after upload to prevent serving them to users
   sourcemaps: {
     deleteSourcemapsAfterUpload: true,
   },
-}))
+})
