@@ -77,6 +77,9 @@ It funnels visitors to the two other sites:
   Animations whose value reads an element's own variable (`--duration`) sit in `@theme inline`, or the marquees stop.
   Tailwind 4 lets `leading-*` win over a responsive `md:text-*`, so where both are set the size carries its v3 line height (`md:text-lg/7`).
   It also brought Tailwind 4's OKLCH colours (slightly more vivid), oklab gradients and its `font-sans` stack, the same as n8builds.dev.
+- **The brand mark is the lowercase "n8"** (owner, 2026-11-01), as on n8builds.dev: a white "n" flowing into a blue "8", replacing the N8 neon icon.
+  The master is `public/brand/n8-mark.png`; `node scripts/gen-brand-icons.mjs` makes the favicon, Apple and 512px icons in `public/tab/` from it (the mark on a dark navy rounded tile).
+  The corner link to n8builds.dev shows the mark on its own; the admin dashboard still has the old N8 mark.
 
 ## The 2026-10-27 refresh (owner's calls)
 

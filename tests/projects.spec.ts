@@ -67,7 +67,12 @@ test('the status arriving moves nothing on the card', async ({ page }) => {
     .toBe(true)
   release()
   await expect(echo.getByRole('link', { name: /^Live demo:/ })).toBeVisible()
-  expect(await offset()).toEqual(before)
+  // Within a pixel: the description can sit on a half pixel, which rounds
+  // either way from one measurement to the next (399 or 400) without moving.
+  const after = await offset()
+  for (const key of ['top', 'left', 'height'] as const) {
+    expect(Math.abs(after[key] - before[key]), key).toBeLessThanOrEqual(1)
+  }
 })
 
 test('a project page shows the status next to its links', async ({ page }) => {
