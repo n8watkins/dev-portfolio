@@ -24,8 +24,17 @@ export default function CornerLinks() {
         aria-label="n8builds.dev (opens in a new tab)"
         className="group fixed left-4 lg:left-8 xl:left-12 2xl:left-16 top-2 1lg:top-4 xl:top-6 z-9999 hidden sm:flex items-center gap-2.5 rounded-xl py-1 pr-2 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-sky-400"
       >
-        <span className="relative h-9 w-9 lg:h-11 lg:w-11 overflow-hidden rounded-xl ring-1 ring-white/10 transition-all duration-200 group-hover:ring-white/25">
-          <Image src="/tab/n8-icon.png" fill sizes="40px" className="object-cover" alt="" />
+        {/* The brand mark on its own (the tab icon puts it on a tile), in the
+            tile's old box so it stays level with the nav and the resume button. */}
+        <span className="flex h-9 items-center lg:h-11">
+          <Image
+            src="/brand/n8-mark.png"
+            alt=""
+            width={1086}
+            height={826}
+            sizes="42px"
+            className="h-[26px] w-auto lg:h-8 transition-opacity duration-200 group-hover:opacity-85"
+          />
         </span>
         <span className="font-bold tracking-tight text-slate-100 text-[0.95rem] lg:text-xl group-hover:text-sky-300 transition-colors">
           n8builds.dev

@@ -124,10 +124,16 @@ const TechStackCycle: React.FC<TechStackCycleProps> = ({ technologies }) => {
     [pause, technologies, currentCategory, jumpTo]
   )
 
-  const categoryIcons = allIcons.filter((tech) => tech.category === currentCategory)
+  // Each tech once in the dock: two parts of a category can use the same one
+  // (Next.js in both), and hovering it lights every part that uses it anyway.
+  const categoryIcons = allIcons.filter(
+    (tech, i) =>
+      tech.category === currentCategory &&
+      allIcons.findIndex((t) => t.category === currentCategory && t.icon === tech.icon) === i
+  )
 
   const isActive = (tech: FlatIcon) =>
-    hoveredIcons.includes(tech.icon) || allIcons.indexOf(tech) === activeIndex
+    hoveredIcons.includes(tech.icon) || allIcons[activeIndex]?.icon === tech.icon
 
   return (
     <div ref={root} className="flex flex-col gap-4 select-none">
