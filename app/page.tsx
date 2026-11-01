@@ -13,7 +13,7 @@ import dynamic from 'next/dynamic'
 // Only lazy load truly below-the-fold components
 const Projects = dynamic(() => import('@/components/Projects'))
 const Experience = dynamic(() => import('@/components/sections/Experience'))
-const AppturnityCard = dynamic(() => import('@/components/sections/AppturnityCard'))
+const WorkshopCards = dynamic(() => import('@/components/sections/WorkshopCards'))
 const Footer = dynamic(() => import('@/components/layout/Footer'))
 const ScrollToTop = dynamic(() => import('@/components/ui/ScrollToTop'), { ssr: false })
 
@@ -85,9 +85,9 @@ export default function Home() {
             </SectionErrorBoundary>
           </section>
 
-          <section id="appturnity" aria-label="Appturnity consulting and social links">
-            <SectionErrorBoundary sectionName="Appturnity Section">
-              <AppturnityCard />
+          <section id="workshop" aria-label="My company and my workshop">
+            <SectionErrorBoundary sectionName="Workshop Section">
+              <WorkshopCards />
             </SectionErrorBoundary>
           </section>
 

@@ -40,11 +40,11 @@ const Grid = () => {
               getting to do so much more of it with AI feels like a blessing.
             </p>
             <p>
-              I co-founded <Out href="https://appturnity.com">Appturnity</Out> as a consulting firm,
-              and we&apos;ve since focused on service businesses: pool, HVAC, landscaping and the
-              like. We launch each one a modern website for free, then build the AI automations that
-              take busywork off their plate, with AI voice agents that answer the phone next. The
-              goal is to run the digital side for many of them.
+              Right now I&apos;m building Tech for Pros, a platform for service businesses: pool,
+              HVAC, landscaping and the like. It turns a few details about a business into a
+              launch-ready website, then takes the follow-up off their plate: lead capture, reviews,
+              reminders and missed-call text-back. Before that I spent three years building client
+              apps at <Out href="https://appturnity.com">Appturnity</Out>, a consulting firm.
             </p>
             <p>
               In my free time I build in public on{' '}

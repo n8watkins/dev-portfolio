@@ -10,6 +10,7 @@ import SiteDoors from '@/components/ui/SiteDoors'
 import { projects } from '@/data/projects'
 import { RESUME_VIEW_URL } from '@/lib/resume'
 import CookieSettingsButton from '@/components/consent/CookieSettingsButton'
+import { TECH_FOR_PROS, techForProsHref } from '@/lib/techForPros'
 
 const EMAIL = 'contact@n8builds.dev'
 const CONTACT_FORM = 'https://n8builds.dev/#contact-form'
@@ -49,7 +50,7 @@ const sitemap = [
       { label: 'About', href: '/#about' },
       { label: 'Projects', href: '/#projects' },
       { label: 'Experience', href: '/#experience' },
-      { label: 'My workshop', href: '/#appturnity' },
+      { label: 'My workshop', href: '/#workshop' },
       { label: 'Contact', href: '/#contact' },
     ],
   },
@@ -63,7 +64,10 @@ const sitemap = [
       { label: 'Resume', href: RESUME_VIEW_URL, external: true },
       { label: 'n8builds.dev', href: 'https://n8builds.dev', external: true },
       { label: 'Build log', href: 'https://n8builds.dev/builds', external: true },
-      { label: 'Appturnity', href: 'https://appturnity.com', external: true },
+      // Only once techforpros.com is live (lib/techForPros.ts).
+      ...(techForProsHref
+        ? [{ label: TECH_FOR_PROS.name, href: techForProsHref, external: true }]
+        : []),
       { label: 'Source code', href: 'https://github.com/n8watkins/dev-portfolio', external: true },
     ],
   },

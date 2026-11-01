@@ -30,7 +30,7 @@ It funnels visitors to the two other sites:
 |---|---|---|
 | portfolio.n8builds.dev | Developer portfolio (this repo) | `n8watkins/dev-portfolio`, `~/n8builds/dev-portfolio` |
 | n8builds.dev | Build-in-public workshop: every build, the build log, notes, streams | `n8watkins/n8builds-web`, `~/n8builds/n8builds-web` |
-| appturnity.com | Consulting | separate |
+| techforpros.com | Tech for Pros, my SaaS for service businesses (not live yet) | separate |
 
 - The repo was renamed from `Portfolio2.0` to `dev-portfolio` on 2026-10-25 (GitHub redirects the old URL), and the folder moved from `~/n8builds/portfolio/portfolio2.0` to `~/n8builds/dev-portfolio`.
 - Stack: Next.js 16 (App Router, webpack build), React 19, TypeScript, Tailwind 4, Motion 14, Sentry, GA4, Vercel Speed Insights.
@@ -81,9 +81,17 @@ It funnels visitors to the two other sites:
   The master is `public/brand/n8-mark.png`; `node scripts/gen-brand-icons.mjs` makes the favicon, Apple and 512px icons in `public/tab/` from it (the mark on a dark navy rounded tile).
   The corner link to n8builds.dev shows the mark on its own; the admin dashboard still has the old N8 mark.
 
+## Tech for Pros (owner, 2026-11-01)
+
+- Tech for Pros (techforpros.com), my SaaS for service businesses, replaces Appturnity everywhere it's where to go next: the hero card, the workshop card, About and the footers.
+- Appturnity stays only as history: the Experience entry (Full Stack Developer, March 2023 to June 2026) and the About line about my three years there.
+- techforpros.com isn't live yet, so nothing links to it: `lib/techForPros.ts` holds the URL and a `live` flag, the cards say "Coming soon" while it's false, and `tests/home.spec.ts` checks no link points there.
+- Going live: set `live: true` in `lib/techForPros.ts` (and in n8builds-web's copy).
+- It has no logo yet: the cards show a wrench, and reuse the landscaping template screenshots.
+
 ## The 2026-10-27 refresh (owner's calls)
 
-- The hero's two cards (n8builds.dev, Appturnity) live in `components/ui/SiteDoors.tsx` and repeat in the footer, beside a site map.
+- The hero's two cards (n8builds.dev, Tech for Pros since 2026-11-01) live in `components/ui/SiteDoors.tsx` and repeat in the footer, beside a site map.
 - About fades in once scrolling starts; only its heading shows on the first screen.
 - Projects show four AI features each; Net-Trailer has no payments copy; screenshots glow in the project's colour on hover (no zoom) and their dots are buttons.
 - Experience hover images are framed per item (`hoverFrame` in `data/experience.tsx`) with one even glow (`hoverGlow`).
@@ -122,7 +130,7 @@ Under the projects, `components/Projects/BuildsTeaser.tsx` shows n8builds.dev's 
 
 1. **Sentry's feedback button** is dark and hidden below 768px; decide whether to keep it at all.
 2. **Streaming links** once streaming starts (see Conventions).
-3. GeminiGPT placeholder screenshots; the Appturnity "A" monogram; the resume PDF's old portfolio URL (owner).
+3. GeminiGPT placeholder screenshots; a Tech for Pros logo and its own screenshots (the cards show a wrench and the landscaping template for now); the resume PDF's old portfolio URL (owner).
 4. Deferred dependency major: TypeScript 6.
 
 ## File map
@@ -132,6 +140,6 @@ Under the projects, `components/Projects/BuildsTeaser.tsx` shows n8builds.dev's 
 - `components/Projects/ProjectCard.tsx`, `ProjectGallery.tsx`, `lib/accents.ts`: the project rows.
 - `components/Projects/ProjectDetail.tsx`, `app/projects/[slug]/page.tsx`: project detail pages.
 - `components/Projects/BuildsTeaser.tsx`: the n8builds.dev teaser. `components/sections/HeroGrid.tsx`: the hero grid (from n8builds.dev).
-- `components/sections/Grid.tsx` (About and the bento), `AppturnityCard.tsx`, `Experience.tsx`, `Hero.tsx`.
+- `components/sections/Grid.tsx` (About and the bento), `WorkshopCards.tsx`, `Experience.tsx`, `Hero.tsx`.
 - `data/projects.tsx`: project copy.
 - `components/ErrorBoundary.tsx`, `SectionErrorBoundary.tsx` report to Sentry.
