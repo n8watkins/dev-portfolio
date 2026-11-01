@@ -2,7 +2,7 @@ import React from 'react'
 import Image from 'next/image'
 import { FiArrowUpRight } from 'react-icons/fi'
 import { LuWrench } from 'react-icons/lu'
-import { TECH_FOR_PROS, techForProsHref } from '@/lib/techForPros'
+import { TECH_FOR_PROS } from '@/lib/techForPros'
 
 /**
  * The two sites this one leads to, each in its own brand: n8builds.dev's
@@ -15,9 +15,6 @@ import { TECH_FOR_PROS, techForProsHref } from '@/lib/techForPros'
  *
  * The two cards are the same height (the grid stretches them) and each one's
  * tag sits at its foot, so the tags line up whatever the pitch's length.
- *
- * A card with no href (Tech for Pros until techforpros.com is live) is not a
- * link: no arrow, and its tag says "Coming soon".
  */
 const doors = [
   {
@@ -35,7 +32,7 @@ const doors = [
     glow: 'shadow-[0_0_28px_-6px_rgba(34,211,238,0.35)] hover:shadow-[0_0_36px_-4px_rgba(34,211,238,0.5)]',
   },
   {
-    href: techForProsHref,
+    href: TECH_FOR_PROS.url,
     eyebrow: 'My company',
     name: TECH_FOR_PROS.name,
     icon: (
@@ -50,7 +47,7 @@ const doors = [
         Get a website, and every lead followed up.
       </>
     ),
-    detail: techForProsHref ? 'Websites and follow-up for service businesses' : 'Coming soon',
+    detail: 'Websites and follow-up for service businesses',
     frame:
       'from-white/40 via-sky-300/25 to-[#1066f4]/50 group-hover:from-white/80 group-hover:to-[#1066f4]',
     wash: 'from-sky-300/20 via-[#1066f4]/15',
@@ -70,14 +67,12 @@ export default function SiteDoors({
   return (
     <div className={`grid grid-cols-1 gap-3.5 sm:grid-cols-2 ${className}`} style={style}>
       {doors.map((door) => {
-        const Card = door.href ? 'a' : 'div'
-        const link = door.href
-          ? { href: door.href, target: '_blank', rel: 'noopener noreferrer' }
-          : {}
         return (
-          <Card
+          <a
             key={door.name}
-            {...link}
+            href={door.href}
+            target="_blank"
+            rel="noopener noreferrer"
             className={`group relative block rounded-2xl bg-linear-to-br p-px text-left transition-all duration-300 hover:-translate-y-0.5 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-sky-400 ${door.frame} ${door.glow}`}
           >
             <span className="relative flex h-full flex-col overflow-hidden rounded-[15px] bg-[#0b1324] p-4">
@@ -106,14 +101,12 @@ export default function SiteDoors({
                   </span>
                   <span className="block text-base font-bold text-slate-50">{door.name}</span>
                 </span>
-                {door.href && (
-                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/4 text-slate-300 transition-all duration-300 group-hover:border-white/30 group-hover:bg-white/10 group-hover:text-white">
-                    <FiArrowUpRight
-                      className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
-                      aria-hidden="true"
-                    />
-                  </span>
-                )}
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/4 text-slate-300 transition-all duration-300 group-hover:border-white/30 group-hover:bg-white/10 group-hover:text-white">
+                  <FiArrowUpRight
+                    className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+                    aria-hidden="true"
+                  />
+                </span>
               </span>
               <span className="relative mt-2.5 block flex-1 text-pretty text-sm leading-snug text-slate-300">
                 {door.pitch}
@@ -123,8 +116,8 @@ export default function SiteDoors({
                 {door.detail}
               </span>
             </span>
-            {door.href && <span className="sr-only"> (opens in a new tab)</span>}
-          </Card>
+            <span className="sr-only"> (opens in a new tab)</span>
+          </a>
         )
       })}
     </div>

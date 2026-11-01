@@ -12,7 +12,7 @@ import {
   staggerItemVariants,
   defaultAnimationConfig,
 } from '@/lib/animations'
-import { TECH_FOR_PROS, techForProsHref } from '@/lib/techForPros'
+import { TECH_FOR_PROS } from '@/lib/techForPros'
 import styles from './Doors.module.css'
 
 /** A screenshot: when it is taller than its frame it scrolls (see Doors.module.css). */
@@ -34,8 +34,7 @@ interface Door {
   blurb: React.ReactNode
   pointsLabel?: string
   points: string[]
-  /** No href: the site isn't live yet, and the button says so instead. */
-  cta: { label: string; href?: string }
+  cta: { label: string; href: string }
   secondary?: { label: string; href: string }
   /** The site's source on GitHub, as a third, quieter link. */
   github?: string
@@ -144,7 +143,7 @@ const doors: Door[] = [
       'An instant site-health check: speed, mobile, SEO and accessibility',
       'Next: reminders, lead follow-up and missed-call text-back',
     ],
-    cta: { label: 'Visit Tech for Pros', href: techForProsHref },
+    cta: { label: 'Visit Tech for Pros', href: TECH_FOR_PROS.url },
     desktop: {
       src: '/work/landscaping-verdant.webp',
       alt: 'A landscaping website template',
@@ -225,25 +224,16 @@ const DoorCard = ({ door, index }: { door: Door; index: number }) => {
       />
 
       {/* Screenshots */}
-      {door.cta.href ? (
-        <a
-          href={door.cta.href}
-          target="_blank"
-          rel="noopener noreferrer"
-          tabIndex={-1}
-          aria-hidden
-          className={`relative block transition-transform duration-500 group-hover:-translate-y-1 ${flip ? 'lg:order-first' : 'lg:order-last'}`}
-        >
-          <Showcase desktop={door.desktop} phone={door.phone} still={door.still} />
-        </a>
-      ) : (
-        <div
-          aria-hidden
-          className={`relative block transition-transform duration-500 group-hover:-translate-y-1 ${flip ? 'lg:order-first' : 'lg:order-last'}`}
-        >
-          <Showcase desktop={door.desktop} phone={door.phone} still={door.still} />
-        </div>
-      )}
+      <a
+        href={door.cta.href}
+        target="_blank"
+        rel="noopener noreferrer"
+        tabIndex={-1}
+        aria-hidden
+        className={`relative block transition-transform duration-500 group-hover:-translate-y-1 ${flip ? 'lg:order-first' : 'lg:order-last'}`}
+      >
+        <Showcase desktop={door.desktop} phone={door.phone} still={door.still} />
+      </a>
 
       {/* Copy */}
       <div className="relative flex flex-col">
@@ -286,24 +276,16 @@ const DoorCard = ({ door, index }: { door: Door; index: number }) => {
 
         {/* The main button, then the smaller links together on one line */}
         <div className="mt-6 flex flex-col items-start gap-4">
-          {door.cta.href ? (
-            <a
-              href={door.cta.href}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={`inline-flex items-center gap-2 rounded-xl bg-linear-to-r ${door.accent.button} px-5 py-2.5 text-sm font-bold text-white transition-all duration-200 hover:scale-[1.02] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-400`}
-            >
-              {door.cta.label}
-              <FiArrowUpRight aria-hidden className="h-4 w-4" />
-              <span className="sr-only"> (opens in a new tab)</span>
-            </a>
-          ) : (
-            // The site isn't live yet: say so, in place of the button.
-            <span className="inline-flex items-center gap-2 rounded-xl border border-white/12 bg-white/4 px-5 py-2.5 text-sm font-bold text-slate-300">
-              <span className="h-1.5 w-1.5 rounded-full bg-sky-300" aria-hidden />
-              Coming soon
-            </span>
-          )}
+          <a
+            href={door.cta.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={`inline-flex items-center gap-2 rounded-xl bg-linear-to-r ${door.accent.button} px-5 py-2.5 text-sm font-bold text-white transition-all duration-200 hover:scale-[1.02] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-400`}
+          >
+            {door.cta.label}
+            <FiArrowUpRight aria-hidden className="h-4 w-4" />
+            <span className="sr-only"> (opens in a new tab)</span>
+          </a>
           <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
             {door.secondary && (
               <a

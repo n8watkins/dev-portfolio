@@ -4,13 +4,18 @@ import { test, expect } from '@playwright/test'
  * The n8builds.dev card in "My workshop": where I build in public, all open
  * source, with the case study and the source a click away (owner, 2026-10-27).
  */
-test('the n8builds card says where I build and links to the case study and the source', async ({ page }) => {
+test('the n8builds card says where I build and links to the case study and the source', async ({
+  page,
+}) => {
   await page.goto('/')
   const card = page.getByRole('article', { name: 'Where I build in public' })
   const link = card.getByRole('link', { name: "How it's built and tested" })
   await link.scrollIntoViewIfNeeded()
   await expect(link).toHaveAttribute('href', 'https://n8builds.dev/builds/n8builds')
-  await expect(card.getByRole('link', { name: /Source code/ })).toHaveAttribute('href', 'https://github.com/n8watkins/n8builds-web')
+  await expect(card.getByRole('link', { name: /Source code/ })).toHaveAttribute(
+    'href',
+    'https://github.com/n8watkins/n8builds-web'
+  )
   await expect(card.getByText(/All open source, this portfolio included/)).toBeVisible()
   // It talks about where I build, not the CI behind it.
   await expect(card).not.toContainText('five browsers')
@@ -47,7 +52,9 @@ test('the n8builds.dev teaser links each build to its n8builds.dev page', async 
  */
 test.describe('the map arcs', () => {
   const offsets = (page: import('@playwright/test').Page) =>
-    page.locator('.neon-path').evaluateAll((paths) => paths.map((p) => getComputedStyle(p).strokeDashoffset))
+    page
+      .locator('.neon-path')
+      .evaluateAll((paths) => paths.map((p) => getComputedStyle(p).strokeDashoffset))
 
   test('hold still, fully drawn, under reduced motion', async ({ page }) => {
     await page.emulateMedia({ reducedMotion: 'reduce' })
@@ -58,7 +65,10 @@ test.describe('the map arcs', () => {
     const before = await offsets(page)
     await page.waitForTimeout(1500)
     expect(await offsets(page)).toEqual(before)
-    expect(before.every((o) => parseFloat(o) === 0), `offsets ${before}`).toBe(true)
+    expect(
+      before.every((o) => parseFloat(o) === 0),
+      `offsets ${before}`
+    ).toBe(true)
   })
 
   test('keep drawing when motion is allowed', async ({ page }) => {
@@ -73,17 +83,23 @@ test.describe('the map arcs', () => {
 })
 
 /**
- * Tech for Pros took over from Appturnity (owner, 2026-11-01). Until
- * techforpros.com is live (lib/techForPros.ts), its cards say "Coming soon"
- * and nothing links to it.
+ * Tech for Pros took over from Appturnity (owner, 2026-11-01): its buttons
+ * take Appturnity's place in the hero and the workshop.
  */
-test('Tech for Pros shows in the hero and the workshop, with no link until its site is live', async ({ page }) => {
+test("Tech for Pros' buttons take Appturnity's place in the hero and the workshop", async ({
+  page,
+}) => {
   await page.goto('/')
-  await expect(page.locator('a[href*="techforpros.com"]')).toHaveCount(0)
+  await expect(
+    page.getByRole('link', { name: /My company\s*Tech for Pros/ }).first()
+  ).toHaveAttribute('href', 'https://techforpros.com')
   const card = page.getByRole('article', { name: /Run a service business/ })
   await card.scrollIntoViewIfNeeded()
   await expect(card.getByText('Tech for Pros', { exact: true })).toBeVisible()
-  await expect(card.getByText('Coming soon')).toBeVisible()
+  await expect(card.getByRole('link', { name: /Visit Tech for Pros/ })).toHaveAttribute(
+    'href',
+    'https://techforpros.com'
+  )
   await expect(page.getByText('Appturnity', { exact: true }).first()).toBeAttached()
   // Appturnity stays only as a past role, never as where to go now.
   await expect(page.locator('a[href="https://appturnity.com"]')).toHaveCount(2)
