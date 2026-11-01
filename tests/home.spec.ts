@@ -161,3 +161,28 @@ test('the footer lists my sites with their marks and signs off with n8builds.dev
   await expect(signOff).toBeVisible()
   await expect(signOff).toHaveAttribute('href', 'https://n8builds.dev')
 })
+
+/**
+ * On a small phone the experience list is several screens tall: each card
+ * fades in as it scrolls into view, rather than the list waiting for a share
+ * of itself to show (which it never could, so it stayed hidden).
+ */
+test('experience cards show on a small phone', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 568 })
+  await page.goto('/')
+  const cards = page.locator('#experience').getByRole('heading', { level: 3 })
+  for (const i of [0, 1]) {
+    await cards.nth(i).scrollIntoViewIfNeeded()
+    await expect(cards.nth(i)).toBeInViewport()
+    await expect
+      .poll(() =>
+        cards.nth(i).evaluate((e) => {
+          let o = 1
+          for (let n: Element | null = e; n; n = n.parentElement)
+            o *= Number(getComputedStyle(n).opacity)
+          return o
+        })
+      )
+      .toBeGreaterThan(0.99)
+  }
+})

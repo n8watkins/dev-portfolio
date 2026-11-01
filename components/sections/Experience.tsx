@@ -6,11 +6,7 @@ import { motion } from 'motion/react'
 import { FiArrowUpRight } from 'react-icons/fi'
 import { workExperience } from '@/data/experience'
 import SectionHeading from '@/components/ui/SectionHeading'
-import {
-  staggerContainerVariants,
-  staggerItemVariants,
-  defaultAnimationConfig,
-} from '@/lib/animations'
+import { staggerItemVariants } from '@/lib/animations'
 
 const Experience = () => {
   return (
@@ -21,11 +17,10 @@ const Experience = () => {
         className="px-2 md:px-4 pt-6 pb-6"
       />
 
-      <motion.div
-        variants={staggerContainerVariants}
-        {...defaultAnimationConfig}
-        className="relative mt-4 px-2 md:px-4"
-      >
+      {/* Each card fades in on its own as it scrolls into view: the whole list is
+          taller than a phone's screen many times over, so waiting for a share of
+          it to show (as a stagger on the list would) left it hidden on phones. */}
+      <div className="relative mt-4 px-2 md:px-4">
         {/* Vertical timeline line */}
         <div className="absolute left-[9px] md:left-[11px] top-2 bottom-4 w-px bg-linear-to-b from-sky-500 via-sky-400/40 to-transparent" />
 
@@ -46,6 +41,9 @@ const Experience = () => {
 
                 <motion.div
                   variants={staggerItemVariants}
+                  initial="hidden"
+                  whileInView="visible"
+                  viewport={{ once: true, amount: 0.2 }}
                   className="group/exp relative pl-10 md:pl-12"
                 >
                   {/* Timeline dot */}
@@ -149,7 +147,7 @@ const Experience = () => {
             )
           })}
         </div>
-      </motion.div>
+      </div>
     </div>
   )
 }
