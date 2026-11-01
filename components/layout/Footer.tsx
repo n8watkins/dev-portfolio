@@ -20,7 +20,7 @@ const CONTACT_FORM = 'https://n8builds.dev/#contact-form'
 const ICON_BUTTON =
   'inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-600 text-slate-200 transition-all duration-200 hover:border-sky-400/60 hover:text-sky-300 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-sky-400 sm:h-11 sm:w-11'
 const LINK =
-  'inline-flex items-center gap-2 text-sm text-slate-400 transition-colors duration-200 hover:text-sky-300'
+  'flex w-fit items-center gap-2 text-sm text-slate-400 transition-colors duration-200 hover:text-sky-300'
 
 /**
  * The streaming links (Twitch, YouTube) stay hidden until streaming starts,
