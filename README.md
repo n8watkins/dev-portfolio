@@ -14,7 +14,7 @@ The build-in-public workshop (every build, the build log, notes and streams) is 
 
 ## Stack
 
-Next.js 16 (App Router, webpack build), React 19, TypeScript, Tailwind CSS 4, Motion 14, Sentry, Google Analytics 4, Vercel Speed Insights.
+Next.js 16 (App Router, Turbopack for dev, tests and the production build), React 19, TypeScript, Tailwind CSS 4, Motion 14, Sentry, Google Analytics 4, Vercel Speed Insights.
 Dark only.
 Inter is bundled (`app/fonts/`), so a build never fetches fonts from Google.
 
@@ -32,7 +32,7 @@ npm run dev          # http://localhost:4829
 | `npm run build` | Production build |
 | `npm test` | Playwright, against a production build on port 4829 (reuses a running server locally) |
 | `npm run test:chromium` | The same, Chromium only (what CI runs) |
-| `npm run analyze` | Bundle analyzer |
+| `npm run analyze` | Turbopack bundle analyzer (`next analyze`; no build output) |
 
 Environment variables are optional for local work; see `.env.local.example`.
 The site's address is fixed in `lib/seo.ts`, not read from the environment.

@@ -33,7 +33,7 @@ It funnels visitors to the two other sites:
 | techforpros.com | Tech for Pros, my SaaS for service businesses (not live yet) | separate |
 
 - The repo was renamed from `Portfolio2.0` to `dev-portfolio` on 2026-10-25 (GitHub redirects the old URL), and the folder moved from `~/n8builds/portfolio/portfolio2.0` to `~/n8builds/dev-portfolio`.
-- Stack: Next.js 16 (App Router, webpack build), React 19, TypeScript, Tailwind 4, Motion 14, Sentry, GA4, Vercel Speed Insights.
+- Stack: Next.js 16 (App Router, Turbopack for dev, tests and the production build), React 19, TypeScript, Tailwind 4, Motion 14, Sentry, GA4, Vercel Speed Insights.
   Dark only (`forcedTheme="dark"`), slate + sky-blue.
 - Vercel project `portfolio`, git-connected: every push to `main` deploys. Other branches get no automatic preview (2026-10-28, `git.deploymentEnabled` in `vercel.json`): previews used about half of the 100 deployments a day the whole account shares. Run `vercel deploy` from a branch for one.
 
@@ -52,6 +52,8 @@ It funnels visitors to the two other sites:
 - To kill a local test server, find it by port (`ss -ltnp | grep :4829`) and kill that PID: `lsof` can miss it, and `pkill -f` matches its own shell.
 
 ## Decisions (do not re-ask)
+
+- **Turbopack everywhere** (owner, 2026-11-01): `next dev`, the Playwright build and the production build all run on Turbopack; see AGENTS.md for the rules and why nothing here needs webpack.
 
 - **Separate from n8builds.dev, on purpose** (confirmed 2026-10-25): different readers (people hiring vs. people following the work), and a repo people can be sent to on its own.
   It is not a page of n8builds.dev.
