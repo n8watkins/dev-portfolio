@@ -36,12 +36,14 @@ export default function Marquee({
   // focused item doesn't slide out from under the visitor.
   const [hasFocus, setHasFocus] = useState(false)
   const isPaused = (pauseOnHover && isHovered) || hasFocus
-  // The items are server-rendered, so a visitor can focus one before the page
-  // hydrates, when React isn't listening yet and onFocus never fires. Catch
-  // that once hydrated, or the focused item slides away.
+  // The items are server-rendered, so a visitor can focus one, or rest the
+  // pointer on the row, before the page hydrates, when React isn't listening
+  // yet: onFocus and onMouseEnter never fire (the pointer doesn't move again).
+  // Catch both once hydrated, or the row runs on under them.
   const firstCopy = useRef<HTMLDivElement>(null)
   useEffect(() => {
     if (firstCopy.current?.contains(document.activeElement)) setHasFocus(true)
+    if (rowRef.current?.matches(':hover')) setIsHovered(true)
   }, [])
   const reduceMotion = usePrefersReducedMotion()
   // The server sends one copy of the items; the loop's duplicates are added
