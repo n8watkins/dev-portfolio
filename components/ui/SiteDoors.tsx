@@ -47,7 +47,7 @@ const doors = [
       <>
         Run a service business?
         <br />
-        Get a website, and the follow-up handled.
+        Get a website, and every lead followed up.
       </>
     ),
     detail: techForProsHref ? 'Websites and follow-up for service businesses' : 'Coming soon',
