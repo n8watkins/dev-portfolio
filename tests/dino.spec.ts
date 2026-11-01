@@ -333,8 +333,10 @@ test.describe('dino easter egg (motion allowed)', () => {
   // where it moved further than it ever can in one frame: a teleport. Only
   // moves seen inside the panel count (its comings and goings off the sides,
   // the drop-in from above and its time away are out of sight). Up and down
-  // it is measured from the top of the row it is on, so a row that moves (a
-  // card resized around rows anchored to its bottom) carries it fairly.
+  // it is measured from the top of the row it is on, or lands on, so a row
+  // that moves (a card resized around rows anchored to its bottom, or a
+  // window resize that lays the rows out again just as it lands) carries it
+  // fairly.
   // Across, on its row, it is measured from the row's tiles too: it rides
   // them, and on a slow frame (WebKit on a busy CI runner can stall for
   // seconds while the window resizes) they carry it 50px and more in one
@@ -346,7 +348,8 @@ test.describe('dino easter egg (motion allowed)', () => {
     h: number
     mode: string
     level: string
-    row: number | null
+    /** Every row's top in the panel (its first tile's). */
+    tops: number[]
     /** The row's first track's left edge in the panel, and one loop copy's width. */
     track: number | null
     period: number | null
@@ -359,13 +362,13 @@ test.describe('dino easter egg (motion allowed)', () => {
       const step = () => {
         const m = new DOMMatrix(getComputedStyle(el).transform)
         const box = panel.getBoundingClientRect()
-        const rowEl = panel.querySelectorAll('[data-marquee-row]')[Number(el.dataset.level)]
-        const tile = rowEl?.querySelector('figure')
-        const row = tile ? tile.getBoundingClientRect().top - box.top : null
+        const rows = [...panel.querySelectorAll('[data-marquee-row]')]
+        const tops = rows.map((r) => (r.querySelector('figure')?.getBoundingClientRect().top ?? NaN) - box.top)
+        const rowEl = rows[Number(el.dataset.level)]
         const [first, second] = rowEl ? [...rowEl.children] : []
         const track = first ? first.getBoundingClientRect().left - box.left : null
         const period = first && second ? second.getBoundingClientRect().left - first.getBoundingClientRect().left : null
-        moves.push({ x: m.m41, y: m.m42, w: box.width, h: box.height, mode: el.dataset.mode!, level: el.dataset.level!, row, track, period })
+        moves.push({ x: m.m41, y: m.m42, w: box.width, h: box.height, mode: el.dataset.mode!, level: el.dataset.level!, tops, track, period })
         requestAnimationFrame(step)
       }
       requestAnimationFrame(step)
@@ -380,10 +383,13 @@ test.describe('dino easter egg (motion allowed)', () => {
       // Its fastest move (a dash on a slow frame) is under 50px a frame.
       // On its row (not falling or leaping between rows), it moves with the row.
       const onRow = (m: Move) => ['walk', 'flip', 'hop', 'drop', 'miss'].includes(m.mode)
-      // (Measured from the frame it starts on: it can move with its row and
-      // step off a tile into a fall in the same frame.)
-      const sameRow = a.level === b.level && a.row !== null && b.row !== null && onRow(a)
-      const dy = sameRow ? b.y - b.row! - (a.y - a.row!) : b.y - a.y
+      // Measured from the row it ends the frame on (it can land on a row
+      // that moved this very frame), else the one it starts on (it can move
+      // with its row and step off a tile into a fall in the same frame). In
+      // the air it is measured in the panel.
+      const ref = onRow(b) ? Number(b.level) : onRow(a) ? Number(a.level) : -1
+      const [topA, topB] = [a.tops[ref], b.tops[ref]]
+      const dy = Number.isFinite(topA) && Number.isFinite(topB) ? b.y - topB - (a.y - topA) : b.y - a.y
       // The row's own travel this frame, which it rides walking, hopping off,
       // flipping or missing. Only while the panel and its tiles keep their
       // size: a resize lays the tracks out again somewhere else in the panel,
