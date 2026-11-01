@@ -41,9 +41,12 @@ export const workExperience: WorkExperienceItem[] = [
   },
   {
     id: 1,
-    company: 'Freelance web development',
+    company: 'Appturnity',
+    // No link to appturnity.com: only the client sites below (owner, 2026-11-01).
+    // White, where Appturnity's white page shows
+    hoverGlow: 'bg-white/16',
     location: 'Los Angeles, CA',
-    role: 'Full Stack Developer and Consultant',
+    role: 'Full Stack Developer',
     period: 'March 2023 – June 2026',
     bullets: [
       'Led end-to-end delivery of client apps: frontend and backend data flows, API boundaries, testing, code reviews and production releases.',
@@ -57,6 +60,8 @@ export const workExperience: WorkExperienceItem[] = [
       { label: 'comfort1hvac.com', url: 'https://comfort1hvac.com/' },
       { label: 'primeshows.live', url: 'https://primeshows.live/' },
     ],
+    hoverImage: '/projects/appturnity-home-2026-10.webp',
+    hoverFrame: 'object-[0%_40%] origin-[0%_40%] scale-100 group-hover:scale-[1.03]',
   },
   {
     id: 2,

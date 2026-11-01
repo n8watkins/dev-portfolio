@@ -87,7 +87,7 @@ It funnels visitors to the two other sites:
 
 - Tech for Pros (techforpros.com), my SaaS for service businesses, is where I work now: the hero card ("Where I work"), the workshop card, the Experience entry, About and both footers name techforpros.com and link to it.
 - Its mark (a worker in a cap holding a blue gear) is `public/brand/techforpros-icon.webp`, shown on a light tile by `components/ui/SiteIcon.tsx`; `lib/sites.ts` holds both sites' names, URLs and marks.
-- The past role is freelance web development consulting (March 2023 to June 2026), with no firm named or linked: the page never names Appturnity, and `tests/home.spec.ts` checks that.
+- Appturnity appears only as a past role in Experience (Full Stack Developer, March 2023 to June 2026, with its screenshot and client-site links) and is never linked; About describes those years as freelance web development and consulting. `tests/home.spec.ts` checks both.
 - The footer's site-map column is "My sites" (both sites with their marks), and both footers end with "Built in public at n8builds.dev" (`components/ui/BuiltInPublic.tsx`).
 - The workshop card still reuses the landscaping template screenshots until Tech for Pros has its own.
 

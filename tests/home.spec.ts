@@ -111,18 +111,34 @@ test("Tech for Pros' cards name techforpros.com, show its mark and link to it", 
 })
 
 /**
- * My past work is freelance web development consulting, with no firm named or
- * linked (owner, 2026-11-01): the page never mentions Appturnity.
+ * Appturnity appears only as a past role in Experience (Full Stack Developer,
+ * with its client sites), never anywhere else and never linked (owner,
+ * 2026-11-01).
  */
-test('the page describes past work as consulting and never names Appturnity', async ({
-  page,
-}) => {
+test('Appturnity shows only as a past role in Experience, never linked', async ({ page }) => {
   await page.goto('/')
-  await expect(page.locator('body')).not.toContainText(/appturnity/i)
   await expect(page.locator('a[href*="appturnity"]')).toHaveCount(0)
   const experience = page.locator('#experience')
-  await expect(experience.getByText('Full Stack Developer and Consultant')).toBeAttached()
-  await expect(experience.getByText('Freelance web development')).toBeAttached()
+  const card = experience.locator('div.group\\/exp', { hasText: 'Appturnity' })
+  await expect(card).toHaveCount(1)
+  await expect(card.getByRole('heading', { name: 'Full Stack Developer', exact: true })).toBeAttached()
+  await expect(card.getByText('Appturnity', { exact: true })).toBeAttached()
+  await expect(card.getByRole('link', { name: /comfort1hvac\.com/ })).toHaveAttribute(
+    'href',
+    'https://comfort1hvac.com/'
+  )
+  // Nowhere outside Experience.
+  const outside = await page.evaluate(() => {
+    const exp = document.getElementById('experience')!
+    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT)
+    const hits: string[] = []
+    for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+      if (/appturnity/i.test(n.textContent ?? '') && !exp.contains(n)) hits.push(n.textContent!)
+    }
+    return hits
+  })
+  expect(outside).toEqual([])
+  await expect(page.locator('head')).not.toContainText(/appturnity/i)
   await expect(experience.getByRole('link', { name: 'Tech for Pros' })).toHaveAttribute(
     'href',
     'https://techforpros.com'
