@@ -143,6 +143,9 @@ test('Appturnity shows only as a past role in Experience, never linked', async (
     'href',
     'https://techforpros.com'
   )
+  await expect(page.locator('#about')).toContainText(
+    'three years building client apps at a consulting firm'
+  )
   await expect(page.locator('#about').getByRole('link', { name: 'Tech for Pros' })).toHaveAttribute(
     'href',
     'https://techforpros.com'

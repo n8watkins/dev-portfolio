@@ -46,7 +46,7 @@ const Grid = () => {
               businesses: pool, HVAC, landscaping and the like. It turns a few details about a
               business into a launch-ready website, then takes the follow-up off their plate: lead
               capture, reviews, reminders and missed-call text-back. Before that I spent three years
-              freelancing as a web developer and consultant, building client apps end to end.
+              building client apps at a consulting firm.
             </p>
             <p>
               In my free time I build in public on{' '}
