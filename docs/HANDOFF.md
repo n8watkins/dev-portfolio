@@ -7,7 +7,7 @@ Last updated: 2026-10-28.
 ### State
 
 - `main` matches n8builds.dev's copy (audit fixes #12) and its dino game files are byte-identical (`npm run check:sync`); dino stats post to `https://n8builds.dev/api/game` (#14).
-- **Production is behind `main`.** It's stuck at #10: #11 to #14 merged while Vercel's 100-deployments-per-24-hours limit was hit, so no production deploy was made for them. The live page doesn't show the "We help!" Appturnity card yet.
+- **Production is behind `main`.** It's stuck at #10: #11 to #14 merged while Vercel's 100-deployments-per-24-hours limit was hit, so no production deploy was made for them.
 - Vercel builds on Node 24.x; `nathansportfolio.vercel.app` and `n8sportfolio.vercel.app` redirect here (#9).
 - Echo's live title no longer has an em dash; Scout's and GeminiGPT's fixes are merged in their repos but not live, because Render auto-deploy is broken for both (owner step, tracked in those repos).
 - OpenPing has a bug: during scheduled off-hours its public feed reports monitors as "operational" (fix tracked in open-ping, `docs/BUG-public-scheduled-off.md`). This site already works around it: a feed older than 30 minutes reads as Asleep (see "Live-demo status" below). Once OpenPing reports `scheduled_off`, check `lib/status.ts` maps it to Asleep.
@@ -30,7 +30,7 @@ It funnels visitors to the two other sites:
 |---|---|---|
 | portfolio.n8builds.dev | Developer portfolio (this repo) | `n8watkins/dev-portfolio`, `~/n8builds/dev-portfolio` |
 | n8builds.dev | Build-in-public workshop: every build, the build log, notes, streams | `n8watkins/n8builds-web`, `~/n8builds/n8builds-web` |
-| techforpros.com | Tech for Pros, my SaaS for service businesses (not live yet) | separate |
+| techforpros.com | Tech for Pros, my SaaS for service businesses | separate |
 
 - The repo was renamed from `Portfolio2.0` to `dev-portfolio` on 2026-10-25 (GitHub redirects the old URL), and the folder moved from `~/n8builds/portfolio/portfolio2.0` to `~/n8builds/dev-portfolio`.
 - Stack: Next.js 16 (App Router, Turbopack for dev, tests and the production build), React 19, TypeScript, Tailwind 4, Motion 14, Sentry, GA4, Vercel Speed Insights.
@@ -85,11 +85,11 @@ It funnels visitors to the two other sites:
 
 ## Tech for Pros (owner, 2026-11-01)
 
-- Tech for Pros (techforpros.com), my SaaS for service businesses, replaces Appturnity everywhere it's where to go next: the hero card, the workshop card, About and the footers.
-- Appturnity stays only as history: the Experience entry (Full Stack Developer, March 2023 to June 2026) and the About line about my three years there.
-- techforpros.com isn't live yet, so nothing links to it: `lib/techForPros.ts` holds the URL and a `live` flag, the cards say "Coming soon" while it's false, and `tests/home.spec.ts` checks no link points there.
-- Going live: set `live: true` in `lib/techForPros.ts` (and in n8builds-web's copy).
-- It has no logo yet: the cards show a wrench, and reuse the landscaping template screenshots.
+- Tech for Pros (techforpros.com), my SaaS for service businesses, is where I work now: the hero card ("Where I work"), the workshop card, the Experience entry, About and both footers name techforpros.com and link to it.
+- Its mark (a worker in a cap holding a blue gear) is `public/brand/techforpros-icon.webp`, shown on a light tile by `components/ui/SiteIcon.tsx`; `lib/sites.ts` holds both sites' names, URLs and marks.
+- The past role is freelance web development consulting (March 2023 to June 2026), with no firm named or linked: the page never names Appturnity, and `tests/home.spec.ts` checks that.
+- The footer's site-map column is "My sites" (both sites with their marks), and both footers end with "Built in public at n8builds.dev" (`components/ui/BuiltInPublic.tsx`).
+- The workshop card still reuses the landscaping template screenshots until Tech for Pros has its own.
 
 ## The 2026-10-27 refresh (owner's calls)
 
@@ -132,7 +132,7 @@ Under the projects, `components/Projects/BuildsTeaser.tsx` shows n8builds.dev's 
 
 1. **Sentry's feedback button** is dark and hidden below 768px; decide whether to keep it at all.
 2. **Streaming links** once streaming starts (see Conventions).
-3. GeminiGPT placeholder screenshots; a Tech for Pros logo and its own screenshots (the cards show a wrench and the landscaping template for now); the resume PDF's old portfolio URL (owner).
+3. GeminiGPT placeholder screenshots; Tech for Pros' own screenshots (the workshop card shows the landscaping template for now); the resume PDF's old portfolio URL (owner).
 4. Deferred dependency major: TypeScript 6.
 
 ## File map
