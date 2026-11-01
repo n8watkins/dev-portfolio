@@ -812,7 +812,8 @@ test.describe('dino easter egg (motion allowed)', () => {
     await showKit(page, '[data-dino-panel]')
     const at = await middleTile(page, 0)
     await page.mouse.click(at.x, at.y)
-    expect(await rowPlayStates(page, 0)).toContain('paused')
+    // Held by the hover (WebKit can take a frame or two to apply it).
+    await expect.poll(() => rowPlayStates(page, 0)).toContain('paused')
     // The click left no focus behind to hold the row (or its description) open.
     await page.mouse.move(5, 5)
     await expect.poll(() => rowPlayStates(page, 0)).not.toContain('paused')
