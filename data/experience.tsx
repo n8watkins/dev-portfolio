@@ -25,18 +25,33 @@ export type WorkExperienceItem = {
 
 export const workExperience: WorkExperienceItem[] = [
   {
+    id: 5,
+    company: 'Tech for Pros',
+    // No link or screenshot until techforpros.com is live.
+    location: 'Los Angeles, CA',
+    role: 'Full Stack Engineer',
+    period: 'January 2026 – Present',
+    bullets: [
+      'Building a SaaS for service businesses: trade-specific Next.js templates and an intake-driven site generator that turns business details into launch-ready drafts in minutes.',
+      'Architecting a shared delivery layer on Cloudflare for domains, hosting, forms, analytics, reviews and client content, so a new business launches without a rebuild.',
+      'Shipped lead capture, review display and request flows, and an instant site-health check covering performance, mobile usability, SEO and accessibility.',
+      'Developing automated follow-up for leads and quotes, appointment and maintenance reminders, referrals and missed-call text-back.',
+    ],
+  },
+  {
     id: 1,
     company: 'Appturnity',
     // White, where Appturnity's white page shows
     hoverGlow: 'bg-white/16',
     companyUrl: 'https://appturnity.com',
     location: 'Los Angeles, CA',
-    role: 'Full Stack Developer & Co-Founder',
-    period: 'March 2023 – Present',
+    role: 'Full Stack Developer',
+    period: 'March 2023 – June 2026',
     bullets: [
-      'Lead end-to-end development of client apps across healthcare, property management, and HVAC using React, Next.js, and TypeScript.',
-      'Built AI automation with Gemini and Cloudflare Workers that replaced manual data entry, saving clients ~$20K/year.',
-      'Developed in-house AI tooling that scores prospective client sites on performance, accessibility, and SEO.',
+      'Led end-to-end delivery of client apps: frontend and backend data flows, API boundaries, testing, code reviews and production releases.',
+      "Automated Lifeline Clinical Lab's data processing with Python, Cloudflare Workers and Gemini, saving ~$20K a year, with uncertain results routed to human review.",
+      "Built Riverwood Ranch's searchable document repository and reusable Comfort1 HVAC landing templates with ISR and analytics, improving LCP and INP ~35%.",
+      'Set up a repeatable AWS deployment path with Docker and Terraform, pre-deploy checks in GitHub Actions and a documented rollback procedure.',
     ],
     links: [
       { label: 'riverwoodranch.web.app', url: 'https://riverwoodranch.web.app/' },
@@ -57,8 +72,8 @@ export const workExperience: WorkExperienceItem[] = [
     role: 'Web Developer',
     period: 'June 2022 – January 2023',
     bullets: [
-      'Built course and event sites for the Donovan portfolio with React, Next.js, and Firebase, with a custom CMS for staff.',
-      'Improved mobile Lighthouse scores by 40 points across all projects.',
+      'Built course and event sites and a staff CMS with React, Next.js and Firebase, reaching 90+ Lighthouse performance and accessibility scores.',
+      'Integrated Cloudinary media and Google Analytics, so staff update content and track visitors without a developer.',
     ],
     links: [{ label: 'arroyosecogc.com', url: 'https://www.arroyosecogc.com/' }],
     hoverImage: '/experience/arroyoseco.webp',
@@ -71,8 +86,8 @@ export const workExperience: WorkExperienceItem[] = [
     role: 'Frontend Developer',
     period: 'July 2021 – May 2022',
     bullets: [
-      'Launched 5+ small business sites focused on SEO, responsive UX, and Core Web Vitals.',
-      'Cut page load times ~40% via image compression, lazy loading, and cross-browser testing.',
+      'Launched 5+ small-business websites with reusable React and Tailwind components, through reviews, testing, releases and post-launch fixes.',
+      'Cut page-load times ~40% with image compression, lazy loading and cross-browser testing; deployed on Firebase Hosting and Vercel.',
     ],
   },
   {
@@ -86,7 +101,7 @@ export const workExperience: WorkExperienceItem[] = [
     period: 'June 2024 – Present',
     additional: true,
     bullets: [
-      'Teach full-stack development with JavaScript and Python, including LLM-assisted coding and debugging.',
+      'Teach JavaScript, Python and application development, guiding students through debugging and the responsible use of LLM-assisted coding tools.',
     ],
     hoverImage: '/experience/coderschool.webp',
     hoverFrame: 'object-[50%_30%] origin-[50%_30%] scale-[2.3] group-hover:scale-[2.15]',

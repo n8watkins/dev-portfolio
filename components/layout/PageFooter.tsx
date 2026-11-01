@@ -1,6 +1,7 @@
 import { FiArrowUpRight, FiGithub, FiMail } from 'react-icons/fi'
 import { CiLinkedin } from 'react-icons/ci'
 import { FaXTwitter } from 'react-icons/fa6'
+import { TECH_FOR_PROS, techForProsHref } from '@/lib/techForPros'
 
 const EMAIL = 'contact@n8builds.dev'
 
@@ -29,7 +30,8 @@ export default function PageFooter() {
         <nav aria-label="Elsewhere" className="flex flex-wrap items-center gap-x-4 gap-y-2">
           {[
             { href: 'https://n8builds.dev', label: 'n8builds.dev' },
-            { href: 'https://appturnity.com', label: 'Appturnity' },
+            // Only once techforpros.com is live (lib/techForPros.ts).
+            ...(techForProsHref ? [{ href: techForProsHref, label: TECH_FOR_PROS.name }] : []),
           ].map((l) => (
             <a
               key={l.href}

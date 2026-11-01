@@ -4,6 +4,7 @@ import React from 'react'
 import Image from 'next/image'
 import { motion } from 'motion/react'
 import { FiArrowUpRight, FiCheck, FiGithub } from 'react-icons/fi'
+import { LuWrench } from 'react-icons/lu'
 import PauseOffscreen from '@/components/ui/PauseOffscreen'
 import SectionHeading from '@/components/ui/SectionHeading'
 import {
@@ -11,6 +12,7 @@ import {
   staggerItemVariants,
   defaultAnimationConfig,
 } from '@/lib/animations'
+import { TECH_FOR_PROS, techForProsHref } from '@/lib/techForPros'
 import styles from './Doors.module.css'
 
 /** A screenshot: when it is taller than its frame it scrolls (see Doors.module.css). */
@@ -27,11 +29,13 @@ interface Door {
   id: string
   title: string
   name: string
-  icon: string
+  /** An image path, or an icon for a brand with no mark of its own. */
+  icon: string | React.ReactElement
   blurb: React.ReactNode
   pointsLabel?: string
   points: string[]
-  cta: { label: string; href: string }
+  /** No href: the site isn't live yet, and the button says so instead. */
+  cta: { label: string; href?: string }
   secondary?: { label: string; href: string }
   /** The site's source on GitHub, as a third, quieter link. */
   github?: string
@@ -117,41 +121,45 @@ const Showcase = ({ desktop, phone, still }: { desktop: Shot; phone: Shot; still
   </PauseOffscreen>
 )
 
-// The two other sites, as n8builds.dev's "Work with me" cards: Appturnity
-// (the owner's company) and n8builds.dev (where he builds in public). Copy
-// from n8builds.dev's own cards and the n8builds case study.
+// The two other sites, as n8builds.dev's "Work with me" cards: Tech for Pros
+// (my company) and n8builds.dev (where I build in public). Copy from
+// n8builds.dev's own cards and the n8builds case study.
 const doors: Door[] = [
   {
-    id: 'appturnity',
-    name: 'Appturnity',
-    icon: '/brands/appturnity.png',
-    title: 'Run a service business? We help!',
+    id: 'techforpros',
+    name: TECH_FOR_PROS.name,
+    // No logo yet: a plain wrench, in the card's blue.
+    icon: (
+      <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#1066f4]/20 ring-1 ring-sky-300/25">
+        <LuWrench aria-hidden className="h-5 w-5 text-sky-300" />
+      </span>
+    ),
+    title: 'Run a service business? I built this for you.',
     blurb:
-      'We build pool, HVAC and landscaping businesses a free website, then automate their busywork with AI.',
-    pointsLabel: 'Today',
+      'Tech for Pros turns a few details about your business into a launch-ready website, then takes the follow-up off your plate.',
+    pointsLabel: 'What it does',
     points: [
-      'A website built and launched for you, free',
-      'Online booking and appointment reminders',
-      'Lead and quote follow-up',
-      'Paid plans add your own domain and Google Business Profile help',
+      'A website for your trade, drafted from a few details in minutes',
+      'Lead capture, and review display and requests',
+      'An instant site-health check: speed, mobile, SEO and accessibility',
+      'Next: reminders, lead follow-up and missed-call text-back',
     ],
-    cta: { label: 'Visit Appturnity', href: 'https://appturnity.com' },
-    secondary: { label: 'See the plans', href: 'https://appturnity.com/pricing' },
+    cta: { label: 'Visit Tech for Pros', href: techForProsHref },
     desktop: {
       src: '/work/landscaping-verdant.webp',
-      alt: "Appturnity's landscaping website template",
+      alt: 'A landscaping website template',
       width: 1200,
       height: 750,
     },
     phone: {
       src: '/work/landscaping-verdant-mobile.webp',
-      alt: "Appturnity's landscaping template on a phone",
+      alt: 'The landscaping template on a phone',
       width: 320,
       height: 7136,
       duration: 40,
     },
     accent: {
-      // Appturnity's own blue (#1066f4) on the button.
+      // A strong blue on the button (#1066f4).
       check: 'text-sky-300',
       button: 'from-[#1066f4] to-[#1066f4] hover:from-[#3b82f6] hover:to-[#3b82f6]',
       glow: 'bg-[radial-gradient(closest-side,rgba(56,189,248,0.12),transparent)]',
@@ -217,27 +225,40 @@ const DoorCard = ({ door, index }: { door: Door; index: number }) => {
       />
 
       {/* Screenshots */}
-      <a
-        href={door.cta.href}
-        target="_blank"
-        rel="noopener noreferrer"
-        tabIndex={-1}
-        aria-hidden
-        className={`relative block transition-transform duration-500 group-hover:-translate-y-1 ${flip ? 'lg:order-first' : 'lg:order-last'}`}
-      >
-        <Showcase desktop={door.desktop} phone={door.phone} still={door.still} />
-      </a>
+      {door.cta.href ? (
+        <a
+          href={door.cta.href}
+          target="_blank"
+          rel="noopener noreferrer"
+          tabIndex={-1}
+          aria-hidden
+          className={`relative block transition-transform duration-500 group-hover:-translate-y-1 ${flip ? 'lg:order-first' : 'lg:order-last'}`}
+        >
+          <Showcase desktop={door.desktop} phone={door.phone} still={door.still} />
+        </a>
+      ) : (
+        <div
+          aria-hidden
+          className={`relative block transition-transform duration-500 group-hover:-translate-y-1 ${flip ? 'lg:order-first' : 'lg:order-last'}`}
+        >
+          <Showcase desktop={door.desktop} phone={door.phone} still={door.still} />
+        </div>
+      )}
 
       {/* Copy */}
       <div className="relative flex flex-col">
         <div className="flex items-center gap-3">
-          <Image
-            src={door.icon}
-            alt=""
-            width={36}
-            height={36}
-            className="h-9 w-9 rounded-xl object-contain"
-          />
+          {typeof door.icon === 'string' ? (
+            <Image
+              src={door.icon}
+              alt=""
+              width={36}
+              height={36}
+              className="h-9 w-9 rounded-xl object-contain"
+            />
+          ) : (
+            door.icon
+          )}
           <p className="text-xl font-bold text-slate-100">{door.name}</p>
         </div>
 
@@ -265,16 +286,24 @@ const DoorCard = ({ door, index }: { door: Door; index: number }) => {
 
         {/* The main button, then the smaller links together on one line */}
         <div className="mt-6 flex flex-col items-start gap-4">
-          <a
-            href={door.cta.href}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={`inline-flex items-center gap-2 rounded-xl bg-linear-to-r ${door.accent.button} px-5 py-2.5 text-sm font-bold text-white transition-all duration-200 hover:scale-[1.02] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-400`}
-          >
-            {door.cta.label}
-            <FiArrowUpRight aria-hidden className="h-4 w-4" />
-            <span className="sr-only"> (opens in a new tab)</span>
-          </a>
+          {door.cta.href ? (
+            <a
+              href={door.cta.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`inline-flex items-center gap-2 rounded-xl bg-linear-to-r ${door.accent.button} px-5 py-2.5 text-sm font-bold text-white transition-all duration-200 hover:scale-[1.02] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-400`}
+            >
+              {door.cta.label}
+              <FiArrowUpRight aria-hidden className="h-4 w-4" />
+              <span className="sr-only"> (opens in a new tab)</span>
+            </a>
+          ) : (
+            // The site isn't live yet: say so, in place of the button.
+            <span className="inline-flex items-center gap-2 rounded-xl border border-white/12 bg-white/4 px-5 py-2.5 text-sm font-bold text-slate-300">
+              <span className="h-1.5 w-1.5 rounded-full bg-sky-300" aria-hidden />
+              Coming soon
+            </span>
+          )}
           <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
             {door.secondary && (
               <a
@@ -301,15 +330,11 @@ const DoorCard = ({ door, index }: { door: Door; index: number }) => {
   )
 }
 
-/** "My company and my workshop": Appturnity and n8builds.dev, after n8builds.dev's Work with me. */
-const AppturnityCard = () => {
+/** "My company and my workshop": Tech for Pros and n8builds.dev, after n8builds.dev's Work with me. */
+const WorkshopCards = () => {
   return (
     <div className="relative pb-10 px-4 select-none">
-      <SectionHeading
-        eyebrow="Beyond the resume"
-        title="My workshop"
-        className="mb-8"
-      />
+      <SectionHeading eyebrow="Beyond the resume" title="My workshop" className="mb-8" />
       <motion.div
         variants={staggerContainerVariants}
         {...defaultAnimationConfig}
@@ -323,4 +348,4 @@ const AppturnityCard = () => {
   )
 }
 
-export default AppturnityCard
+export default WorkshopCards

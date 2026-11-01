@@ -71,3 +71,20 @@ test.describe('the map arcs', () => {
     await expect.poll(() => offsets(page)).not.toEqual(before)
   })
 })
+
+/**
+ * Tech for Pros took over from Appturnity (owner, 2026-11-01). Until
+ * techforpros.com is live (lib/techForPros.ts), its cards say "Coming soon"
+ * and nothing links to it.
+ */
+test('Tech for Pros shows in the hero and the workshop, with no link until its site is live', async ({ page }) => {
+  await page.goto('/')
+  await expect(page.locator('a[href*="techforpros.com"]')).toHaveCount(0)
+  const card = page.getByRole('article', { name: /Run a service business/ })
+  await card.scrollIntoViewIfNeeded()
+  await expect(card.getByText('Tech for Pros', { exact: true })).toBeVisible()
+  await expect(card.getByText('Coming soon')).toBeVisible()
+  await expect(page.getByText('Appturnity', { exact: true }).first()).toBeAttached()
+  // Appturnity stays only as a past role, never as where to go now.
+  await expect(page.locator('a[href="https://appturnity.com"]')).toHaveCount(2)
+})
