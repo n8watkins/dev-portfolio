@@ -1,13 +1,12 @@
 import React from 'react'
-import Image from 'next/image'
 import { FiArrowUpRight } from 'react-icons/fi'
-import { LuWrench } from 'react-icons/lu'
-import { TECH_FOR_PROS } from '@/lib/techForPros'
+import SiteIcon from '@/components/ui/SiteIcon'
+import { N8BUILDS, TECH_FOR_PROS } from '@/lib/sites'
 
 /**
  * The two sites this one leads to, each in its own brand: n8builds.dev's
- * cyan-to-blue and its N8 mark, Tech for Pros' white-to-light-blue and a
- * wrench (it has no logo yet).
+ * cyan-to-blue and its n8 mark, Tech for Pros' white-to-light-blue and its
+ * worker with a gear (components/ui/SiteIcon.tsx).
  * A gradient hairline frames each card, and a soft glow in the brand's colour
  * always surrounds it; on hover (or keyboard focus) the brand's colour washes
  * in, the glow brightens, the mark grows a touch and the arrow nudges out.
@@ -18,10 +17,10 @@ import { TECH_FOR_PROS } from '@/lib/techForPros'
  */
 const doors = [
   {
-    href: 'https://n8builds.dev',
+    href: N8BUILDS.url,
     eyebrow: 'I build in public',
-    name: 'n8builds.dev',
-    icon: '/tab/n8-icon.png',
+    name: N8BUILDS.name,
+    icon: 'n8builds' as const,
     pitch: 'Try my free tools, then fork one and make it your own.',
     detail: '7 builds · all open source',
     frame:
@@ -33,13 +32,9 @@ const doors = [
   },
   {
     href: TECH_FOR_PROS.url,
-    eyebrow: 'My company',
-    name: TECH_FOR_PROS.name,
-    icon: (
-      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#1066f4]/20 ring-1 ring-sky-300/25 transition-transform duration-300 group-hover:scale-110">
-        <LuWrench className="h-5 w-5 text-sky-300" aria-hidden="true" />
-      </span>
-    ),
+    eyebrow: 'Where I work',
+    name: TECH_FOR_PROS.domain,
+    icon: 'techforpros' as const,
     pitch: (
       <>
         Run a service business?
@@ -47,7 +42,7 @@ const doors = [
         Get a website, and every lead followed up.
       </>
     ),
-    detail: 'Websites and follow-up for service businesses',
+    detail: 'For service businesses',
     frame:
       'from-white/40 via-sky-300/25 to-[#1066f4]/50 group-hover:from-white/80 group-hover:to-[#1066f4]',
     wash: 'from-sky-300/20 via-[#1066f4]/15',
@@ -82,17 +77,10 @@ export default function SiteDoors({
                 className={`pointer-events-none absolute inset-0 bg-linear-to-br ${door.wash} to-transparent opacity-30 transition-opacity duration-300 group-hover:opacity-100 group-focus-visible:opacity-100`}
               />
               <span className="relative flex items-center gap-3">
-                {typeof door.icon === 'string' ? (
-                  <Image
-                    src={door.icon}
-                    alt=""
-                    width={36}
-                    height={36}
-                    className="h-9 w-9 shrink-0 rounded-lg object-contain transition-transform duration-300 group-hover:scale-110"
-                  />
-                ) : (
-                  door.icon
-                )}
+                <SiteIcon
+                  site={door.icon}
+                  className="h-9 w-9 transition-transform duration-300 group-hover:scale-110"
+                />
                 <span className="min-w-0 flex-1">
                   <span
                     className={`block bg-linear-to-r ${door.eyebrowText} bg-clip-text text-[0.65rem] font-bold uppercase tracking-[0.14em] text-transparent`}

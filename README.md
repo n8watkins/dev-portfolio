@@ -3,13 +3,13 @@
 Nathan Watkins' developer portfolio, live at **https://portfolio.n8builds.dev**.
 
 It is the hire-me page: selected projects with their own detail pages, client work, and experience.
-The build-in-public workshop (every build, the build log, notes and streams) is a separate site, [n8builds.dev](https://n8builds.dev), and my company is Tech for Pros (techforpros.com, launching soon: see `lib/techForPros.ts`); this site leads to both.
+The build-in-public workshop (every build, the build log, notes and streams) is a separate site, [n8builds.dev](https://n8builds.dev), and my company is Tech for Pros, a SaaS for service businesses at [techforpros.com](https://techforpros.com); this site leads to both (`lib/sites.ts`).
 
 ## What's on it
 
 - **Projects:** Echo, Scout, GeminiGPT and Net-Trailer, each as a row after n8builds.dev's Lab (screenshots with left/right, tech pills, feature checks, in the app's own colour), and a blog-style detail page at `/projects/<slug>`.
 - **Building in public:** a teaser under the projects that shows n8builds.dev's builds one at a time, each linking to its live site and its page there.
-- **About, experience and contact,** with links out to n8builds.dev and, once its site is live, Tech for Pros.
+- **About, experience and contact,** with links out to n8builds.dev and techforpros.com.
 - **Share cards:** generated at build time (`app/opengraph-image.tsx`), with titles and descriptions kept in one place (`lib/seo.ts`).
 
 ## Stack

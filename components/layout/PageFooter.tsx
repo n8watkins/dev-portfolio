@@ -1,7 +1,9 @@
 import { FiArrowUpRight, FiGithub, FiMail } from 'react-icons/fi'
 import { CiLinkedin } from 'react-icons/ci'
 import { FaXTwitter } from 'react-icons/fa6'
-import { TECH_FOR_PROS, techForProsHref } from '@/lib/techForPros'
+import BuiltInPublic from '@/components/ui/BuiltInPublic'
+import SiteIcon from '@/components/ui/SiteIcon'
+import { N8BUILDS, TECH_FOR_PROS } from '@/lib/sites'
 
 const EMAIL = 'contact@n8builds.dev'
 
@@ -15,10 +17,12 @@ const ICON =
 export default function PageFooter() {
   return (
     <footer className="border-t border-white/10 bg-darkBlue">
-      <div className="mx-auto flex max-w-5xl flex-col gap-6 px-4 py-10 sm:px-6 md:flex-row md:items-center md:justify-between xl:max-w-6xl 2xl:max-w-7xl">
+      <div className="mx-auto flex max-w-5xl flex-col gap-6 px-4 py-10 sm:px-6 lg:flex-row lg:items-center lg:justify-between xl:max-w-6xl 2xl:max-w-7xl">
         <div>
           <p className="text-lg font-bold text-slate-100">Nathan Watkins</p>
-          <p className="text-sm text-slate-400">Full-stack developer in Los Angeles. Open to full-time roles.</p>
+          <p className="text-sm text-slate-400">
+            Full-stack developer in Los Angeles. Open to full-time roles.
+          </p>
           <a
             href={`mailto:${EMAIL}`}
             className="mt-3 inline-flex items-center gap-2 rounded-full bg-linear-to-r from-cyan-500 to-blue-600 px-4 py-2 text-sm font-semibold text-white transition-all hover:from-cyan-400 hover:to-blue-500"
@@ -27,36 +31,65 @@ export default function PageFooter() {
             {EMAIL}
           </a>
         </div>
-        <nav aria-label="Elsewhere" className="flex flex-wrap items-center gap-x-4 gap-y-2">
-          {[
-            { href: 'https://n8builds.dev', label: 'n8builds.dev' },
-            // Only once techforpros.com is live (lib/techForPros.ts).
-            ...(techForProsHref ? [{ href: techForProsHref, label: TECH_FOR_PROS.name }] : []),
-          ].map((l) => (
+        {/* My two sites, then the socials: one row from lg up, two rows below it */}
+        <div className="flex flex-col items-start gap-3 lg:flex-row lg:items-center lg:gap-4">
+          <nav aria-label="My sites" className="flex flex-wrap items-center gap-x-4 gap-y-2">
+            {(
+              [
+                { href: N8BUILDS.url, label: N8BUILDS.name, site: 'n8builds' },
+                { href: TECH_FOR_PROS.url, label: TECH_FOR_PROS.domain, site: 'techforpros' },
+              ] as const
+            ).map((l) => (
+              <a
+                key={l.href}
+                href={l.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-sm text-slate-300 transition-colors hover:text-sky-300"
+              >
+                <SiteIcon site={l.site} className="h-5 w-5" rounded="rounded-md" />
+                {l.label}
+                <FiArrowUpRight className="h-4 w-4" aria-hidden="true" />
+              </a>
+            ))}
+          </nav>
+          <span className="hidden h-6 w-px bg-white/10 lg:block" aria-hidden="true" />
+          {/* Pulled left by the buttons' padding, so the icons line up with the links above */}
+          <div className="-ml-2.5 flex items-center gap-x-4 lg:ml-0">
             <a
-              key={l.href}
-              href={l.href}
+              href="https://github.com/n8watkins"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-sm text-slate-300 transition-colors hover:text-sky-300"
+              aria-label="GitHub"
+              className={ICON}
             >
-              {l.label}
-              <FiArrowUpRight className="h-4 w-4" aria-hidden="true" />
+              <FiGithub className="h-5 w-5" aria-hidden="true" />
             </a>
-          ))}
-          <span className="h-6 w-px bg-white/10" aria-hidden="true" />
-          <a href="https://github.com/n8watkins" target="_blank" rel="noopener noreferrer" aria-label="GitHub" className={ICON}>
-            <FiGithub className="h-5 w-5" aria-hidden="true" />
-          </a>
-          <a href="https://www.linkedin.com/in/n8watkins/" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" className={ICON}>
-            <CiLinkedin className="h-6 w-6" aria-hidden="true" />
-          </a>
-          <a href="https://x.com/n8watkins" target="_blank" rel="noopener noreferrer" aria-label="X" className={ICON}>
-            <FaXTwitter className="h-4 w-4" aria-hidden="true" />
-          </a>
-        </nav>
+            <a
+              href="https://www.linkedin.com/in/n8watkins/"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="LinkedIn"
+              className={ICON}
+            >
+              <CiLinkedin className="h-6 w-6" aria-hidden="true" />
+            </a>
+            <a
+              href="https://x.com/n8watkins"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="X"
+              className={ICON}
+            >
+              <FaXTwitter className="h-4 w-4" aria-hidden="true" />
+            </a>
+          </div>
+        </div>
       </div>
-      <p className="pb-8 text-center text-xs text-slate-500">Copyright © 2026 Nathan Watkins</p>
+      <div className="flex flex-col items-center gap-3 pb-8">
+        <BuiltInPublic />
+        <p className="text-center text-xs text-slate-500">Copyright © 2026 Nathan Watkins</p>
+      </div>
     </footer>
   )
 }

@@ -130,3 +130,26 @@ test('a project row opens its page, its live demo and its source', async ({ page
   await echo.getByRole('link', { name: 'View Echo details' }).click()
   await expect(page).toHaveURL(/\/projects\/echo$/, { timeout: 30000 })
 })
+
+/**
+ * A project page's footer: my two sites with their marks under "My sites",
+ * then "Built in public at n8builds.dev" (owner, 2026-11-01).
+ */
+test("a project page's footer links my sites with their marks", async ({ page }) => {
+  await page.goto('/projects/echo')
+  const sites = page.getByRole('navigation', { name: 'My sites' })
+  await sites.scrollIntoViewIfNeeded()
+  await expect(sites.getByRole('link', { name: 'n8builds.dev' })).toHaveAttribute(
+    'href',
+    'https://n8builds.dev'
+  )
+  await expect(sites.getByRole('link', { name: 'techforpros.com' })).toHaveAttribute(
+    'href',
+    'https://techforpros.com'
+  )
+  await expect(sites.locator('img[src*="n8-icon"]')).toHaveCount(1)
+  await expect(sites.locator('img[src*="techforpros-icon"]')).toHaveCount(1)
+  await expect(
+    page.locator('footer').getByRole('link', { name: /Built in public at n8builds\.dev/ })
+  ).toBeVisible()
+})
