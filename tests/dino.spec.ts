@@ -89,6 +89,19 @@ const dinoTiming = (page: Page, timing: DinoTiming) =>
     w.__n8DinoTiming = { ...w.__n8DinoTiming, ...t }
   }, timing)
 
+// A device that can't keep up: every frame spends `ms` of main-thread work.
+const slowFrames = (page: Page, ms: number) =>
+  page.addInitScript((ms) => {
+    const hog = () => {
+      const end = performance.now() + ms
+      while (performance.now() < end) {
+        // Busy: a slow frame.
+      }
+      requestAnimationFrame(hog)
+    }
+    requestAnimationFrame(hog)
+  }, ms)
+
 test.describe('dino easter egg (motion allowed)', () => {
   test.use({ contextOptions: { reducedMotion: 'no-preference' } })
   // Most tests follow it along its rows, so they keep it from roaming off on
@@ -622,16 +635,7 @@ test.describe('dino easter egg (motion allowed)', () => {
     // A device that can't keep up: every frame spends 150 ms of main-thread
     // work, so frames come about three times slower than the dino's capped
     // step. The round runs on real time, so 7 s is still 7 s.
-    await page.addInitScript(() => {
-      const hog = () => {
-        const end = performance.now() + 150
-        while (performance.now() < end) {
-          // Busy: a slow frame.
-        }
-        requestAnimationFrame(hog)
-      }
-      requestAnimationFrame(hog)
-    })
+    await slowFrames(page, 150)
     await dinoTiming(page, { reactions: ['dash'], round: 7 })
     await onTopRow(page)
     const timer = page.locator('[data-dino-timer]')
@@ -769,6 +773,70 @@ test.describe('dino easter egg (motion allowed)', () => {
       'walk@1:left',
     ])
       await expect.poll(seen, { message: `it gets to ${want}`, timeout: 45_000 }).toContain(want)
+  })
+
+  // Every mode, level and way it faces, in order (a repeat only once).
+  const recordRoaming = (page: Page) =>
+    dino(page).evaluate((el) => {
+      const log: string[] = []
+      ;(window as unknown as { roamLog: string[] }).roamLog = log
+      const note = () => {
+        const now = `${el.dataset.mode}@${el.dataset.level}:${el.dataset.dir}`
+        if (log.at(-1) !== now) log.push(now)
+      }
+      note()
+      new MutationObserver(note).observe(el, { attributes: true })
+    })
+  const roamLog = (page: Page) =>
+    page.evaluate(() => (window as unknown as { roamLog: string[] }).roamLog)
+
+  // About 20 frames a second, where each of its capped steps is most of the
+  // way it looks ahead for a tile's edge: a step often takes its feet just
+  // past the edge it then turns round or chooses at.
+  test('turning round at the end of a tile, it stays on it, even when frames come slowly', async ({
+    page,
+    browserName,
+  }) => {
+    test.skip(browserName !== 'chromium', 'game logic, checked in Chromium (slow CI frames elsewhere)')
+    test.setTimeout(60_000)
+    await slowFrames(page, 40)
+    // It only ever chooses to turn round (and turns back from the side fades).
+    await dinoTiming(page, { roam: true, stay: [0.1, 0.2], firstLineAfter: 60_000, choices: ['turn'] })
+    await onTopRow(page)
+    await recordRoaming(page)
+    const turns = async () => {
+      const log = await roamLog(page)
+      return log.filter((now, i) => i > 0 && now.startsWith('walk@') && log[i - 1].startsWith('walk@')).length
+    }
+    await expect.poll(turns, { message: 'it turns round', timeout: 45_000 }).toBeGreaterThanOrEqual(8)
+    // Never into a gap: only walking and hopping, all along the top row.
+    const log = await roamLog(page)
+    expect(log.filter((now) => !/^(walk|hop)@0:/.test(now))).toEqual([])
+  })
+
+  test('choosing to leave, it hops on along its row and off the side, even when frames come slowly', async ({
+    page,
+    browserName,
+  }) => {
+    test.skip(browserName !== 'chromium', 'game logic, checked in Chromium (slow CI frames elsewhere)')
+    test.setTimeout(60_000)
+    await slowFrames(page, 40)
+    // It only ever chooses to leave, and comes back in on the top row.
+    await dinoTiming(page, {
+      roam: true,
+      stay: [0.1, 0.2],
+      firstLineAfter: 60_000,
+      choices: ['exit'],
+      entries: ['drop'],
+    })
+    await onTopRow(page)
+    await recordRoaming(page)
+    const leaves = async () => (await roamLog(page)).filter((now) => now.startsWith('away@')).length
+    await expect.poll(leaves, { message: 'it leaves', timeout: 45_000 }).toBeGreaterThanOrEqual(3)
+    // Off the side of the top row each time, never down through a gap in it
+    // (it only falls dropping back in from above).
+    const log = await roamLog(page)
+    expect(log.filter((now) => !/^((walk|hop|away)@0|fall@-1):/.test(now))).toEqual([])
   })
 
   test('skips the click hint once it has been clicked', async ({ page }) => {

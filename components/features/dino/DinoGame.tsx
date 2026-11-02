@@ -589,6 +589,14 @@ export default function DinoGame() {
     const support = (foot: number, spans: [number, number][]) =>
       spans.find(([a, b]) => foot >= a && foot <= b)
 
+    // Turning round, it stays on the tile it stood on. It looks for a tile's
+    // edge from where it stood before this frame's step, and on a slow frame
+    // that step can carry its feet just past the edge: turned round there, it
+    // would fall into the gap.
+    const stayOn = ([a, b]: [number, number]) => {
+      x = Math.min(Math.max(x + W / 2, a + 1), b - 1) - W / 2
+    }
+
     const land = (target: Level, spans: [number, number][] | null) => {
       // Nudge onto the nearest tile if the dino would land in a gap.
       if (spans && !support(x + W / 2, spans)) {
@@ -766,11 +774,15 @@ export default function DinoGame() {
         // the panel's side, so this can't wait for a tile's edge). Not while
         // its row has just been paused: it walks on to its next jump and
         // misses it, even on a narrow panel where that gap is in the fade.
-        if (roam && !leaving && !reentering && !missPending && (dir > 0 ? x + W > panelW * 0.85 : x < panelW * 0.15))
+        let turned = false
+        if (roam && !leaving && !reentering && !missPending && (dir > 0 ? x + W > panelW * 0.85 : x < panelW * 0.15)) {
           dir = dir > 0 ? -1 : 1
+          turned = true
+        }
         if (spans) {
           const under = support(foot, spans)
           if (under) reentering = false
+          if (under && turned) stayOn(under)
           if (!under && reentering) {
             // Still off the edge: keep walking.
           } else if (!under) {
@@ -787,6 +799,17 @@ export default function DinoGame() {
                 .filter((e) => (e - edge) * dir > 0)
                 .sort((p, q) => (p - edge) * dir - (q - edge) * dir)[0]
               const gap = next === undefined ? 16 : Math.abs(next - edge)
+              // A lunge sized to the gap: it clears it and lands a little way
+              // onto the next tile (relative to the row, which carries it
+              // along meanwhile), in an arc that grows with it.
+              const lunge = () => {
+                const reach = gap + LANDING
+                const T = Math.min(Math.max(reach / (SPEED * 1.4), 0.26), 0.6)
+                // The top row's arc stays inside the panel (which clips).
+                const h = Math.max(0, Math.min(8 + gap * 0.4, current.y - H - ceiling))
+                hop = { t: 0, T, h, floor: current.y, vx: (dir * reach) / T }
+                mode = 'hop'
+              }
               if (missPending) {
                 // Mistimed: a late little hop that comes down in the gap
                 // (relative to the row, which carries it along meanwhile).
@@ -812,22 +835,16 @@ export default function DinoGame() {
                   mode = 'drop'
                   carry = rowSpeed(current.row)
                 } else if (choice === 'turn') {
+                  stayOn(under)
                   dir = dir > 0 ? -1 : 1
                 } else {
-                  // Walks on, hopping as usual, until it leaves the panel.
+                  // Walks on, hopping as usual (this gap too: standing at
+                  // its edge, it would otherwise walk into it and fall),
+                  // until it leaves the panel.
                   leaving = true
+                  lunge()
                 }
-              } else {
-                // A lunge sized to the gap: it clears it and lands a little
-                // way onto the next tile (relative to the row, which carries
-                // it along meanwhile), in an arc that grows with it.
-                const reach = gap + LANDING
-                const T = Math.min(Math.max(reach / (SPEED * 1.4), 0.26), 0.6)
-                // The top row's arc stays inside the panel (which clips).
-                const h = Math.max(0, Math.min(8 + gap * 0.4, current.y - H - ceiling))
-                hop = { t: 0, T, h, floor: current.y, vx: (dir * reach) / T }
-                mode = 'hop'
-              }
+              } else lunge()
             }
           }
         }
