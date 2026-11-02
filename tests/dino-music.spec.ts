@@ -40,8 +40,13 @@ const spyOnAudio = (page: Page) =>
     if (!Real) return
     // Silent: everything the page connects to the speakers goes through a
     // gain of 0 first, so a test run can never be heard (under WSLg even a
-    // headless browser plays through the Windows speakers). The context still
-    // runs, so the scheduling can be checked.
+    // headless browser plays through the Windows speakers). And on its own
+    // clock: a test machine may have no sound device (CI, or PULSE_SERVER
+    // pointing nowhere), where a real context never starts running. Its state
+    // and time follow the page's own resume() and suspend() calls, as a real
+    // context's do on a machine that can play, so the tests check what the
+    // page asks for and the notes it schedules.
+    const realClose = Real.prototype.close
     w.AudioContext = class extends Real {
       constructor(options?: AudioContextOptions) {
         super(options)
@@ -50,7 +55,39 @@ const spyOnAudio = (page: Page) =>
         const silent = super.createGain()
         silent.gain.value = 0
         silent.connect(super.destination)
-        Object.defineProperty(this, 'destination', { value: silent })
+        // Made in a click, so running, as browsers start it then.
+        let state: AudioContextState = 'running'
+        let clock = 0
+        let since = performance.now()
+        const now = () => (state === 'running' ? clock + (performance.now() - since) / 1000 : clock)
+        Object.defineProperties(this, {
+          destination: { value: silent },
+          state: { get: () => state },
+          currentTime: { get: now },
+          resume: {
+            value: async () => {
+              if (state === 'suspended') {
+                since = performance.now()
+                state = 'running'
+              }
+            },
+          },
+          suspend: {
+            value: async () => {
+              if (state === 'running') {
+                clock = now()
+                state = 'suspended'
+              }
+            },
+          },
+          close: {
+            value: () => {
+              clock = now()
+              state = 'closed'
+              return realClose.call(this)
+            },
+          },
+        })
       }
     }
     const start = OscillatorNode.prototype.start
@@ -302,7 +339,12 @@ test.describe('dino game music (reduced motion)', () => {
 test.describe('dino game music, rendered offline', () => {
   test('a steady 4-bar loop at 148 bpm, about 35% volume, never clipping, fading in and out without clicks', async ({
     page,
+    browserName,
   }) => {
+    // The render pauses the loop part way through with OfflineAudioContext's
+    // suspend(time), which Firefox lacks. The synth is the same in every
+    // browser, so Chromium and WebKit cover it.
+    test.skip(browserName === 'firefox', 'no OfflineAudioContext.suspend()')
     const source = readFileSync('components/features/dino/music.ts', 'utf8')
     const js = ts.transpileModule(source, {
       compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 },
