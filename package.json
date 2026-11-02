@@ -72,5 +72,9 @@
     "*.{js,jsx,ts,tsx}": [
       "eslint --fix"
     ]
+  },
+  "overrides": {
+    "minimatch": "^11.0.3",
+    "glob": "^14.0.3"
   }
 }
