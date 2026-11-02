@@ -7,6 +7,11 @@ dotenv.config({ path: path.resolve(__dirname, '.env.local') })
 
 // E2E_PORT lets a second checkout (or a running `npm run dev` on 4829) coexist.
 const PORT = Number(process.env.E2E_PORT) || 4829
+// No test run is ever heard (the dino game has music): the browsers get no
+// sound device (under WSLg every Linux process, headless browsers included,
+// plays through the Windows speakers via PULSE_SERVER), and Chromium is muted.
+process.env.PULSE_SERVER = 'unix:/nonexistent'
+const MUTED = { args: ['--mute-audio'] }
 
 /**
  * Playwright configuration for Web Vitals testing
@@ -57,10 +62,12 @@ export default defineConfig({
   // The same five browsers as n8builds-web, so the shared dino and its tests
   // are checked on every one of them here too.
   projects: [
-    { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
+    // Chromium runs muted: the dino game's music (tests/dino-music.spec.ts)
+    // must never sound out loud on a developer's machine.
+    { name: 'chromium', use: { ...devices['Desktop Chrome'], launchOptions: MUTED } },
     { name: 'firefox', use: { ...devices['Desktop Firefox'] } },
     { name: 'webkit', use: { ...devices['Desktop Safari'] } },
-    { name: 'mobile-chrome', use: { ...devices['Pixel 7'] } },
+    { name: 'mobile-chrome', use: { ...devices['Pixel 7'], launchOptions: MUTED } },
     { name: 'mobile-safari', use: { ...devices['iPhone 14'] } },
   ],
 

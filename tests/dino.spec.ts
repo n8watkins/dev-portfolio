@@ -153,6 +153,9 @@ test.describe('dino easter egg (motion allowed)', () => {
   test('pausing the row it walks on makes it miss a jump and fall to the next row, walking the other way', async ({
     page,
   }) => {
+    // Each fall may take up to 20s where frames come slowly (a loaded WebKit
+    // took 9.5s for one), so together they can outlast the 30s default.
+    test.setTimeout(90_000)
     await onTopRow(page)
 
     // Hovering the top row pauses it: the dino misses, lands on the bottom

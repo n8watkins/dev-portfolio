@@ -15,6 +15,8 @@ const config = [
       'components/ui/StackTile.tsx',
       'components/features/dino/DinoEasterEgg.tsx',
       'components/features/dino/DinoGame.tsx',
+      'components/features/dino/DinoMusic.tsx',
+      'components/features/dino/music.ts',
       'components/features/dino/sprite.ts',
       'hooks/usePrefersReducedMotion.ts',
       'hooks/useHydrated.ts',

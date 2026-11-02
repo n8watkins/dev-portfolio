@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type ComponentType } from 'react'
 import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion'
+import DinoMusic from './DinoMusic'
 
 /**
  * The homepage AI kit's easter egg: a pixel dino that walks along the marquee
@@ -9,6 +10,9 @@ import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion'
  * ships up front: an empty, absolutely positioned layer (so nothing shifts)
  * that loads the game once the marquee nears the viewport. Under reduced
  * motion there is no layer and nothing loads.
+ *
+ * The game's music toggle (DinoMusic.tsx) sits in the panel's top right
+ * corner, under reduced motion too: music isn't motion.
  *
  * Place it inside the marquee panel (an element with `data-dino-panel`),
  * after the rows and before the edge fades, so the dino walks into the fades.
@@ -33,14 +37,18 @@ export default function DinoEasterEgg() {
     return () => observer.disconnect()
   }, [reduceMotion, Game])
 
-  if (reduceMotion) return null
   return (
-    <div
-      ref={layer}
-      aria-hidden="true"
-      className="pointer-events-none absolute inset-0 overflow-hidden"
-    >
-      {Game && <Game />}
-    </div>
+    <>
+      {!reduceMotion && (
+        <div
+          ref={layer}
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 overflow-hidden"
+        >
+          {Game && <Game />}
+        </div>
+      )}
+      <DinoMusic />
+    </>
   )
 }

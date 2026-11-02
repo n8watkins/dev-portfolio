@@ -43,7 +43,7 @@ It funnels visitors to the two other sites:
 - `npm test` runs Playwright against a production build on port 4829 (it builds first, or reuses a server already running there locally).
   `E2E_PORT=4839 npm test` uses another port, so a running `npm run dev` on 4829 is not mistaken for the test build.
   No retries: a flaky test gets fixed.
-- Specs: `tests/consent.spec.ts` (the analytics consent banner), `tests/dino.spec.ts` (the dino game on the tech stack card: n8builds.dev's dino tests, kept in step with its `tests/e2e/ai-kit.spec.ts`), `tests/home.spec.ts` (the n8builds card, and the n8builds.dev teaser's links), `tests/projects.spec.ts` (status pills, project rows and pages), `tests/seo.spec.ts` (titles, share cards, no em dashes, no Sentry example routes), `tests/web-vitals.spec.ts` (Web Vitals budgets and axe accessibility).
+- Specs: `tests/consent.spec.ts` (the analytics consent banner), `tests/dino.spec.ts` (the dino game on the tech stack card: n8builds.dev's dino tests, kept in step with its `tests/e2e/ai-kit.spec.ts`), `tests/dino-music.spec.ts` (the dino game's music toggle and its sound checked offline, never out loud: n8builds.dev's `tests/e2e/dino-music.spec.ts`), `tests/home.spec.ts` (the n8builds card, and the n8builds.dev teaser's links), `tests/projects.spec.ts` (status pills, project rows and pages), `tests/seo.spec.ts` (titles, share cards, no em dashes, no Sentry example routes), `tests/web-vitals.spec.ts` (Web Vitals budgets and axe accessibility).
 - The site scrolls smoothly (`scroll-smooth` on every element), so a test that scrolls must wait for the scroll to stop before hovering or clicking.
 - GitHub Actions (`.github/workflows/ci.yml`): lint, types and build, then the Playwright suite on the same five browsers as n8builds.dev (chromium, firefox, webkit, mobile-chrome, mobile-safari) inside Playwright's Docker image (its version read from `package-lock.json`).
   WebKit and mobile Safari each run as two shards with one worker: they have no GPU in CI, so their frames come slowly (about 10 fps on this page), and competing workers make that worse.
@@ -102,7 +102,7 @@ It funnels visitors to the two other sites:
 - The tech stack card shows the same tiles as n8builds.dev's AI kit (`data/stack.tsx`, shared byte for byte), in two rows here: the AI kit, then the dev stack (three rows there) (owner, 2026-10-29).
   Hovering a tile shows what it is for, a tap does on phones, and a mouse click does nothing (only hovering pauses a row).
   Row loop times come from the tile count (`rowDuration`), so every row moves at the same pace.
-  The dino and its 30-second catch game are byte-identical with n8builds.dev's.
+  The dino and its 30-second catch game are byte-identical with n8builds.dev's. So is its optional music ("Desert Run", a toggle in the card's top right corner, off by default, never autoplayed).
 - Twitch and YouTube stay hidden until streaming starts (`STREAMING` in `components/layout/Footer.tsx`).
 
 ## Live-demo status (OpenPing)
