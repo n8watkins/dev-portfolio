@@ -66,7 +66,7 @@
     "release-kit": "github:n8watkins/release-kit#v2.0.0",
     "svgo": "^4.1.0",
     "tailwindcss": "^4.3.3",
-    "typescript": "^5"
+    "typescript": "~6.0.3"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [
