@@ -419,12 +419,15 @@ export default function DinoGame() {
       // Storage blocked: the best score lasts this page view only.
     }
     // The scoreboards' text, written straight to the DOM (no re-render per
-    // frame): the catches, the round's countdown and the best score.
+    // frame): the catches, the round's countdown and the best score. The
+    // extra (a new best, the all-time record) is left out on narrow panels.
     const texts = new Map<HTMLElement, string>()
-    const show = (el: HTMLElement, text: string) => {
-      if (texts.get(el) === text) return
-      texts.set(el, text)
-      el.textContent = text
+    const show = (el: HTMLElement, text: string, extra = '') => {
+      if (texts.get(el) === text + extra) return
+      texts.set(el, text + extra)
+      const [main, more] = el.children as HTMLCollectionOf<HTMLElement>
+      main.textContent = text
+      more.textContent = extra
       el.dataset.shown = text ? 'true' : 'false'
     }
     const timerText = timer.querySelector<HTMLElement>('[data-dino-timer-text]')!
@@ -445,13 +448,13 @@ export default function DinoGame() {
       if (roundLeft > 0) {
         show(score, `Catches ${catches}`)
       } else if (resultLeft > 0) {
-        show(score, `Time! ${catches} ${catches === 1 ? 'catch' : 'catches'}${beatBest ? ' · New best!' : ''}`)
+        show(score, `Time! ${catches} ${catches === 1 ? 'catch' : 'catches'}`, beatBest ? ' · New best!' : '')
       } else {
         show(score, '')
       }
       // During a round the best counts this round's catches as they pass it.
       const mine = Math.max(best, catches)
-      show(bestEl, playing ? `Best ${mine}${allTime > mine ? ` · Record ${allTime}` : ''}` : '')
+      show(bestEl, playing ? `Best ${mine}` : '', playing && allTime > mine ? ` · Record ${allTime}` : '')
       bestEl.dataset.new = playing && catches > 0 && (beatBest || catches > best) ? 'true' : 'false'
     }
     // What it says now and then (DINO_LINES), each once per visit.
@@ -1143,42 +1146,51 @@ export default function DinoGame() {
       {/* The scoreboards, in a band across the top of the panel that the dino
           never enters: the round (catches and clock) and the best score. Shown
           during a round and for a moment after it. A fixed height, so the band
-          measures the same empty or full. Decorative, like the dino. */}
-      <div
-        ref={bandRef}
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 top-2.5 z-10 flex justify-center gap-2"
-      >
-        <div
-          ref={scoreRef}
-          data-dino-score
-          data-shown="false"
-          className="flex h-[1.625rem] items-center rounded-full whitespace-nowrap border border-white/10 bg-[#081427]/85 px-3 font-mono text-xs font-semibold text-cyan-200 tabular-nums opacity-0 backdrop-blur-sm transition-opacity duration-300 data-[shown=true]:opacity-100"
-        />
-        {/* The countdown: bigger digits over a bar that drains with the round; red and pulsing near the end. */}
-        <div
-          ref={timerRef}
-          data-dino-timer
-          data-shown="false"
-          data-urgent="false"
-          className="group/timer relative flex h-[1.625rem] items-center overflow-hidden rounded-full border border-cyan-300/30 bg-[#081427]/85 px-3.5 font-mono text-sm font-bold text-cyan-100 tabular-nums opacity-0 backdrop-blur-sm transition-[opacity,color,border-color] duration-300 data-[shown=true]:opacity-100 data-[urgent=true]:animate-pulse data-[urgent=true]:border-rose-400/60 data-[urgent=true]:text-rose-200"
-        >
-          <span data-dino-timer-text />
-          <span
-            ref={timerBarRef}
-            aria-hidden="true"
-            className="absolute inset-x-0 bottom-0 h-[3px] origin-left bg-gradient-to-r from-cyan-400 to-blue-500 group-data-[urgent=true]/timer:from-rose-500 group-data-[urgent=true]/timer:to-orange-400"
-            style={{ transform: 'scaleX(1)' }}
-          />
+          measures the same empty or full. Decorative, like the dino.
+          It keeps to one line clear of the music toggle in the top right
+          corner (DinoMusic.tsx): on a narrower panel it centres in the room
+          left of it and drops the extras (a new best, the all-time record),
+          and on the narrowest its text gets smaller. */}
+      <div ref={bandRef} aria-hidden="true" className="@container pointer-events-none absolute inset-x-0 top-2.5 z-10">
+        <div className="flex justify-center gap-2 px-2 @max-[36rem]:pr-11 @max-[20rem]:gap-1.5">
+          <div
+            ref={scoreRef}
+            data-dino-score
+            data-shown="false"
+            className="flex h-[1.625rem] items-center rounded-full whitespace-nowrap border border-white/10 bg-[#081427]/85 px-3 font-mono text-xs font-semibold text-cyan-200 tabular-nums opacity-0 backdrop-blur-sm transition-opacity duration-300 data-[shown=true]:opacity-100 @max-[20rem]:px-2 @max-[20rem]:text-[11px]"
+          >
+            <span />
+            <span className="whitespace-pre @max-[29rem]:hidden" />
+          </div>
+          {/* The countdown: bigger digits over a bar that drains with the round;
+              red and pulsing near the end. Out of the line between rounds. */}
+          <div
+            ref={timerRef}
+            data-dino-timer
+            data-shown="false"
+            data-urgent="false"
+            className="group/timer relative flex h-[1.625rem] items-center overflow-hidden rounded-full border border-cyan-300/30 bg-[#081427]/85 px-3.5 font-mono text-sm font-bold text-cyan-100 tabular-nums backdrop-blur-sm transition-[color,border-color] duration-300 data-[shown=false]:hidden data-[urgent=true]:animate-pulse data-[urgent=true]:border-rose-400/60 data-[urgent=true]:text-rose-200 @max-[20rem]:px-2.5 @max-[20rem]:text-[13px]"
+          >
+            <span data-dino-timer-text />
+            <span
+              ref={timerBarRef}
+              aria-hidden="true"
+              className="absolute inset-x-0 bottom-0 h-[3px] origin-left bg-gradient-to-r from-cyan-400 to-blue-500 group-data-[urgent=true]/timer:from-rose-500 group-data-[urgent=true]/timer:to-orange-400"
+              style={{ transform: 'scaleX(1)' }}
+            />
+          </div>
+          {/* A new best lights up. */}
+          <div
+            ref={bestRef}
+            data-dino-best
+            data-shown="false"
+            data-new="false"
+            className="flex h-[1.625rem] items-center rounded-full whitespace-nowrap border border-white/10 bg-[#081427]/85 px-3 font-mono text-xs font-semibold text-slate-300 tabular-nums opacity-0 backdrop-blur-sm transition-[opacity,color,border-color] duration-300 data-[new=true]:border-amber-300/40 data-[new=true]:text-amber-200 data-[shown=true]:opacity-100 @max-[20rem]:px-2 @max-[20rem]:text-[11px]"
+          >
+            <span />
+            <span className="whitespace-pre @max-[29rem]:hidden" />
+          </div>
         </div>
-        {/* A new best lights up. */}
-        <div
-          ref={bestRef}
-          data-dino-best
-          data-shown="false"
-          data-new="false"
-          className="flex h-[1.625rem] items-center rounded-full whitespace-nowrap border border-white/10 bg-[#081427]/85 px-3 font-mono text-xs font-semibold text-slate-300 tabular-nums opacity-0 backdrop-blur-sm transition-[opacity,color,border-color] duration-300 data-[new=true]:border-amber-300/40 data-[new=true]:text-amber-200 data-[shown=true]:opacity-100"
-        />
       </div>
     </>
   )
