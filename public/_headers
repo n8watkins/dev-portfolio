@@ -1,0 +1,12 @@
+# Headers for files served straight from Workers static assets (public/ and
+# /_next/static), which never reach the worker or next.config.mjs's headers().
+# Pages and API routes get the full set from lib/security/headers.mjs.
+/*
+  Strict-Transport-Security: max-age=63072000
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: strict-origin-when-cross-origin
+
+# Hashed build files never change, so browsers keep them for a year.
+/_next/static/*
+  Cache-Control: public, max-age=31536000, immutable

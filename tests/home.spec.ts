@@ -35,7 +35,12 @@ test('the n8builds.dev teaser links each build to its n8builds.dev page', async 
     ['Portfolio Rank', 'portfolio-rank', 'https://portfoliorank.vercel.app'],
     ['TL;DW', 'tldw', null],
   ] as const) {
-    await teaser.getByRole('button', { name: `Show ${name}` }).click()
+    // A click that lands before the carousel hydrates does nothing (seen in
+    // Firefox on CI), so click until the counter shows the build.
+    await expect(async () => {
+      await teaser.getByRole('button', { name: `Show ${name}` }).click()
+      await expect(teaser.getByText(new RegExp(`^${name}, \\d+ of \\d+$`))).toBeVisible({ timeout: 1000 })
+    }).toPass()
     const link = teaser.getByRole('link', { name: `See the build: ${name} on n8builds.dev` })
     await expect(link).toHaveAttribute('href', `https://n8builds.dev/builds/${slug}`)
     await expect(link).toHaveAttribute('target', '_blank')

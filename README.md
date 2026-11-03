@@ -14,7 +14,7 @@ The build-in-public workshop (every build, the build log, notes and streams) is 
 
 ## Stack
 
-Next.js 16 (App Router, Turbopack for dev, tests and the production build), React 19, TypeScript, Tailwind CSS 4, Motion 14, Sentry, Google Analytics 4, Vercel Speed Insights.
+Next.js 16 (App Router, Turbopack for dev, tests and the production build), React 19, TypeScript, Tailwind CSS 4, Motion 14, Sentry, Google Analytics 4, Cloudflare Web Analytics.
 Dark only.
 Inter is bundled (`app/fonts/`), so a build never fetches fonts from Google.
 
@@ -42,7 +42,7 @@ The site's address is fixed in `lib/seo.ts`, not read from the environment.
 - **GitHub Actions** (`.github/workflows/ci.yml`) runs on every pull request and every push to `main`: lint, types and a production build, then the Playwright suite in Chromium inside Playwright's own image.
   Docs-only changes skip the build and the browser tests.
   One job, "CI result", sums it up for branch protection.
-- **Vercel** deploys every push to `main` to portfolio.n8builds.dev. Other branches get no automatic preview (`git.deploymentEnabled` in `vercel.json`, to stay under the daily deployment limit); run `vercel deploy` from a branch for one.
+- **Cloudflare Workers** (through OpenNext) runs the site: `.github/workflows/deploy.yml` deploys every push to `main`; see [`DEPLOY.md`](DEPLOY.md).
 
 ## Docs
 

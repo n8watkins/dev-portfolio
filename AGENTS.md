@@ -13,7 +13,7 @@
 ## Bundler: Turbopack everywhere
 
 - Dev servers and tests run on Turbopack; never add `--webpack` to `next dev`, and never cap the heap (`NODE_OPTIONS=--max-old-space-size`): a capped heap makes Next restart and fail requests instead of saving memory.
-- The production build (`npm run build`, Playwright's test build, Vercel) runs on Turbopack too (owner decision, 2026-11-01).
+- The production build (`npm run build`, Playwright's test build, the OpenNext build for Cloudflare) runs on Turbopack too (owner decision, 2026-11-01).
   Add `--webpack` back only for something that genuinely needs it, and write the reason here.
 - Sentry (`@sentry/nextjs` 10) supports Turbopack builds on Next 15.4.1 and later: source maps upload after the compile (`runAfterProductionCompile`), matched by Turbopack's native debug IDs, and are deleted after upload; `tunnelRoute` and the instrumentation files work the same.
   Its webpack-only options do nothing under Turbopack, so the debug-logging tree-shake is `compiler.define` in `next.config.mjs`, not `webpack.treeshake`.

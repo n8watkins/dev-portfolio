@@ -33,9 +33,10 @@ It funnels visitors to the two other sites:
 | techforpros.com | Tech for Pros, my SaaS for service businesses | separate |
 
 - The repo was renamed from `Portfolio2.0` to `dev-portfolio` on 2026-10-25 (GitHub redirects the old URL), and the folder moved from `~/n8builds/portfolio/portfolio2.0` to `~/n8builds/dev-portfolio`.
-- Stack: Next.js 16 (App Router, Turbopack for dev, tests and the production build), React 19, TypeScript, Tailwind 4, Motion 14, Sentry, GA4, Vercel Speed Insights.
+- Stack: Next.js 16 (App Router, Turbopack for dev, tests and the production build), React 19, TypeScript, Tailwind 4, Motion 14, Sentry, GA4, Cloudflare Web Analytics.
   Dark only (`forcedTheme="dark"`), slate + sky-blue.
-- Vercel project `portfolio`, git-connected: every push to `main` deploys. Other branches get no automatic preview (2026-10-28, `git.deploymentEnabled` in `vercel.json`): previews used about half of the 100 deployments a day the whole account shares. Run `vercel deploy` from a branch for one.
+- Runs on Cloudflare Workers (the `dev-portfolio` Worker, built by OpenNext; `DEPLOY.md`), deploying from `main`, at https://dev-portfolio.nathancwatkins23.workers.dev until portfolio.n8builds.dev moves over (owner, 2026-11-03: Vercel is dropped entirely).
+  Until then portfolio.n8builds.dev serves the last deployment of the Vercel project `portfolio`, which no longer deploys (`vercel.json`).
 
 ## Running and testing
 
@@ -64,7 +65,7 @@ It funnels visitors to the two other sites:
   The share image is generated from `app/opengraph-image.tsx`; there is no saved screenshot to go stale.
 - **The site's address is fixed** in `lib/seo.ts` (`https://portfolio.n8builds.dev`), not read from `NEXT_PUBLIC_SITE_URL`: a stale local value once pointed the share cards at an old vercel.app address.
 - **No em dashes** in visible copy (`tests/seo.spec.ts` checks), as on n8builds.dev.
-- **Inter is bundled** (`app/fonts/`); the share card uses `assets/fonts/*.ttf`.
+- **Inter is bundled** (`app/fonts/`); the share card uses `public/og/*.ttf`, read through `lib/publicFile.ts`.
 - **One GA4 property** (`G-JZQGKY9Q37`) covers this site and n8builds.dev; segment by hostname.
   Production only.
 - **Analytics consent, the same as n8builds.dev** (2026-10-26): `lib/consent.ts` is a copy of n8builds-web's (keep the two in sync) and `components/consent/` holds the banner.

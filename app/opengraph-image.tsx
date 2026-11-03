@@ -1,6 +1,5 @@
-import { readFile } from 'node:fs/promises'
-import { join } from 'node:path'
 import { ImageResponse } from 'next/og'
+import { readPublicFile } from '@/lib/publicFile'
 import { ROLE, SITE_NAME } from '@/lib/seo'
 
 /**
@@ -14,15 +13,16 @@ export const size = { width: 1200, height: 630 }
 export const contentType = 'image/png'
 
 export default async function Image() {
-  // Literal paths, so the build traces just these four files; a path built from
-  // a variable makes Turbopack trace (and deploy) the whole project.
+  // Inter (OFL, public/og/Inter-LICENSE.txt), the portrait and the tab icon,
+  // read from the site's own public files: static assets on Workers, the disk
+  // at build time.
   const [medium, extraBold, portrait, icon] = await Promise.all([
-    readFile(join(process.cwd(), 'assets/fonts/Inter-Medium.ttf')),
-    readFile(join(process.cwd(), 'assets/fonts/Inter-ExtraBold.ttf')),
-    readFile(join(process.cwd(), 'public/hero/portrait.jpg')),
-    readFile(join(process.cwd(), 'public/tab/n8-icon.png')),
+    readPublicFile('/og/Inter-Medium.ttf'),
+    readPublicFile('/og/Inter-ExtraBold.ttf'),
+    readPublicFile('/hero/portrait.jpg'),
+    readPublicFile('/tab/n8-icon.png'),
   ])
-  const dataUrl = (bytes: Buffer, type: string) => `data:${type};base64,${bytes.toString('base64')}`
+  const dataUrl = (bytes: ArrayBuffer, type: string) => `data:${type};base64,${Buffer.from(bytes).toString('base64')}`
 
   return new ImageResponse(
     (

@@ -1,0 +1,31 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  // The site as a Cloudflare Worker, built by OpenNext (see DEPLOY.md).
+  // worker/index.js wraps the generated .open-next/worker.js.
+  "name": "dev-portfolio",
+  "account_id": "b2c564cf83cb9184dd6d7cc4ff8b38bf",
+  "main": "worker/index.js",
+  "compatibility_date": "2026-11-01",
+  // nodejs_compat is required by OpenNext; global_fetch_strictly_public keeps
+  // the server's own fetches (OpenPing's status feed) on the public internet.
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  // Next's image optimizer (next/image) runs on Cloudflare Images.
+  "images": { "binding": "IMAGES" },
+  // ISR (/api/status revalidates every minute) keeps responses in R2, with a
+  // Durable Object queue that deduplicates the background revalidations. The
+  // site never calls revalidateTag or revalidatePath, so there is no tag cache.
+  "r2_buckets": [{ "binding": "NEXT_INC_CACHE_R2_BUCKET", "bucket_name": "dev-portfolio-opennext-cache" }],
+  "durable_objects": {
+    "bindings": [{ "name": "NEXT_CACHE_DO_QUEUE", "class_name": "DOQueueHandler" }]
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["DOQueueHandler"] }],
+  // The revalidation queue renders pages again by calling the worker itself.
+  "services": [{ "binding": "WORKER_SELF_REFERENCE", "service": "dev-portfolio" }],
+  "observability": { "enabled": true, "head_sampling_rate": 1 },
+  "workers_dev": true,
+  "preview_urls": false
+}

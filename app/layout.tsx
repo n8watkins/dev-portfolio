@@ -5,7 +5,7 @@ import { ThemeProvider } from './provider'
 import ErrorBoundary from '@/components/ErrorBoundary'
 import { WebVitals } from './web-vitals'
 import { WebVitalsHUD } from '@/components/WebVitalsHUD'
-import { SpeedInsights } from "@vercel/speed-insights/next"
+import { WebAnalytics } from '@/components/WebAnalytics'
 import { consentBootstrapScript } from '@/lib/consent'
 import ConsentLoader from '@/components/consent/ConsentLoader'
 import { SITE_DESCRIPTION, SITE_NAME, SITE_SHARE_DESCRIPTION, SITE_TITLE, SITE_URL } from '@/lib/seo'
@@ -90,7 +90,7 @@ export default function RootLayout({
           {GA_ID && <ConsentLoader />}
           <WebVitals />
           <WebVitalsHUD />
-          <SpeedInsights />
+          <WebAnalytics />
         </ThemeProvider>
       </body>
     </html>

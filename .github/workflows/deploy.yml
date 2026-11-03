@@ -1,0 +1,56 @@
+# Builds the site with OpenNext and deploys it to Cloudflare Workers (see
+# DEPLOY.md). The build always runs; the deploy step skips with a notice until
+# the CLOUDFLARE_API_TOKEN repository secret exists.
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+    # Docs-only changes can't change the site (the same rule as CI's).
+    paths-ignore: ['docs/**', '**/*.md', 'LICENSE']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy
+    # Only the upstream repo deploys; a fork has no Worker to deploy to.
+    if: github.repository == 'n8watkins/dev-portfolio'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      # Inlined into the pages at build time. Public values: the one GA4
+      # property for n8builds.dev and its subdomains, and the Web Analytics
+      # token, kept as a repository variable (DEPLOY.md).
+      NEXT_PUBLIC_GA_ID: G-JZQGKY9Q37
+      NEXT_PUBLIC_CF_WEB_ANALYTICS_TOKEN: ${{ vars.NEXT_PUBLIC_CF_WEB_ANALYTICS_TOKEN }}
+      # Optional: uploads source maps to Sentry.
+      SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build:worker
+
+      - name: Waiting for setup
+        if: env.CLOUDFLARE_API_TOKEN == ''
+        run: echo "::notice::Built, but skipping the deploy until the CLOUDFLARE_API_TOKEN secret is added (DEPLOY.md)."
+
+      - name: Deploy
+        if: env.CLOUDFLARE_API_TOKEN != ''
+        run: npx opennextjs-cloudflare deploy
