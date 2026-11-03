@@ -72,9 +72,9 @@ A real-time visual heads-up display shows Web Vitals metrics as they're collecte
 - Full metric names and descriptions
 - Keyboard shortcut toggle
 
-### 4. Vercel Speed Insights
+### 4. Cloudflare Web Analytics
 
-Integrated with Vercel's Speed Insights for production monitoring.
+The Cloudflare Web Analytics beacon (`components/WebAnalytics.tsx`) reports real visitors' Core Web Vitals in production.
 
 ## Usage
 

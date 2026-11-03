@@ -67,7 +67,12 @@ jobs:
       - run: npm run lint
       - run: npm run type-check
       - run: npm run test:unit
-      - run: npm run build
+      # cloudflare-env.d.ts must match wrangler.jsonc's bindings.
+      - run: npm run check:cf-types
+      # The production build: OpenNext turns the Next build into the Worker,
+      # and wrangler bundles it without deploying.
+      - run: npm run build:worker
+      - run: npm run check:deploy
 
   e2e:
     name: E2E (${{ matrix.project }}${{ matrix.shard && format(' {0}', matrix.shard) || '' }})

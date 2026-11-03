@@ -18,14 +18,15 @@ test('production policy: no eval, no frames, no plugins, and the dino stats orig
   // GA4's /g/collect hits on www.google.com (seen on n8builds.dev, Sentry N8BUILDS-3).
   assert.ok(directive(policy, 'connect-src').includes('https://www.google.com'))
   assert.ok(!policy.includes('vercel.live'))
+  // Cloudflare Web Analytics: the beacon script and its endpoint.
+  assert.ok(directive(policy, 'script-src').includes('https://static.cloudflareinsights.com'))
+  assert.ok(directive(policy, 'connect-src').includes('https://cloudflareinsights.com'))
 })
 
-test('dev allows eval and the HMR websocket; previews allow the Vercel toolbar', () => {
+test('dev allows eval and the HMR websocket', () => {
   const dev = buildContentSecurityPolicy({ dev: true })
   assert.ok(directive(dev, 'script-src').includes("'unsafe-eval'"))
   assert.ok(directive(dev, 'connect-src').includes('ws:'))
-  const preview = buildContentSecurityPolicy({ preview: true })
-  assert.deepEqual(directive(preview, 'frame-src'), ['https://vercel.live'])
 })
 
 test('violations report to the portfolio Sentry project', () => {

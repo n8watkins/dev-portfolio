@@ -39,3 +39,8 @@ next-env.d.ts
 
 # Sentry Config File
 .env.sentry-build-plugin
+
+# Cloudflare (OpenNext build output, wrangler's local state and secrets)
+/.open-next/
+/.wrangler/
+.dev.vars*
