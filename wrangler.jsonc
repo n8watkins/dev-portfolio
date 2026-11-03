@@ -26,6 +26,9 @@
   // The revalidation queue renders pages again by calling the worker itself.
   "services": [{ "binding": "WORKER_SELF_REFERENCE", "service": "dev-portfolio" }],
   "observability": { "enabled": true, "head_sampling_rate": 1 },
-  "workers_dev": true,
+  // portfolio.n8builds.dev as a Workers custom domain: Cloudflare creates and
+  // manages its DNS record and certificate. The workers.dev address is off.
+  "routes": [{ "pattern": "portfolio.n8builds.dev", "custom_domain": true }],
+  "workers_dev": false,
   "preview_urls": false
 }
