@@ -1,5 +1,6 @@
 {
   "versionFiles": [],
   "workflows": "package",
-  "repository": "n8watkins/dev-portfolio"
+  "repository": "n8watkins/dev-portfolio",
+  "visibility": "public"
 }
