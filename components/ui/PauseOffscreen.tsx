@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useEffect, useRef } from 'react'
+import { latestEntry } from '@/lib/intersection'
 
 /**
  * Marks its box with `data-offscreen` while it is outside the viewport, so CSS
@@ -13,8 +14,8 @@ export default function PauseOffscreen({ className, children }: { className?: st
   useEffect(() => {
     const el = ref.current
     if (!el || typeof IntersectionObserver === 'undefined') return
-    const observer = new IntersectionObserver(([entry]) => {
-      el.toggleAttribute('data-offscreen', !entry.isIntersecting)
+    const observer = new IntersectionObserver((entries) => {
+      el.toggleAttribute('data-offscreen', !latestEntry(entries).isIntersecting)
     })
     observer.observe(el)
     return () => observer.disconnect()

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { useHydrated } from '@/hooks/useHydrated'
 import type { Music } from './music'
+import { latestEntry } from '@/lib/intersection'
 
 /**
  * The dino game's music toggle: a small button in the top right corner of the
@@ -122,7 +123,7 @@ export default function DinoMusic() {
     const observer = new IntersectionObserver((entries) => {
       const e = engine.current
       if (!e) return
-      e.inView = entries.some((entry) => entry.isIntersecting)
+      e.inView = latestEntry(entries).isIntersecting
       e.sync()
     })
     observer.observe(panel)
