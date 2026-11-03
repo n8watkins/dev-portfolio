@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useId, useRef } from 'react'
 import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion'
+import { latestEntry } from '@/lib/intersection'
 
 const CELL = 52
 const COLS = 40 // 2080px: covers the widest common screens
@@ -202,8 +203,8 @@ export default function HeroGrid() {
     // rest (on n8builds.dev, HeroChainMeter sets it; here the grid does).
     const observer =
       hero && typeof IntersectionObserver !== 'undefined'
-        ? new IntersectionObserver(([entry]) =>
-            hero.toggleAttribute('data-offscreen', !entry.isIntersecting)
+        ? new IntersectionObserver((entries) =>
+            hero.toggleAttribute('data-offscreen', !latestEntry(entries).isIntersecting)
           )
         : null
     if (hero) observer?.observe(hero)

@@ -18,6 +18,7 @@ export const SHARED = [
   'hooks/usePrefersReducedMotion.ts',
   'hooks/useHydrated.ts',
   'lib/utils.ts',
+  'lib/intersection.ts',
 ]
 
 const repo = resolve(process.argv[2] ?? '../n8builds-web')

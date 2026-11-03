@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { techNameMapping } from '@/data/projects'
 import { Technologies, TechNameMappingInterface } from '@/lib/types'
 import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion'
+import { latestEntry } from '@/lib/intersection'
 
 interface TechStackCycleProps {
   technologies: Technologies
@@ -54,7 +55,7 @@ const TechStackCycle: React.FC<TechStackCycleProps> = ({ technologies }) => {
   useEffect(() => {
     const el = root.current
     if (!el || typeof IntersectionObserver === 'undefined') return
-    const observer = new IntersectionObserver(([entry]) => setVisible(entry.isIntersecting))
+    const observer = new IntersectionObserver((entries) => setVisible(latestEntry(entries).isIntersecting))
     observer.observe(el)
     return () => observer.disconnect()
   }, [])

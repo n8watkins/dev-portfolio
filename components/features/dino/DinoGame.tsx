@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useRef } from 'react'
 import { DINO_COLS, DINO_FRAMES, DINO_ROWS, framePaths, type DinoFrame } from './sprite'
+import { latestEntry } from '@/lib/intersection'
 
 /**
  * The easter egg itself (loaded lazily by DinoEasterEgg.tsx). A pixel dino
@@ -1084,7 +1085,7 @@ export default function DinoGame() {
     })
     resize.observe(panel)
     const visibility = new IntersectionObserver((entries) => {
-      onScreen = entries.some((entry) => entry.isIntersecting)
+      onScreen = latestEntry(entries).isIntersecting
       update()
     })
     visibility.observe(panel)
