@@ -90,7 +90,7 @@ export function GgmlMark({ className, style }: MarkProps) {
  * Piper's mark (from its README logo): the "P" of PIPER wearing a jester's
  * cap, its three points tipped with bells.
  */
-function PiperMark({ className, style }: MarkProps) {
+export function PiperMark({ className, style }: MarkProps) {
   return (
     <svg viewBox="0 0 48 52" aria-hidden="true" className={className} style={style}>
       <g fill="currentColor">
@@ -144,10 +144,10 @@ export const ai_agents: AIStackItem[] = [
   { name: 'Gemini', icon: <SiGooglegemini className={ICON} style={{ color: '#4285F4' }} />, description: 'Long-context summarization in my extensions.' },
 ]
 
-// Row 2 - local-first & tooling (whisper.cpp powers Scribe, Piper powers the Piper TTS extension)
+// Row 2 - local-first & tooling (whisper.cpp powers Scribe, Piper and Kokoro power the VoiceDock extension)
 export const ai_tools: AIStackItem[] = [
   { name: 'whisper.cpp', icon: <GgmlMark className={ICON} style={{ color: LIGHT }} />, description: 'Local speech-to-text (powers Scribe).' },
-  { name: 'Piper', icon: <PiperMark className={ICON} style={{ color: LIGHT }} />, description: 'Local text-to-speech (powers my Piper TTS extension).' },
+  { name: 'Piper', icon: <PiperMark className={ICON} style={{ color: LIGHT }} />, description: 'Local text-to-speech (one of the voice engines in my VoiceDock extension).' },
   { name: 'Hugging Face', icon: <SiHuggingface className={ICON} style={{ color: '#FFD21E' }} />, description: 'Models and datasets to pull from.' },
 ]
 
