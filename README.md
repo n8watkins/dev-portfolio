@@ -47,6 +47,7 @@ The site's address is fixed in `lib/seo.ts`, not read from the environment.
 ## Docs
 
 - [`docs/HANDOFF.md`](docs/HANDOFF.md): current state, decisions, conventions and the backlog.
+- [`OWNER-TODO.md`](OWNER-TODO.md): what only the owner can do (DNS, accounts, the resume, decisions).
 - [`WEB_VITALS.md`](WEB_VITALS.md): the Web Vitals HUD (Alt+Shift+V in development) and monitoring.
 - [`docs/bundle-analysis.md`](docs/bundle-analysis.md): a bundle-size snapshot.
 
