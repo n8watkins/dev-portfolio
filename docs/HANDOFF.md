@@ -19,7 +19,7 @@ Last updated: 2026-10-28.
 
 ### Blocked on the owner
 
-- Subdomain DNS (rank, trailers, echo); update project links when they exist.
+The owner's open steps (the rank, trailers and echo subdomains, Render auto-deploy, GeminiGPT's key, the resume, Lifeline's certificate, the Sentry button) are in [../OWNER-TODO.md](../OWNER-TODO.md); keep that file current instead of listing them here.
 
 ## What this is
 
