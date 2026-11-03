@@ -1,7 +1,7 @@
 # Deploying portfolio.n8builds.dev
 
-The site runs on Cloudflare Workers as the `dev-portfolio` Worker in the owner's Cloudflare account, built by the OpenNext adapter (`@opennextjs/cloudflare`).
-Until the custom domain is attached, it is served at https://dev-portfolio.nathancwatkins23.workers.dev, and portfolio.n8builds.dev still points at the last Vercel deployment.
+The site runs on Cloudflare Workers as the `dev-portfolio` Worker in the owner's Cloudflare account, built by the OpenNext adapter (`@opennextjs/cloudflare`), at https://portfolio.n8builds.dev.
+The hostname is a Workers custom domain (`routes` in `wrangler.jsonc`), so Cloudflare creates and manages its DNS record itself; the `workers.dev` address is turned off.
 
 ## How it fits together
 
@@ -43,10 +43,9 @@ Fix forward afterwards by reverting the commit and deploying again, so the repos
 
 ## Moving portfolio.n8builds.dev over
 
-The Vercel project stops deploying with this change (`vercel.json`), so portfolio.n8builds.dev keeps serving the last Vercel deployment until the domain moves.
-The custom domain is attached in a separate pull request, as a Workers custom domain in `wrangler.jsonc`.
-Before that deploy, the owner deletes the Vercel record in the Cloudflare dashboard (DNS for n8builds.dev): `portfolio CNAME cname.vercel-dns.com`.
-Keep the Vercel project for a week as a rollback (re-adding the record points the domain back at it), then delete it.
+Attaching the custom domain needed the old Vercel record gone first: `wrangler deploy` refuses a hostname that already has DNS records it doesn't manage.
+The owner deleted `portfolio CNAME cname.vercel-dns.com` in the Cloudflare dashboard, then this config was deployed.
+The Vercel project stays for a week as a rollback (remove the `routes`, deploy, and re-add the record to point the domain back at it), then is deleted.
 The old `nathansportfolio.vercel.app` and `n8sportfolio.vercel.app` addresses go away with the Vercel project.
 
 ## Taking it down

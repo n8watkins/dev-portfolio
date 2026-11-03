@@ -35,8 +35,8 @@ It funnels visitors to the two other sites:
 - The repo was renamed from `Portfolio2.0` to `dev-portfolio` on 2026-10-25 (GitHub redirects the old URL), and the folder moved from `~/n8builds/portfolio/portfolio2.0` to `~/n8builds/dev-portfolio`.
 - Stack: Next.js 16 (App Router, Turbopack for dev, tests and the production build), React 19, TypeScript, Tailwind 4, Motion 14, Sentry, GA4, Cloudflare Web Analytics.
   Dark only (`forcedTheme="dark"`), slate + sky-blue.
-- Runs on Cloudflare Workers (the `dev-portfolio` Worker, built by OpenNext; `DEPLOY.md`), deploying from `main`, at https://dev-portfolio.nathancwatkins23.workers.dev until portfolio.n8builds.dev moves over (owner, 2026-11-03: Vercel is dropped entirely).
-  Until then portfolio.n8builds.dev serves the last deployment of the Vercel project `portfolio`, which no longer deploys (`vercel.json`).
+- Runs on Cloudflare Workers (the `dev-portfolio` Worker, built by OpenNext; `DEPLOY.md`), deploying from `main`, at https://portfolio.n8builds.dev (owner, 2026-11-03: Vercel is dropped entirely).
+  The Vercel project `portfolio` no longer deploys (`vercel.json`) and stays a week as a rollback.
 
 ## Running and testing
 
