@@ -1,7 +1,11 @@
 import Image from 'next/image'
 import React from 'react'
 import { FaLocationDot } from 'react-icons/fa6'
-import MapAnimation from './MapAnimations'
+import dynamic from 'next/dynamic'
+
+// The arcs (gsap) draw on the client only, over the map, and take no space, so
+// their code loads after the page instead of with it.
+const MapAnimation = dynamic(() => import('./MapAnimations'), { ssr: false })
 
 const MapDetails = () => {
   return (

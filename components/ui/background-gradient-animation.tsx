@@ -1,6 +1,7 @@
 'use client'
 import { cn } from '@/lib/utils'
-import { useEffect, useRef, useSyncExternalStore } from 'react'
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
+import { latestEntry } from '@/lib/intersection'
 import { useTheme } from 'next-themes'
 
 // The user agent never changes, so there is nothing to subscribe to.
@@ -80,22 +81,27 @@ export const BackgroundGradientAnimation = ({
     blendingValue,
   ])
 
-  useEffect(() => {
-    let frameId: number
-    function move() {
-      if (interactiveRef.current) {
-        curX.current += (tgX.current - curX.current) / 20
-        curY.current += (tgY.current - curY.current) / 20
-        interactiveRef.current.style.transform = `translate(${Math.round(
-          curX.current
-        )}px, ${Math.round(curY.current)}px)`
-      }
-      frameId = requestAnimationFrame(move)
-    }
-
-    frameId = requestAnimationFrame(move)
-    return () => cancelAnimationFrame(frameId)
-  }, [])
+  // The pointer glow eases toward the cursor one frame at a time, and the loop
+  // runs only until it has caught up: it used to run every frame for as long
+  // as the page was open, a style change per frame even with no mouse at all.
+  const frameId = useRef<number | null>(null)
+  const move = () => {
+    frameId.current = null
+    const blob = interactiveRef.current
+    if (!blob) return
+    const dx = tgX.current - curX.current
+    const dy = tgY.current - curY.current
+    curX.current += dx / 20
+    curY.current += dy / 20
+    blob.style.transform = `translate(${Math.round(curX.current)}px, ${Math.round(curY.current)}px)`
+    if (Math.abs(dx) > 0.5 || Math.abs(dy) > 0.5) frameId.current = requestAnimationFrame(move)
+  }
+  useEffect(
+    () => () => {
+      if (frameId.current !== null) cancelAnimationFrame(frameId.current)
+    },
+    []
+  )
 
   // Attached to the container (not the blob) so the glow tracks the cursor
   // even over text/children; the blob's own rect moves with its transform.
@@ -103,7 +109,21 @@ export const BackgroundGradientAnimation = ({
     const rect = event.currentTarget.getBoundingClientRect()
     tgX.current = event.clientX - rect.left
     tgY.current = event.clientY - rect.top
+    if (frameId.current === null) frameId.current = requestAnimationFrame(move)
   }
+
+  // The five blurred blobs drift only while the card is on screen: off screen
+  // their animations hold still, so the browser stops re-rendering a large
+  // blur every frame for a card nobody sees.
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [onScreen, setOnScreen] = useState(false)
+  useEffect(() => {
+    const el = containerRef.current
+    if (!el || typeof IntersectionObserver === 'undefined') return
+    const observer = new IntersectionObserver((entries) => setOnScreen(latestEntry(entries).isIntersecting))
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
 
   const isSafari = useSyncExternalStore(
     subscribeToNothing,
@@ -113,6 +133,7 @@ export const BackgroundGradientAnimation = ({
 
   return (
     <div
+      ref={containerRef}
       onMouseMove={interactive ? handleMouseMove : undefined}
       className={cn(
         'absolute w-full h-full z-50 overflow-hidden top-0 left-0 bg-[linear-gradient(40deg,var(--gradient-background-start),var(--gradient-background-end))] animate-fade duration-500',
@@ -136,7 +157,8 @@ export const BackgroundGradientAnimation = ({
       <div
         className={cn(
           'gradients-container h-full w-full blur-lg',
-          isSafari ? 'blur-2xl' : 'filter-[url(#blurMe)_blur(40px)]'
+          isSafari ? 'blur-2xl' : 'filter-[url(#blurMe)_blur(40px)]',
+          !onScreen && '[&>div]:[animation-play-state:paused]'
         )}>
         <div
           className={cn(

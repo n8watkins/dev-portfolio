@@ -1,6 +1,6 @@
 'use client'
 import React, { Component, ErrorInfo, ReactNode } from 'react'
-import * as Sentry from '@sentry/nextjs'
+import { captureError } from '@/lib/sentry/lazy'
 import { logger } from '@/lib/logger'
 
 interface Props {
@@ -48,7 +48,7 @@ class SectionErrorBoundary extends Component<Props, State> {
     // Log error with section context
     logger.error(`❌ Error in ${sectionName}:`, error, errorInfo)
 
-    Sentry.captureException(error, {
+    captureError(error, {
       tags: { section: sectionName },
       contexts: { react: { componentStack: errorInfo.componentStack } },
     })

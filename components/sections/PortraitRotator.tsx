@@ -36,7 +36,7 @@ const transitionVariants = {
 /**
  * Cycles through a list of portrait images with a configurable transition.
  *
- * The first image is always statically rendered with `priority` so it stays
+ * The first image is always statically rendered and preloaded so it stays
  * the LCP element; rotation only layers animated images on top of it. With a
  * single image the component behaves exactly like a static portrait.
  */
@@ -71,7 +71,11 @@ const PortraitRotator: React.FC<PortraitRotatorProps> = ({
         src={images[0]}
         className="rounded-full object-cover"
         fill
-        priority
+        // The LCP element: preloaded and fetched at high priority (Next 16's
+        // `priority` preloaded it at the default low priority for images).
+        preload
+        loading="eager"
+        fetchPriority="high"
         placeholder={blurDataURL ? 'blur' : 'empty'}
         blurDataURL={blurDataURL}
         sizes={sizes}
