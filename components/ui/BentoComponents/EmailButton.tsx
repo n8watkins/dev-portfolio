@@ -1,9 +1,14 @@
 import React, { useState, useEffect } from 'react'
 import { MdContentCopy } from 'react-icons/md'
 import { BackgroundGradientAnimation } from '../background-gradient-animation'
-import Lottie from 'lottie-react'
-import animationData from '../../../data/confetti.json'
+import dynamic from 'next/dynamic'
 import { motion, AnimatePresence } from 'motion/react'
+
+// The firework loads when the pointer or focus reaches the button, so it is
+// ready by the click; a click before that shows it as soon as it arrives.
+const loadConfetti = () => import('./Confetti')
+const Confetti = dynamic(loadConfetti, { ssr: false })
+const preloadConfetti = () => void loadConfetti().catch(() => {})
 
 interface ResumeButtonsProps {
   buttonContainer?: string
@@ -51,24 +56,16 @@ const EmailButton: React.FC<ResumeButtonsProps> = ({ buttonContainer, buttonClas
             Have a project? Let&apos;s connect!{' '}
           </h2>
         </div>
-        {/* First firework - BAM! */}
-        <div key={animationKey} className="absolute top-0 left-0 w-full h-full z-50 ">
-          <Lottie
-            animationData={animationData}
-            loop={false}
-            autoplay={true}
-            style={{ height: 400, width: 400 }}
-          />
-        </div>
+        {/* First firework - BAM! (after a copy; it used to play once, unseen, at page load) */}
+        {animationKey > 0 && (
+          <div key={animationKey} className="absolute top-0 left-0 w-full h-full z-50 ">
+            <Confetti style={{ height: 400, width: 400 }} />
+          </div>
+        )}
         {/* Second firework - BAM! (delayed and offset to the right) */}
         {showSecondFirework && (
           <div key={`${animationKey}-2`} className="absolute top-0 left-0 w-full h-full z-50 ">
-            <Lottie
-              animationData={animationData}
-              loop={false}
-              autoplay={true}
-              style={{ height: 400, width: 400, marginLeft: '150px' }}
-            />
+            <Confetti style={{ height: 400, width: 400, marginLeft: '150px' }} />
           </div>
         )}
         <div
@@ -78,6 +75,8 @@ const EmailButton: React.FC<ResumeButtonsProps> = ({ buttonContainer, buttonClas
           <button
             className={`${buttonClass} pointer-events-auto gap-3 bg-[linear-gradient(1100deg,#5b21b6,45%,#6d28d9,55%,#5b21b6)] dark:bg-[linear-gradient(1100deg,#001f54,45%,#002b76,55%,#001f54)] border-white/30 dark:bg-animate-duration-[4000ms] `}
             onClick={handleEmailClick}
+            onPointerEnter={preloadConfetti}
+            onFocus={preloadConfetti}
             disabled={!isVisible}>
             <AnimatePresence mode="wait">
               <motion.span
