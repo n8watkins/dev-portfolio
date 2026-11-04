@@ -37,7 +37,9 @@ async function settle(page: Page) {
  * GA_GRACE_MS after load, lib/consent.ts), once the browser is idle.
  */
 async function interact(page: Page) {
-  await page.mouse.wheel(0, 200)
+  // A key, not a wheel or a tap: it works the same on every browser project
+  // (mobile WebKit has no mouse wheel).
+  await page.keyboard.press('Shift')
 }
 
 const consentCookie = async (context: BrowserContext) =>
