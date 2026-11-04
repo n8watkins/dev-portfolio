@@ -29,7 +29,8 @@
     "prepare": "husky",
     "check:sync": "node scripts/check-n8builds-sync.mjs",
     "release": "release-kit release",
-    "release:check": "release-kit check && npm run lint && npm run type-check && npm run test:unit && npm run build"
+    "release:check": "release-kit check && npm run lint && npm run type-check && npm run test:unit && npm run build",
+    "lighthouse": "node scripts/lighthouse.mjs"
   },
   "dependencies": {
     "@opennextjs/cloudflare": "1.20.15",
@@ -64,10 +65,12 @@
     "@types/react-dom": "^19.3.0",
     "@types/react-lottie": "^1.2.10",
     "@types/react-scroll": "^1.8.10",
+    "chrome-launcher": "^1.2.2",
     "dotenv": "^17.2.2",
     "eslint": "^10.13.0",
     "eslint-config-next": "^16.4.3",
     "husky": "^9.1.7",
+    "lighthouse": "^13.6.0",
     "lint-staged": "^16.2.4",
     "postcss": "^8",
     "release-kit": "github:n8watkins/release-kit#v2.7.0",

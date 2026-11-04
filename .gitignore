@@ -44,3 +44,6 @@ next-env.d.ts
 /.open-next/
 /.wrangler/
 .dev.vars*
+
+# Lighthouse reports (npm run lighthouse)
+.lighthouse/
