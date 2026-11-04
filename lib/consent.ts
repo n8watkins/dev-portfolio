@@ -19,9 +19,22 @@
  *   n8builds-web's lib/consent.ts (keep the two in sync).
  *
  * The bootstrap below is a tiny inline script in <head>, so the defaults are
- * in place before gtag.js can load; gtag.js itself still loads only after the
- * page has loaded and gone idle (what next/script's lazyOnload did before).
+ * in place before gtag.js can load. gtag.js itself (about 180 KB, and half a
+ * second of script on a phone) waits until the visitor first scrolls, taps,
+ * clicks or types, or GA_GRACE_MS after the page has loaded, whichever comes
+ * first, and then for the browser to be idle: on a phone it used to run right
+ * after load, while the visitor was trying to use the page. Commands queued
+ * before then (the page_view among them) are sent once it loads.
  */
+
+/**
+ * How long after the load event gtag.js waits for a first interaction before
+ * loading anyway, so a visitor who only reads is still counted.
+ */
+export const GA_GRACE_MS = 5000
+
+/** The first interactions that load gtag.js early (see GA_GRACE_MS). */
+const GA_WAKE_EVENTS = ['pointerdown', 'keydown', 'scroll', 'touchstart', 'wheel']
 
 export type ConsentChoice = 'granted' | 'denied'
 
@@ -97,7 +110,8 @@ const DENIED_ADS = { ad_storage: 'denied', ad_user_data: 'denied', ad_personaliz
  * The inline <head> script. It sets the Consent Mode defaults, reads the
  * choice (the shared cookie first, then the old localStorage key), honours
  * Global Privacy Control as a decline when there is no choice, configures GA,
- * and loads gtag.js after load and idle only when analytics is allowed.
+ * and loads gtag.js only when analytics is allowed: after the first
+ * interaction or GA_GRACE_MS after load, then idle (an Accept loads it at once).
  * It exposes `window.n8Consent` (ConsentApi) for the banner.
  */
 export function consentBootstrapScript(gaId: string): string {
@@ -124,12 +138,14 @@ var state=c||(gpc?'denied':ask?'pending':'granted');
 if(c||gpc)gtag('consent','update',{analytics_storage:state});
 gtag('js',new Date());
 gtag('config',id);
-var loaded=false;
+var loaded=false,waiting=false,E=${j(GA_WAKE_EVENTS)};
 function load(){if(loaded)return;loaded=true;var s=d.createElement('script');s.async=true;s.src='https://www.googletagmanager.com/gtag/js?id='+encodeURIComponent(id);d.head.appendChild(s)}
-function later(){var idle=w.requestIdleCallback||function(f){return setTimeout(f,1)};idle(load)}
-function start(){if(d.readyState==='complete')later();else w.addEventListener('load',later,{once:true})}
+function later(){var idle=w.requestIdleCallback||function(f){return w.setTimeout(f,1)};idle(load)}
+function wake(){if(!waiting)return;waiting=false;E.forEach(function(e){w.removeEventListener(e,wake,true)});later()}
+function arm(){w.setTimeout(wake,${GA_GRACE_MS})}
+function start(){if(loaded||waiting)return;waiting=true;E.forEach(function(e){w.addEventListener(e,wake,{capture:true,passive:true})});if(d.readyState==='complete')arm();else w.addEventListener('load',arm,{once:true})}
 function clearGa(){d.cookie.split(';').forEach(function(p){var n=p.split('=')[0].trim();if(n.indexOf('_ga')!==0)return;var h=l.hostname.split('.');for(var i=0;i<h.length;i++){d.cookie=n+'=; Max-Age=0; Path=/; Domain='+h.slice(i).join('.')}d.cookie=n+'=; Max-Age=0; Path=/'})}
-var n8={state:state,choice:c,ask:ask,gpc:gpc,set:function(v){writeCookie(v);try{w.localStorage.setItem(K,v)}catch(e){}n8.choice=v;n8.state=v;gtag('consent','update',{analytics_storage:v});if(v==='granted')start();else clearGa();try{w.dispatchEvent(new CustomEvent(${j(CONSENT_CHANGE_EVENT)},{detail:v}))}catch(e){}}};
+var n8={state:state,choice:c,ask:ask,gpc:gpc,set:function(v){writeCookie(v);try{w.localStorage.setItem(K,v)}catch(e){}n8.choice=v;n8.state=v;gtag('consent','update',{analytics_storage:v});if(v==='granted'){waiting=true;wake()}else clearGa();try{w.dispatchEvent(new CustomEvent(${j(CONSENT_CHANGE_EVENT)},{detail:v}))}catch(e){}}};
 w.n8Consent=n8;
 if(state==='granted')start();
 })();`

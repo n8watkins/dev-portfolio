@@ -32,6 +32,14 @@ async function settle(page: Page) {
   )
 }
 
+/**
+ * A first interaction: with analytics allowed, gtag.js loads after one (or
+ * GA_GRACE_MS after load, lib/consent.ts), once the browser is idle.
+ */
+async function interact(page: Page) {
+  await page.mouse.wheel(0, 200)
+}
+
 const consentCookie = async (context: BrowserContext) =>
   (await context.cookies()).find((c) => c.name === 'n8-consent')
 
@@ -51,11 +59,12 @@ test.describe('in a European time zone', () => {
     expect(gtag[0]).toContain('gtag/js?id=G-E2ETEST000')
     expect((await consentCookie(context))?.value).toBe('granted')
 
-    // The choice sticks: no banner next time, and GA loads.
+    // The choice sticks: no banner next time, and GA loads (after a first interaction).
     await page.reload()
     await settle(page)
     await expect(banner(page)).toBeHidden()
-    expect(gtag).toHaveLength(2)
+    await interact(page)
+    await expect.poll(() => gtag.length).toBe(2)
   })
 
   test('Decline keeps GA from ever loading', async ({ page, context }) => {
@@ -68,6 +77,9 @@ test.describe('in a European time zone', () => {
     await page.reload()
     await settle(page)
     await expect(banner(page)).toBeHidden()
+    // Even after an interaction, when GA would otherwise load.
+    await interact(page)
+    await settle(page)
     expect(gtag).toEqual([])
   })
 
@@ -124,6 +136,9 @@ test.describe('in a European time zone', () => {
     await page.goto('/')
     await settle(page)
     await expect(banner(page)).toBeHidden()
+    // Even after an interaction, when GA would otherwise load.
+    await interact(page)
+    await settle(page)
     expect(gtag).toEqual([])
   })
 })
@@ -136,6 +151,9 @@ test.describe('in an Eastern Canada (Quebec) time zone', () => {
     await page.goto('/')
     await expect(banner(page)).toBeVisible()
     await settle(page)
+    // Even after an interaction, when GA would otherwise load.
+    await interact(page)
+    await settle(page)
     expect(gtag).toEqual([])
   })
 })
@@ -143,10 +161,12 @@ test.describe('in an Eastern Canada (Quebec) time zone', () => {
 test.describe('elsewhere (America/Los_Angeles)', () => {
   test.use({ timezoneId: 'America/Los_Angeles' })
 
-  test('no banner, and GA loads after the page is idle', async ({ page, context }) => {
+  test('no banner, and GA loads after the first interaction, not with the page', async ({ page, context }) => {
     const gtag = await countGtag(context)
     await page.goto('/')
     await settle(page)
+    expect(gtag, 'no GA while the page loads').toEqual([])
+    await interact(page)
     await expect.poll(() => gtag.length).toBe(1)
     await expect(banner(page)).toHaveCount(0)
   })
@@ -155,6 +175,9 @@ test.describe('elsewhere (America/Los_Angeles)', () => {
     await context.addInitScript(() => Object.defineProperty(Navigator.prototype, 'globalPrivacyControl', { get: () => true }))
     const gtag = await countGtag(context)
     await page.goto('/')
+    await settle(page)
+    // Even after an interaction, when GA would otherwise load.
+    await interact(page)
     await settle(page)
     expect(gtag).toEqual([])
   })
