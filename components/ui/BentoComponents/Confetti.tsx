@@ -1,6 +1,6 @@
 'use client'
 import type { CSSProperties } from 'react'
-import Lottie from 'lottie-react'
+import { Lottie } from 'lottie-react'
 import animationData from '../../../data/confetti.json'
 
 /**
@@ -9,5 +9,5 @@ import animationData from '../../../data/confetti.json'
  * used, not with the page.
  */
 export default function Confetti({ style }: { style: CSSProperties }) {
-  return <Lottie animationData={animationData} loop={false} autoplay style={style} />
+  return <Lottie src={animationData} loop={false} autoplay style={style} />
 }
