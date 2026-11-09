@@ -42,7 +42,7 @@ export default async function Image() {
           <div style={{ fontSize: 84, fontWeight: 800, lineHeight: 1.05, marginTop: 20 }}>{SITE_NAME}</div>
           <div style={{ fontSize: 44, fontWeight: 800, color: '#38bdf8', marginTop: 12 }}>{ROLE}</div>
           <div style={{ fontSize: 28, color: '#cbd5e1', marginTop: 28, maxWidth: 600, lineHeight: 1.4 }}>
-            Voice agents, research agents and client sites, built with React, Next.js and AI.
+            AI apps, recommenders and client sites, built with React, Next.js and AI.
           </div>
           <div style={{ display: 'flex', alignItems: 'center', marginTop: 'auto', fontSize: 26, color: '#94a3b8' }}>
             <img src={dataUrl(icon, 'image/png')} width={44} height={44} alt="" style={{ marginRight: 16, borderRadius: 10 }} />

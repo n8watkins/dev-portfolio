@@ -9,7 +9,7 @@
 export const whoamiTitle = { path: '~/whoami', name: 'Nathan Watkins' }
 export const whoami: string[] = [
   'I build AI products end to end.',
-  'Voice agents, research agents, chat.',
+  'AI assistants, recommenders, web apps.',
   'Open to full-time roles.',
 ]
 

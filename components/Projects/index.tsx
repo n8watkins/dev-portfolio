@@ -1,15 +1,16 @@
 import React from 'react'
 import { motion } from 'motion/react'
 import { fadeInUpVariants, defaultAnimationConfig } from '@/lib/animations'
-import { projects } from '@/data/projects'
+import { inProgress, projects } from '@/data/projects'
 import { accents } from '@/lib/accents'
 import ProjectCard from './ProjectCard'
 import BuildsTeaser from './BuildsTeaser'
+import InProgressCard from './InProgressCard'
 import { DemoSleepNote } from './StatusPill'
 import SectionHeading from '@/components/ui/SectionHeading'
 
 const BLURB =
-  'AI is changing what software can do and how it gets made. Each project here puts a different kind of AI to work: a voice agent you can talk over, a research agent that cites its sources, a chat platform with memory, a recommender that learns your taste, and a leaderboard that Gemini helps rank.'
+  "AI is changing what software can do and how it gets made. Each project here puts AI to work: an assistant I'm building now that talks, researches and remembers, a recommender that learns your taste, and a leaderboard that Gemini helps rank."
 
 const Projects: React.FC = () => {
   return (
@@ -46,12 +47,23 @@ const Projects: React.FC = () => {
             </motion.span>
           ))}
         </motion.p>
-        <DemoSleepNote className="mt-4" />
+        {/* The weekday note only matters while a monitored demo is on the page. */}
+        {projects.some((p) => p.statusName) && <DemoSleepNote className="mt-4" />}
       </SectionHeading>
 
       {/* Each row sits in a full-bleed wash of its project's colour, glowing
           in from the page edge on its screenshot's side (`.lab-row-wash`). */}
       <div className="flex w-full flex-col">
+        {inProgress && (
+          <motion.div
+            variants={fadeInUpVariants}
+            {...defaultAnimationConfig}
+            viewport={{ once: true, amount: 0.15 }}
+            className="relative px-2 py-8 md:px-4 md:py-10"
+          >
+            <InProgressCard project={inProgress} />
+          </motion.div>
+        )}
         {projects.map((project, index) => (
           <motion.div
             key={project.id}

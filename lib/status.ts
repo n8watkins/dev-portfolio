@@ -10,7 +10,7 @@ export const OPENPING_SITE = 'https://openping.n8builds.dev'
 export const OPENPING_BUILD = 'https://n8builds.dev/builds/openping'
 
 /**
- * When the live demos (Echo, Scout, GeminiGPT) are kept awake: their OpenPing
+ * When the live demos (any project with a `statusName`) are kept awake: their OpenPing
  * monitors' schedule, in the installation's timezone (America/Los_Angeles).
  * The public feed doesn't carry schedules, so this is kept by hand; change it
  * here if the monitors' schedule changes.
