@@ -65,7 +65,7 @@ It funnels visitors to the two other sites:
   Each is a row after n8builds.dev's Lab (2026-10-26): screenshots with left/right, its icon, a short `summary`, Live demo / Source / Full story, all in the app's own colour (`lib/accents.ts`).
   The cards are tight (owner, 2026-11-08): the tech pills and feature checks live on the project's page (`/projects/<slug>`), not the card.
   Everything else is in the n8builds.dev teaser under them (see below).
-- **"Message me"** sits beside Resume in the top right corner (from 640px; icon only below 1024px) and opens n8builds.dev's contact form (https://n8builds.dev/#contact) (owner, 2026-11-08).
+- **"Message me"** sits beside Resume in the top right corner (from 768px; icon only below 1280px) and opens n8builds.dev's contact form (https://n8builds.dev/#contact) (owner, 2026-11-08).
 - **Titles and share cards** live in `lib/seo.ts`: "Nathan Watkins | Full-Stack Developer" for the home page (the headline dropped "AI" on 2026-10-26), "<project> - <subtitle> | Nathan Watkins" for project pages, share descriptions of at most 120 characters.
   The share image is generated from `app/opengraph-image.tsx`; there is no saved screenshot to go stale.
 - **The site's address is fixed** in `lib/seo.ts` (`https://portfolio.n8builds.dev`), not read from `NEXT_PUBLIC_SITE_URL`: a stale local value once pointed the share cards at an old vercel.app address.

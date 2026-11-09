@@ -216,7 +216,7 @@ test('experience cards show on a small phone', async ({ page }) => {
  * n8builds.dev's contact form (owner, 2026-11-08).
  */
 test('the top corner offers Message me beside the resume', async ({ page, isMobile }) => {
-  test.skip(isMobile, 'The corner buttons show from 640px up; on a phone the hero carries the resume.')
+  test.skip(isMobile, '"Message me" shows from 768px up; on a phone the footer carries the contact links.')
   await page.goto('/')
   const message = page.getByRole('link', { name: /^Message me/ })
   await expect(message).toBeVisible()
