@@ -21,6 +21,7 @@ export const projects: Project[] = [
     subTitle: 'AI-Powered Netflix Clone',
     des: `A Netflix-style streaming app with an AI brain. Describe what you're in the mood for in plain language and Gemini turns it into tailored picks, while a personalized "Recommended For You" engine learns from your watch history and feedback. Plus TMDB-powered browsing and trailers, secure auth, and Firebase-backed persistence.`,
     summary: `A Netflix-style streaming app with an AI brain: describe your mood in plain language and Gemini turns it into picks, while a recommender learns your taste and explains each one.`,
+    highlight: `A Gemini analyzer turns a plain-language mood into a media type, genres and a vibe, behind a router that falls back to another model when one is busy, and every pick says why it surfaced.`,
     clip: {
       src: '/projects/clips/net-trailer.mp4',
       poster: '/projects/clips/net-trailer-poster.webp',
@@ -106,6 +107,7 @@ export const projects: Project[] = [
     subTitle: 'The Developer Portfolio Leaderboard',
     des: `2,000+ developer portfolios from Emma Bostian's open developer-portfolios list, ranked by head-to-head votes instead of A to Z. Pick the better of two in about five seconds, browse every site with a real screenshot, Lighthouse scores and an AI review, or add your own portfolio and see how it compares.`,
     summary: `2,000+ developer portfolios from Emma Bostian's open list, ranked by head-to-head votes instead of A to Z. Vote on a matchup, or add your own portfolio and see how it compares.`,
+    highlight: `Gemini judges portfolios head to head, so the leaderboard means something before anyone votes; then ELO takes over, with one vote per person per matchup enforced in the database.`,
     clip: {
       src: '/projects/clips/portfolio-rank.mp4',
       poster: '/projects/clips/portfolio-rank-poster.webp',

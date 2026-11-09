@@ -23,6 +23,7 @@ export default function ProjectClip({
   frameClassName = 'border-white/8',
   onOpen,
   className = 'w-full shrink-0 md:w-1/2',
+  aspectClassName = 'aspect-16/10',
 }: {
   title: string
   src: string
@@ -31,6 +32,8 @@ export default function ProjectClip({
   frameClassName?: string
   onOpen?: () => void
   className?: string
+  /** The frame's shape; the clip fills it from the top. */
+  aspectClassName?: string
 }) {
   const box = useRef<HTMLDivElement>(null)
   const video = useRef<HTMLVideoElement>(null)
@@ -77,7 +80,7 @@ export default function ProjectClip({
   return (
     <div ref={box} className={className}>
       <div
-        className={`group/clip relative aspect-16/10 overflow-hidden rounded-2xl border bg-[#07101d] transition-[border-color,box-shadow] duration-300 ${frameClassName}`}
+        className={`group/clip relative ${aspectClassName} overflow-hidden rounded-2xl border bg-[#07101d] transition-[border-color,box-shadow] duration-300 ${frameClassName}`}
       >
         <button
           type="button"

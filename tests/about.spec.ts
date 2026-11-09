@@ -5,12 +5,12 @@ import { test, expect } from '@playwright/test'
  * story in photo scenes (at work, in LA, the setup), with stickers drifting
  * around them. The work (projects, experience, stack) is on the home page.
  */
-test('the home page teases About and links to the full page', async ({ page }) => {
+test('the home page opens with About and the bento, and links to the full page', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.goto('/')
   const teaser = page.locator('#about')
   await expect(teaser.getByRole('heading', { name: 'About me' })).toBeAttached()
-  await expect(teaser).toContainText('ready to relocate')
+  await expect(teaser).toContainText(/ready to relocate/i)
   await teaser.getByRole('link', { name: 'More about me' }).click()
   await expect(page).toHaveURL(/\/about$/)
   await expect(page.getByRole('heading', { level: 1, name: 'About me' })).toBeVisible()

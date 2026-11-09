@@ -35,7 +35,7 @@ test("every page's footer has my two sites' cards and the site map", async ({ pa
 test('the n8builds.dev teaser links each build to its n8builds.dev page', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.goto('/')
-  const teaser = page.getByRole('region', { name: 'Building in public' })
+  const teaser = page.getByRole('region', { name: /See more of my selected work on n8builds\.dev/ })
   await teaser.scrollIntoViewIfNeeded()
   for (const [name, slug, live] of [
     ['Solara', 'solara', 'https://solara-uv.web.app'],
@@ -54,6 +54,43 @@ test('the n8builds.dev teaser links each build to its n8builds.dev page', async 
     if (live) await expect(site).toHaveAttribute('href', live)
     else await expect(site).toHaveCount(0)
   }
+})
+
+/**
+ * The map card's arcs (components/ui/BentoComponents/MapAnimations.tsx) draw
+ * themselves in a GSAP loop. Under reduced motion they show fully drawn and
+ * hold still; otherwise they keep drawing.
+ */
+test.describe('the map arcs', () => {
+  const offsets = (page: import('@playwright/test').Page) =>
+    page
+      .locator('.neon-path')
+      .evaluateAll((paths) => paths.map((p) => getComputedStyle(p).strokeDashoffset))
+
+  test('hold still, fully drawn, under reduced motion', async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+    await page.goto('/')
+    const arcs = page.locator('.neon-path')
+    await arcs.first().scrollIntoViewIfNeeded()
+    await expect(arcs).toHaveCount(3)
+    const before = await offsets(page)
+    await page.waitForTimeout(1500)
+    expect(await offsets(page)).toEqual(before)
+    expect(
+      before.every((o) => parseFloat(o) === 0),
+      `offsets ${before}`
+    ).toBe(true)
+  })
+
+  test('keep drawing when motion is allowed', async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'no-preference' })
+    await page.goto('/')
+    const arcs = page.locator('.neon-path')
+    await arcs.first().scrollIntoViewIfNeeded()
+    await expect(arcs).toHaveCount(3)
+    const before = await offsets(page)
+    await expect.poll(() => offsets(page)).not.toEqual(before)
+  })
 })
 
 /**
@@ -120,22 +157,50 @@ test('Experience links only Tech for Pros, and Appturnity shows only as a past r
   )
 })
 
-test('"Expand all" opens every role\'s "What I did" in place, and closes them again', async ({ page }) => {
+test('"Expand all" opens every role in place, and closes them again', async ({ page }) => {
   await page.goto('/')
   const experience = page.locator('#experience')
-  const details = experience.locator('details')
+  const toggles = experience.locator('[data-role-toggle]')
   await experience.getByRole('button', { name: 'Expand all' }).scrollIntoViewIfNeeded()
-  await expect(details.first()).toBeAttached()
-  const count = await details.count()
+  const count = await toggles.count()
   expect(count).toBeGreaterThan(3)
   await expect(experience.getByText(/Building Tech for Pros, a SaaS/)).toBeHidden()
   await experience.getByRole('button', { name: 'Expand all' }).click()
-  for (let i = 0; i < count; i++) await expect(details.nth(i)).toHaveAttribute('open', '')
+  for (let i = 0; i < count; i++) await expect(toggles.nth(i)).toHaveAttribute('aria-expanded', 'true')
   await expect(experience.getByText(/Building Tech for Pros, a SaaS/)).toBeVisible()
   // The work's screenshots come with it, as pictures only.
   await expect(experience.getByRole('img', { name: /Riverwood Ranch/ })).toBeVisible()
   await experience.getByRole('button', { name: 'Collapse all' }).click()
-  for (let i = 0; i < count; i++) await expect(details.nth(i)).not.toHaveAttribute('open', '')
+  for (let i = 0; i < count; i++) await expect(toggles.nth(i)).toHaveAttribute('aria-expanded', 'false')
+})
+
+test('a whole role row opens on a click or from the keyboard, and its link still works', async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.goto('/')
+  const experience = page.locator('#experience')
+  const role = experience.locator('div.group\\/exp', { hasText: 'Web Developer' })
+  await role.scrollIntoViewIfNeeded()
+  const bullet = role.getByText(/Built course and event sites/)
+  await expect(bullet).toBeHidden()
+  // Anywhere on the row: here, where the role's title is (the row's button lies over it).
+  const title = (await role.getByRole('heading', { name: 'Web Developer' }).boundingBox())!
+  await page.mouse.click(title.x + title.width / 2, title.y + title.height / 2)
+  await expect(bullet).toBeVisible()
+  // The keyboard: the row's button takes focus and Enter closes it again.
+  const toggle = role.locator('[data-role-toggle]')
+  await toggle.focus()
+  await page.keyboard.press('Enter')
+  await expect(toggle).toHaveAttribute('aria-expanded', 'false')
+  await expect(bullet).toBeHidden()
+  // Tech for Pros' link sits above the row's button, so it opens the site.
+  const tfp = experience.getByRole('link', { name: /^Tech for Pros/ })
+  const hit = await tfp.evaluate((a) => {
+    const r = a.getBoundingClientRect()
+    return document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2)?.closest('a') === a
+  })
+  expect(hit).toBe(true)
 })
 
 /**

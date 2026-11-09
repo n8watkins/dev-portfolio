@@ -71,21 +71,5 @@ export const stackLayers: StackLayer[] = [
   },
 ]
 
-/** The home page's compact row: a dozen of the tools I reach for most. */
-export const stackHighlights: AIStackItem[] = pick([
-  'Claude Code',
-  'Gemini',
-  'Next.js',
-  'React',
-  'TypeScript',
-  'Tailwind CSS',
-  'PostgreSQL',
-  'Turso',
-  'Drizzle',
-  'Cloudflare',
-  'Vercel',
-  'Playwright',
-])
-
 /** How many tiles data/stack.tsx has: every one sits in exactly one layer (tests/stack.spec.ts). */
 export const stackTileCount = all.length

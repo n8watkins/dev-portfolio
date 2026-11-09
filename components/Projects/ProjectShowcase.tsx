@@ -71,13 +71,15 @@ export default function ProjectShowcase({ project }: { project: Project }) {
             frameClassName={`${accent.outline} ${accent.shadow}`}
             onOpen={open}
             className="w-full"
+            // Wide and short: the demo across the top, with room below for what it is.
+            aspectClassName="aspect-video md:aspect-[21/9]"
           />
         ) : (
           <button
             type="button"
             onClick={open}
             aria-label={`Open ${project.title}'s page`}
-            className={`relative block aspect-16/10 w-full overflow-hidden rounded-2xl border bg-[#07101d] ${accent.outline}`}
+            className={`relative block aspect-video w-full overflow-hidden rounded-2xl border bg-[#07101d] md:aspect-[21/9] ${accent.outline}`}
           >
             <Image
               src={project.images[0].src}
@@ -90,7 +92,7 @@ export default function ProjectShowcase({ project }: { project: Project }) {
         )}
 
         <div className="flex flex-col gap-5 px-1 pt-5 pb-2 sm:px-3 md:flex-row md:items-end md:justify-between md:gap-10">
-          <div className="min-w-0 md:max-w-2xl">
+          <div className="min-w-0 md:max-w-3xl">
             <div className="flex items-center gap-3">
               <Image
                 src={project.icon}
@@ -115,6 +117,12 @@ export default function ProjectShowcase({ project }: { project: Project }) {
             <p className="mt-3 text-[0.95rem] leading-relaxed text-[#9cadc5] sm:text-base">
               {project.summary}
             </p>
+            {project.highlight && (
+              <p className="mt-3 text-sm leading-relaxed text-slate-300 sm:text-[0.95rem]">
+                <span className={`font-semibold ${accent.subtitle}`}>What&apos;s interesting: </span>
+                {project.highlight}
+              </p>
+            )}
             <CreditLine project={project} />
           </div>
           <div className="grid shrink-0 grid-cols-2 gap-2 sm:flex">

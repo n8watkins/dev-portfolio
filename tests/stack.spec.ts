@@ -1,16 +1,16 @@
 import { test, expect } from '@playwright/test'
 
 /**
- * The stack (owner, 2026-11-08): a compact row on the home page with "See my
- * stack", and /stack with every tool by layer (each with a line on why) and
+ * The stack (owner, 2026-11-08): the home page's tech stack card (with the
+ * dino) has "See my stack" to /stack, with every tool by layer (each with a line on why) and
  * the dino game as a proper play area, roomy on phones too.
  */
-test('the home page shows a compact stack row that leads to /stack', async ({ page }) => {
+test("the home page's tech stack card leads to /stack", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.goto('/')
-  const stack = page.locator('#stack')
-  await expect(stack.getByRole('list', { name: 'Some of my stack' }).getByRole('listitem')).toHaveCount(12)
-  await stack.getByRole('link', { name: 'See my stack' }).click()
+  const link = page.locator('#about').getByRole('link', { name: 'See my stack' })
+  await link.scrollIntoViewIfNeeded()
+  await link.click()
   await expect(page).toHaveURL(/\/stack$/)
   await expect(page.getByRole('heading', { level: 1, name: 'What I build with' })).toBeVisible()
 })

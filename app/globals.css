@@ -499,8 +499,9 @@
    in the HTML at full size; a clip-path steps across it one character per
    step (font-mono, so a step is exactly 1ch), and a block cursor rides the end
    of the typed text. --chars, --start and --hold come from the component.
-   Clip-path and transform only: no layout shift. Reduced motion shows the
-   text, and the prompt, at once. */
+   The last line keeps a blinking cursor at its end (.whoami-cursor, the
+   caret's box and place). Clip-path, transform and opacity only: no layout
+   shift. Reduced motion shows the text and the cursor at once. */
 .whoami-type {
   position: relative;
   display: inline-block;
@@ -517,10 +518,16 @@
   pointer-events: none;
 }
 .whoami-cursor {
-  display: inline-block;
+  position: absolute;
+  left: calc(var(--chars) * 1ch);
+  top: 0.2em;
+  width: 0.62em;
+  height: 1.15em;
+  background: rgb(34 211 238 / 0.85);
+  pointer-events: none;
 }
 @media (prefers-reduced-motion: no-preference) {
-  .whoami-type > span {
+  .whoami-type > span:first-child {
     display: inline-block;
     animation: whoami-type calc(var(--chars) * 32ms) steps(var(--chars), end) var(--start) both;
   }
@@ -529,11 +536,9 @@
       whoami-caret-move calc(var(--chars) * 32ms) steps(var(--chars), end) var(--start) both,
       whoami-caret-on var(--hold) linear var(--start);
   }
-  .whoami-prompt {
-    animation: whoami-show 1ms linear var(--start) both;
-  }
   .whoami-cursor {
-    animation: whoami-blink 1.06s step-end var(--start) infinite;
+    opacity: 0;
+    animation: whoami-blink 1.06s step-end var(--end) infinite;
   }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -559,14 +564,6 @@
 }
 @keyframes whoami-caret-on {
   from,
-  to {
-    opacity: 1;
-  }
-}
-@keyframes whoami-show {
-  from {
-    opacity: 0;
-  }
   to {
     opacity: 1;
   }

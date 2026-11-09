@@ -7,8 +7,8 @@ import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion'
 import { trackProjectEvent } from '@/lib/analytics'
 
 /**
- * The n8builds.dev teaser under the projects: the site's icon with a small
- * "Building in public" label, then its builds one at a time. Each shows its
+ * The n8builds.dev card under the projects: "See more of my selected work on
+ * n8builds.dev", then its builds one at a time, its featured ones first. Each shows its
  * own icon and accent, what it is, a link to
  * its live site when it has one, and "See the build" on n8builds.dev. The
  * facts come from n8builds-web's data/builds.tsx and Lab rows.
@@ -33,29 +33,10 @@ interface Build {
 
 const BUILDS: Build[] = [
   {
-    slug: 'scribe',
-    shot: {
-      src: '/builds/scribe/shot-2026-10.webp',
-      alt: "Scribe's site: hold a hotkey, talk, and it types",
-    },
-    name: 'Scribe',
-    icon: '/builds/scribe/icon.png',
-    kind: 'Desktop app',
-    tagline: 'Speech-to-text for Windows',
-    desc: 'Hold a hotkey, talk and let go: your words land at the cursor in any app, transcribed by Whisper on your own PC.',
-    liveSite: 'https://scribe.n8builds.dev',
-    accent: {
-      text: 'text-sky-300',
-      glow: 'from-sky-400/[0.14]',
-      bar: 'bg-sky-400',
-      rgb: '56 189 248',
-    },
-  },
-  {
     slug: 'openping',
     shot: {
-      src: '/builds/openping/shot-2026-10.webp',
-      alt: "OpenPing's status page, watching the live demos",
+      src: '/builds/openping/shot-2026-11.webp',
+      alt: "OpenPing's site: uptime monitoring on your own Cloudflare",
     },
     name: 'OpenPing',
     icon: '/builds/openping/icon.svg',
@@ -72,7 +53,7 @@ const BUILDS: Build[] = [
   },
   {
     slug: 'solara',
-    shot: { src: '/builds/solara/shot-2026-10.webp', alt: 'Solara: know your sun window' },
+    shot: { src: '/builds/solara/shot-2026-11.webp', alt: 'Solara: know when to go outside' },
     name: 'Solara',
     icon: '/builds/solara/icon.png',
     kind: 'Web app',
@@ -84,6 +65,25 @@ const BUILDS: Build[] = [
       glow: 'from-orange-400/[0.14]',
       bar: 'bg-orange-400',
       rgb: '250 204 21',
+    },
+  },
+  {
+    slug: 'scribe',
+    shot: {
+      src: '/builds/scribe/shot-2026-10.webp',
+      alt: "Scribe's site: hold a hotkey, talk, and it types",
+    },
+    name: 'Scribe',
+    icon: '/builds/scribe/icon.png',
+    kind: 'Desktop app',
+    tagline: 'Speech-to-text for Windows',
+    desc: 'Hold a hotkey, talk and let go: your words land at the cursor in any app, transcribed by Whisper on your own PC.',
+    liveSite: 'https://scribe.n8builds.dev',
+    accent: {
+      text: 'text-sky-300',
+      glow: 'from-sky-400/[0.14]',
+      bar: 'bg-sky-400',
+      rgb: '56 189 248',
     },
   },
   {
@@ -193,6 +193,7 @@ export default function BuildsTeaser() {
     >
       {/* The site, then what it is: its icon with the small label together. */}
       <div className="flex flex-col gap-2">
+        {/* An invitation to the rest of my work (owner, 2026-11-08). */}
         <a
           href="https://n8builds.dev"
           target="_blank"
@@ -204,25 +205,19 @@ export default function BuildsTeaser() {
             alt=""
             width={40}
             height={40}
-            className="h-10 w-10 rounded-xl ring-1 ring-white/10"
+            className="h-10 w-10 shrink-0 rounded-xl ring-1 ring-white/10"
           />
-          <span className="flex flex-col">
-            <span
-              id="building-in-public"
-              className="flex items-center gap-2 text-[0.7rem] font-bold uppercase tracking-[0.16em] text-emerald-300"
-            >
-              <span className="relative flex h-2 w-2" aria-hidden="true">
-                <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 motion-safe:animate-ping" />
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
-              </span>
-              Building in public
-            </span>
-            <span className="flex items-center gap-1 text-xl font-bold text-slate-100 group-hover:text-sky-300 transition-colors">
+          <h3
+            id="building-in-public"
+            className="text-lg font-bold text-slate-100 transition-colors group-hover:text-sky-300 sm:text-xl"
+          >
+            See more of my selected work on{' '}
+            <span className="whitespace-nowrap text-sky-400 group-hover:text-sky-300">
               n8builds.dev
-              <FiArrowUpRight className="h-4 w-4 opacity-70" aria-hidden="true" />
-              <span className="sr-only"> (opens in a new tab)</span>
+              <FiArrowUpRight className="ml-1 inline h-4 w-4 align-[-0.1em] opacity-80" aria-hidden="true" />
             </span>
-          </span>
+            <span className="sr-only"> (opens in a new tab)</span>
+          </h3>
         </a>
       </div>
 

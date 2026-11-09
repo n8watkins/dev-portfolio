@@ -30,6 +30,8 @@ export interface Project {
   des: string
   /** One or two sentences for the home page's project card; the page itself shows `des`. */
   summary: string
+  /** What's interesting about how it's built, in a sentence: the card's second line. */
+  highlight?: string
   /** Screenshots, first one shown; the gallery steps through the rest. */
   images: { src: string; alt: string }[]
   /**

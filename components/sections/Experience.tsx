@@ -10,7 +10,7 @@ import { staggerItemVariants } from '@/lib/animations'
 
 /** A role's bullets, and small screenshots of the work when it has them. */
 const Details = ({ item }: { item: WorkExperienceItem }) => (
-  <div className="mt-4 flex flex-col gap-5 md:flex-row md:items-start md:gap-6">
+  <div className="flex flex-col gap-5 md:flex-row md:items-start md:gap-6">
     <ul className="flex-1 space-y-2.5">
       {item.bullets.map((bullet, i) => (
         <li
@@ -46,19 +46,19 @@ const Details = ({ item }: { item: WorkExperienceItem }) => (
 
 /**
  * Experience as a compact timeline (owner, 2026-11-08): each role's title,
- * company and years, with what I did folded under "What I did", and "Expand
- * all" to open every role in place. Only Tech for Pros links out; the other
+ * company and years; clicking anywhere on a role (or Enter or Space on it)
+ * opens what I did in place, and "Expand all" opens every role. Only Tech for Pros links out; the other
  * companies are plain text, and no client sites are linked.
  */
 const Experience = () => {
   const [open, setOpen] = useState<Set<number>>(() => new Set())
   const allOpen = open.size === workExperience.length
-  const toggle = (id: number, isOpen: boolean) =>
+  const toggle = (id: number) =>
     setOpen((prev) => {
       const next = new Set(prev)
-      if (isOpen) next.add(id)
-      else next.delete(id)
-      return next.size === prev.size && [...next].every((x) => prev.has(x)) ? prev : next
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
     })
 
   return (
@@ -87,6 +87,7 @@ const Experience = () => {
           {workExperience.map((item, index) => {
             const showDivider =
               item.additional && workExperience[index - 1] && !workExperience[index - 1].additional
+            const isOpen = open.has(item.id)
             return (
               <React.Fragment key={item.id}>
                 {showDivider && (
@@ -104,46 +105,68 @@ const Experience = () => {
                   className="group/exp relative pl-10 md:pl-12"
                 >
                   <div className="absolute top-[14px] left-0 h-[19px] w-[19px] rounded-full border-[3px] border-slate-900 bg-sky-500 shadow-lg shadow-sky-500/40" />
-                  <div className="relative overflow-hidden rounded-xl border border-white/5 bg-slate-900 p-4 shadow-[0_20px_25px_-5px_rgba(0,0,0,0.3)] transition-colors duration-300 hover:border-sky-500/30 md:p-5">
-                    <div className="mb-2 flex flex-wrap items-center gap-x-2 gap-y-1">
-                      <span className="rounded-full border border-sky-500/20 bg-sky-500/10 px-2.5 py-0.5 text-xs font-semibold tracking-wider text-sky-400 uppercase">
-                        {item.period}
-                      </span>
-                      <span className="text-xs text-slate-400">{item.location}</span>
-                    </div>
-                    <h3 className="text-xl leading-snug font-bold text-slate-100 md:text-2xl/8">
-                      {item.role}
-                    </h3>
-                    <p className="mt-0.5 mb-3 text-base font-semibold text-sky-400">
-                      {item.companyUrl ? (
-                        <a
-                          href={item.companyUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1.5 transition-colors hover:text-sky-300"
-                        >
-                          {item.company}
-                          <FiExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
-                          <span className="sr-only"> (opens in a new tab)</span>
-                        </a>
-                      ) : (
-                        item.company
-                      )}
-                    </p>
-                    <details
-                      open={open.has(item.id)}
-                      onToggle={(e) => toggle(item.id, e.currentTarget.open)}
-                      className="group/details"
-                    >
-                      <summary className="inline-flex cursor-pointer list-none items-center gap-1.5 rounded-lg text-sm font-semibold text-slate-300 transition-colors hover:text-sky-300 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-sky-400 [&::-webkit-details-marker]:hidden">
-                        What I did
-                        <FiChevronDown
-                          className="h-4 w-4 transition-transform duration-200 group-open/details:rotate-180"
+                  {/* The whole role header is one button (stretched over it): click
+                      or press Enter or Space anywhere on it to open what I did.
+                      Tech for Pros' link sits above that layer, so it still opens
+                      the site. */}
+                  <div
+                    className={`relative overflow-hidden rounded-xl border bg-slate-900 shadow-[0_20px_25px_-5px_rgba(0,0,0,0.3)] transition-colors duration-200 has-[[data-role-toggle]:hover]:border-sky-400/40 has-[[data-role-toggle]:hover]:bg-slate-800/80 has-[[data-role-toggle]:focus-visible]:ring-2 has-[[data-role-toggle]:focus-visible]:ring-sky-400 ${isOpen ? 'border-sky-500/30' : 'border-white/5'}`}
+                  >
+                    <div className="group/role relative p-4 md:p-5">
+                      <button
+                        type="button"
+                        data-role-toggle
+                        onClick={() => toggle(item.id)}
+                        aria-expanded={isOpen}
+                        aria-controls={`role-${item.id}`}
+                        className="absolute inset-0 z-10 cursor-pointer rounded-xl focus:outline-hidden"
+                      >
+                        <span className="sr-only">
+                          {item.role}, {item.company}: {isOpen ? 'hide' : 'show'} what I did
+                        </span>
+                      </button>
+                      <div className="mb-2 flex flex-wrap items-center gap-x-2 gap-y-1">
+                        <span className="rounded-full border border-sky-500/20 bg-sky-500/10 px-2.5 py-0.5 text-xs font-semibold tracking-wider text-sky-400 uppercase">
+                          {item.period}
+                        </span>
+                        <span className="text-xs text-slate-400">{item.location}</span>
+                      </div>
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="min-w-0">
+                          <h3 className="text-xl leading-snug font-bold text-slate-100 md:text-2xl/8">
+                            {item.role}
+                          </h3>
+                          <p className="mt-0.5 text-base font-semibold text-sky-400">
+                            {item.companyUrl ? (
+                              <a
+                                href={item.companyUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="relative z-20 inline-flex items-center gap-1.5 rounded transition-colors hover:text-sky-300 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-sky-400"
+                              >
+                                {item.company}
+                                <FiExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
+                                <span className="sr-only"> (opens in a new tab)</span>
+                              </a>
+                            ) : (
+                              item.company
+                            )}
+                          </p>
+                        </div>
+                        <span
                           aria-hidden="true"
-                        />
-                      </summary>
+                          className="mt-1 inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-white/10 bg-white/4 px-2.5 py-1.5 text-xs font-semibold whitespace-nowrap text-slate-300 transition-colors group-has-[[data-role-toggle]:hover]/role:border-sky-400/40 group-has-[[data-role-toggle]:hover]/role:text-sky-200 sm:text-sm"
+                        >
+                          <span className="hidden sm:inline">{isOpen ? 'Hide' : 'What I did'}</span>
+                          <FiChevronDown
+                            className={`h-4 w-4 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
+                          />
+                        </span>
+                      </div>
+                    </div>
+                    <div id={`role-${item.id}`} hidden={!isOpen} className="px-4 pb-5 md:px-5">
                       <Details item={item} />
-                    </details>
+                    </div>
                   </div>
                 </motion.div>
               </React.Fragment>

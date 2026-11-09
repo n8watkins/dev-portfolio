@@ -6,9 +6,9 @@ import type { NavItem } from '@/components/layout/FloatingNav'
  * their sections.
  */
 const SECTIONS = [
+  { name: 'About', id: 'about' },
   { name: 'Projects', id: 'projects' },
   { name: 'Experience', id: 'experience' },
-  { name: 'About', id: 'about' },
   { name: 'Contact', id: 'contact' },
 ]
 

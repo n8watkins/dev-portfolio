@@ -64,10 +64,9 @@ const sitemap: { title: string; links: SitemapLink[] }[] = [
   {
     title: 'Home',
     links: [
+      { label: 'About', href: '/#about', home: 'about' },
       { label: 'Projects', href: '/#projects', home: 'projects' },
       { label: 'Experience', href: '/#experience', home: 'experience' },
-      { label: 'Stack', href: '/#stack', home: 'stack' },
-      { label: 'About', href: '/#about', home: 'about' },
       { label: 'Contact', href: '/#contact', home: 'contact' },
     ],
   },
