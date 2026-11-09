@@ -53,15 +53,15 @@ type SitemapLink = {
   site?: 'n8builds' | 'techforpros'
 }
 
-/** The site map: this page's sections, the project pages, and my other sites. */
+/** The site map: this site (its pages and sections), the project pages, and my other sites. */
 const sitemap: { title: string; links: SitemapLink[] }[] = [
   {
-    title: 'On this page',
+    title: 'This site',
     links: [
-      { label: 'About', href: '/#about' },
+      { label: 'About me', href: '/about' },
       { label: 'Projects', href: '/#projects' },
       { label: 'Experience', href: '/#experience' },
-      { label: 'My workshop', href: '/#workshop' },
+      { label: 'My workshop', href: '/about#workshop' },
       { label: 'Contact', href: '/#contact' },
     ],
   },

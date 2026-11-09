@@ -7,7 +7,7 @@ import { test, expect } from '@playwright/test'
 test('the n8builds card says where I build and links to the case study and the source', async ({
   page,
 }) => {
-  await page.goto('/')
+  await page.goto('/about')
   const card = page.getByRole('article', { name: 'Where I build in public' })
   const link = card.getByRole('link', { name: "How it's built and tested" })
   await link.scrollIntoViewIfNeeded()
@@ -63,7 +63,7 @@ test.describe('the map arcs', () => {
 
   test('hold still, fully drawn, under reduced motion', async ({ page }) => {
     await page.emulateMedia({ reducedMotion: 'reduce' })
-    await page.goto('/')
+    await page.goto('/about')
     const arcs = page.locator('.neon-path')
     await arcs.first().scrollIntoViewIfNeeded()
     await expect(arcs).toHaveCount(3)
@@ -78,7 +78,7 @@ test.describe('the map arcs', () => {
 
   test('keep drawing when motion is allowed', async ({ page }) => {
     await page.emulateMedia({ reducedMotion: 'no-preference' })
-    await page.goto('/')
+    await page.goto('/about')
     const arcs = page.locator('.neon-path')
     await arcs.first().scrollIntoViewIfNeeded()
     await expect(arcs).toHaveCount(3)
@@ -105,6 +105,8 @@ test("Tech for Pros' cards name techforpros.com, show its mark and link to it", 
   const box = await tag.boundingBox()
   expect(box!.height).toBeLessThan(30)
 
+  // The workshop cards are on the About page.
+  await page.goto('/about')
   const card = page.getByRole('article', { name: /Run a service business/ })
   await card.scrollIntoViewIfNeeded()
   await expect(card.getByText('techforpros.com', { exact: true })).toBeVisible()
@@ -120,8 +122,8 @@ test("Tech for Pros' cards name techforpros.com, show its mark and link to it", 
  * with its client sites), never anywhere else and never linked (owner,
  * 2026-11-01).
  */
-test('Appturnity shows only as a past role in Experience, never linked', async ({ page }) => {
-  await page.goto('/')
+for (const path of ['/', '/about']) test(`Appturnity shows only as a past role in Experience, never linked (${path})`, async ({ page }) => {
+  await page.goto(path)
   await expect(page.locator('a[href*="appturnity"]')).toHaveCount(0)
   const experience = page.locator('#experience')
   const card = experience.locator('div.group\\/exp', { hasText: 'Appturnity' })
@@ -148,10 +150,9 @@ test('Appturnity shows only as a past role in Experience, never linked', async (
     'href',
     'https://techforpros.com'
   )
-  await expect(page.locator('#about')).toContainText(
-    'three years building client apps at a consulting firm'
-  )
-  await expect(page.locator('#about').getByRole('link', { name: 'Tech for Pros' })).toHaveAttribute(
+  const about = page.locator(path === '/' ? '#about' : 'main section').first()
+  await expect(about).toContainText('three years building client apps at a consulting firm')
+  await expect(about.getByRole('link', { name: 'Tech for Pros' })).toHaveAttribute(
     'href',
     'https://techforpros.com'
   )

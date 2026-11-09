@@ -2,6 +2,9 @@ import { readFileSync } from 'node:fs'
 import { test, expect, type Page } from '@playwright/test'
 import ts from 'typescript'
 
+// The tech stack card (and its dino) is on the About page in this layout (variant B).
+const STACK_PAGE = '/about'
+
 /**
  * The dino game's optional music (components/features/dino/DinoMusic.tsx and
  * music.ts): a toggle in the top right corner of the game panel. Headless
@@ -166,7 +169,7 @@ test.describe('dino game music (motion allowed)', () => {
   test('sits in the top right corner, off by default, clear of the scoreboards, and makes no audio', async ({
     page,
   }) => {
-    await page.goto('/')
+    await page.goto(STACK_PAGE)
     await showKit(page)
     const button = await hydratedMusic(page)
     await expect(button).toBeVisible()
@@ -205,7 +208,7 @@ test.describe('dino game music (motion allowed)', () => {
   })
 
   test('pressing it plays the loop, pressing again stops it, and the choice is remembered', async ({ page }) => {
-    await page.goto('/')
+    await page.goto(STACK_PAGE)
     await showKit(page)
     const button = await hydratedMusic(page)
     await button.click()
@@ -227,7 +230,7 @@ test.describe('dino game music (motion allowed)', () => {
   })
 
   test('works from the keyboard with a visible focus ring, without scrolling the page', async ({ page }) => {
-    await page.goto('/')
+    await page.goto(STACK_PAGE)
     await showKit(page)
     const button = await hydratedMusic(page)
     await button.focus()
@@ -246,7 +249,7 @@ test.describe('dino game music (motion allowed)', () => {
 
   test('remembered as on, it never starts by itself: the next catch of the dino starts it', async ({ page }) => {
     await remember(page, '1')
-    await page.goto('/')
+    await page.goto(STACK_PAGE)
     await showKit(page)
     const button = await hydratedMusic(page)
     await expect(button).toHaveAttribute('data-dino-music', 'ready')
@@ -267,7 +270,7 @@ test.describe('dino game music (motion allowed)', () => {
 
   test('remembered as on, pressing the button starts it too', async ({ page }) => {
     await remember(page, '1')
-    await page.goto('/')
+    await page.goto(STACK_PAGE)
     await showKit(page)
     const button = await hydratedMusic(page)
     await expect(button).toHaveAttribute('data-dino-music', 'ready')
@@ -278,13 +281,13 @@ test.describe('dino game music (motion allowed)', () => {
 
   test('remembered as off, it stays off', async ({ page }) => {
     await remember(page, '0')
-    await page.goto('/')
+    await page.goto(STACK_PAGE)
     await showKit(page)
     await expect(music(page)).toHaveAttribute('data-dino-music', 'off')
   })
 
   test('pauses while the panel is off screen or the tab is hidden, and comes back', async ({ page }) => {
-    await page.goto('/')
+    await page.goto(STACK_PAGE)
     await showKit(page)
     const button = await hydratedMusic(page)
     await button.click()
@@ -314,7 +317,7 @@ test.describe('dino game music (reduced motion)', () => {
   test.beforeEach(({ page }) => spyOnAudio(page))
 
   test('the toggle is there without the dino, plays, and does not animate', async ({ page }) => {
-    await page.goto('/')
+    await page.goto(STACK_PAGE)
     await showKit(page)
     await expect(dino(page)).toHaveCount(0)
     const button = await hydratedMusic(page)

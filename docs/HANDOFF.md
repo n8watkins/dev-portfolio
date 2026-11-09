@@ -89,6 +89,15 @@ It funnels visitors to the two other sites:
   The master is `public/brand/n8-mark.png`; `node scripts/gen-brand-icons.mjs` makes the favicon, Apple and 512px icons in `public/tab/` from it (the mark on a dark navy rounded tile).
   The corner link to n8builds.dev shows the mark on its own; the admin dashboard still has the old N8 mark.
 
+## Layout: home plus an About page (variant B, 2026-11-08)
+
+- The home page is work-first: the hero, a short About teaser with "More about me" (`components/sections/AboutTeaser.tsx`), the projects, the n8builds.dev teaser, a compact experience timeline (titles, companies and years, each role's bullets folded into "What I did", `<Experience compact />`), and contact.
+- `/about` (`app/about/page.tsx`, `components/AboutPage.tsx`) has the full story beside two portraits (`AboutStory`), "How I work" (`HowIWork`), the bento with the tech stack, the map and the resume (`StackGrid`), resume buttons, every role in full, and the workshop cards (Tech for Pros and n8builds.dev).
+  Its sections are imported, not lazy, so `/about#experience` lands on the section.
+- The nav's About goes to `/about`; on `/about` the nav's other items go home and leave a note for the home page to scroll to the section (`home` in `data/navigation.tsx`, as "Back to projects" does).
+  `/about` is in the sitemap; its old redirect to `/` is gone.
+- The dino tests run on `/about` here (`STACK_PAGE` in `tests/dino.spec.ts` and `tests/dino-music.spec.ts`); n8builds-web's copies run on its home page.
+
 ## Tech for Pros (owner, 2026-11-01)
 
 - Tech for Pros (techforpros.com), my SaaS for service businesses, is where I work now: the hero card ("Where I work"), the workshop card, the Experience entry, About and both footers name techforpros.com and link to it.
@@ -149,6 +158,6 @@ Under the projects, `components/Projects/BuildsTeaser.tsx` shows n8builds.dev's 
 - `components/Projects/ProjectCard.tsx`, `ProjectGallery.tsx`, `lib/accents.ts`: the project rows.
 - `components/Projects/ProjectDetail.tsx`, `app/projects/[slug]/page.tsx`: project detail pages.
 - `components/Projects/BuildsTeaser.tsx`: the n8builds.dev teaser. `components/sections/HeroGrid.tsx`: the hero grid (from n8builds.dev).
-- `components/sections/Grid.tsx` (About and the bento), `WorkshopCards.tsx`, `Experience.tsx`, `Hero.tsx`.
+- `components/sections/AboutTeaser.tsx`, `AboutStory.tsx`, `HowIWork.tsx`, `StackGrid.tsx` (the bento), `WorkshopCards.tsx`, `Experience.tsx`, `Hero.tsx`; `components/AboutPage.tsx`.
 - `data/projects.tsx`: project copy.
 - `components/ErrorBoundary.tsx`, `SectionErrorBoundary.tsx` report to Sentry.

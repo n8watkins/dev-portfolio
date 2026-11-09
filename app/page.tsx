@@ -2,7 +2,7 @@
 import React, { useEffect } from 'react'
 import { SCROLL_TO_KEY } from '@/components/Projects/BackToProjects'
 import Hero from '@/components/sections/Hero'
-import Grid from '@/components/sections/Grid'
+import AboutTeaser from '@/components/sections/AboutTeaser'
 import { FloatingNav } from '@/components/layout/FloatingNav'
 import { navItems } from '@/data/navigation'
 import { useSectionTracking } from '@/hooks/useSectionTracking'
@@ -13,7 +13,6 @@ import dynamic from 'next/dynamic'
 // Only lazy load truly below-the-fold components
 const Projects = dynamic(() => import('@/components/Projects'))
 const Experience = dynamic(() => import('@/components/sections/Experience'))
-const WorkshopCards = dynamic(() => import('@/components/sections/WorkshopCards'))
 const Footer = dynamic(() => import('@/components/layout/Footer'))
 const ScrollToTop = dynamic(() => import('@/components/ui/ScrollToTop'), { ssr: false })
 
@@ -69,7 +68,7 @@ export default function Home() {
         <div className="m-auto max-w-md sm:max-w-xl md:max-w-3xl lg:max-w-4xl xl:max-w-5xl 2xl:max-w-6xl">
           <section id="about" aria-label="About me">
             <SectionErrorBoundary sectionName="About Section">
-              <Grid />
+              <AboutTeaser />
             </SectionErrorBoundary>
           </section>
 
@@ -81,13 +80,7 @@ export default function Home() {
 
           <section id="experience" aria-label="Work experience">
             <SectionErrorBoundary sectionName="Experience Section">
-              <Experience />
-            </SectionErrorBoundary>
-          </section>
-
-          <section id="workshop" aria-label="My company and my workshop">
-            <SectionErrorBoundary sectionName="Workshop Section">
-              <WorkshopCards />
+              <Experience compact />
             </SectionErrorBoundary>
           </section>
 

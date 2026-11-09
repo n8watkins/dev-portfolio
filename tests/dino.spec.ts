@@ -1,5 +1,8 @@
 import { test, expect, type Page } from '@playwright/test'
 
+// The tech stack card (and its dino) is on the About page in this layout (variant B).
+const STACK_PAGE = '/about'
+
 /**
  * The dino easter egg on the "My tech stack" card: the same dino as
  * n8builds.dev's AI kit (components/features/dino/ is byte-identical, see
@@ -111,7 +114,7 @@ test.describe('dino easter egg (motion allowed)', () => {
   test('loads only once the AI kit nears the viewport, and never blocks the tiles', async ({
     page,
   }) => {
-    await page.goto('/')
+    await page.goto(STACK_PAGE)
     await expect(page.locator('h1')).toBeVisible()
     // Far above the kit, the game hasn't loaded.
     await page.waitForTimeout(1000)
@@ -156,7 +159,7 @@ test.describe('dino easter egg (motion allowed)', () => {
   }
 
   const onTopRow = async (page: Page) => {
-    await page.goto('/')
+    await page.goto(STACK_PAGE)
     await showKit(page, '[data-dino-panel]')
     await expect(dino(page)).toHaveAttribute('data-level', '0', { timeout: 10_000 })
     await expect(dino(page)).toHaveAttribute('data-mode', 'walk')
@@ -220,7 +223,7 @@ test.describe('dino easter egg (motion allowed)', () => {
   })
 
   test('a row paused the moment it appears still makes it miss', async ({ page }) => {
-    await page.goto('/')
+    await page.goto(STACK_PAGE)
     await showKit(page, '[data-dino-panel]')
     // Hold the top row before the game has measured the rows: the pause counts
     // once it has, rather than being taken for how the row always was.
@@ -524,7 +527,7 @@ test.describe('dino easter egg (motion allowed)', () => {
       choices: ['exit', 'turn'],
       entries: ['left', 'right'],
     })
-    await page.goto('/')
+    await page.goto(STACK_PAGE)
     await showKit(page, '[data-dino-panel]')
     await expect(dino(page)).toHaveAttribute('data-mode', 'walk', { timeout: 10_000 })
     // Each side entry: where it came in, and where it made its first choice.
@@ -700,7 +703,7 @@ test.describe('dino easter egg (motion allowed)', () => {
     // so the waits are generous.
     test.setTimeout(90_000)
     await dinoTiming(page, { firstLineAfter: 0.3, lineGap: [600, 600] })
-    await page.goto('/')
+    await page.goto(STACK_PAGE)
     await showKit(page, '[data-dino-panel]')
     // The first hints at the click; it stops to say it.
     await expect(dino(page)).toHaveAttribute('data-line', '0', { timeout: 30_000 })
@@ -720,7 +723,7 @@ test.describe('dino easter egg (motion allowed)', () => {
     // It talks after a second of walking in clear view, counted on its own
     // capped clock, so where frames come slowly (WebKit without a GPU, about
     // 10 fps) the walk in and that second take twice as long: allow 12 s.
-    await page.goto('/')
+    await page.goto(STACK_PAGE)
     await showKit(page, '[data-dino-panel]')
     await expect(dino(page)).toHaveAttribute('data-line', '0', { timeout: 12_000 })
     await expect(page.locator('[data-dino-bubble="line-0"]')).toBeVisible()
@@ -748,7 +751,7 @@ test.describe('dino easter egg (motion allowed)', () => {
       choices: ['change', 'turn', 'change', 'turn', 'exit'],
       entries: ['left', 'right', 'drop'],
     })
-    await page.goto('/')
+    await page.goto(STACK_PAGE)
     await showKit(page, '[data-dino-panel]')
     await expect(dino(page)).toHaveAttribute('data-mode', 'walk', { timeout: 10_000 })
     await dino(page).evaluate((el) => {
@@ -853,7 +856,7 @@ test.describe('dino easter egg (motion allowed)', () => {
   })
 
   test('the tiles cannot be selected by a double or triple click, and still take keyboard focus', async ({ page }) => {
-    await page.goto('/')
+    await page.goto(STACK_PAGE)
     await showKit(page, '[data-dino-panel]')
     // Hovering the middle of a row pauses it (it never holds still otherwise),
     // then a double click there, which would select a word anywhere else.
@@ -911,7 +914,7 @@ test.describe('dino easter egg (motion allowed)', () => {
 
   test('hovering a tile shows what it is for', async ({ page, hasTouch }) => {
     test.skip(hasTouch, 'no hover on a touch screen (a tap shows it, below)')
-    await page.goto('/')
+    await page.goto(STACK_PAGE)
     await showKit(page, '[data-dino-panel]')
     const at = await middleTile(page, 1)
     await page.mouse.move(at.x, at.y)
@@ -922,7 +925,7 @@ test.describe('dino easter egg (motion allowed)', () => {
 
   test('clicking a tile does nothing: its row runs again once the pointer leaves', async ({ page, hasTouch }) => {
     test.skip(hasTouch, 'a tap pauses the row on purpose (see above)')
-    await page.goto('/')
+    await page.goto(STACK_PAGE)
     await showKit(page, '[data-dino-panel]')
     const at = await middleTile(page, 0)
     await page.mouse.click(at.x, at.y)
@@ -936,7 +939,7 @@ test.describe('dino easter egg (motion allowed)', () => {
 
   test('a tapped tile shows what it is for and holds its row', async ({ page, hasTouch }) => {
     test.skip(!hasTouch, 'touch screens only')
-    await page.goto('/')
+    await page.goto(STACK_PAGE)
     await showKit(page, '[data-dino-panel]')
     // The tile nearest the middle of the bottom row (copies included: any tile takes a tap).
     const at = await page.evaluate(() => {
@@ -954,7 +957,7 @@ test.describe('dino easter egg (motion allowed)', () => {
   })
 
   test('both rows move at the same pace, however many tiles each has', async ({ page }) => {
-    await page.goto('/')
+    await page.goto(STACK_PAGE)
     const speeds = () =>
       page.locator('[data-dino-panel] [data-marquee-row]').evaluateAll((rows) =>
         rows.map((row) => {
@@ -970,7 +973,7 @@ test.describe('dino easter egg (motion allowed)', () => {
   })
 
   test('the gaps it hops and falls through are clearly wider than it is', async ({ page }) => {
-    await page.goto('/')
+    await page.goto(STACK_PAGE)
     await showKit(page, '[data-dino-panel]')
     await expect(dino(page)).toHaveCount(1)
     const m = await page.locator('[data-dino-panel]').evaluate((panel) => {
@@ -995,7 +998,7 @@ test.describe('dino easter egg (reduced motion)', () => {
   test.use({ contextOptions: { reducedMotion: 'reduce' } })
 
   test("shows n8builds.dev's tiles: the AI kit, then the dev stack", async ({ page }) => {
-    await page.goto('/')
+    await page.goto(STACK_PAGE)
     const ai = page.getByRole('region', { name: 'AI kit' })
     for (const tool of ['Claude Code', 'Claude Opus 5.5', 'ChatGPT', 'whisper.cpp', 'Hugging Face']) {
       await expect(ai.getByText(tool, { exact: true })).toHaveCount(1)
@@ -1011,7 +1014,7 @@ test.describe('dino easter egg (reduced motion)', () => {
   })
 
   test('the wrapped tiles keep the default spacing', async ({ page }) => {
-    await page.goto('/')
+    await page.goto(STACK_PAGE)
     const gap = await page
       .getByRole('region', { name: 'AI kit' })
       .evaluate((row) => getComputedStyle(row).columnGap)
@@ -1019,7 +1022,7 @@ test.describe('dino easter egg (reduced motion)', () => {
   })
 
   test('is not shown or loaded', async ({ page }) => {
-    await page.goto('/')
+    await page.goto(STACK_PAGE)
     await showKit(page, '[data-dino-panel]')
     await page.waitForTimeout(1500)
     await expect(dino(page)).toHaveCount(0)

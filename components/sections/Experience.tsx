@@ -2,13 +2,55 @@
 
 import React from 'react'
 import Image from 'next/image'
+import Link from 'next/link'
 import { motion } from 'motion/react'
-import { FiArrowUpRight } from 'react-icons/fi'
-import { workExperience } from '@/data/experience'
+import { FiArrowUpRight, FiChevronDown } from 'react-icons/fi'
+import { workExperience, type WorkExperienceItem } from '@/data/experience'
 import SectionHeading from '@/components/ui/SectionHeading'
 import { staggerItemVariants } from '@/lib/animations'
 
-const Experience = () => {
+/** A role's bullets and its related links. */
+const Details = ({ item }: { item: WorkExperienceItem }) => (
+  <>
+    {/* Bullets */}
+    <ul className="space-y-2.5">
+      {item.bullets.map((bullet, i) => (
+        <li
+          key={i}
+          className="flex items-start gap-3 text-sm md:text-base/6 text-slate-400 leading-relaxed"
+        >
+          <span className="mt-[9px] shrink-0 w-[5px] h-[5px] rounded-full bg-sky-400/60" />
+          <span>{bullet}</span>
+        </li>
+      ))}
+    </ul>
+
+    {/* Related links */}
+    {item.links && item.links.length > 0 && (
+      <div className="flex flex-wrap gap-2 mt-4">
+        {item.links.map((link) => (
+          <a
+            key={link.url}
+            href={link.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 text-xs text-sky-400 hover:text-sky-300 bg-sky-500/10 px-2.5 py-1 rounded-full border border-sky-500/20 hover:border-sky-500/40 transition-colors"
+          >
+            {link.label}
+            <FiArrowUpRight className="w-3 h-3" />
+          </a>
+        ))}
+      </div>
+    )}
+  </>
+)
+
+/**
+ * Experience as a timeline. `compact` (the home page, variant B) shows each
+ * role's title, company and years, with its bullets and links folded into
+ * "What I did"; the About page shows them all open.
+ */
+const Experience = ({ compact = false }: { compact?: boolean }) => {
   return (
     <div className="relative pt-0 md:pt-8 pb-12 md:pb-20 xl:max-w-6xl 2xl:max-w-7xl m-auto select-none">
       <SectionHeading
@@ -24,7 +66,7 @@ const Experience = () => {
         {/* Vertical timeline line */}
         <div className="absolute left-[9px] md:left-[11px] top-2 bottom-4 w-px bg-linear-to-b from-sky-500 via-sky-400/40 to-transparent" />
 
-        <div className="space-y-6">
+        <div className={compact ? 'space-y-4' : 'space-y-6'}>
           {workExperience.map((item, index) => {
             const showDivider =
               item.additional && workExperience[index - 1] && !workExperience[index - 1].additional
@@ -58,7 +100,7 @@ const Experience = () => {
                     className={`pointer-events-none absolute -inset-y-1 -right-1 left-9 rounded-2xl opacity-0 blur-lg transition-opacity duration-500 group-hover/exp:opacity-100 md:left-11 ${item.hoverGlow ?? 'bg-sky-400/16'}`}
                   />
                   <div
-                    className={`group relative overflow-hidden rounded-xl p-5 md:p-6 bg-slate-900 border border-white/5 shadow-[0_20px_25px_-5px_rgba(0,0,0,0.3)] hover:border-sky-500/30 transition-all duration-300`}
+                    className={`group relative overflow-hidden rounded-xl ${compact ? 'p-4 md:p-5' : 'p-5 md:p-6'} bg-slate-900 border border-white/5 shadow-[0_20px_25px_-5px_rgba(0,0,0,0.3)] hover:border-sky-500/30 transition-all duration-300`}
                   >
                     {/* Hover image reveal (desktop only): its frame fades in from the left, so
                         the picture never hard-cuts against the copy */}
@@ -95,7 +137,7 @@ const Experience = () => {
                       </h3>
 
                       {/* Company */}
-                      <p className="text-base font-semibold mt-0.5 mb-4">
+                      <p className={`text-base font-semibold mt-0.5 ${compact ? 'mb-3' : 'mb-4'}`}>
                         {item.companyUrl ? (
                           <a
                             href={item.companyUrl}
@@ -110,35 +152,21 @@ const Experience = () => {
                         )}
                       </p>
 
-                      {/* Bullets */}
-                      <ul className="space-y-2.5">
-                        {item.bullets.map((bullet, i) => (
-                          <li
-                            key={i}
-                            className="flex items-start gap-3 text-sm md:text-base/6 text-slate-400 leading-relaxed"
-                          >
-                            <span className="mt-[9px] shrink-0 w-[5px] h-[5px] rounded-full bg-sky-400/60" />
-                            <span>{bullet}</span>
-                          </li>
-                        ))}
-                      </ul>
-
-                      {/* Related links */}
-                      {item.links && item.links.length > 0 && (
-                        <div className="flex flex-wrap gap-2 mt-4">
-                          {item.links.map((link) => (
-                            <a
-                              key={link.url}
-                              href={link.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1 text-xs text-sky-400 hover:text-sky-300 bg-sky-500/10 px-2.5 py-1 rounded-full border border-sky-500/20 hover:border-sky-500/40 transition-colors"
-                            >
-                              {link.label}
-                              <FiArrowUpRight className="w-3 h-3" />
-                            </a>
-                          ))}
-                        </div>
+                      {compact ? (
+                        <details className="group/details">
+                          <summary className="inline-flex cursor-pointer list-none items-center gap-1.5 rounded-lg text-sm font-semibold text-slate-300 transition-colors hover:text-sky-300 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-sky-400 [&::-webkit-details-marker]:hidden">
+                            What I did
+                            <FiChevronDown
+                              className="h-4 w-4 transition-transform duration-200 group-open/details:rotate-180"
+                              aria-hidden="true"
+                            />
+                          </summary>
+                          <div className="mt-4">
+                            <Details item={item} />
+                          </div>
+                        </details>
+                      ) : (
+                        <Details item={item} />
                       )}
                     </div>
                   </div>
@@ -148,6 +176,19 @@ const Experience = () => {
           })}
         </div>
       </div>
+
+      {compact && (
+        <p className="mt-8 px-2 pl-12 text-sm text-slate-400 md:px-4 md:pl-16">
+          Every role in full, with how I work and my stack, is on{' '}
+          <Link
+            href="/about#experience"
+            className="font-semibold text-sky-400 underline decoration-sky-400/40 underline-offset-4 transition-colors hover:text-sky-300"
+          >
+            my About page
+          </Link>
+          .
+        </p>
+      )}
     </div>
   )
 }
