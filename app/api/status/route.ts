@@ -10,9 +10,9 @@ export const revalidate = 60
 
 // The E2E suite's statuses (STATUS_FIXTURE=1): one of each kind a visitor can see.
 const FIXTURE: StatusMap = {
-  Echo: { state: 'operational', uptime90d: 92.914 },
-  Scout: { state: 'scheduled_off', uptime90d: 99.46 },
-  GeminiGPT: { state: 'down', uptime90d: 81 },
+  'Demo Up': { state: 'operational', uptime90d: 92.914 },
+  'Demo Asleep': { state: 'scheduled_off', uptime90d: 99.46 },
+  'Demo Down': { state: 'down', uptime90d: 81 },
 }
 
 export async function GET() {

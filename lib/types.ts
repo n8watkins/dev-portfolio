@@ -21,7 +21,7 @@ export interface Technologies {
 
 export interface Project {
   id: number
-  /** URL slug for the project's detail page, e.g. /projects/echo */
+  /** URL slug for the project's detail page, e.g. /projects/net-trailer */
   slug: string
   title: string
   /** The title as the app writes it (Portfolio Rank's gold "Rank"); `title` otherwise. */
@@ -35,7 +35,7 @@ export interface Project {
   /** The app's own icon, shown left of its name. */
   icon: string
   /** The app's brand colour: its row's glow, outline, checks and main button (lib/accents.ts). */
-  accent: 'echo' | 'scout' | 'geminigpt' | 'net-trailer' | 'portfolio-rank'
+  accent: 'net-trailer' | 'portfolio-rank'
   /** A few pills for the tech, shown on the project's page. */
   tags: string[]
   /** What it actually does, shown on its page as checks in its colour (from each app's own Key Features). */
@@ -56,6 +56,16 @@ export interface Project {
   invite?: { heading: string; body: string; label: string; href: string }
   /** The monitor's name on OpenPing's public status page, when the live site is monitored. */
   statusName?: string
+}
+
+/** A project still being built: a compact card with no name, links or screenshots yet. */
+export interface InProgressProject {
+  /** A neutral label in place of a name, until it has one. */
+  label: string
+  /** What it will do, in one sentence. */
+  pitch: string
+  /** A few words each on what it does, shown as small chips. */
+  points: string[]
 }
 
 export type TechNameMappingInterface = {

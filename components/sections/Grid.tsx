@@ -51,9 +51,8 @@ const Grid = () => {
             <p>
               In my free time I build in public on{' '}
               <Out href="https://n8builds.dev">n8builds.dev</Out>. That&apos;s where the tools I use
-              daily live: Scribe, my local dictation app for Windows, and OpenPing, the uptime
-              monitor watching the demos on this page, plus Solara, Portfolio Rank and a few Chrome
-              extensions, all free and open source. Next up: streaming the builds live.
+              daily live: Scribe, my local dictation app for Windows, and OpenPing, my uptime
+              monitor, plus Solara and a few Chrome extensions, all free and open source. Next up: streaming the builds live.
             </p>
           </div>
           <figure className="relative mx-auto w-48 shrink-0 sm:w-56 md:mx-0 md:w-64">

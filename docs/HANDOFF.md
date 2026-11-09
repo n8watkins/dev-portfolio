@@ -1,6 +1,6 @@
 # HANDOFF - dev-portfolio
 
-Last updated: 2026-10-28.
+Last updated: 2026-11-08.
 
 ## Current state and open work (2026-10-27): start here
 
@@ -9,17 +9,17 @@ Last updated: 2026-10-28.
 - `main` matches n8builds.dev's copy (audit fixes #12) and its dino game files are byte-identical (`npm run check:sync`); dino stats post to `https://n8builds.dev/api/game` (#14).
 - **Production is behind `main`.** It's stuck at #10: #11 to #14 merged while Vercel's 100-deployments-per-24-hours limit was hit, so no production deploy was made for them.
 - Vercel builds on Node 24.x; `nathansportfolio.vercel.app` and `n8sportfolio.vercel.app` redirect here (#9).
-- Echo's live title no longer has an em dash; Scout's and GeminiGPT's fixes are merged in their repos but not live, because Render auto-deploy is broken for both (owner step, tracked in those repos).
+- Echo, Scout and GeminiGPT were retired on 2026-11-08 (owner): their repos went private and archived, and their Render demos came down. One new AI app, not yet named, will replace them; until it ships, an "In progress" card stands in (see "Featured projects").
 - OpenPing has a bug: during scheduled off-hours its public feed reports monitors as "operational" (fix tracked in open-ping, `docs/BUG-public-scheduled-off.md`). This site already works around it: a feed older than 30 minutes reads as Asleep (see "Live-demo status" below). Once OpenPing reports `scheduled_off`, check `lib/status.ts` maps it to Asleep.
 
 ### Next
 
-1. When GeminiGPT moves to Gemini 3.5 Flash Lite (GeminiGPT #3, waiting on the owner's key), change this site's "Gemini 3.1 Flash Lite" copy to match.
+1. When the new AI app ships, replace `inProgress` in `data/projects.tsx` with its regular project entry (first in the list), and give it a `statusName` if OpenPing monitors it.
 2. Keep the shared files in sync with n8builds-web after any change there (`npm run check:sync`): the dino, the marquee and its tiles, and the tile list `data/stack.tsx` (edit it in n8builds-web, then copy it here).
 
 ### Blocked on the owner
 
-The owner's open steps (the rank, trailers and echo subdomains, Render auto-deploy, GeminiGPT's key, the resume, Lifeline's certificate, the Sentry button) are in [../OWNER-TODO.md](../OWNER-TODO.md); keep that file current instead of listing them here.
+The owner's open steps (the rank and trailers subdomains, the resume, Lifeline's certificate, the Sentry button, the parked primeshows.live link) are in [../OWNER-TODO.md](../OWNER-TODO.md); keep that file current instead of listing them here.
 
 ## What this is
 
@@ -44,7 +44,7 @@ It funnels visitors to the two other sites:
 - `npm test` runs Playwright against a production build on port 4829 (it builds first, or reuses a server already running there locally).
   `E2E_PORT=4839 npm test` uses another port, so a running `npm run dev` on 4829 is not mistaken for the test build.
   No retries: a flaky test gets fixed.
-- Specs: `tests/consent.spec.ts` (the analytics consent banner), `tests/dino.spec.ts` (the dino game on the tech stack card: n8builds.dev's dino tests, kept in step with its `tests/e2e/ai-kit.spec.ts`), `tests/dino-music.spec.ts` (the dino game's music toggle and its sound checked offline, never out loud: n8builds.dev's `tests/e2e/dino-music.spec.ts`), `tests/home.spec.ts` (the n8builds card, and the n8builds.dev teaser's links), `tests/projects.spec.ts` (status pills, project rows and pages), `tests/seo.spec.ts` (titles, share cards, no em dashes, no Sentry example routes), `tests/web-vitals.spec.ts` (Web Vitals budgets and axe accessibility).
+- Specs: `tests/consent.spec.ts` (the analytics consent banner), `tests/dino.spec.ts` (the dino game on the tech stack card: n8builds.dev's dino tests, kept in step with its `tests/e2e/ai-kit.spec.ts`), `tests/dino-music.spec.ts` (the dino game's music toggle and its sound checked offline, never out loud: n8builds.dev's `tests/e2e/dino-music.spec.ts`), `tests/home.spec.ts` (the n8builds card, and the n8builds.dev teaser's links), `tests/projects.spec.ts` (the project rows and pages, the in-progress card, the retired apps' redirects, the status API), `tests/seo.spec.ts` (titles, share cards, no em dashes, no Sentry example routes), `tests/web-vitals.spec.ts` (Web Vitals budgets and axe accessibility).
 - The site scrolls smoothly (`scroll-smooth` on every element), so a test that scrolls must wait for the scroll to stop before hovering or clicking.
 - GitHub Actions (`.github/workflows/ci.yml`): lint, types and build, then the Playwright suite on the same five browsers as n8builds.dev (chromium, firefox, webkit, mobile-chrome, mobile-safari) inside Playwright's Docker image (its version read from `package-lock.json`).
   WebKit and mobile Safari each run as two shards with one worker: they have no GPU in CI, so their frames come slowly (about 10 fps on this page), and competing workers make that worse.
@@ -58,8 +58,9 @@ It funnels visitors to the two other sites:
 
 - **Separate from n8builds.dev, on purpose** (confirmed 2026-10-25): different readers (people hiring vs. people following the work), and a repo people can be sent to on its own.
   It is not a page of n8builds.dev.
-- **Featured projects** are Echo, Scout, GeminiGPT, Net-Trailer and Portfolio Rank, in that order (owner, 2026-11-08).
-  Echo, Scout and GeminiGPT will later merge into one AI app; until then they stay three rows.
+- **Featured projects** (owner, 2026-11-08): the new AI app's "In progress" card first, then Net-Trailer and Portfolio Rank, then the n8builds.dev teaser.
+  The "In progress" card (`inProgress` in `data/projects.tsx`, `components/Projects/InProgressCard.tsx`) has a neutral label ("New AI app - in progress"), one sentence on what it will do, three chips, and no name, links or screenshots; the real project row replaces it when the app ships.
+  Echo, Scout and GeminiGPT were retired that day: their pages, screenshots and status wiring are gone, and `/projects/echo|scout|geminigpt` redirect (308) to `/#projects` (`next.config.mjs`), since n8builds.dev and old shares link them.
   Portfolio Rank moved here from n8builds.dev's featured rows: its card credits Emma Bostian's developer-portfolios list, and its page credits her and Ali Spittel and invites visitors to vote and add their portfolio.
   Each is a row after n8builds.dev's Lab (2026-10-26): screenshots with left/right, its icon, a short `summary`, Live demo / Source / Full story, all in the app's own colour (`lib/accents.ts`).
   The cards are tight (owner, 2026-11-08): the tech pills and feature checks live on the project's page (`/projects/<slug>`), not the card.
@@ -113,12 +114,13 @@ It funnels visitors to the two other sites:
 ## Live-demo status (OpenPing)
 
 - The pill shows the state, not the uptime number: the demos are monitored on weekdays only, on purpose (2026-10-26); a note says they sleep on weekends.
-- Echo, Scout and GeminiGPT show a status pill on their cards and pages: "Live demo" and Online, Slow, Down, Maintenance or Asleep, linking to https://openping.n8builds.dev/status.
+- No project on the site is monitored since Echo, Scout and GeminiGPT were retired (2026-11-08); the wiring stays for the new AI app.
+  A project with a `statusName` shows a status pill on its card and page: "Live demo" and Online, Slow, Down, Maintenance or Asleep, linking to https://openping.n8builds.dev/status, and the projects intro shows the weekday note.
 - `app/api/status` reads OpenPing's public feed on the server (it sends no CORS headers) and caches it a minute; `lib/status.ts` maps it; `components/Projects/StatusPill.tsx` shows it.
 - A project opts in with `statusName` in `data/projects.tsx` (its monitor's name on the status page).
 - OpenPing checks the Render demos on weekdays only. Its feed keeps the last state through off-hours, so a feed older than 30 minutes reads as Asleep (the demos sleep when nothing keeps them awake); a real outage still shows as Down.
 - The pill shows nothing until the status arrives or if it can't be read, and its row is reserved so it moves nothing.
-- Tests use fixed statuses (`STATUS_FIXTURE=1`, set by `playwright.config.ts`); `npm run test:unit` covers the mapping.
+- Tests use fixed statuses (`STATUS_FIXTURE=1`, set by `playwright.config.ts`, named "Demo Up", "Demo Asleep" and "Demo Down"); `npm run test:unit` covers the mapping.
 
 ## The n8builds.dev teaser
 
@@ -137,7 +139,7 @@ Under the projects, `components/Projects/BuildsTeaser.tsx` shows n8builds.dev's 
 
 1. **Sentry's feedback button** is dark and hidden below 768px; decide whether to keep it at all.
 2. **Streaming links** once streaming starts (see Conventions).
-3. GeminiGPT placeholder screenshots; Tech for Pros' own screenshots (the workshop card shows the landscaping template for now); the resume PDF's old portfolio URL (owner).
+3. Tech for Pros' own screenshots (the workshop card shows the landscaping template for now); the resume PDF's old portfolio URL (owner).
 4. Deferred dependency major: TypeScript 6.
 
 ## File map

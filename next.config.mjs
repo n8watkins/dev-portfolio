@@ -68,6 +68,13 @@ const nextConfig = {
         destination: '/',
         permanent: false,
       },
+      // Echo, Scout and GeminiGPT were retired on 2026-11-08 (one new AI app
+      // replaces them); old links land on the projects instead of a 404.
+      {
+        source: '/projects/:slug(echo|scout|geminigpt)',
+        destination: '/#projects',
+        permanent: true,
+      },
       {
         source: '/blog/:path*',
         destination: '/',
