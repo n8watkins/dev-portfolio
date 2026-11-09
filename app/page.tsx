@@ -13,6 +13,7 @@ import dynamic from 'next/dynamic'
 // Only lazy load truly below-the-fold components
 const Projects = dynamic(() => import('@/components/Projects'))
 const Experience = dynamic(() => import('@/components/sections/Experience'))
+const StackRow = dynamic(() => import('@/components/sections/StackRow'))
 const Footer = dynamic(() => import('@/components/layout/Footer'))
 const ScrollToTop = dynamic(() => import('@/components/ui/ScrollToTop'), { ssr: false })
 
@@ -39,7 +40,8 @@ export default function Home() {
     let frame = 0
     const tryScroll = () => {
       const el = document.getElementById(target!)
-      if (el && el.offsetHeight > 400) {
+      // A lazy section is a short placeholder until it renders.
+      if (el && el.offsetHeight > 200) {
         window.scrollTo({
           top: el.getBoundingClientRect().top + window.scrollY - 80,
           behavior: 'instant',
@@ -66,12 +68,6 @@ export default function Home() {
         <FloatingNav navItems={navItems} />
 
         <div className="m-auto max-w-md sm:max-w-xl md:max-w-3xl lg:max-w-4xl xl:max-w-5xl 2xl:max-w-6xl">
-          <section id="about" aria-label="About me">
-            <SectionErrorBoundary sectionName="About Section">
-              <AboutTeaser />
-            </SectionErrorBoundary>
-          </section>
-
           <section id="projects" aria-label="Projects">
             <SectionErrorBoundary sectionName="Projects Section">
               <Projects />
@@ -80,7 +76,19 @@ export default function Home() {
 
           <section id="experience" aria-label="Work experience">
             <SectionErrorBoundary sectionName="Experience Section">
-              <Experience compact />
+              <Experience />
+            </SectionErrorBoundary>
+          </section>
+
+          <section id="stack" aria-label="My stack">
+            <SectionErrorBoundary sectionName="Stack Section">
+              <StackRow />
+            </SectionErrorBoundary>
+          </section>
+
+          <section id="about" aria-label="About me">
+            <SectionErrorBoundary sectionName="About Section">
+              <AboutTeaser />
             </SectionErrorBoundary>
           </section>
 

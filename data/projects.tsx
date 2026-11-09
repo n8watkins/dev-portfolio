@@ -21,6 +21,11 @@ export const projects: Project[] = [
     subTitle: 'AI-Powered Netflix Clone',
     des: `A Netflix-style streaming app with an AI brain. Describe what you're in the mood for in plain language and Gemini turns it into tailored picks, while a personalized "Recommended For You" engine learns from your watch history and feedback. Plus TMDB-powered browsing and trailers, secure auth, and Firebase-backed persistence.`,
     summary: `A Netflix-style streaming app with an AI brain: describe your mood in plain language and Gemini turns it into picks, while a recommender learns your taste and explains each one.`,
+    clip: {
+      src: '/projects/clips/net-trailer.mp4',
+      poster: '/projects/clips/net-trailer-poster.webp',
+      alt: "Net-Trailer's home page: the featured titles, then the Trending and Top Rated rows",
+    },
     images: [
       { src: '/projects/net-trailer/1-app.webp', alt: 'Net-Trailer: a featured title with Play and More Info' },
       { src: '/projects/net-trailer/2-rows.webp', alt: 'Net-Trailer: Trending and Top Rated rows from TMDB' },
@@ -101,6 +106,11 @@ export const projects: Project[] = [
     subTitle: 'The Developer Portfolio Leaderboard',
     des: `2,000+ developer portfolios from Emma Bostian's open developer-portfolios list, ranked by head-to-head votes instead of A to Z. Pick the better of two in about five seconds, browse every site with a real screenshot, Lighthouse scores and an AI review, or add your own portfolio and see how it compares.`,
     summary: `2,000+ developer portfolios from Emma Bostian's open list, ranked by head-to-head votes instead of A to Z. Vote on a matchup, or add your own portfolio and see how it compares.`,
+    clip: {
+      src: '/projects/clips/portfolio-rank.mp4',
+      poster: '/projects/clips/portfolio-rank-poster.webp',
+      alt: 'Portfolio Rank: voting between two portfolios, head to head',
+    },
     images: [
       { src: '/projects/portfolio-rank/1-home.webp', alt: 'Portfolio Rank: the best developer portfolios, ranked, with the top ranked right now' },
       { src: '/projects/portfolio-rank/2-rank.webp', alt: 'Portfolio Rank: which portfolio is better? Two portfolios side by side' },

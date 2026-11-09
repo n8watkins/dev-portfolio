@@ -680,3 +680,66 @@ select:focus-visible {
 .consent-out {
   animation: consent-out 0.22s cubic-bezier(0.4, 0, 1, 1) both;
 }
+
+/* The contact card's border: a slow light running around it (owner,
+   2026-11-08). The angle is a registered property so it can animate; under
+   reduced motion the light rests at the top, and it pauses off screen. */
+@property --contact-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+.contact-glow {
+  background: conic-gradient(
+    from var(--contact-angle),
+    rgb(34 211 238 / 0.22) 0deg,
+    rgb(56 189 248 / 0.22) 250deg,
+    rgb(125 211 252 / 0.95) 300deg,
+    rgb(37 99 235 / 0.55) 330deg,
+    rgb(34 211 238 / 0.22) 360deg
+  );
+  animation: contact-orbit 10s linear infinite;
+}
+[data-offscreen].contact-glow {
+  animation-play-state: paused;
+}
+@keyframes contact-orbit {
+  to {
+    --contact-angle: 360deg;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .contact-glow {
+    animation: none;
+  }
+}
+
+/* The About page's stickers (components/about/Decals.tsx): a slow drift and
+   sway around their resting tilt. Still under reduced motion; paused while
+   their scene is off screen (PauseOffscreen marks it data-offscreen). */
+.decal {
+  transform: rotate(var(--tilt, 0deg));
+  animation-name: decal-drift;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  animation-direction: alternate;
+}
+[data-offscreen] .decal {
+  animation-play-state: paused;
+}
+@keyframes decal-drift {
+  0% {
+    transform: translate(0, 0) rotate(var(--tilt, 0deg));
+  }
+  50% {
+    transform: translate(6px, -9px) rotate(calc(var(--tilt, 0deg) + 5deg));
+  }
+  100% {
+    transform: translate(-5px, 4px) rotate(calc(var(--tilt, 0deg) - 4deg));
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .decal {
+    animation: none;
+  }
+}

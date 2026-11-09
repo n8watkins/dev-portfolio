@@ -1,24 +1,30 @@
 import { test, expect } from '@playwright/test'
 
 /**
- * The n8builds.dev card in "My workshop": where I build in public, all open
- * source, with the case study and the source a click away (owner, 2026-10-27).
+ * Every page's footer carries the hero's two cards, n8builds.dev (where I
+ * build in public) and Tech for Pros (where I work), above the site map
+ * (owner, 2026-11-08; the big workshop pitches are gone).
  */
-test('the n8builds card says where I build and links to the case study and the source', async ({
-  page,
-}) => {
-  await page.goto('/about')
-  const card = page.getByRole('article', { name: 'Where I build in public' })
-  const link = card.getByRole('link', { name: "How it's built and tested" })
-  await link.scrollIntoViewIfNeeded()
-  await expect(link).toHaveAttribute('href', 'https://n8builds.dev/builds/n8builds')
-  await expect(card.getByRole('link', { name: /Source code/ })).toHaveAttribute(
-    'href',
-    'https://github.com/n8watkins/n8builds-web'
-  )
-  await expect(card.getByText(/All open source, this portfolio included/)).toBeVisible()
-  // It talks about where I build, not the CI behind it.
-  await expect(card).not.toContainText('five browsers')
+test("every page's footer has my two sites' cards and the site map", async ({ page }) => {
+  for (const path of ['/', '/projects', '/stack', '/about', '/projects/net-trailer']) {
+    await page.goto(path)
+    const footer = page.locator('footer')
+    await expect(footer.getByRole('link', { name: /I build in public\s*n8builds\.dev/ }), path).toHaveAttribute(
+      'href',
+      /n8builds\.dev/
+    )
+    await expect(footer.getByRole('link', { name: /Where I work\s*techforpros\.com/ }), path).toHaveAttribute(
+      'href',
+      'https://techforpros.com'
+    )
+    const map = footer.getByRole('navigation', { name: 'Site map' })
+    for (const name of ['Projects', 'Stack', 'About me', 'Resume', 'Contact', 'Build log']) {
+      await expect(map.getByRole('link', { name: new RegExp(`^${name}`) }).first(), `${path} ${name}`).toBeAttached()
+    }
+  }
+  // No workshop pitches left anywhere.
+  await page.goto('/')
+  await expect(page.getByRole('article', { name: /Run a service business/ })).toHaveCount(0)
 })
 
 /**
@@ -51,46 +57,9 @@ test('the n8builds.dev teaser links each build to its n8builds.dev page', async 
 })
 
 /**
- * The map card's arcs (components/ui/BentoComponents/MapAnimations.tsx) draw
- * themselves in a GSAP loop. Under reduced motion they show fully drawn and
- * hold still; otherwise they keep drawing.
- */
-test.describe('the map arcs', () => {
-  const offsets = (page: import('@playwright/test').Page) =>
-    page
-      .locator('.neon-path')
-      .evaluateAll((paths) => paths.map((p) => getComputedStyle(p).strokeDashoffset))
-
-  test('hold still, fully drawn, under reduced motion', async ({ page }) => {
-    await page.emulateMedia({ reducedMotion: 'reduce' })
-    await page.goto('/about')
-    const arcs = page.locator('.neon-path')
-    await arcs.first().scrollIntoViewIfNeeded()
-    await expect(arcs).toHaveCount(3)
-    const before = await offsets(page)
-    await page.waitForTimeout(1500)
-    expect(await offsets(page)).toEqual(before)
-    expect(
-      before.every((o) => parseFloat(o) === 0),
-      `offsets ${before}`
-    ).toBe(true)
-  })
-
-  test('keep drawing when motion is allowed', async ({ page }) => {
-    await page.emulateMedia({ reducedMotion: 'no-preference' })
-    await page.goto('/about')
-    const arcs = page.locator('.neon-path')
-    await arcs.first().scrollIntoViewIfNeeded()
-    await expect(arcs).toHaveCount(3)
-    const before = await offsets(page)
-    await expect.poll(() => offsets(page)).not.toEqual(before)
-  })
-})
-
-/**
  * Tech for Pros (techforpros.com) is where I work now (owner, 2026-11-01): the
- * hero's card and the workshop's card name the site, show its mark and link
- * to it, and the hero card's tag fits on one line.
+ * hero's card names the site, shows its mark and links to it, and its tag fits
+ * on one line.
  */
 test("Tech for Pros' cards name techforpros.com, show its mark and link to it", async ({
   page,
@@ -104,34 +73,24 @@ test("Tech for Pros' cards name techforpros.com, show its mark and link to it", 
   await expect(tag).toBeVisible()
   const box = await tag.boundingBox()
   expect(box!.height).toBeLessThan(30)
-
-  // The workshop cards are on the About page.
-  await page.goto('/about')
-  const card = page.getByRole('article', { name: /Run a service business/ })
-  await card.scrollIntoViewIfNeeded()
-  await expect(card.getByText('techforpros.com', { exact: true })).toBeVisible()
-  await expect(card.locator('img[src*="techforpros-icon"]')).toHaveCount(1)
-  await expect(card.getByRole('link', { name: /Visit techforpros\.com/ })).toHaveAttribute(
-    'href',
-    'https://techforpros.com'
-  )
 })
 
 /**
- * Appturnity appears only as a past role in Experience (Full Stack Developer,
- * with its client sites), never anywhere else and never linked (owner,
- * 2026-11-01).
+ * Appturnity appears only as a past role in Experience, never anywhere else and
+ * never linked (owner, 2026-11-01). Since 2026-11-08 only Tech for Pros links
+ * out from Experience (with a link icon); every other company is plain text,
+ * and no client site is linked anywhere.
  */
-for (const path of ['/', '/about']) test(`Appturnity shows only as a past role in Experience, never linked (${path})`, async ({ page }) => {
-  await page.goto(path)
+test('Experience links only Tech for Pros, and Appturnity shows only as a past role', async ({
+  page,
+}) => {
+  await page.goto('/')
   await expect(page.locator('a[href*="appturnity"]')).toHaveCount(0)
   const experience = page.locator('#experience')
   const card = experience.locator('div.group\\/exp', { hasText: 'Appturnity' })
   await expect(card).toHaveCount(1)
   await expect(card.getByRole('heading', { name: 'Full Stack Developer', exact: true })).toBeAttached()
   await expect(card.getByText('Appturnity', { exact: true })).toBeAttached()
-  // On the home page the client links sit folded in "What I did".
-  await expect(card.locator('a[href="https://comfort1hvac.com/"]')).toHaveText(/comfort1hvac\.com/)
   // Nowhere outside Experience.
   const outside = await page.evaluate(() => {
     const exp = document.getElementById('experience')!
@@ -144,16 +103,39 @@ for (const path of ['/', '/about']) test(`Appturnity shows only as a past role i
   })
   expect(outside).toEqual([])
   await expect(page.locator('head')).not.toContainText(/appturnity/i)
-  await expect(experience.getByRole('link', { name: 'Tech for Pros' })).toHaveAttribute(
-    'href',
-    'https://techforpros.com'
-  )
-  const about = page.locator(path === '/' ? '#about' : 'main section').first()
+
+  const links = experience.locator('a[href]')
+  await expect(links).toHaveCount(1)
+  await expect(links.first()).toHaveAttribute('href', 'https://techforpros.com')
+  await expect(links.first().locator('svg')).toHaveCount(1)
+  for (const site of ['riverwoodranch', 'lifelineclinicallab', 'comfort1hvac', 'primeshows', 'arroyosecogc', 'thecoderschool']) {
+    await expect(page.locator(`a[href*="${site}"]`), site).toHaveCount(0)
+  }
+
+  const about = page.locator('#about')
   await expect(about).toContainText('three years building client apps at a consulting firm')
   await expect(about.getByRole('link', { name: 'Tech for Pros' })).toHaveAttribute(
     'href',
     'https://techforpros.com'
   )
+})
+
+test('"Expand all" opens every role\'s "What I did" in place, and closes them again', async ({ page }) => {
+  await page.goto('/')
+  const experience = page.locator('#experience')
+  const details = experience.locator('details')
+  await experience.getByRole('button', { name: 'Expand all' }).scrollIntoViewIfNeeded()
+  await expect(details.first()).toBeAttached()
+  const count = await details.count()
+  expect(count).toBeGreaterThan(3)
+  await expect(experience.getByText(/Building Tech for Pros, a SaaS/)).toBeHidden()
+  await experience.getByRole('button', { name: 'Expand all' }).click()
+  for (let i = 0; i < count; i++) await expect(details.nth(i)).toHaveAttribute('open', '')
+  await expect(experience.getByText(/Building Tech for Pros, a SaaS/)).toBeVisible()
+  // The work's screenshots come with it, as pictures only.
+  await expect(experience.getByRole('img', { name: /Riverwood Ranch/ })).toBeVisible()
+  await experience.getByRole('button', { name: 'Collapse all' }).click()
+  for (let i = 0; i < count; i++) await expect(details.nth(i)).not.toHaveAttribute('open', '')
 })
 
 /**

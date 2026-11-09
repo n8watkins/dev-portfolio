@@ -50,7 +50,7 @@ test('a project page is titled after the project, with a short share description
 })
 
 test('no visible copy uses an em dash', async ({ page }) => {
-  for (const path of ['/', '/projects/net-trailer', '/projects/portfolio-rank']) {
+  for (const path of ['/', '/projects', '/stack', '/about', '/projects/net-trailer', '/projects/portfolio-rank']) {
     await page.goto(path)
     // Sections fade in on scroll; walk the page so all of them render.
     await page.evaluate(async () => {

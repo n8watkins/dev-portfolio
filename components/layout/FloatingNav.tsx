@@ -1,3 +1,5 @@
+'use client'
+
 import React, { useState } from 'react'
 import { motion } from 'motion/react'
 import { Link } from 'react-scroll'
@@ -9,10 +11,10 @@ const cn = (...classes: (string | boolean | undefined | null)[]): string =>
   classes.filter(Boolean).join(' ')
 
 /**
- * A nav item: `link` scrolls to a section on this page; `href` goes to
- * another page (the About page), and `home` goes to a home page section from
- * another page (it leaves a note for the home page to scroll there, as "Back
- * to projects" does, so no "#section" stays in the address).
+ * A nav item: `link` scrolls to a section on this page; `href` with `home`
+ * goes to a home page section from another page (it leaves a note for the home
+ * page to scroll there, as "Back to projects" does, so no "#section" stays in
+ * the address).
  */
 export type NavItem = {
   name: string

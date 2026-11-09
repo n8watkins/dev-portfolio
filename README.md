@@ -7,9 +7,9 @@ The build-in-public workshop (every build, the build log, notes and streams) is 
 
 ## What's on it
 
-- **Projects:** an "In progress" card for the AI app I'm building now, then Net-Trailer and Portfolio Rank, each as a row after n8builds.dev's Lab (screenshots with left/right and a short summary, in the app's own colour), and a blog-style detail page at `/projects/<slug>` with the tech and features.
+- **Projects:** an "In progress" card for the AI app I'm building now, then Net-Trailer and Portfolio Rank as big cards with a looping clip of each demo, `/projects` with every project in detail, and a blog-style page per project at `/projects/<slug>`.
 - **Building in public:** a teaser under the projects that shows n8builds.dev's builds one at a time, each linking to its live site and its page there.
-- **About, experience and contact:** a short About and a compact timeline on the home page, and the full story, how I work, the stack, the resume and every role on `/about`, with links out to n8builds.dev and techforpros.com.
+- **Pages:** the home page (projects first, then experience, a stack row, a short About and contact), `/projects` (every project in detail), `/stack` (the stack by layer, and the dino game) and `/about` (the story in photos).
 - **Share cards:** generated at build time (`app/opengraph-image.tsx`), with titles and descriptions kept in one place (`lib/seo.ts`).
 
 ## Stack

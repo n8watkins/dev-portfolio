@@ -44,7 +44,7 @@ It funnels visitors to the two other sites:
 - `npm test` runs Playwright against a production build on port 4829 (it builds first, or reuses a server already running there locally).
   `E2E_PORT=4839 npm test` uses another port, so a running `npm run dev` on 4829 is not mistaken for the test build.
   No retries: a flaky test gets fixed.
-- Specs: `tests/consent.spec.ts` (the analytics consent banner), `tests/dino.spec.ts` (the dino game on the tech stack card: n8builds.dev's dino tests, kept in step with its `tests/e2e/ai-kit.spec.ts`), `tests/dino-music.spec.ts` (the dino game's music toggle and its sound checked offline, never out loud: n8builds.dev's `tests/e2e/dino-music.spec.ts`), `tests/home.spec.ts` (the n8builds card, and the n8builds.dev teaser's links), `tests/projects.spec.ts` (the project rows and pages, the in-progress card, the retired apps' redirects, the status API), `tests/seo.spec.ts` (titles, share cards, no em dashes, no Sentry example routes), `tests/web-vitals.spec.ts` (Web Vitals budgets and axe accessibility).
+- Specs: `tests/consent.spec.ts` (the analytics consent banner), `tests/dino.spec.ts` (the dino game on /stack: n8builds.dev's dino tests, kept in step with its `tests/e2e/ai-kit.spec.ts`), `tests/dino-music.spec.ts` (the dino game's music toggle and its sound checked offline, never out loud: n8builds.dev's `tests/e2e/dino-music.spec.ts`), `tests/home.spec.ts` (the n8builds card, and the n8builds.dev teaser's links), `tests/about.spec.ts` (the About page, the nav from subpages, the sitemap), `tests/stack.spec.ts` (the stack row, /stack and its play area), `tests/projects.spec.ts` (the project cards, /projects and the project pages, the in-progress card, the retired apps' redirects, the status API), `tests/seo.spec.ts` (titles, share cards, no em dashes, no Sentry example routes), `tests/web-vitals.spec.ts` (Web Vitals budgets and axe accessibility).
 - The site scrolls smoothly (`scroll-smooth` on every element), so a test that scrolls must wait for the scroll to stop before hovering or clicking.
 - GitHub Actions (`.github/workflows/ci.yml`): lint, types and build, then the Playwright suite on the same five browsers as n8builds.dev (chromium, firefox, webkit, mobile-chrome, mobile-safari) inside Playwright's Docker image (its version read from `package-lock.json`).
   WebKit and mobile Safari each run as two shards with one worker: they have no GPU in CI, so their frames come slowly (about 10 fps on this page), and competing workers make that worse.
@@ -62,9 +62,7 @@ It funnels visitors to the two other sites:
   The "In progress" card (`inProgress` in `data/projects.tsx`, `components/Projects/InProgressCard.tsx`) has a neutral label ("New AI app - in progress"), one sentence on what it will do, three chips, and no name, links or screenshots; the real project row replaces it when the app ships.
   Echo, Scout and GeminiGPT were retired that day: their pages, screenshots and status wiring are gone, and `/projects/echo|scout|geminigpt` redirect (308) to `/#projects` (`next.config.mjs`), since n8builds.dev and old shares link them.
   Portfolio Rank moved here from n8builds.dev's featured rows: its card credits Emma Bostian's developer-portfolios list, and its page credits her and Ali Spittel and invites visitors to vote and add their portfolio.
-  Each is a row after n8builds.dev's Lab (2026-10-26): screenshots with left/right, its icon, a short `summary`, Live demo / Source / Full story, all in the app's own colour (`lib/accents.ts`).
-  The cards are tight (owner, 2026-11-08): the tech pills and feature checks live on the project's page (`/projects/<slug>`), not the card.
-  Everything else is in the n8builds.dev teaser under them (see below).
+  On the home page each is one big, full-width card (see "The layout" below); `/projects` shows every project at full size; `/projects/<slug>` tells its full story. Colours per app in `lib/accents.ts`.
 - **"Message me"** sits beside Resume in the top right corner (from 768px; icon only below 1280px) and opens n8builds.dev's contact form (https://n8builds.dev/#contact) (owner, 2026-11-08).
 - **Titles and share cards** live in `lib/seo.ts`: "Nathan Watkins | Full-Stack Developer" for the home page (the headline dropped "AI" on 2026-10-26), "<project> - <subtitle> | Nathan Watkins" for project pages, share descriptions of at most 120 characters.
   The share image is generated from `app/opengraph-image.tsx`; there is no saved screenshot to go stale.
@@ -89,32 +87,41 @@ It funnels visitors to the two other sites:
   The master is `public/brand/n8-mark.png`; `node scripts/gen-brand-icons.mjs` makes the favicon, Apple and 512px icons in `public/tab/` from it (the mark on a dark navy rounded tile).
   The corner link to n8builds.dev shows the mark on its own; the admin dashboard still has the old N8 mark.
 
-## Layout: home plus an About page (variant B, 2026-11-08)
+## The layout (owner, 2026-11-08)
 
-- The home page is work-first: the hero, a short About teaser with "More about me" (`components/sections/AboutTeaser.tsx`), the projects, the n8builds.dev teaser, a compact experience timeline (titles, companies and years, each role's bullets folded into "What I did", `<Experience compact />`), and contact.
-- `/about` (`app/about/page.tsx`, `components/AboutPage.tsx`) has the full story beside two portraits (`AboutStory`), "How I work" (`HowIWork`), the bento with the tech stack, the map and the resume card (`StackGrid`), every role in full, and the workshop cards (Tech for Pros and n8builds.dev).
-  Its sections are imported, not lazy, so `/about#experience` lands on the section.
-- The nav's About goes to `/about`; on `/about` the nav's other items go home and leave a note for the home page to scroll to the section (`home` in `data/navigation.tsx`, as "Back to projects" does).
-  `/about` is in the sitemap; its old redirect to `/` is gone.
-- The dino tests run on `/about` here (`STACK_PAGE` in `tests/dino.spec.ts` and `tests/dino-music.spec.ts`); n8builds-web's copies run on its home page.
+The owner picked layout B (a work-first home page plus detail pages) over A (one long page) and asked for this rework, bringing in A's visuals.
+
+- **Home**, projects first: the hero, Projects, Experience, Stack, a short About, Contact.
+  The nav (on every page) jumps to these sections; on other pages it goes home first (`subpageNavItems` in `data/navigation.tsx`). The detail pages are reached from the sections.
+- **Projects**: the "In progress" card, then each project as a big, full-width card (`components/Projects/ProjectShowcase.tsx`): its looping clip (or first screenshot) across the top, then icon, name, a sentence or two, Live demo and Full story. "Detailed view" (right of the heading) opens `/projects` (`components/ProjectsPage.tsx`, `ProjectFull.tsx`): every screenshot, the whole description, features, tech, and Live demo / Source / Full story.
+  The n8builds.dev teaser comes after them, tightened (no tag pills, smaller screenshot and padding).
+- **Clips** (from layout A): `clip` in `data/projects.tsx`, files in `public/projects/clips/` (about 7 seconds, about 200 KB, H.264 MP4 and a WebP poster), played by `components/Projects/ProjectClip.tsx`: loaded only near the screen, paused off screen, the poster under reduced motion, a pause button.
+  Record one with Playwright's `recordVideo` at 1280x800, then trim, speed up and encode with ffmpeg to 960x600 at 24 fps (`libx264 -crf 30 -preset slow -movflags +faststart`, no audio).
+  Net-Trailer's clip predates its rebrand (n8watkins/net_trailers#20) and shows browsing (its AI search answered "API key not valid" on 2026-11-08): re-record it once that lands.
+- **Experience** stays on the home page, compact: title, company and dates per role, "What I did" folded, and "Expand all" on the right to open every role in place.
+  Only Tech for Pros links out (with a link icon); every other company is plain text, and no client sites are linked. A role's small screenshots (`visuals` in `data/experience.tsx`, pictures only) show when it is opened.
+- **Stack**: a compact row of a dozen logos on the home page (`components/sections/StackRow.tsx`, `stackHighlights`) with "See my stack" to `/stack` (`components/StackPage.tsx`): the dino game as a full-width play area (30rem tall on phones), then every tool by layer with its one-line reason (`data/stackLayers.ts` sorts `data/stack.tsx`'s tiles by name; that file stays byte-identical with n8builds-web).
+  The bento (map, "Ready to relocate", resume card, "Have a project?") is gone; "ready to relocate" is a line in About, and the resume is the header button.
+- **About** (`/about`, `components/AboutPage.tsx`) is only about the owner: one portrait (the photo, until the owner picks), then the story in three photo scenes (at work, Los Angeles, the setup) from `data/about.tsx`, with stickers drifting around them (`components/about/Decals.tsx`, `.decal` in `app/globals.css`: still under reduced motion, paused off screen, absolute so nothing shifts).
+  The scene photos are placeholders until the owner sends them (OWNER-TODO item 8): set `src` in `data/about.tsx`.
+- **Footer** on every page (`components/layout/Footer.tsx`): the contact card, whose border carries a slow light around it (`.contact-glow`, still under reduced motion, paused off screen), the hero's two cards (n8builds.dev, Tech for Pros), and a site map (home sections, the pages, Resume, my sites).
+- The workshop section (the big Tech for Pros and n8builds.dev pitches) is gone, and so is the compact project-page footer.
+- The dino tests run on `/stack` (`STACK_PAGE` in `tests/dino.spec.ts` and `tests/dino-music.spec.ts`); n8builds-web's copies run on its home page.
 
 ## Tech for Pros (owner, 2026-11-01)
 
-- Tech for Pros (techforpros.com), my SaaS for service businesses, is where I work now: the hero card ("Where I work"), the workshop card, the Experience entry, About and both footers name techforpros.com and link to it.
+- Tech for Pros (techforpros.com), my SaaS for service businesses, is where I work now: the hero card ("Where I work"), the footer's card, the Experience entry, About and the footer name techforpros.com and link to it.
 - Its mark (a worker in a cap holding a blue gear) is `public/brand/techforpros-icon.webp`, shown on a light tile by `components/ui/SiteIcon.tsx`; `lib/sites.ts` holds both sites' names, URLs and marks.
-- Appturnity appears only as a past role in Experience (Full Stack Developer, March 2023 to June 2026, with its screenshot and client-site links) and is never linked; About describes those years as building client apps at a consulting firm, without naming it. `tests/home.spec.ts` checks both.
-- The footer's site-map column is "My sites" (both sites with their marks), and both footers end with "Built in public at n8builds.dev" (`components/ui/BuiltInPublic.tsx`).
-- The workshop card still reuses the landscaping template screenshots until Tech for Pros has its own.
+- Appturnity appears only as a past role in Experience (Full Stack Developer, March 2023 to June 2026, with its client sites' screenshots, no links) and is never linked; About describes those years as building client apps at a consulting firm, without naming it. `tests/home.spec.ts` checks both.
+- The footer's site-map column "My sites" lists both sites with their marks, and the footer ends with "Built in public at n8builds.dev" (`components/ui/BuiltInPublic.tsx`).
+- Tech for Pros' Experience entry shows the landscaping template until Tech for Pros has its own screenshots.
 
 ## The 2026-10-27 refresh (owner's calls)
 
 - The hero's two cards (n8builds.dev, Tech for Pros since 2026-11-01) live in `components/ui/SiteDoors.tsx` and repeat in the footer, beside a site map.
-- About fades in once scrolling starts; only its heading shows on the first screen.
 - Projects show four AI features each; Net-Trailer has no payments copy; screenshots glow in the project's colour on hover (no zoom) and their dots are buttons.
-- Experience hover images are framed per item (`hoverFrame` in `data/experience.tsx`) with one even glow (`hoverGlow`).
-- The workshop section is "Beyond the resume / My workshop", one name line per card.
 - Contact: the address, LinkedIn and X, then "Or message me through n8builds.dev" (its contact form).
-- The tech stack card shows the same tiles as n8builds.dev's AI kit (`data/stack.tsx`, shared byte for byte), in two rows here: the AI kit, then the dev stack (three rows there) (owner, 2026-10-29).
+- The tech stack panel (now on `/stack`) shows the same tiles as n8builds.dev's AI kit (`data/stack.tsx`, shared byte for byte), in two rows here: the AI kit, then the dev stack (three rows there) (owner, 2026-10-29).
   Hovering a tile shows what it is for, a tap does on phones, and a mouse click does nothing (only hovering pauses a row).
   Row loop times come from the tile count (`rowDuration`), so every row moves at the same pace.
   The dino and its 30-second catch game are byte-identical with n8builds.dev's. So is its optional music ("Desert Run", a toggle in the card's top right corner, off by default, never autoplayed).
@@ -148,16 +155,17 @@ Under the projects, `components/Projects/BuildsTeaser.tsx` shows n8builds.dev's 
 
 1. **Sentry's feedback button** is dark and hidden below 768px; decide whether to keep it at all.
 2. **Streaming links** once streaming starts (see Conventions).
-3. Tech for Pros' own screenshots (the workshop card shows the landscaping template for now); the resume PDF's old portfolio URL (owner).
+3. Tech for Pros' own screenshots (its Experience entry shows the landscaping template for now); the About page's photos and portrait choice; the resume PDF's old portfolio URL (owner).
 4. Deferred dependency major: TypeScript 6.
 
 ## File map
 
 - `lib/seo.ts`: site address, titles, descriptions, `shareSummary`.
 - `app/layout.tsx`: metadata, fonts, GA snippet. `app/opengraph-image.tsx` (+ `twitter-image.tsx`): the share card.
-- `components/Projects/ProjectCard.tsx`, `ProjectGallery.tsx`, `lib/accents.ts`: the project rows.
+- `components/Projects/ProjectShowcase.tsx` (home cards), `ProjectFull.tsx` (/projects), `ProjectClip.tsx`, `ProjectGallery.tsx`, `InProgressCard.tsx`, `lib/accents.ts`.
 - `components/Projects/ProjectDetail.tsx`, `app/projects/[slug]/page.tsx`: project detail pages.
 - `components/Projects/BuildsTeaser.tsx`: the n8builds.dev teaser. `components/sections/HeroGrid.tsx`: the hero grid (from n8builds.dev).
-- `components/sections/AboutTeaser.tsx`, `AboutStory.tsx`, `HowIWork.tsx`, `StackGrid.tsx` (the bento), `WorkshopCards.tsx`, `Experience.tsx`, `Hero.tsx`; `components/AboutPage.tsx`.
+- `components/sections/AboutTeaser.tsx`, `StackRow.tsx`, `Experience.tsx`, `Hero.tsx`; the pages `components/ProjectsPage.tsx`, `StackPage.tsx`, `AboutPage.tsx` (with `components/about/Decals.tsx`).
+- `data/projects.tsx`, `data/experience.tsx`, `data/about.tsx`, `data/stackLayers.ts`, `data/navigation.tsx`.
 - `data/projects.tsx`: project copy.
 - `components/ErrorBoundary.tsx`, `SectionErrorBoundary.tsx` report to Sentry.

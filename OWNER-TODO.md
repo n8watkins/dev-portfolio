@@ -98,3 +98,25 @@ Only you know whether the site moved or ended.
 
 **Unblocks.**
 No link from the portfolio to a parked domain.
+
+## 8. Photos for the About page
+
+- [ ] Pick the portrait, and send three photos for the About page's scenes.
+
+**What.**
+The About page (owner, 2026-11-08) uses one portrait and three photo scenes; until the photos arrive, the scenes show placeholders ("Photo to come").
+
+**Steps.**
+
+1. Pick the portrait: the photo (`public/hero/portrait.jpg`, used for now) or the watercolor (`public/hero/portrait-watercolor.jpg`), or send a new one (4:5 portrait, at least 800x1000).
+2. Send three landscape photos, 4:3, at least 1200x900:
+   - **At work**: you at your desk, or with a client or team.
+   - **Los Angeles**: you outdoors somewhere in LA you like.
+   - **The setup**: the desk, screens, keyboard and mic you build and stream from.
+3. Tell Claude, who adds them to `public/about/` and sets each scene's `src` in `data/about.tsx`.
+
+**Why.**
+Only you have these photos.
+
+**Unblocks.**
+A finished About page.

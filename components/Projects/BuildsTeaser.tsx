@@ -24,7 +24,6 @@ interface Build {
   kind: string
   tagline: string
   desc: string
-  tags: string[]
   liveSite?: string
   /** A screenshot beside the copy (contain: a small popup, shown whole on a dark frame). */
   shot?: { src: string; alt: string; contain?: boolean }
@@ -44,7 +43,6 @@ const BUILDS: Build[] = [
     kind: 'Desktop app',
     tagline: 'Speech-to-text for Windows',
     desc: 'Hold a hotkey, talk and let go: your words land at the cursor in any app, transcribed by Whisper on your own PC.',
-    tags: ['Tauri', 'Rust', 'whisper.cpp'],
     liveSite: 'https://scribe.n8builds.dev',
     accent: {
       text: 'text-sky-300',
@@ -64,7 +62,6 @@ const BUILDS: Build[] = [
     kind: 'Web tool',
     tagline: 'Uptime monitoring on your own Cloudflare',
     desc: 'Watches live demos and sites without counting their scheduled off-hours as downtime.',
-    tags: ['Cloudflare Workers', 'D1', 'Hono', 'React'],
     liveSite: 'https://openping.n8builds.dev',
     accent: {
       text: 'text-emerald-300',
@@ -81,7 +78,6 @@ const BUILDS: Build[] = [
     kind: 'Web app',
     tagline: 'Personal UV planner',
     desc: 'The UV index is a number, not an answer. Solara turns live UV, your skin type and your sunscreen into safe sun windows.',
-    tags: ['Next.js', 'Firebase', 'Open-Meteo'],
     liveSite: 'https://solara-uv.web.app',
     accent: {
       text: 'text-orange-300',
@@ -102,7 +98,6 @@ const BUILDS: Build[] = [
     kind: 'Chrome extension',
     tagline: 'Local-first YouTube archiver',
     desc: 'Archive YouTube videos, playlists and whole channels with a local yt-dlp helper. Your library, on your own disk.',
-    tags: ['Chrome MV3', 'yt-dlp', 'React'],
     accent: {
       text: 'text-rose-300',
       glow: 'from-rose-400/[0.14]',
@@ -122,7 +117,6 @@ const BUILDS: Build[] = [
     kind: 'Chrome extension',
     tagline: 'Fully local read-aloud for Chrome',
     desc: 'Highlight text, right-click, and hear it read aloud by a Piper model running fully on your machine. No cloud, no keys.',
-    tags: ['Chrome MV3', 'Piper', 'React'],
     accent: {
       text: 'text-violet-300',
       glow: 'from-violet-400/[0.14]',
@@ -137,7 +131,6 @@ const BUILDS: Build[] = [
     kind: 'Chrome extension',
     tagline: 'One-keystroke YouTube to Gemini',
     desc: "On any YouTube video, press Alt+G: it opens Gemini with your saved prompt and the video, and submits. Too Long; Didn't Watch.",
-    tags: ['Chrome MV3', 'TypeScript', 'Vite'],
     accent: {
       text: 'text-orange-300',
       glow: 'from-orange-400/[0.14]',
@@ -231,15 +224,12 @@ export default function BuildsTeaser() {
             </span>
           </span>
         </a>
-        <p className="max-w-2xl text-sm text-slate-400 sm:text-base">
-          More of what I&apos;m building in public.
-        </p>
       </div>
 
       {/* One build at a time, in its own colour */}
       <div
         // On hover the card's edge and a soft glow pick up the current build's colour.
-        className="relative mt-5 overflow-hidden rounded-2xl border border-white/10 bg-white/3 p-5 transition-[border-color,box-shadow] duration-300 hover:border-[rgb(var(--build)/0.4)] hover:shadow-[0_0_44px_-16px_rgb(var(--build)/0.5)] sm:p-6"
+        className="relative mt-4 overflow-hidden rounded-2xl border border-white/10 bg-white/3 p-4 transition-[border-color,box-shadow] duration-300 hover:border-[rgb(var(--build)/0.4)] hover:shadow-[0_0_44px_-16px_rgb(var(--build)/0.5)] sm:p-5"
         style={{ '--build': build.accent.rgb } as React.CSSProperties}
         role="group"
         aria-roledescription="carousel"
@@ -251,7 +241,7 @@ export default function BuildsTeaser() {
         />
         <div
           key={build.slug}
-          className={`${dir > 0 ? 'teaser-in-r' : 'teaser-in-l'} relative grid items-center gap-6 md:grid-cols-[minmax(0,1.45fr)_minmax(0,1fr)] md:gap-8`}
+          className={`${dir > 0 ? 'teaser-in-r' : 'teaser-in-l'} relative grid items-center gap-5 md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)] md:gap-6`}
         >
           <div className="min-w-0">
             {/* Its icon beside its name, as on the project rows; the copy runs full width under them. */}
@@ -262,10 +252,10 @@ export default function BuildsTeaser() {
                 width={44}
                 height={44}
                 unoptimized={build.icon.endsWith('.svg')}
-                className="h-11 w-11 shrink-0 rounded-xl"
+                className="h-10 w-10 shrink-0 rounded-xl"
               />
               <div className="min-w-0">
-                <h3 className="text-2xl font-bold tracking-tight text-slate-50">
+                <h3 className="text-xl font-bold tracking-tight text-slate-50">
                   {build.wordmark ?? build.name}
                 </h3>
                 <p className={`text-sm font-semibold ${build.accent.text}`}>
@@ -273,20 +263,10 @@ export default function BuildsTeaser() {
                 </p>
               </div>
             </div>
-            <p className="mt-3 max-w-2xl text-[0.95rem] leading-relaxed text-slate-300">
+            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-300">
               {build.desc}
             </p>
-            <ul aria-label={`${build.name} is built with`} className="mt-3 flex flex-wrap gap-1.5">
-              {build.tags.map((tag) => (
-                <li
-                  key={tag}
-                  className="rounded-md border border-white/10 bg-white/4 px-2 py-1 font-mono text-xs text-slate-300"
-                >
-                  {tag}
-                </li>
-              ))}
-            </ul>
-            <div className="mt-4 flex flex-wrap gap-2">
+            <div className="mt-3 flex flex-wrap gap-2">
               {build.liveSite && (
                 <a
                   href={build.liveSite}
@@ -343,7 +323,7 @@ export default function BuildsTeaser() {
         </div>
 
         {/* The controls, centred: back, where you are, forward */}
-        <div className="relative mt-6 flex items-center justify-center gap-4">
+        <div className="relative mt-4 flex items-center justify-center gap-4">
           <ArrowButton side="prev" onClick={() => go(-1)} />
           <div className="flex items-center gap-1.5">
             {BUILDS.map((b, i) => (

@@ -81,24 +81,41 @@ test('a project page shows its screenshot whole, not cropped to a strip', async 
   }
 })
 
-test('a project row opens its page, its live demo and its source', async ({ page }) => {
+test('a project card opens its page and its live demo', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await projectsInView(page)
   const net = card(page, 'Net-Trailer')
   await expect(
     net.getByRole('link', { name: 'Try the Net-Trailer live demo (new tab)' })
   ).toHaveAttribute('href', 'https://net-trailers.vercel.app/')
-  await expect(
-    net.getByRole('link', { name: 'View Net-Trailer source on GitHub (new tab)' })
-  ).toHaveAttribute('href', /github\.com\/n8watkins\//)
-  // The card stays tight: the tech pills and feature checks are on the project's page.
+  // The card stays big and simple: the source, tech and features are on /projects and its page.
   await expect(net.getByRole('list', { name: 'What Net-Trailer does' })).toHaveCount(0)
-  await expect(net.getByRole('list', { name: 'Net-Trailer is built with' })).toHaveCount(0)
   await net.getByRole('link', { name: 'Read the full story of Net-Trailer' }).click()
   await expect(page).toHaveURL(/\/projects\/net-trailer$/, { timeout: 30000 })
   await expect(
     page.getByRole('list', { name: 'What Net-Trailer does' }).getByRole('listitem')
   ).not.toHaveCount(0)
+})
+
+test('"Detailed view" opens /projects, with every project at full size', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.goto('/')
+  await page.locator('#projects').getByRole('link', { name: 'Detailed view' }).click()
+  await expect(page).toHaveURL(/\/projects$/)
+  await expect(page.getByRole('heading', { level: 1, name: 'Projects, in detail' })).toBeVisible()
+  await expect(page.getByRole('article', { name: 'New AI app - in progress' })).toBeVisible()
+  for (const title of ['Net-Trailer', 'Portfolio Rank']) {
+    const full = card(page, title)
+    await expect(full.getByRole('link', { name: `View ${title} source on GitHub (new tab)` })).toHaveAttribute(
+      'href',
+      /github\.com\/n8watkins\//
+    )
+    await expect(full.getByRole('list', { name: `What ${title} does` }).getByRole('listitem')).not.toHaveCount(0)
+    await expect(full.getByRole('link', { name: `Read the full story of ${title}` })).toHaveAttribute(
+      'href',
+      new RegExp(`/projects/`)
+    )
+  }
 })
 
 /**
@@ -133,7 +150,7 @@ test('Portfolio Rank credits its list and invites you to add your portfolio', as
  */
 test("a project page's footer links my sites with their marks", async ({ page }) => {
   await page.goto('/projects/net-trailer')
-  const sites = page.getByRole('navigation', { name: 'My sites' })
+  const sites = page.getByRole('navigation', { name: 'Site map' })
   await sites.scrollIntoViewIfNeeded()
   await expect(sites.getByRole('link', { name: 'n8builds.dev' })).toHaveAttribute(
     'href',

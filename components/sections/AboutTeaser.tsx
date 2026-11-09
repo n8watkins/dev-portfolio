@@ -9,8 +9,8 @@ import SectionHeading from '@/components/ui/SectionHeading'
 import { TECH_FOR_PROS } from '@/lib/sites'
 
 /**
- * The home page's About: who I am in two sentences and a portrait, then
- * "More about me" to the About page, where the full story lives (variant B).
+ * The home page's About: who I am in a few sentences and a portrait, then
+ * "More about me" to the About page, where the full story lives.
  */
 export default function AboutTeaser() {
   return (
@@ -36,7 +36,8 @@ export default function AboutTeaser() {
               {TECH_FOR_PROS.name}
             </a>
             , a platform for service businesses, and consult on AI;
-            before that I spent three years building client apps at a consulting firm.
+            before that I spent three years building client apps at a consulting firm. I&apos;m based
+            in LA and ready to relocate.
           </p>
           <Link
             href="/about"

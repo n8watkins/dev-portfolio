@@ -1,1 +1,0 @@
-export { gridItems } from './gridItems'

@@ -2,8 +2,23 @@ import { readFileSync } from 'node:fs'
 import { test, expect, type Page } from '@playwright/test'
 import ts from 'typescript'
 
-// The tech stack card (and its dino) is on the About page in this layout (variant B).
-const STACK_PAGE = '/about'
+// The tech stack card (and its dino) is on /stack here (owner, 2026-11-08); n8builds.dev's copy runs on its home page.
+const STACK_PAGE = '/stack'
+
+/**
+ * On /stack the play area sits near the top, inside the game's load margin, so
+ * a test that needs the panel far off screen first pushes it down the page
+ * (a style for the test only; n8builds.dev's kit is far down its home page).
+ */
+const pushPanelDown = (page: import('@playwright/test').Page) =>
+  page.addInitScript(() => {
+    document.addEventListener('DOMContentLoaded', () => {
+      const style = document.createElement('style')
+      style.textContent = '[data-dino-panel] { margin-top: 0 } section:has(> [data-dino-panel]) { margin-top: 3000px !important }'
+      document.head.append(style)
+    })
+  })
+
 
 /**
  * The dino game's optional music (components/features/dino/DinoMusic.tsx and
@@ -287,6 +302,7 @@ test.describe('dino game music (motion allowed)', () => {
   })
 
   test('pauses while the panel is off screen or the tab is hidden, and comes back', async ({ page }) => {
+    await pushPanelDown(page)
     await page.goto(STACK_PAGE)
     await showKit(page)
     const button = await hydratedMusic(page)
