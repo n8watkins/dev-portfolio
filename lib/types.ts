@@ -32,6 +32,12 @@ export interface Project {
   summary: string
   /** Screenshots, first one shown; the gallery steps through the rest. */
   images: { src: string; alt: string }[]
+  /**
+   * A few muted seconds of the live demo in use (an MP4 and its poster in
+   * public/projects/clips/), shown on the home page's card in place of the
+   * screenshots. Without one, the card shows the screenshots.
+   */
+  clip?: { src: string; poster: string; alt: string }
   /** The app's own icon, shown left of its name. */
   icon: string
   /** The app's brand colour: its row's glow, outline, checks and main button (lib/accents.ts). */

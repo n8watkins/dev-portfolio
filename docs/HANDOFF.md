@@ -89,6 +89,18 @@ It funnels visitors to the two other sites:
   The master is `public/brand/n8-mark.png`; `node scripts/gen-brand-icons.mjs` makes the favicon, Apple and 512px icons in `public/tab/` from it (the mark on a dark navy rounded tile).
   The corner link to n8builds.dev shows the mark on its own; the admin dashboard still has the old N8 mark.
 
+## Layout: one long page (variant A, 2026-11-08)
+
+- The home page stays one long page, with more room between sections (`app/page.tsx`).
+- About is larger: bigger copy and portrait, and a "How I work" row (`components/sections/HowIWork.tsx`), each tile a claim the sites back up.
+- Experience shows the work: framed screenshots of each role's sites beside the copy (under it on phones), from `visuals` in `data/experience.tsx`; a card with visuals no longer has the hover image.
+  The client shots (`public/experience/riverwoodranch.webp`, `comfort1hvac.webp`) were captured from the live sites on 2026-11-08; lifelineclinicallab.com did not load (certificate), and primeshows.live is now a parked domain.
+- Project cards show the live demo in use: a muted, looping clip (`clip` in `data/projects.tsx`, files in `public/projects/clips/`, about 7 seconds, about 200 KB each, H.264 MP4 with a WebP poster), by `components/Projects/ProjectClip.tsx`.
+  The poster paints first; the video loads only near the screen, plays on screen and pauses off it, stays on the poster under reduced motion, and has a pause/play button (WCAG 2.2.2).
+  Net-Trailer's clip shows browsing, not its AI search, which answered "API key not valid" on 2026-11-08; re-record it once its new branding lands.
+  Portfolio Rank's shows practice votes in its face-off.
+  Record a clip with Playwright's `recordVideo` at 1280x800, then trim, speed up and encode with ffmpeg to 960x600 at 24 fps (`libx264 -crf 30 -preset slow -movflags +faststart`, no audio).
+
 ## Tech for Pros (owner, 2026-11-01)
 
 - Tech for Pros (techforpros.com), my SaaS for service businesses, is where I work now: the hero card ("Where I work"), the workshop card, the Experience entry, About and both footers name techforpros.com and link to it.

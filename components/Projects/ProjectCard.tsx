@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation'
 import { FiBookOpen, FiExternalLink, FiGithub } from 'react-icons/fi'
 import StatusPill from './StatusPill'
 import ProjectGallery from './ProjectGallery'
+import ProjectClip from './ProjectClip'
 import { accents } from '@/lib/accents'
 import { trackProjectEvent } from '@/lib/analytics'
 import type { Project } from '@/lib/types'
@@ -38,16 +39,28 @@ export default function ProjectCard({ project, index }: { project: Project; inde
       aria-label={project.title}
       className={`group flex flex-col ${flipped ? 'md:flex-row-reverse' : 'md:flex-row'} items-center gap-6 md:gap-12`}
     >
-      <ProjectGallery
-        title={project.title}
-        images={project.images}
-        frameClassName={`${accent.outline} ${accent.shadow}`}
-        dotClassName={accent.dot}
-        onOpen={open}
-        // On hover the screenshot's frame lights up in the project's colour (no zoom).
-        className="w-full shrink-0 md:w-1/2"
-        imageClassName="object-cover object-top"
-      />
+      {/* The demo in use when there is a clip of it, the screenshots otherwise. */}
+      {project.clip ? (
+        <ProjectClip
+          title={project.title}
+          src={project.clip.src}
+          poster={project.clip.poster}
+          alt={project.clip.alt}
+          frameClassName={`${accent.outline} ${accent.shadow}`}
+          onOpen={open}
+        />
+      ) : (
+        <ProjectGallery
+          title={project.title}
+          images={project.images}
+          frameClassName={`${accent.outline} ${accent.shadow}`}
+          dotClassName={accent.dot}
+          onOpen={open}
+          // On hover the screenshot's frame lights up in the project's colour (no zoom).
+          className="w-full shrink-0 md:w-1/2"
+          imageClassName="object-cover object-top"
+        />
+      )}
 
       <div className="flex w-full flex-col md:w-1/2">
         <div className="flex items-center gap-3">

@@ -62,7 +62,7 @@ const Experience = () => {
                   >
                     {/* Hover image reveal (desktop only): its frame fades in from the left, so
                         the picture never hard-cuts against the copy */}
-                    {item.hoverImage && (
+                    {item.hoverImage && !item.visuals && (
                       <div
                         className="absolute inset-y-0 right-0 w-[30%] overflow-hidden mask-[linear-gradient(to_left,black_45%,transparent)] opacity-0 group-hover:opacity-80 transition-opacity duration-500 pointer-events-none hidden md:block"
                         aria-hidden="true"
@@ -80,7 +80,14 @@ const Experience = () => {
                     )}
 
                     {/* With an image, the copy stops short of it, so it never sits on the picture */}
-                    <div className={`relative z-10 ${item.hoverImage ? 'md:max-w-[68%]' : ''}`}>
+                    <div
+                      className={
+                        item.visuals
+                          ? 'relative z-10 flex flex-col gap-6 md:grid md:grid-cols-[minmax(0,1fr)_15rem] md:gap-8 lg:grid-cols-[minmax(0,1fr)_19rem]'
+                          : ''
+                      }
+                    >
+                    <div className={`relative z-10 ${item.hoverImage && !item.visuals ? 'md:max-w-[68%]' : ''}`}>
                       {/* Period + location */}
                       <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mb-2">
                         <span className="text-xs font-semibold tracking-wider uppercase text-sky-400 bg-sky-500/10 px-2.5 py-0.5 rounded-full border border-sky-500/20">
@@ -140,6 +147,40 @@ const Experience = () => {
                           ))}
                         </div>
                       )}
+                    </div>
+
+                    {/* The work itself: a framed screenshot of each site */}
+                    {item.visuals && (
+                      <div className="grid grid-cols-2 gap-3 md:flex md:flex-col md:gap-4">
+                        {item.visuals.map((v) => (
+                          <figure key={v.src} className={item.visuals!.length === 1 ? 'col-span-2' : ''}>
+                            <div className="overflow-hidden rounded-lg border border-white/10 bg-[#0a1322] shadow-lg shadow-black/40 transition-colors duration-300 group-hover:border-sky-400/30">
+                              <div
+                                aria-hidden="true"
+                                className="flex items-center gap-1 border-b border-white/8 bg-white/4 px-2.5 py-1.5"
+                              >
+                                <span className="h-1.5 w-1.5 rounded-full bg-white/20" />
+                                <span className="h-1.5 w-1.5 rounded-full bg-white/20" />
+                                <span className="h-1.5 w-1.5 rounded-full bg-white/20" />
+                              </div>
+                              <div className="relative aspect-16/10">
+                                <Image
+                                  src={v.src}
+                                  alt={v.alt}
+                                  fill
+                                  sizes="(max-width: 768px) 50vw, 19rem"
+                                  // Top left: a 16:9 shot keeps its logo when the frame trims it.
+                                  className="object-cover object-left-top"
+                                />
+                              </div>
+                            </div>
+                            <figcaption className="mt-1.5 truncate text-xs text-slate-400">
+                              {v.label}
+                            </figcaption>
+                          </figure>
+                        ))}
+                      </div>
+                    )}
                     </div>
                   </div>
                 </motion.div>

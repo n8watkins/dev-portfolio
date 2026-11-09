@@ -73,25 +73,25 @@ export default function Home() {
             </SectionErrorBoundary>
           </section>
 
-          <section id="projects" aria-label="Projects">
+          <section id="projects" aria-label="Projects" className="mt-12 md:mt-20">
             <SectionErrorBoundary sectionName="Projects Section">
               <Projects />
             </SectionErrorBoundary>
           </section>
 
-          <section id="experience" aria-label="Work experience">
+          <section id="experience" aria-label="Work experience" className="mt-16 md:mt-28">
             <SectionErrorBoundary sectionName="Experience Section">
               <Experience />
             </SectionErrorBoundary>
           </section>
 
-          <section id="workshop" aria-label="My company and my workshop">
+          <section id="workshop" aria-label="My company and my workshop" className="mt-12 md:mt-20">
             <SectionErrorBoundary sectionName="Workshop Section">
               <WorkshopCards />
             </SectionErrorBoundary>
           </section>
 
-          <section id="contact">
+          <section id="contact" className="mt-16 md:mt-24">
             <SectionErrorBoundary sectionName="Contact Section">
               <Footer />
             </SectionErrorBoundary>

@@ -21,11 +21,24 @@ export type WorkExperienceItem = {
    */
   hoverFrame?: string
   additional?: boolean
+  /**
+   * Screenshots of the work, shown beside the card's copy (desktop) or under
+   * it (phone): client sites where they are still up, the company's own site
+   * otherwise. A card with these shows them instead of its hover image.
+   */
+  visuals?: { src: string; alt: string; label: string }[]
 }
 
 export const workExperience: WorkExperienceItem[] = [
   {
     id: 5,
+    visuals: [
+      {
+        src: '/work/landscaping-verdant.webp',
+        alt: 'A landscaping website drafted by Tech for Pros',
+        label: 'A Tech for Pros template',
+      },
+    ],
     company: 'Tech for Pros',
     companyUrl: 'https://techforpros.com',
     location: 'Los Angeles, CA',
@@ -41,6 +54,18 @@ export const workExperience: WorkExperienceItem[] = [
   },
   {
     id: 1,
+    visuals: [
+      {
+        src: '/experience/riverwoodranch.webp',
+        alt: "Riverwood Ranch's site: a private community in Southern California",
+        label: 'riverwoodranch.web.app',
+      },
+      {
+        src: '/experience/comfort1hvac.webp',
+        alt: "Comfort1 HVAC's landing page: Climate control you can count on",
+        label: 'comfort1hvac.com',
+      },
+    ],
     company: 'Appturnity',
     // No link to appturnity.com: only the client sites below (owner, 2026-11-01).
     // White, where Appturnity's white page shows
@@ -65,6 +90,13 @@ export const workExperience: WorkExperienceItem[] = [
   },
   {
     id: 2,
+    visuals: [
+      {
+        src: '/experience/arroyoseco.webp',
+        alt: "Arroyo Seco Golf Course's site",
+        label: 'arroyosecogc.com',
+      },
+    ],
     company: 'Donovan Golf Course Management',
     // A little of the course's green
     hoverGlow: 'bg-green-400/[0.14]',
@@ -93,6 +125,13 @@ export const workExperience: WorkExperienceItem[] = [
   },
   {
     id: 4,
+    visuals: [
+      {
+        src: '/experience/coderschool.webp',
+        alt: "The Coder School Santa Monica's site",
+        label: 'thecoderschool.com',
+      },
+    ],
     company: 'The Coder School',
     // Green, and white at the bottom
     hoverGlow: 'bg-linear-to-b from-green-400/16 to-white/[0.14]',
