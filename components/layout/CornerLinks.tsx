@@ -18,7 +18,7 @@ const RESUME = 'border-sky-400/40 bg-sky-500/10 text-sky-100 hover:border-sky-30
 export default function CornerLinks() {
   return (
     <>
-      <div className="fixed top-0 w-full h-16 lg:h-28 bg-linear-to-t from-blue-400/0 via-blue-400/90 to-blue-400 dark:from-darkBlue/0 dark:via-darkBlue/90 dark:to-darkBlue z-9999 select-none" />
+      <div aria-hidden="true" className="pointer-events-none fixed top-0 w-full h-16 lg:h-28 bg-linear-to-t from-blue-400/0 via-blue-400/90 to-blue-400 dark:from-darkBlue/0 dark:via-darkBlue/90 dark:to-darkBlue z-9999 select-none" />
       {/* Top left: the n8builds.dev wordmark, to n8builds.dev. Top right: the resume.
           Both sit further in from the edges on large screens.
           From sm up; on a phone the hero carries both. */}

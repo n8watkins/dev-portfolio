@@ -196,7 +196,7 @@ test('a whole role row opens on a click or from the keyboard, and its link still
   await expect(bullet).toBeHidden()
   // Tech for Pros' link sits above the row's button, so it opens the site.
   const tfp = experience.getByRole('link', { name: /^Tech for Pros/ })
-  await tfp.scrollIntoViewIfNeeded()
+  await tfp.evaluate((el) => el.scrollIntoView({ block: 'center', behavior: 'instant' }))
   await expect(tfp).toBeInViewport()
   const hit = await tfp.evaluate((a) => {
     const r = a.getBoundingClientRect()
@@ -292,4 +292,14 @@ test('/projects and the project pages lead back to the home page', async ({ page
     await expect(back, path).toHaveAttribute('href', '/')
     await expect(page.getByRole('link', { name: 'Back to projects' }), path).toHaveCount(0)
   }
+})
+
+/**
+ * The top bar's fade lets clicks through: a link scrolled under it (the top
+ * ~112px of the screen) still works (before 2026-11-08 the fade swallowed them).
+ */
+test("a link under the top bar's fade still takes the click", async ({ page }) => {
+  await page.goto('/')
+  const fade = page.locator('div.fixed.top-0.w-full').first()
+  expect(await fade.evaluate((el) => getComputedStyle(el).pointerEvents)).toBe('none')
 })
