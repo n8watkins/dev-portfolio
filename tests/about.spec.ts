@@ -22,7 +22,7 @@ test('the About page has the story, how I work, the stack, the resume and every 
   await expect(page.getByRole('heading', { name: 'What I bring' })).toBeAttached()
   await expect(page.getByText('Tested like a product')).toBeAttached()
   await expect(page.locator('[data-dino-panel]')).toBeAttached()
-  await expect(page.getByRole('link', { name: /View my resume/ })).toHaveAttribute(
+  await expect(page.getByRole('link', { name: 'View my resume (new tab)' })).toHaveAttribute(
     'href',
     /drive\.google\.com/
   )

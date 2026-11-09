@@ -92,7 +92,7 @@ It funnels visitors to the two other sites:
 ## Layout: home plus an About page (variant B, 2026-11-08)
 
 - The home page is work-first: the hero, a short About teaser with "More about me" (`components/sections/AboutTeaser.tsx`), the projects, the n8builds.dev teaser, a compact experience timeline (titles, companies and years, each role's bullets folded into "What I did", `<Experience compact />`), and contact.
-- `/about` (`app/about/page.tsx`, `components/AboutPage.tsx`) has the full story beside two portraits (`AboutStory`), "How I work" (`HowIWork`), the bento with the tech stack, the map and the resume (`StackGrid`), resume buttons, every role in full, and the workshop cards (Tech for Pros and n8builds.dev).
+- `/about` (`app/about/page.tsx`, `components/AboutPage.tsx`) has the full story beside two portraits (`AboutStory`), "How I work" (`HowIWork`), the bento with the tech stack, the map and the resume card (`StackGrid`), every role in full, and the workshop cards (Tech for Pros and n8builds.dev).
   Its sections are imported, not lazy, so `/about#experience` lands on the section.
 - The nav's About goes to `/about`; on `/about` the nav's other items go home and leave a note for the home page to scroll to the section (`home` in `data/navigation.tsx`, as "Back to projects" does).
   `/about` is in the sitemap; its old redirect to `/` is gone.

@@ -130,10 +130,8 @@ for (const path of ['/', '/about']) test(`Appturnity shows only as a past role i
   await expect(card).toHaveCount(1)
   await expect(card.getByRole('heading', { name: 'Full Stack Developer', exact: true })).toBeAttached()
   await expect(card.getByText('Appturnity', { exact: true })).toBeAttached()
-  await expect(card.getByRole('link', { name: /comfort1hvac\.com/ })).toHaveAttribute(
-    'href',
-    'https://comfort1hvac.com/'
-  )
+  // On the home page the client links sit folded in "What I did".
+  await expect(card.locator('a[href="https://comfort1hvac.com/"]')).toHaveText(/comfort1hvac\.com/)
   // Nowhere outside Experience.
   const outside = await page.evaluate(() => {
     const exp = document.getElementById('experience')!

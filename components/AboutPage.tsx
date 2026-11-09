@@ -1,7 +1,6 @@
 'use client'
 
 import React from 'react'
-import { FiDownload, FiFileText } from 'react-icons/fi'
 import { FloatingNav } from '@/components/layout/FloatingNav'
 import PageFooter from '@/components/layout/PageFooter'
 import SectionErrorBoundary from '@/components/SectionErrorBoundary'
@@ -9,20 +8,15 @@ import SectionHeading from '@/components/ui/SectionHeading'
 import AboutStory from '@/components/sections/AboutStory'
 import HowIWork from '@/components/sections/HowIWork'
 import { aboutNavItems } from '@/data/navigation'
-import { RESUME_DOWNLOAD_URL, RESUME_VIEW_URL } from '@/lib/resume'
-import { trackResumeEvent } from '@/lib/analytics'
 
 // Imported, not lazy: "/about#experience" must find the section at load.
 import StackGrid from '@/components/sections/StackGrid'
 import Experience from '@/components/sections/Experience'
 import WorkshopCards from '@/components/sections/WorkshopCards'
 
-const BUTTON =
-  'inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-colors duration-200 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-sky-400'
-
 /**
  * The About page (variant B): the full story with photos, how I work, my
- * stack (the bento, with the dino), the resume, every role in full, and my
+ * stack (the bento, with the dino, the map and the resume card), every role in full, and my
  * company and workshop. The home page keeps a short teaser and the work.
  */
 export default function AboutPage() {
@@ -61,26 +55,6 @@ export default function AboutPage() {
               <SectionErrorBoundary sectionName="Stack Section">
                 <StackGrid />
               </SectionErrorBoundary>
-            </div>
-            <div className="mt-8 flex flex-wrap items-center gap-3">
-              <a
-                href={RESUME_VIEW_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => trackResumeEvent('view')}
-                className={`${BUTTON} border border-sky-400/40 bg-sky-500/10 text-sky-100 hover:border-sky-300/70 hover:bg-sky-500/20`}
-              >
-                <FiFileText className="h-4 w-4" aria-hidden="true" />
-                View my resume<span className="sr-only"> (opens in a new tab)</span>
-              </a>
-              <a
-                href={RESUME_DOWNLOAD_URL}
-                onClick={() => trackResumeEvent('download')}
-                className={`${BUTTON} border border-white/12 bg-white/4 text-slate-200 hover:bg-white/8`}
-              >
-                <FiDownload className="h-4 w-4" aria-hidden="true" />
-                Download PDF
-              </a>
             </div>
           </section>
 
