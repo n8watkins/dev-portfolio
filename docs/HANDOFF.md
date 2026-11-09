@@ -63,7 +63,7 @@ It funnels visitors to the two other sites:
   Echo, Scout and GeminiGPT were retired that day: their pages, screenshots and status wiring are gone, and `/projects/echo|scout|geminigpt` redirect (308) to `/#projects` (`next.config.mjs`), since n8builds.dev and old shares link them.
   Portfolio Rank moved here from n8builds.dev's featured rows: its card credits Emma Bostian's developer-portfolios list, and its page credits her and Ali Spittel and invites visitors to vote and add their portfolio.
   On the home page each is one big, full-width card (see "The layout" below); `/projects` shows every project at full size; `/projects/<slug>` tells its full story. Colours per app in `lib/accents.ts`.
-- **"Message me"** sits beside Resume in the top right corner (from 768px; icon only below 1280px) and opens n8builds.dev's contact form (https://n8builds.dev/#contact) (owner, 2026-11-08).
+- **"Message me"** sits beside Resume in the top right corner (from 768px; icon only below 1280px) and opens n8builds.dev's contact form (https://n8builds.dev/#contact-form) (owner, 2026-11-08).
 - **Titles and share cards** live in `lib/seo.ts`: "Nathan Watkins | Full-Stack Developer" for the home page (the headline dropped "AI" on 2026-10-26), "<project> - <subtitle> | Nathan Watkins" for project pages, share descriptions of at most 120 characters.
   The share image is generated from `app/opengraph-image.tsx`; there is no saved screenshot to go stale.
 - **The site's address is fixed** in `lib/seo.ts` (`https://portfolio.n8builds.dev`), not read from `NEXT_PUBLIC_SITE_URL`: a stale local value once pointed the share cards at an old vercel.app address.

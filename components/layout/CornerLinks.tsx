@@ -16,7 +16,7 @@ const CORNER_BUTTON =
 const RESUME = 'border-sky-400/40 bg-sky-500/10 text-sky-100 hover:border-sky-300/70 hover:bg-sky-500/20'
 const MESSAGE = 'border-white/15 bg-white/5 text-slate-100 hover:border-white/30 hover:bg-white/10'
 
-export const CONTACT_FORM_URL = 'https://n8builds.dev/#contact'
+export const CONTACT_FORM_URL = 'https://n8builds.dev/#contact-form'
 
 export default function CornerLinks() {
   return (

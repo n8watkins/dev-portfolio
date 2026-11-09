@@ -266,6 +266,6 @@ test('the top corner offers Message me beside the resume', async ({ page, isMobi
   await page.goto('/')
   const message = page.getByRole('link', { name: /^Message me/ })
   await expect(message).toBeVisible()
-  await expect(message).toHaveAttribute('href', 'https://n8builds.dev/#contact')
+  await expect(message).toHaveAttribute('href', 'https://n8builds.dev/#contact-form')
   await expect(message).toHaveAttribute('target', '_blank')
 })
