@@ -41,7 +41,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
       <FloatingNav navItems={subpageNavItems} />
       <ProjectDetail project={project} />
       <div className="relative overflow-hidden bg-darkBlue">
-        <div className="mx-auto max-w-md sm:max-w-xl md:max-w-3xl lg:max-w-4xl xl:max-w-5xl 2xl:max-w-6xl">
+        <div className="mx-auto max-w-md sm:max-w-xl md:max-w-3xl lg:max-w-4xl xl:max-w-6xl 2xl:max-w-7xl">
           <Footer />
         </div>
       </div>

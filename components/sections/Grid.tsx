@@ -24,7 +24,7 @@ const Grid = () => {
   return (
     <section className="mb-10">
       {/* About intro - the copy beside the portrait, above the bento grid and aligned with it */}
-      <div className="max-w-md sm:max-w-lg md:max-w-3xl lg:max-w-4xl xl:max-w-5xl mx-auto px-4 pt-6 md:pt-2 pb-14">
+      <div className="max-w-md sm:max-w-lg md:max-w-3xl lg:max-w-4xl xl:max-w-6xl 2xl:max-w-7xl mx-auto px-4 pt-6 md:pt-2 pb-14">
         <SectionHeading eyebrow="Get to know me" title="About me" />
         {/* The copy and the portrait fade in together once you start scrolling
             (only the heading peeks in on the first screen); the portrait sits
@@ -34,7 +34,7 @@ const Grid = () => {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, amount: 0.25 }}
           transition={{ duration: 0.5 }}
-          className="mt-4 flex flex-col-reverse gap-8 md:flex-row md:items-center md:gap-12"
+          className="mt-4 flex flex-col-reverse gap-8 md:flex-row md:items-center md:justify-between md:gap-12"
         >
           <div className="max-w-3xl space-y-4 text-pretty text-base leading-relaxed text-slate-300 md:flex-1 md:text-lg/7">
             {/* A short intro (owner, 2026-11-08); the full story is on /about. */}

@@ -118,7 +118,7 @@ function HomeLink({ id, children }: { id: string; children: React.ReactNode }) {
 
 const Footer = () => {
   return (
-    <footer className="xl:max-w-5xl pt-0 pb-20 lg:pb-12">
+    <footer className="xl:max-w-6xl 2xl:max-w-7xl pt-0 pb-20 lg:pb-12">
       {/* background grid */}
       <div className="w-full absolute left-0 1sm:-translate-y-52 -bottom-72 min-h-96 pointer-events-none">
         <Image

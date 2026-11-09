@@ -26,7 +26,7 @@ export default function ProjectsPage() {
         tabIndex={-1}
         className="relative w-full overflow-hidden bg-darkBlue text-slate-200 focus:outline-hidden"
       >
-        <div className="mx-auto max-w-md px-4 pt-28 sm:max-w-xl md:max-w-3xl md:pt-36 lg:max-w-4xl xl:max-w-5xl 2xl:max-w-6xl">
+        <div className="mx-auto max-w-md px-4 pt-28 sm:max-w-xl md:max-w-3xl md:pt-36 lg:max-w-4xl xl:max-w-6xl 2xl:max-w-7xl">
           <BackToHome />
           <p className="text-xs font-semibold tracking-[0.2em] text-sky-400 uppercase">
             Selected projects
@@ -41,7 +41,7 @@ export default function ProjectsPage() {
             ))}
           </div>
         </div>
-        <div className="mx-auto max-w-md sm:max-w-xl md:max-w-3xl lg:max-w-4xl xl:max-w-5xl 2xl:max-w-6xl">
+        <div className="mx-auto max-w-md sm:max-w-xl md:max-w-3xl lg:max-w-4xl xl:max-w-6xl 2xl:max-w-7xl">
           <Footer />
         </div>
         <ScrollToTop />

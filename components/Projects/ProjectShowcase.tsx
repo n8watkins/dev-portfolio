@@ -85,7 +85,7 @@ export default function ProjectShowcase({ project }: { project: Project }) {
               src={project.images[0].src}
               alt={project.images[0].alt}
               fill
-              sizes="(max-width: 1280px) 100vw, 72rem"
+              sizes="(max-width: 1280px) 100vw, 80rem"
               className="object-cover object-top"
             />
           </button>

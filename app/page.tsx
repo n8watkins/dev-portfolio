@@ -106,7 +106,7 @@ export default function Home() {
 
         <FloatingNav navItems={navItems} />
 
-        <div className="m-auto max-w-md sm:max-w-xl md:max-w-3xl lg:max-w-4xl xl:max-w-5xl 2xl:max-w-6xl">
+        <div className="m-auto max-w-md sm:max-w-xl md:max-w-3xl lg:max-w-4xl xl:max-w-6xl 2xl:max-w-7xl">
           <section id="about" aria-label="About me">
             <SectionErrorBoundary sectionName="About Section">
               <Grid />
