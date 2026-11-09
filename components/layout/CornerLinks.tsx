@@ -12,7 +12,7 @@ import { trackResumeEvent } from '@/lib/analytics'
  * up; on a phone the hero carries the resume and Contact the rest.
  */
 const CORNER_BUTTON =
-  'inline-flex items-center gap-2 rounded-xl border h-10 px-3.5 lg:h-14 lg:px-5 text-sm lg:text-base font-semibold backdrop-blur-xs transition-colors duration-200 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-sky-400'
+  'items-center gap-2 rounded-xl border h-10 px-3.5 lg:h-14 lg:px-5 text-sm lg:text-base font-semibold backdrop-blur-xs transition-colors duration-200 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-sky-400'
 const RESUME = 'border-sky-400/40 bg-sky-500/10 text-sky-100 hover:border-sky-300/70 hover:bg-sky-500/20'
 const MESSAGE = 'border-white/15 bg-white/5 text-slate-100 hover:border-white/30 hover:bg-white/10'
 
@@ -44,7 +44,8 @@ export default function CornerLinks() {
             className="h-[26px] w-auto lg:h-8 transition-opacity duration-200 group-hover:opacity-85"
           />
         </span>
-        <span className="font-bold tracking-tight text-slate-100 text-[0.95rem] lg:text-xl group-hover:text-sky-300 transition-colors">
+        {/* The name from md up: at 640px the centred nav would cover it. */}
+        <span className="hidden md:inline font-bold tracking-tight text-slate-100 text-[0.95rem] lg:text-xl group-hover:text-sky-300 transition-colors">
           n8builds.dev
         </span>
       </a>
@@ -53,11 +54,12 @@ export default function CornerLinks() {
           href={CONTACT_FORM_URL}
           target="_blank"
           rel="noopener noreferrer"
-          className={`${CORNER_BUTTON} ${MESSAGE}`}
+          // From md up: at 640px the centred nav leaves room only for the resume.
+          className={`${CORNER_BUTTON} ${MESSAGE} hidden md:inline-flex`}
         >
           <FiMessageSquare className="h-4 w-4" aria-hidden="true" />
-          {/* Icon only below lg, where the centred nav leaves no room for the words. */}
-          <span className="sr-only lg:not-sr-only">Message me</span>
+          {/* Icon only below xl, where the centred nav leaves no room for the words. */}
+          <span className="sr-only xl:not-sr-only">Message me</span>
           <span className="sr-only"> (opens n8builds.dev&apos;s contact form in a new tab)</span>
         </a>
         <a
@@ -65,7 +67,7 @@ export default function CornerLinks() {
           target="_blank"
           rel="noopener noreferrer"
           onClick={() => trackResumeEvent('view')}
-          className={`${CORNER_BUTTON} ${RESUME}`}
+          className={`${CORNER_BUTTON} ${RESUME} inline-flex`}
         >
           <FiFileText className="h-4 w-4" aria-hidden="true" />
           Resume<span className="sr-only"> (opens in a new tab)</span>
