@@ -4,7 +4,7 @@ import React, { useState } from 'react'
 import { motion } from 'motion/react'
 import { Link } from 'react-scroll'
 import NextLink from 'next/link'
-import { SCROLL_TO_KEY } from '@/components/Projects/BackToProjects'
+import { SCROLL_TO_KEY } from '@/components/Projects/BackToHome'
 import CornerLinks from './CornerLinks'
 
 const cn = (...classes: (string | boolean | undefined | null)[]): string =>
@@ -13,7 +13,7 @@ const cn = (...classes: (string | boolean | undefined | null)[]): string =>
 /**
  * A nav item: `link` scrolls to a section on this page; `href` with `home`
  * goes to a home page section from another page (it leaves a note for the home
- * page to scroll there, as "Back to projects" does, so no "#section" stays in
+ * page to scroll there, as the footer's site map does, so no "#section" stays in
  * the address).
  */
 export type NavItem = {

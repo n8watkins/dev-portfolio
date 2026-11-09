@@ -1,22 +1,19 @@
 'use client'
 
 import Image from 'next/image'
-import { FiFileText, FiMessageSquare } from 'react-icons/fi'
+import { FiFileText } from 'react-icons/fi'
 import { RESUME_VIEW_URL } from '@/lib/resume'
 import { trackResumeEvent } from '@/lib/analytics'
 
 /**
  * The fixed top bar's corners, on every page: the n8builds.dev wordmark top left
- * (to n8builds.dev), and "Message me" (n8builds.dev's contact form) beside the
- * resume top right, over a fade so content scrolls under them cleanly. From sm
- * up; on a phone the hero carries the resume and Contact the rest.
+ * (to n8builds.dev) and the resume top right, over a fade so content scrolls
+ * under them cleanly. From sm up; on a phone the hero carries both. Contact is
+ * in the nav and the footer ("Message me" here was removed, owner, 2026-11-08).
  */
 const CORNER_BUTTON =
   'items-center gap-2 rounded-xl border h-10 px-3.5 lg:h-14 lg:px-5 text-sm lg:text-base font-semibold backdrop-blur-xs transition-colors duration-200 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-sky-400'
 const RESUME = 'border-sky-400/40 bg-sky-500/10 text-sky-100 hover:border-sky-300/70 hover:bg-sky-500/20'
-const MESSAGE = 'border-white/15 bg-white/5 text-slate-100 hover:border-white/30 hover:bg-white/10'
-
-export const CONTACT_FORM_URL = 'https://n8builds.dev/#contact-form'
 
 export default function CornerLinks() {
   return (
@@ -49,19 +46,7 @@ export default function CornerLinks() {
           n8builds.dev
         </span>
       </a>
-      <div className="fixed right-4 lg:right-8 xl:right-12 2xl:right-16 top-2 1lg:top-4 xl:top-6 z-9999 hidden sm:flex items-center gap-2 lg:gap-3">
-        <a
-          href={CONTACT_FORM_URL}
-          target="_blank"
-          rel="noopener noreferrer"
-          // From md up: at 640px the centred nav leaves room only for the resume.
-          className={`${CORNER_BUTTON} ${MESSAGE} hidden md:inline-flex`}
-        >
-          <FiMessageSquare className="h-4 w-4" aria-hidden="true" />
-          {/* Icon only below xl, where the centred nav leaves no room for the words. */}
-          <span className="sr-only xl:not-sr-only">Message me</span>
-          <span className="sr-only"> (opens n8builds.dev&apos;s contact form in a new tab)</span>
-        </a>
+      <div className="fixed right-4 lg:right-8 xl:right-12 2xl:right-16 top-2 1lg:top-4 xl:top-6 z-9999 hidden sm:flex items-center">
         <a
           href={RESUME_VIEW_URL}
           target="_blank"

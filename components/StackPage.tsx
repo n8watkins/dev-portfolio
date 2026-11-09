@@ -1,11 +1,14 @@
 'use client'
 
 import React from 'react'
+import dynamic from 'next/dynamic'
 import { FloatingNav } from '@/components/layout/FloatingNav'
 import Footer from '@/components/layout/Footer'
 import TechStack from '@/components/features/TechStack'
 import { subpageNavItems } from '@/data/navigation'
 import { stackLayers } from '@/data/stackLayers'
+
+const ScrollToTop = dynamic(() => import('@/components/ui/ScrollToTop'), { ssr: false })
 
 /**
  * /stack (owner, 2026-11-08): the dino game as a proper play area ("I
@@ -79,6 +82,7 @@ export default function StackPage() {
         <div className="mx-auto max-w-md sm:max-w-xl md:max-w-3xl lg:max-w-4xl xl:max-w-5xl 2xl:max-w-6xl">
           <Footer />
         </div>
+        <ScrollToTop />
       </main>
     </>
   )

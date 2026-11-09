@@ -68,3 +68,53 @@ test("a subpage's nav jumps to the home page's sections", async ({ page, isMobil
   await expect(page).toHaveURL(/\/$/)
   await expect(page.locator('#experience')).toBeInViewport()
 })
+
+test('/about ends with ways on: where you were, the experience, and the top of the home page', async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  // Straight to /about: nothing to return to, so no "Continue where you were".
+  await page.goto('/about')
+  const ways = page.getByRole('navigation', { name: 'Where to next' })
+  await ways.scrollIntoViewIfNeeded()
+  await expect(ways.getByRole('link', { name: 'Back to the top of the home page' })).toHaveAttribute('href', '/')
+  await expect(ways.getByRole('link', { name: 'See my experience' })).toBeVisible()
+  await expect(ways.getByRole('link', { name: 'Continue where you were' })).toHaveCount(0)
+
+  // From the home page's "More about me": back to the same spot, the section
+  // at the top of the screen and how far into it, as saved on the way out.
+  // (A click before the page has hydrated is a plain page load, which leaves
+  // nothing to return to; wait for it, as a visitor's first scroll would.)
+  await page.goto('/', { waitUntil: 'networkidle' })
+  const more = page.locator('#about').getByRole('link', { name: 'More about me' })
+  await more.scrollIntoViewIfNeeded()
+  await more.click()
+  await expect(page).toHaveURL(/\/about$/)
+  await expect
+    .poll(() => page.evaluate(() => sessionStorage.getItem('portfolio-left-home-at')))
+    .not.toBeNull()
+  const saved = JSON.parse(
+    (await page.evaluate(() => sessionStorage.getItem('portfolio-left-home-at')))!
+  ) as { section: string; offset: number }
+  const back = page.getByRole('navigation', { name: 'Where to next' }).getByRole('link', { name: 'Continue where you were' })
+  await back.scrollIntoViewIfNeeded()
+  await back.click()
+  await expect(page).toHaveURL(/\/$/)
+  const offsetNow = () =>
+    page.evaluate(
+      (section) =>
+        section
+          ? -document.getElementById(section)!.getBoundingClientRect().top
+          : window.scrollY,
+      saved.section
+    )
+  await expect.poll(async () => Math.abs((await offsetNow()) - saved.offset)).toBeLessThanOrEqual(3)
+
+  // "See my experience" lands on the home page's experience.
+  await page.goto('/about')
+  const exp = page.getByRole('navigation', { name: 'Where to next' }).getByRole('link', { name: 'See my experience' })
+  await exp.scrollIntoViewIfNeeded()
+  await exp.click()
+  await expect(page).toHaveURL(/\/$/)
+  await expect(page.locator('#experience')).toBeInViewport()
+})

@@ -4,11 +4,13 @@ import React, { useEffect, useState } from 'react'
 import Image from 'next/image'
 import { FiArrowUpRight, FiChevronLeft, FiChevronRight, FiExternalLink } from 'react-icons/fi'
 import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion'
+import ProjectClip from './ProjectClip'
 import { trackProjectEvent } from '@/lib/analytics'
 
 /**
- * The n8builds.dev card under the projects: "See more of my selected work on
- * n8builds.dev", then its builds one at a time, its featured ones first. Each shows its
+ * The n8builds.dev card under the projects: the site's name as a link, "See
+ * more of my selected work" under it, then its builds one at a time, the
+ * featured ones (OpenPing, Solara) first, shown in use. Each shows its
  * own icon and accent, what it is, a link to
  * its live site when it has one, and "See the build" on n8builds.dev. The
  * facts come from n8builds-web's data/builds.tsx and Lab rows.
@@ -27,6 +29,12 @@ interface Build {
   liveSite?: string
   /** A screenshot beside the copy (contain: a small popup, shown whole on a dark frame). */
   shot?: { src: string; alt: string; contain?: boolean }
+  /**
+   * The product in use instead: a few muted seconds (n8builds.dev's own build
+   * page clips, scripts/product-clips/ in n8builds-web), played like the
+   * project clips.
+   */
+  clip?: { src: string; poster: string; alt: string }
   /** The accent: the product's own colour (text and the card's glow). */
   accent: { text: string; glow: string; bar: string; rgb: string }
 }
@@ -34,9 +42,10 @@ interface Build {
 const BUILDS: Build[] = [
   {
     slug: 'openping',
-    shot: {
-      src: '/builds/openping/shot-2026-11.webp',
-      alt: "OpenPing's site: uptime monitoring on your own Cloudflare",
+    clip: {
+      src: '/builds/openping/clip.mp4',
+      poster: '/builds/openping/clip-poster.webp',
+      alt: "OpenPing checking whether a site is up: it's up, with its status and response time",
     },
     name: 'OpenPing',
     icon: '/builds/openping/icon.svg',
@@ -53,7 +62,11 @@ const BUILDS: Build[] = [
   },
   {
     slug: 'solara',
-    shot: { src: '/builds/solara/shot-2026-11.webp', alt: 'Solara: know when to go outside' },
+    clip: {
+      src: '/builds/solara/clip.mp4',
+      poster: '/builds/solara/clip-poster.webp',
+      alt: "Solara's dashboard: today's UV by hour and the next lower-UV slot for a run",
+    },
     name: 'Solara',
     icon: '/builds/solara/icon.png',
     kind: 'Web app',
@@ -184,7 +197,7 @@ export default function BuildsTeaser() {
 
   return (
     <section
-      aria-labelledby="building-in-public"
+      aria-labelledby="building-in-public" aria-describedby="building-in-public-sub"
       className="w-full text-left"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
@@ -193,13 +206,9 @@ export default function BuildsTeaser() {
     >
       {/* The site, then what it is: its icon with the small label together. */}
       <div className="flex flex-col gap-2">
-        {/* An invitation to the rest of my work (owner, 2026-11-08). */}
-        <a
-          href="https://n8builds.dev"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="group flex items-center gap-3 rounded-lg focus:outline-hidden focus-visible:ring-2 focus-visible:ring-sky-400"
-        >
+        {/* The site's name on top, plainly a link, and the invitation under it
+            (owner, 2026-11-08). */}
+        <div className="flex items-center gap-3">
           <Image
             src="/tab/n8-icon.png"
             alt=""
@@ -207,18 +216,25 @@ export default function BuildsTeaser() {
             height={40}
             className="h-10 w-10 shrink-0 rounded-xl ring-1 ring-white/10"
           />
-          <h3
-            id="building-in-public"
-            className="text-lg font-bold text-slate-100 transition-colors group-hover:text-sky-300 sm:text-xl"
-          >
-            See more of my selected work on{' '}
-            <span className="whitespace-nowrap text-sky-400 group-hover:text-sky-300">
-              n8builds.dev
-              <FiArrowUpRight className="ml-1 inline h-4 w-4 align-[-0.1em] opacity-80" aria-hidden="true" />
-            </span>
-            <span className="sr-only"> (opens in a new tab)</span>
-          </h3>
-        </a>
+          <div className="min-w-0">
+            <h3 id="building-in-public" className="text-xl font-bold sm:text-2xl">
+              <a
+                href="https://n8builds.dev"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group inline-flex items-center gap-1.5 rounded text-slate-50 underline decoration-sky-400/50 decoration-2 underline-offset-4 transition-colors hover:text-sky-300 hover:decoration-sky-300 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-sky-400"
+              >
+                n8builds.dev
+                <FiArrowUpRight
+                  className="h-5 w-5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+                  aria-hidden="true"
+                />
+                <span className="sr-only"> (opens in a new tab)</span>
+              </a>
+            </h3>
+            <p id="building-in-public-sub" className="text-sm text-slate-400 sm:text-base">See more of my selected work</p>
+          </div>
+        </div>
       </div>
 
       {/* One build at a time, in its own colour */}
@@ -293,7 +309,20 @@ export default function BuildsTeaser() {
               </a>
             </div>
           </div>
-          {/* The screenshot, or the icon on its own frame when there is none */}
+          {/* The product in use, a screenshot, or the icon on its own frame when there is neither */}
+          {build.clip ? (
+            <ProjectClip
+              title={build.name}
+              src={build.clip.src}
+              poster={build.clip.poster}
+              alt={build.clip.alt}
+              frameClassName="border-white/10 shadow-2xl shadow-black/40"
+              className="hidden md:block"
+              onOpen={() =>
+                window.open(`https://n8builds.dev/builds/${build.slug}`, '_blank', 'noopener,noreferrer')
+              }
+            />
+          ) : (
           <div className="relative hidden aspect-16/10 overflow-hidden rounded-xl border border-white/10 bg-[#0a1322] shadow-2xl shadow-black/40 md:block">
             {build.shot ? (
               <Image
@@ -315,6 +344,7 @@ export default function BuildsTeaser() {
               </div>
             )}
           </div>
+          )}
         </div>
 
         {/* The controls, centred: back, where you are, forward */}

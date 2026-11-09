@@ -1,13 +1,16 @@
 'use client'
 
 import React from 'react'
+import dynamic from 'next/dynamic'
 import { FloatingNav } from '@/components/layout/FloatingNav'
 import Footer from '@/components/layout/Footer'
 import InProgressCard from '@/components/Projects/InProgressCard'
 import ProjectFull from '@/components/Projects/ProjectFull'
-import BackToProjects from '@/components/Projects/BackToProjects'
+import BackToHome from '@/components/Projects/BackToHome'
 import { subpageNavItems } from '@/data/navigation'
 import { inProgress, projects } from '@/data/projects'
+
+const ScrollToTop = dynamic(() => import('@/components/ui/ScrollToTop'), { ssr: false })
 
 /**
  * /projects, the "Detailed view" (owner, 2026-11-08): every project at full
@@ -24,7 +27,7 @@ export default function ProjectsPage() {
         className="relative w-full overflow-hidden bg-darkBlue text-slate-200 focus:outline-hidden"
       >
         <div className="mx-auto max-w-md px-4 pt-28 sm:max-w-xl md:max-w-3xl md:pt-36 lg:max-w-4xl xl:max-w-5xl 2xl:max-w-6xl">
-          <BackToProjects />
+          <BackToHome />
           <p className="text-xs font-semibold tracking-[0.2em] text-sky-400 uppercase">
             Selected projects
           </p>
@@ -41,6 +44,7 @@ export default function ProjectsPage() {
         <div className="mx-auto max-w-md sm:max-w-xl md:max-w-3xl lg:max-w-4xl xl:max-w-5xl 2xl:max-w-6xl">
           <Footer />
         </div>
+        <ScrollToTop />
       </main>
     </>
   )

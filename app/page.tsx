@@ -1,6 +1,7 @@
 'use client'
 import React, { useEffect } from 'react'
-import { SCROLL_TO_KEY } from '@/components/Projects/BackToProjects'
+import { SCROLL_TO_KEY } from '@/components/Projects/BackToHome'
+import { forgetHomeSpot, rememberHomeSpot, takeRestoreSpot } from '@/lib/returnTo'
 import Hero from '@/components/sections/Hero'
 import Grid from '@/components/sections/Grid'
 import { FloatingNav } from '@/components/layout/FloatingNav'
@@ -23,8 +24,47 @@ export default function Home() {
   // Track scroll depth milestones
   useScrollTracking()
 
-  // Coming back from a project page ("Back to projects"): land on the
-  // projects without a #projects in the address. The section is lazy-loaded,
+  // On the way to /about (any link there): remember how far down the page is,
+  // for /about's "Continue where you were".
+  useEffect(() => {
+    forgetHomeSpot()
+    const onClick = (e: MouseEvent) => {
+      const link = (e.target as Element | null)?.closest?.('a[href]')
+      if (link && new URL((link as HTMLAnchorElement).href).pathname === '/about') rememberHomeSpot()
+    }
+    document.addEventListener('click', onClick, true)
+    return () => document.removeEventListener('click', onClick, true)
+  }, [])
+
+  // Back from /about's "Continue where you were": return to that spot once its
+  // section has rendered (the sections below the hero are lazy), up to 3s.
+  useEffect(() => {
+    const spot = takeRestoreSpot()
+    if (spot === null) return
+    const started = performance.now()
+    let frame = 0
+    // Until it sticks: the section must have rendered, the page must be tall
+    // enough to reach the spot (or the browser clamps the scroll), and the
+    // scroll must have landed there.
+    const tryRestore = () => {
+      const el = spot.section ? document.getElementById(spot.section) : null
+      const ready = !spot.section || (el !== null && el.offsetHeight > 200)
+      const base = el ? el.getBoundingClientRect().top + window.scrollY : 0
+      const target = Math.max(0, base + spot.offset)
+      const reachable = document.documentElement.scrollHeight - window.innerHeight >= target - 1
+      if (ready && reachable) {
+        window.scrollTo({ top: target, behavior: 'instant' })
+        if (Math.abs(window.scrollY - target) <= 2) return
+      }
+      if (performance.now() - started < 3000) frame = requestAnimationFrame(tryRestore)
+      else window.scrollTo({ top: target, behavior: 'instant' })
+    }
+    tryRestore()
+    return () => cancelAnimationFrame(frame)
+  }, [])
+
+  // Arriving from another page through the nav or the site map: land on the
+  // section without a #section in the address. The sections are lazy-loaded,
   // so wait (up to 3s) until it has rendered.
   useEffect(() => {
     let target: string | null = null

@@ -35,7 +35,7 @@ test("every page's footer has my two sites' cards and the site map", async ({ pa
 test('the n8builds.dev teaser links each build to its n8builds.dev page', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.goto('/')
-  const teaser = page.getByRole('region', { name: /See more of my selected work on n8builds\.dev/ })
+  const teaser = page.getByRole('region', { name: /n8builds\.dev/ })
   await teaser.scrollIntoViewIfNeeded()
   for (const [name, slug, live] of [
     ['Solara', 'solara', 'https://solara-uv.web.app'],
@@ -196,6 +196,8 @@ test('a whole role row opens on a click or from the keyboard, and its link still
   await expect(bullet).toBeHidden()
   // Tech for Pros' link sits above the row's button, so it opens the site.
   const tfp = experience.getByRole('link', { name: /^Tech for Pros/ })
+  await tfp.scrollIntoViewIfNeeded()
+  await expect(tfp).toBeInViewport()
   const hit = await tfp.evaluate((a) => {
     const r = a.getBoundingClientRect()
     return document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2)?.closest('a') === a
@@ -257,15 +259,37 @@ test('experience cards show on a small phone', async ({ page }) => {
   }
 })
 
-/**
- * "Message me" sits beside the resume in the top right corner and opens
- * n8builds.dev's contact form (owner, 2026-11-08).
- */
-test('the top corner offers Message me beside the resume', async ({ page, isMobile }) => {
-  test.skip(isMobile, '"Message me" shows from 768px up; on a phone the footer carries the contact links.')
+/** The top right corner has the resume only (owner, 2026-11-08: "Message me" removed). */
+test('the top corner offers the resume and no Message me', async ({ page, isMobile }) => {
+  test.skip(isMobile, 'The corner buttons show from 640px up; on a phone the hero carries the resume.')
   await page.goto('/')
-  const message = page.getByRole('link', { name: /^Message me/ })
-  await expect(message).toBeVisible()
-  await expect(message).toHaveAttribute('href', 'https://n8builds.dev/#contact-form')
-  await expect(message).toHaveAttribute('target', '_blank')
+  await expect(page.getByRole('link', { name: /^Message me/ })).toHaveCount(0)
+  await expect(page.getByRole('link', { name: /^Resume/ }).first()).toBeVisible()
+})
+
+test("hovering a role shows a glimpse of its site, which steps aside once it's open", async ({
+  page,
+  isMobile,
+}) => {
+  test.skip(isMobile, 'The glimpse is a desktop hover; phones open the role to see the screenshots.')
+  await page.goto('/')
+  const role = page.locator('#experience div.group\\/exp', { hasText: 'Web Developer' })
+  await role.scrollIntoViewIfNeeded()
+  const glimpse = role.locator('div[aria-hidden="true"]:has(img)').first()
+  const opacity = () => glimpse.evaluate((el) => Number(getComputedStyle(el).opacity))
+  expect(await opacity()).toBe(0)
+  const title = (await role.getByRole('heading', { name: 'Web Developer' }).boundingBox())!
+  await page.mouse.move(title.x + 20, title.y + 10)
+  await expect.poll(opacity).toBeGreaterThan(0.5)
+  await page.mouse.click(title.x + 20, title.y + 10)
+  await expect.poll(opacity).toBe(0)
+})
+
+test('/projects and the project pages lead back to the home page', async ({ page }) => {
+  for (const path of ['/projects', '/projects/net-trailer']) {
+    await page.goto(path)
+    const back = page.getByRole('link', { name: 'Back to home' })
+    await expect(back, path).toHaveAttribute('href', '/')
+    await expect(page.getByRole('link', { name: 'Back to projects' }), path).toHaveCount(0)
+  }
 })

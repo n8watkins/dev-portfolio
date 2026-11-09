@@ -37,25 +37,12 @@ const Grid = () => {
           className="mt-4 flex flex-col-reverse gap-8 md:flex-row md:items-center md:gap-12"
         >
           <div className="max-w-3xl space-y-4 text-pretty text-base leading-relaxed text-slate-300 md:flex-1 md:text-lg/7">
+            {/* A short intro (owner, 2026-11-08); the full story is on /about. */}
             <p>
               I&apos;m Nathan, a full-stack developer in Los Angeles, and I&apos;m all in on AI.
-              Building things people actually find useful has always mattered most to me, and
-              getting to do so much more of it with AI feels like a blessing.
-            </p>
-            <p>
-              These days I consult on AI and build{' '}
-              <Out href={TECH_FOR_PROS.url}>{TECH_FOR_PROS.name}</Out>, a platform for service
-              businesses: pool, HVAC, landscaping and the like. It turns a few details about a
-              business into a launch-ready website, then takes the follow-up off their plate: lead
-              capture, reviews, reminders and missed-call text-back. Before that I spent three years
+              These days I build <Out href={TECH_FOR_PROS.url}>{TECH_FOR_PROS.name}</Out>, a
+              platform for service businesses, and consult on AI; before that I spent three years
               building client apps at a consulting firm.
-            </p>
-            <p>
-              In my free time I build in public on{' '}
-              <Out href="https://n8builds.dev">n8builds.dev</Out>. That&apos;s where the tools I use
-              daily live: Scribe, my local dictation app for Windows, and OpenPing, my uptime
-              monitor, plus Solara and a few Chrome extensions, all free and open source. Next up:
-              streaming the builds live.
             </p>
             <Link
               href="/about"

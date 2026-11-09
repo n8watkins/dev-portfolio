@@ -8,7 +8,7 @@ import { Project } from '@/lib/types'
 import { accents } from '@/lib/accents'
 import ProjectGallery from './ProjectGallery'
 import TechStackCycle from './TechStackCycle'
-import BackToProjects from './BackToProjects'
+import BackToHome from './BackToHome'
 import StatusPill, { DemoSleepNote } from './StatusPill'
 
 function Heading({ id, children }: { id: string; children: React.ReactNode }) {
@@ -107,7 +107,7 @@ export default function ProjectDetail({ project }: { project: Project }) {
         style={{ '--lab-from': accent.rgb, '--lab-x': '0%' } as React.CSSProperties}
       />
       <div className="relative max-w-5xl xl:max-w-6xl 2xl:max-w-7xl mx-auto px-4 sm:px-6 pt-24 pb-12 md:pt-28 md:pb-16">
-        <BackToProjects />
+        <BackToHome />
 
         {/* Header */}
         <header className="mb-8">

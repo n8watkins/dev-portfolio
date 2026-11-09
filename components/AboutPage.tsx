@@ -1,8 +1,10 @@
 'use client'
 
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import Image from 'next/image'
-import { Briefcase, Monitor, TreePalm } from 'lucide-react'
+import Link from 'next/link'
+import dynamic from 'next/dynamic'
+import { ArrowUp, Briefcase, CornerUpLeft, Monitor, TreePalm } from 'lucide-react'
 import { FloatingNav } from '@/components/layout/FloatingNav'
 import Footer from '@/components/layout/Footer'
 import PauseOffscreen from '@/components/ui/PauseOffscreen'
@@ -10,6 +12,10 @@ import Decals from '@/components/about/Decals'
 import { subpageNavItems } from '@/data/navigation'
 import { aboutPortrait, aboutScenes, type AboutPhoto, type AboutScene } from '@/data/about'
 import { TECH_FOR_PROS } from '@/lib/sites'
+import { homeSpot, returnToHomeSpot } from '@/lib/returnTo'
+import { SCROLL_TO_KEY } from '@/components/Projects/BackToHome'
+
+const ScrollToTop = dynamic(() => import('@/components/ui/ScrollToTop'), { ssr: false })
 
 const LINK =
   'font-semibold text-sky-400 underline decoration-sky-400/40 underline-offset-4 hover:text-sky-300 hover:decoration-sky-300 transition-colors duration-200'
@@ -95,6 +101,63 @@ function ScenePhoto({ photo, mood }: { photo: AboutPhoto; mood: AboutScene['mood
   )
 }
 
+const WAY =
+  'group inline-flex items-center justify-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold transition-colors focus:outline-hidden focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:ring-offset-2 focus-visible:ring-offset-darkBlue'
+const WAY_QUIET = 'border border-white/12 bg-white/4 text-slate-100 hover:border-sky-400/50 hover:bg-white/8 hover:text-sky-200'
+
+/**
+ * The ways on, at the end of the story (owner, 2026-11-08): back to where you
+ * were on the home page (only when you came from there), the home page's
+ * experience, or its top. All three stay on this site.
+ */
+function WaysOn() {
+  // Read after hydration, so the server's HTML (no button) matches the first render.
+  const [canReturn, setCanReturn] = useState(false)
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- session storage exists only in the browser
+    setCanReturn(homeSpot() !== null)
+  }, [])
+  return (
+    <nav
+      aria-label="Where to next"
+      className="mt-20 mb-24 flex flex-col items-center gap-5 border-t border-white/8 pt-12 text-center md:mt-28"
+    >
+      <p className="text-lg text-slate-300">That&apos;s me. Where to next?</p>
+      <div className="flex w-full max-w-sm flex-col gap-3 sm:w-auto sm:max-w-none sm:flex-row sm:flex-wrap sm:justify-center">
+        {canReturn && (
+          <Link
+            href="/"
+            scroll={false}
+            onClick={returnToHomeSpot}
+            className={`${WAY} bg-sky-500 text-slate-950 hover:bg-sky-400`}
+          >
+            <CornerUpLeft className="h-4 w-4" aria-hidden="true" />
+            Continue where you were
+          </Link>
+        )}
+        <Link
+          href="/"
+          scroll={false}
+          onClick={() => {
+            try {
+              sessionStorage.setItem(SCROLL_TO_KEY, 'experience')
+            } catch {
+              // Storage blocked: the link still goes home, to the top.
+            }
+          }}
+          className={`${WAY} ${canReturn ? WAY_QUIET : 'bg-sky-500 text-slate-950 hover:bg-sky-400'}`}
+        >
+          See my experience
+        </Link>
+        <Link href="/" className={`${WAY} ${WAY_QUIET}`}>
+          <ArrowUp className="h-4 w-4" aria-hidden="true" />
+          Back to the top of the home page
+        </Link>
+      </div>
+    </nav>
+  )
+}
+
 /**
  * The About page, only about me (owner, 2026-11-08): one portrait and the
  * opening, then the story in a few photo scenes (at work, in LA, the setup),
@@ -149,7 +212,7 @@ export default function AboutPage() {
             <Decals mood="intro" />
           </PauseOffscreen>
 
-          <div className="mt-24 mb-24 flex flex-col gap-24 md:mt-32 md:gap-32">
+          <div className="mt-24 flex flex-col gap-24 md:mt-32 md:gap-32">
             {aboutScenes.map((scene, i) => (
               <PauseOffscreen key={scene.id} className="relative">
                 <section
@@ -178,10 +241,13 @@ export default function AboutPage() {
               </PauseOffscreen>
             ))}
           </div>
+
+          <WaysOn />
         </div>
         <div className="mx-auto max-w-md sm:max-w-xl md:max-w-3xl lg:max-w-4xl xl:max-w-5xl 2xl:max-w-6xl">
           <Footer />
         </div>
+        <ScrollToTop />
       </main>
     </>
   )

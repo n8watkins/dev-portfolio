@@ -88,6 +88,7 @@ const Experience = () => {
             const showDivider =
               item.additional && workExperience[index - 1] && !workExperience[index - 1].additional
             const isOpen = open.has(item.id)
+            const preview = item.visuals?.[0]
             return (
               <React.Fragment key={item.id}>
                 {showDivider && (
@@ -125,47 +126,74 @@ const Experience = () => {
                           {item.role}, {item.company}: {isOpen ? 'hide' : 'show'} what I did
                         </span>
                       </button>
-                      <div className="mb-2 flex flex-wrap items-center gap-x-2 gap-y-1">
-                        <span className="rounded-full border border-sky-500/20 bg-sky-500/10 px-2.5 py-0.5 text-xs font-semibold tracking-wider text-sky-400 uppercase">
-                          {item.period}
-                        </span>
-                        <span className="text-xs text-slate-400">{item.location}</span>
-                      </div>
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="min-w-0">
-                          <h3 className="text-xl leading-snug font-bold text-slate-100 md:text-2xl/8">
-                            {item.role}
-                          </h3>
-                          <p className="mt-0.5 text-base font-semibold text-sky-400">
-                            {item.companyUrl ? (
-                              <a
-                                href={item.companyUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="relative z-20 inline-flex items-center gap-1.5 rounded transition-colors hover:text-sky-300 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-sky-400"
-                              >
-                                {item.company}
-                                <FiExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
-                                <span className="sr-only"> (opens in a new tab)</span>
-                              </a>
-                            ) : (
-                              item.company
-                            )}
-                          </p>
+                      {/* On hover (desktop), a glimpse of the work fades in from the
+                          right, as before but smaller; it steps aside once the role is
+                          open and its screenshots show below. */}
+                      {preview && (
+                        <div
+                          aria-hidden="true"
+                          className={`pointer-events-none absolute inset-y-0 right-0 hidden w-[24%] overflow-hidden mask-[linear-gradient(to_left,black_45%,transparent)] opacity-0 transition-opacity duration-500 md:block ${isOpen ? '' : 'group-has-[[data-role-toggle]:hover]/role:opacity-80'}`}
+                        >
+                          <Image
+                            src={preview.src}
+                            alt=""
+                            fill
+                            sizes="20vw"
+                            className="object-cover object-left-top transition-transform duration-700 group-has-[[data-role-toggle]:hover]/role:scale-105"
+                          />
+                          <div className="absolute inset-0 bg-darkBlue/40" />
                         </div>
+                      )}
+                      <div className={`relative ${preview ? 'md:max-w-[72%]' : ''}`}>
+                        <div className="mb-2 flex flex-wrap items-center gap-x-2 gap-y-1">
+                          <span className="rounded-full border border-sky-500/20 bg-sky-500/10 px-2.5 py-0.5 text-xs font-semibold tracking-wider text-sky-400 uppercase">
+                            {item.period}
+                          </span>
+                          <span className="text-xs text-slate-400">{item.location}</span>
+                        </div>
+                        <h3 className="text-xl leading-snug font-bold text-slate-100 md:text-2xl/8">
+                          {item.role}
+                        </h3>
+                        <p className="mt-0.5 text-base font-semibold text-sky-400">
+                          {item.companyUrl ? (
+                            <a
+                              href={item.companyUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="relative z-20 inline-flex items-center gap-1.5 rounded transition-colors hover:text-sky-300 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-sky-400"
+                            >
+                              {item.company}
+                              <FiExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
+                              <span className="sr-only"> (opens in a new tab)</span>
+                            </a>
+                          ) : (
+                            item.company
+                          )}
+                        </p>
+                        {/* "What I did", on the left as before */}
                         <span
                           aria-hidden="true"
-                          className="mt-1 inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-white/10 bg-white/4 px-2.5 py-1.5 text-xs font-semibold whitespace-nowrap text-slate-300 transition-colors group-has-[[data-role-toggle]:hover]/role:border-sky-400/40 group-has-[[data-role-toggle]:hover]/role:text-sky-200 sm:text-sm"
+                          className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-slate-300 transition-colors group-has-[[data-role-toggle]:hover]/role:text-sky-300"
                         >
-                          <span className="hidden sm:inline">{isOpen ? 'Hide' : 'What I did'}</span>
+                          What I did
                           <FiChevronDown
-                            className={`h-4 w-4 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
+                            className={`h-4 w-4 transition-transform duration-300 motion-reduce:transition-none ${isOpen ? 'rotate-180' : ''}`}
                           />
                         </span>
                       </div>
                     </div>
-                    <div id={`role-${item.id}`} hidden={!isOpen} className="px-4 pb-5 md:px-5">
-                      <Details item={item} />
+                    {/* Opens smoothly: its row eases from 0fr to 1fr while it fades in
+                        (instant under reduced motion); closed, it is hidden and inert. */}
+                    <div
+                      id={`role-${item.id}`}
+                      inert={!isOpen}
+                      className={`grid transition-[grid-template-rows,opacity,visibility] duration-[350ms] ease-out motion-reduce:transition-none ${isOpen ? 'visible grid-rows-[1fr] opacity-100' : 'invisible grid-rows-[0fr] opacity-0'}`}
+                    >
+                      <div className="min-h-0 overflow-hidden">
+                        <div className="px-4 pb-5 md:px-5">
+                          <Details item={item} />
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </motion.div>
