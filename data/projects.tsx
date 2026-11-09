@@ -8,6 +8,7 @@ export const projects: Project[] = [
     subTitle: 'Realtime Voice Agent',
     des: `A browser-based realtime voice AI - speak and it speaks back, streamed and interruptible. Echo closes the whole spoken loop (mic → transcribe → think → speak) with function-calling tools in the middle and a turn-taking state machine that lets you talk over it. The model was the easy part; the ~800 milliseconds of perceived latency were the hard part.`,
     // The real UI leads; the title card repeats the card's own heading, so it is only the share image.
+    summary: `A browser-based realtime voice AI: speak and it speaks back, streamed and interruptible. The model was the easy part; the ~800 milliseconds of perceived latency were the hard part.`,
     images: [
       { src: '/projects/echo/1-app.webp', alt: 'Echo: the voice orb, ready to talk, with suggested things to say' },
       { src: '/projects/echo/2-intro.webp', alt: "Echo's welcome: what it is and its key features" },
@@ -85,6 +86,7 @@ export const projects: Project[] = [
     title: 'Scout',
     subTitle: 'Agentic Research Assistant',
     des: `An AI agent that plans, searches the live web, reads sources, and writes a cited report - streaming each step as it happens. Scout is a from-scratch ReAct loop on Gemini with function calling and SSE: no agent framework, no black box. It doesn't hand you an answer, it shows you the reasoning loop that produced it. The process is the product.`,
+    summary: `An AI agent that plans, searches the live web, reads sources and writes a cited report, streaming each step. A from-scratch ReAct loop on Gemini: no framework, no black box.`,
     images: [
       { src: '/projects/scout/1-dark.webp', alt: 'Scout: ask a hard research question and watch it plan, search, read and cite' },
       { src: '/projects/scout/2-app.webp', alt: 'Scout in light mode, with suggested research topics' },
@@ -161,6 +163,7 @@ export const projects: Project[] = [
     title: 'GeminiGPT',
     subTitle: 'AI Chat Platform',
     des: `A full-stack AI chat platform powered by Google's Gemini 3.1 Flash Lite. Supports multi-chat sessions, cross-chat semantic search over LanceDB vector embeddings, PDF and DOCX document understanding, and real-time response streaming over WebSockets - with a bring-your-own-key model that keeps usage private.`,
+    summary: `A full-stack AI chat on Gemini with memory across chats: semantic search over every past conversation, PDF and DOCX understanding, and replies streamed over WebSockets.`,
     images: [
       { src: '/projects/geminigpt/1-app.webp', alt: 'GeminiGPT: a new chat with suggested prompts' },
       { src: '/projects/geminigpt/2-intro.webp', alt: "GeminiGPT's welcome: what it is and its key features" },
@@ -238,6 +241,7 @@ export const projects: Project[] = [
     title: 'Net-Trailer',
     subTitle: 'AI-Powered Netflix Clone',
     des: `A Netflix-style streaming app with an AI brain. Describe what you're in the mood for in plain language and Gemini turns it into tailored picks, while a personalized "Recommended For You" engine learns from your watch history and feedback. Plus TMDB-powered browsing and trailers, secure auth, and Firebase-backed persistence.`,
+    summary: `A Netflix-style streaming app with an AI brain: describe your mood in plain language and Gemini turns it into picks, while a recommender learns your taste and explains each one.`,
     images: [
       { src: '/projects/net-trailer/1-app.webp', alt: 'Net-Trailer: a featured title with Play and More Info' },
       { src: '/projects/net-trailer/2-rows.webp', alt: 'Net-Trailer: Trending and Top Rated rows from TMDB' },
@@ -305,6 +309,100 @@ export const projects: Project[] = [
     aiUsage: `Net-Trailer's AI is a Gemini-powered recommendation layer over a TMDB catalog. Natural-language search sends your phrasing to Gemini, which extracts intent - media type, genres, mood - and turns it into a tailored row, behind a multi-model router that falls back automatically when a model is busy. A separate personalized engine builds a profile from your full watch and rating history, with a real-time feedback loop that reshapes future picks and a "why this was recommended" explanation attached to each title.`,
     github: 'https://github.com/n8watkins/net_trailer',
     liveSite: 'https://net-trailers.vercel.app/',
+  },
+  {
+    id: 6,
+    slug: 'portfolio-rank',
+    title: 'Portfolio Rank',
+    wordmark: (
+      <>
+        Portfolio <span className="text-[#fbbf24]">Rank</span>
+      </>
+    ),
+    subTitle: 'The Developer Portfolio Leaderboard',
+    des: `2,000+ developer portfolios from Emma Bostian's open developer-portfolios list, ranked by head-to-head votes instead of A to Z. Pick the better of two in about five seconds, browse every site with a real screenshot, Lighthouse scores and an AI review, or add your own portfolio and see how it compares.`,
+    summary: `2,000+ developer portfolios from Emma Bostian's open list, ranked by head-to-head votes instead of A to Z. Vote on a matchup, or add your own portfolio and see how it compares.`,
+    images: [
+      { src: '/projects/portfolio-rank/1-home.webp', alt: 'Portfolio Rank: the best developer portfolios, ranked, with the top ranked right now' },
+      { src: '/projects/portfolio-rank/2-rank.webp', alt: 'Portfolio Rank: which portfolio is better? Two portfolios side by side' },
+      { src: '/projects/portfolio-rank/3-top.webp', alt: "Portfolio Rank's leaderboard, ranked by ELO from head-to-head votes" },
+    ],
+    icon: '/projects/icons/portfolio-rank.png',
+    accent: 'portfolio-rank',
+    tags: ['Next.js', 'Gemini', 'Turso', 'Playwright', 'Vercel'],
+    features: ['Head-to-head voting', 'ELO leaderboard', 'A screenshot of every site', 'Lighthouse scores and AI reviews'],
+    technologies: {
+      Frontend: {
+        descriptionParts: [
+          {
+            text: 'Face-off voting, the leaderboard and a searchable catalog of every portfolio',
+            icons: [{ icon: 'next.svg' }, { icon: 're.svg' }, { icon: 'ts.svg' }],
+          },
+          {
+            text: 'Browse UI and portfolio cards',
+            icons: [{ icon: 'tail.svg' }],
+          },
+        ],
+      },
+      Backend: {
+        descriptionParts: [
+          {
+            text: 'GitHub sign-in, so each person gets one vote per matchup',
+            icons: [{ icon: 'nextAuth.png' }],
+          },
+          {
+            text: 'Votes, ELO scores and the catalog in Turso (libSQL), written atomically',
+            icons: [{ icon: 'sqlite.svg' }],
+          },
+          {
+            text: 'Gemini judges portfolios head to head to seed the rankings, and grades each site on a 6-axis rubric',
+            icons: [{ icon: 'gemini.svg' }],
+          },
+        ],
+      },
+      Cloud: {
+        descriptionParts: [
+          {
+            text: 'A screenshot of every portfolio, taken with Playwright',
+            icons: [{ icon: 'playwright.svg' }],
+          },
+          {
+            text: 'Hosted on Vercel, with daily GitHub Actions that sync the list, judge new matchups and refresh scores',
+            icons: [{ icon: 'vercel.png' }, { icon: 'github.png' }],
+          },
+        ],
+      },
+    },
+    highlights: [
+      "Built on Emma Bostian's developer-portfolios list, a community resource since 2019, sorted A to Z. Portfolio Rank gives it a real frontend and a ranking system, so you can find the good ones.",
+      'Face-off voting: two portfolios side by side, pick the better one, and ELO decides the leaderboard. Ten practice votes need no account; official votes take a GitHub sign-in, one per person per matchup.',
+      'Rankings start from AI: Gemini judges portfolios head to head, so the leaderboard is useful before human votes pile up, then the crowd takes over.',
+      'Every site gets a real screenshot, Lighthouse scores from PageSpeed Insights, polish checks and an AI review on a 6-axis rubric.',
+      'Vote integrity is guarded hardest: a UNIQUE constraint and a single write transaction, so concurrent requests cannot race past the duplicate check or the daily cap.',
+      'The pipeline runs itself: daily GitHub Actions sync the upstream list, judge new matchups and refresh screenshots and scores.',
+    ],
+    purpose: `A list of 2,000 portfolios sorted alphabetically is a phone book: nobody can find the good ones. Portfolio Rank asks what it takes to turn a giant community list into something fun to browse, and what keeps a crowd-voted leaderboard honest enough to trust.`,
+    aiUsage: `Gemini bootstraps the rankings: it judges portfolios pairwise on design and content, so the leaderboard means something before people have voted, then human votes take over through ELO. It also grades each site on a 6-axis rubric, shown beside objective Lighthouse scores, so the AI's opinion is never the only signal.`,
+    credits: [
+      {
+        name: "Emma Bostian's developer-portfolios",
+        href: 'https://github.com/emmabostian/developer-portfolios',
+        note: 'The community list every portfolio here comes from, curated by Emma and thousands of contributors since 2019. Go star it.',
+      },
+      {
+        name: 'Ali Spittel',
+        href: 'https://twitter.com/ASpittel/status/1171604728951779328',
+        note: 'Her 2019 tweet asking developers to share their portfolios is what started the list.',
+      },
+    ],
+    invite: {
+      heading: 'Vote, or add your portfolio',
+      body: 'Pick the better of two portfolios in about five seconds, or add yours: it gets a screenshot, Lighthouse scores and an AI review, and joins the head-to-head rankings.',
+      label: 'Add yours on Portfolio Rank',
+      href: 'https://portfoliorank.n8builds.dev/',
+    },
+    github: 'https://github.com/n8watkins/portfolio-rank',
+    liveSite: 'https://portfoliorank.n8builds.dev',
   },
 ]
 
@@ -378,6 +476,7 @@ export const techNameMapping = {
 
   //----->Containerization & Orchestration
   'dock.svg': 'Docker',
+  'playwright.svg': 'Playwright',
   'kubernetes.png': 'Kubernetes',
   'github.svg': 'GitHub',
 }

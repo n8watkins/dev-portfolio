@@ -9,7 +9,7 @@ import { trackProjectEvent } from '@/lib/analytics'
 /**
  * The n8builds.dev teaser under the projects: the site's icon with a small
  * "Building in public" label, then its builds one at a time. Each shows its
- * own icon and accent (Portfolio Rank's gold "Rank"), what it is, a link to
+ * own icon and accent, what it is, a link to
  * its live site when it has one, and "See the build" on n8builds.dev. The
  * facts come from n8builds-web's data/builds.tsx and Lab rows.
  *
@@ -88,31 +88,6 @@ const BUILDS: Build[] = [
       glow: 'from-orange-400/[0.14]',
       bar: 'bg-orange-400',
       rgb: '250 204 21',
-    },
-  },
-  {
-    slug: 'portfolio-rank',
-    shot: {
-      src: '/builds/portfolio-rank/shot-2026-10.webp',
-      alt: 'Portfolio Rank: the top developer portfolios, ranked by votes',
-    },
-    name: 'Portfolio Rank',
-    wordmark: (
-      <>
-        Portfolio <span className="text-[#fbbf24]">Rank</span>
-      </>
-    ),
-    icon: '/builds/portfolio-rank/icon.png',
-    kind: 'Web app',
-    tagline: 'The developer portfolio leaderboard',
-    desc: '1,700+ developer portfolios, ranked by head-to-head votes instead of A to Z, with a real screenshot of every site.',
-    tags: ['Next.js', 'Gemini', 'Turso', 'Vercel'],
-    liveSite: 'https://portfoliorank.vercel.app',
-    accent: {
-      text: 'text-amber-300',
-      glow: 'from-amber-400/[0.14]',
-      bar: 'bg-amber-400',
-      rgb: '251 191 36',
     },
   },
   {
