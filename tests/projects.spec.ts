@@ -97,7 +97,7 @@ test('the status API answers with names, states and uptime only', async ({ reque
 test('a project page shows its screenshot whole, not cropped to a strip', async ({ page }) => {
   for (const width of [375, 1280]) {
     await page.setViewportSize({ width, height: 900 })
-    for (const slug of ['echo', 'scout', 'geminigpt', 'net-trailer']) {
+    for (const slug of ['echo', 'scout', 'geminigpt', 'net-trailer', 'portfolio-rank']) {
       await page.goto(`/projects/${slug}`)
       const image = page.locator('main [data-gallery] img').first()
       await expect(image).toBeVisible()
@@ -124,11 +124,42 @@ test('a project row opens its page, its live demo and its source', async ({ page
   await expect(
     echo.getByRole('link', { name: 'View Echo source on GitHub (new tab)' })
   ).toHaveAttribute('href', /github\.com\/n8watkins\//)
-  await expect(
-    echo.getByRole('list', { name: 'What Echo does' }).getByRole('listitem')
-  ).not.toHaveCount(0)
-  await echo.getByRole('link', { name: 'View Echo details' }).click()
+  // The card stays tight: the tech pills and feature checks are on the project's page.
+  await expect(echo.getByRole('list', { name: 'What Echo does' })).toHaveCount(0)
+  await expect(echo.getByRole('list', { name: 'Echo is built with' })).toHaveCount(0)
+  await echo.getByRole('link', { name: 'Read the full story of Echo' }).click()
   await expect(page).toHaveURL(/\/projects\/echo$/, { timeout: 30000 })
+  await expect(
+    page.getByRole('list', { name: 'What Echo does' }).getByRole('listitem')
+  ).not.toHaveCount(0)
+})
+
+/**
+ * Portfolio Rank moved here from n8builds.dev's featured rows (owner,
+ * 2026-11-08): last of the projects, crediting Emma Bostian's list and
+ * inviting visitors to vote and add their own portfolio.
+ */
+test('Portfolio Rank comes last, credits its list and invites you to add your portfolio', async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.goto('/')
+  const titles = page.locator('#projects article h3')
+  await expect(titles).toHaveText(['Echo', 'Scout', 'GeminiGPT', 'Net-Trailer', 'Portfolio Rank'])
+  const rank = card(page, 'Portfolio Rank')
+  await expect(
+    rank.getByRole('link', { name: /Emma Bostian's developer-portfolios/ })
+  ).toHaveAttribute('href', 'https://github.com/emmabostian/developer-portfolios')
+  await expect(
+    rank.getByRole('link', { name: 'Try the Portfolio Rank live demo (new tab)' })
+  ).toHaveAttribute('href', 'https://portfoliorank.n8builds.dev')
+
+  await page.goto('/projects/portfolio-rank')
+  await expect(page.getByRole('heading', { name: 'Credits' })).toBeVisible()
+  await expect(page.getByRole('link', { name: /Add yours on Portfolio Rank/ })).toHaveAttribute(
+    'href',
+    'https://portfoliorank.n8builds.dev/'
+  )
 })
 
 /**

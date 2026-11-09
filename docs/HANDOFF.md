@@ -58,9 +58,13 @@ It funnels visitors to the two other sites:
 
 - **Separate from n8builds.dev, on purpose** (confirmed 2026-10-25): different readers (people hiring vs. people following the work), and a repo people can be sent to on its own.
   It is not a page of n8builds.dev.
-- **Featured projects** are Echo, Scout, GeminiGPT and Net-Trailer.
-  Each is a row after n8builds.dev's Lab (2026-10-26): screenshots with left/right, its icon, tech pills, feature checks, Live demo / Source / Details, all in the app's own colour (`lib/accents.ts`).
+- **Featured projects** are Echo, Scout, GeminiGPT, Net-Trailer and Portfolio Rank, in that order (owner, 2026-11-08).
+  Echo, Scout and GeminiGPT will later merge into one AI app; until then they stay three rows.
+  Portfolio Rank moved here from n8builds.dev's featured rows: its card credits Emma Bostian's developer-portfolios list, and its page credits her and Ali Spittel and invites visitors to vote and add their portfolio.
+  Each is a row after n8builds.dev's Lab (2026-10-26): screenshots with left/right, its icon, a short `summary`, Live demo / Source / Full story, all in the app's own colour (`lib/accents.ts`).
+  The cards are tight (owner, 2026-11-08): the tech pills and feature checks live on the project's page (`/projects/<slug>`), not the card.
   Everything else is in the n8builds.dev teaser under them (see below).
+- **"Message me"** sits beside Resume in the top right corner (from 640px; icon only below 1024px) and opens n8builds.dev's contact form (https://n8builds.dev/#contact) (owner, 2026-11-08).
 - **Titles and share cards** live in `lib/seo.ts`: "Nathan Watkins | Full-Stack Developer" for the home page (the headline dropped "AI" on 2026-10-26), "<project> - <subtitle> | Nathan Watkins" for project pages, share descriptions of at most 120 characters.
   The share image is generated from `app/opengraph-image.tsx`; there is no saved screenshot to go stale.
 - **The site's address is fixed** in `lib/seo.ts` (`https://portfolio.n8builds.dev`), not read from `NEXT_PUBLIC_SITE_URL`: a stale local value once pointed the share cards at an old vercel.app address.
@@ -118,7 +122,7 @@ It funnels visitors to the two other sites:
 
 ## The n8builds.dev teaser
 
-Under the projects, `components/Projects/BuildsTeaser.tsx` shows n8builds.dev's builds one at a time (Scribe, OpenPing, Solara, Portfolio Rank, TubeVault, Piper TTS, TL;DW), each with its real icon (`public/builds/<slug>/`), its accent, a Live site link when it has one and "See the build" on n8builds.dev (owner, 2026-10-26; it replaced the "Building in public" bento card and the More builds strip).
+Under the projects, `components/Projects/BuildsTeaser.tsx` shows n8builds.dev's builds one at a time (Scribe, OpenPing, Solara, TubeVault, Piper TTS, TL;DW; Portfolio Rank left it for the project rows on 2026-11-08), each with its real icon (`public/builds/<slug>/`), its accent, a Live site link when it has one and "See the build" on n8builds.dev (owner, 2026-10-26; it replaced the "Building in public" bento card and the More builds strip).
 
 ## Conventions
 

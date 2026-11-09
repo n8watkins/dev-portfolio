@@ -4,7 +4,7 @@ import React from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { FiCheck, FiExternalLink, FiFileText, FiGithub } from 'react-icons/fi'
+import { FiBookOpen, FiExternalLink, FiGithub } from 'react-icons/fi'
 import StatusPill from './StatusPill'
 import ProjectGallery from './ProjectGallery'
 import { accents } from '@/lib/accents'
@@ -18,10 +18,11 @@ const BUTTON =
 /**
  * A project as a Lab row, after n8builds.dev's (components/sections/
  * FeaturedProjects.tsx there): the screenshots with left/right on one side,
- * and on the other its icon and name, what it is, the tech as pills, what it
- * does as checks in its own colour, then Live demo, Source and Details. The
- * row sits in a wash of its brand colour from the screenshot's side (see
- * Projects/index.tsx). Sides alternate per row.
+ * and on the other its icon and name, a short summary (and who it builds on,
+ * when it credits someone), then Live demo, Source and Full story. The tech
+ * pills and feature checks live on the project's page, so the card stays
+ * tight (owner, 2026-11-08). The row sits in a wash of its brand colour from
+ * the screenshot's side (see Projects/index.tsx). Sides alternate per row.
  */
 export default function ProjectCard({ project, index }: { project: Project; index: number }) {
   const router = useRouter()
@@ -60,7 +61,7 @@ export default function ProjectCard({ project, index }: { project: Project; inde
           />
           <div className="min-w-0">
             <h3 className="text-2xl font-bold tracking-tight text-slate-50 sm:text-3xl">
-              {project.title}
+              {project.wordmark ?? project.title}
             </h3>
             <p className={`text-sm font-semibold ${accent.subtitle}`}>{project.subTitle}</p>
           </div>
@@ -73,32 +74,25 @@ export default function ProjectCard({ project, index }: { project: Project; inde
           </div>
         )}
 
-        <p className="mt-3 line-clamp-4 text-sm leading-relaxed text-[#9cadc5] sm:text-[0.95rem]">
-          {project.des}
+        <p className="mt-3 text-sm leading-relaxed text-[#9cadc5] sm:text-[0.95rem]">
+          {project.summary}
         </p>
 
-        <ul aria-label={`${project.title} is built with`} className="mt-3 flex flex-wrap gap-1.5">
-          {project.tags.map((tag) => (
-            <li
-              key={tag}
-              className="rounded-md border border-white/10 bg-white/4 px-2 py-1 font-mono text-xs text-slate-300"
+        {project.credits?.[0] && (
+          <p className="mt-3 text-sm text-slate-400">
+            Built on{' '}
+            <a
+              href={project.credits[0].href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`font-semibold underline decoration-current/40 underline-offset-4 transition-colors hover:text-white ${accent.subtitle}`}
             >
-              {tag}
-            </li>
-          ))}
-        </ul>
-
-        <ul
-          aria-label={`What ${project.title} does`}
-          className="mt-4 grid gap-x-5 gap-y-1.5 sm:grid-cols-2"
-        >
-          {project.features.map((feature) => (
-            <li key={feature} className="flex items-start gap-2 text-sm font-medium text-slate-200">
-              <FiCheck className={`mt-[3px] h-4 w-4 shrink-0 ${accent.check}`} aria-hidden="true" />
-              {feature}
-            </li>
-          ))}
-        </ul>
+              {project.credits[0].name}
+              <span className="sr-only"> (opens in a new tab)</span>
+            </a>{' '}
+            list.
+          </p>
+        )}
 
         <div className="mt-5 grid grid-cols-3 gap-2">
           {project.liveSite && (
@@ -131,12 +125,12 @@ export default function ProjectCard({ project, index }: { project: Project; inde
           )}
           <Link
             href={`/projects/${project.slug}`}
-            aria-label={`View ${project.title} details`}
+            aria-label={`Read the full story of ${project.title}`}
             onClick={() => trackProjectEvent('view', project.title, { source: 'grid' })}
             className={`${BUTTON} border border-white/12 bg-white/4 text-slate-200 hover:bg-white/8`}
           >
-            <FiFileText className="h-4 w-4" aria-hidden="true" />
-            Details
+            <FiBookOpen className="h-4 w-4" aria-hidden="true" />
+            Full story
           </Link>
         </div>
       </div>

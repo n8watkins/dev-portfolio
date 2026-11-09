@@ -1,3 +1,5 @@
+import type React from 'react'
+
 export interface TechIcon {
   icon: string
 }
@@ -22,17 +24,21 @@ export interface Project {
   /** URL slug for the project's detail page, e.g. /projects/echo */
   slug: string
   title: string
+  /** The title as the app writes it (Portfolio Rank's gold "Rank"); `title` otherwise. */
+  wordmark?: React.ReactNode
   subTitle: string
   des: string
+  /** One or two sentences for the home page's project card; the page itself shows `des`. */
+  summary: string
   /** Screenshots, first one shown; the gallery steps through the rest. */
   images: { src: string; alt: string }[]
   /** The app's own icon, shown left of its name. */
   icon: string
   /** The app's brand colour: its row's glow, outline, checks and main button (lib/accents.ts). */
-  accent: 'echo' | 'scout' | 'geminigpt' | 'net-trailer'
-  /** A few pills for the tech; the full stack is on the project's page. */
+  accent: 'echo' | 'scout' | 'geminigpt' | 'net-trailer' | 'portfolio-rank'
+  /** A few pills for the tech, shown on the project's page. */
   tags: string[]
-  /** What it actually does, shown as checks in its colour (from each app's own Key Features). */
+  /** What it actually does, shown on its page as checks in its colour (from each app's own Key Features). */
   features: string[]
   /** A 1200x630 card for link previews, when the first screenshot isn't one. */
   shareImage?: string
@@ -44,6 +50,10 @@ export interface Project {
   highlights?: string[]
   github?: string
   liveSite?: string
+  /** The people and work it builds on, credited on its card and its page. */
+  credits?: { name: string; href: string; note: string }[]
+  /** An invitation on its page (Portfolio Rank: vote, or add your portfolio). */
+  invite?: { heading: string; body: string; label: string; href: string }
   /** The monitor's name on OpenPing's public status page, when the live site is monitored. */
   statusName?: string
 }

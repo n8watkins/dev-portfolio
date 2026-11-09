@@ -32,7 +32,7 @@ test('the n8builds.dev teaser links each build to its n8builds.dev page', async 
   const teaser = page.getByRole('region', { name: 'Building in public' })
   await teaser.scrollIntoViewIfNeeded()
   for (const [name, slug, live] of [
-    ['Portfolio Rank', 'portfolio-rank', 'https://portfoliorank.vercel.app'],
+    ['Solara', 'solara', 'https://solara-uv.web.app'],
     ['TL;DW', 'tldw', null],
   ] as const) {
     // A click that lands before the carousel hydrates does nothing (seen in
@@ -209,4 +209,17 @@ test('experience cards show on a small phone', async ({ page }) => {
       )
       .toBeGreaterThan(0.99)
   }
+})
+
+/**
+ * "Message me" sits beside the resume in the top right corner and opens
+ * n8builds.dev's contact form (owner, 2026-11-08).
+ */
+test('the top corner offers Message me beside the resume', async ({ page, isMobile }) => {
+  test.skip(isMobile, 'The corner buttons show from 640px up; on a phone the hero carries the resume.')
+  await page.goto('/')
+  const message = page.getByRole('link', { name: /^Message me/ })
+  await expect(message).toBeVisible()
+  await expect(message).toHaveAttribute('href', 'https://n8builds.dev/#contact')
+  await expect(message).toHaveAttribute('target', '_blank')
 })

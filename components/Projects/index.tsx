@@ -9,7 +9,7 @@ import { DemoSleepNote } from './StatusPill'
 import SectionHeading from '@/components/ui/SectionHeading'
 
 const BLURB =
-  'AI is changing what software can do and how it gets made. Each project here puts a different kind of AI to work: a voice agent you can talk over, a research agent that cites its sources, a chat platform with memory, and a recommender that learns your taste.'
+  'AI is changing what software can do and how it gets made. Each project here puts a different kind of AI to work: a voice agent you can talk over, a research agent that cites its sources, a chat platform with memory, a recommender that learns your taste, and a leaderboard that Gemini helps rank.'
 
 const Projects: React.FC = () => {
   return (
