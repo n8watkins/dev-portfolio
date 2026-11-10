@@ -95,6 +95,7 @@ The owner picked layout B (a work-first home page plus detail pages) over A (one
 
 - **Home** (owner's review, 2026-11-08): the hero, About (the intro, then the bento exactly as before: Ready to relocate, the tech stack card with the dino, the resume card, "Have a project? Let's connect"), Projects, Experience, Contact.
   Since round 4 of 2026-11-09 the bento has a fifth card, the n8builds.dev build log (`components/ui/BentoComponents/BuildLogCard.tsx`): a month, its changes and a bar per day, live from https://n8builds.dev/builds/months.json through `app/api/build-log` (an hour of cache; a plain card when it cannot be read), with arrows that go round the months, and links to n8builds.dev (top left) and the build log (top right).
+  The months also move on by themselves every 5 s (owner, 2026-11-09), holding while hovered or keyboard-focused, for 15 s after an arrow, off screen, in a hidden tab and under reduced motion.
   From 1280px the grid has 12 columns: Ready to relocate (5) and the stack (7), then the resume, "Have a project?" and the build log as three equal columns (round 5).
   About on the home page is a short intro (two sentences, owner's round 3) ending in "More about me" (to `/about`), where the full story lives; the tech stack card has "See my stack" (to `/stack`).
   `/projects` and the project pages lead "Back to home" (`components/Projects/BackToHome.tsx`, to the top of `/`).
