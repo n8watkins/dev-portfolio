@@ -480,6 +480,74 @@
   }
 }
 
+/* The build log card's day bars rise in, one after another, when a month shows
+   (components/ui/BentoComponents/BuildLogCard.tsx). Not under reduced motion. */
+@keyframes log-bar-rise {
+  from {
+    transform: scaleY(0);
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .log-bar {
+    animation: log-bar-rise 0.5s cubic-bezier(0.25, 0.1, 0.25, 1) both;
+  }
+}
+
+/* The Wren mark's idle life (components/Projects/WrenMark.tsx, from Wren's own
+   globals.css): an occasional tail flick and head tilt. Held still under
+   reduced motion. */
+svg.wren .tail,
+svg.wren .head {
+  transform-box: view-box;
+}
+svg.wren .tail {
+  transform-origin: 9.2px 16px;
+}
+svg.wren .head {
+  transform-origin: 21px 16.5px;
+}
+@keyframes w-flick {
+  0%,
+  84%,
+  100% {
+    transform: rotate(0);
+  }
+  87% {
+    transform: rotate(14deg);
+  }
+  90% {
+    transform: rotate(-4deg);
+  }
+  93% {
+    transform: rotate(9deg);
+  }
+  96% {
+    transform: rotate(0);
+  }
+}
+@keyframes w-tilt {
+  0%,
+  62%,
+  100% {
+    transform: rotate(0);
+  }
+  66%,
+  80% {
+    transform: rotate(-12deg);
+  }
+  84% {
+    transform: rotate(3deg);
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  svg.wren.idle .tail {
+    animation: w-flick 6s ease-in-out infinite;
+  }
+  svg.wren.idle .head {
+    animation: w-tilt 7.5s ease-in-out 1.8s infinite;
+  }
+}
+
 /* The hero grid's fade (components/sections/HeroGrid.tsx, from n8builds.dev):
    out at the top and bottom, and toward the left and right edges, the two
    masks intersected, so the grid melts into the page. */

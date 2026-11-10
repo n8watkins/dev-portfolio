@@ -22,7 +22,7 @@ export const gridItem5: GridItemConfig = {
   id: 5,
   title: '',
   description: '',
-  gridItemContainer: 'col-span-2 row-span-2 md:row-span-1 lg:col-span-2 xl:row-span-2 ',
+  gridItemContainer: 'col-span-2 row-span-2 md:row-span-1 lg:col-span-2 xl:col-span-3 xl:row-span-3 ',
 
   imgClassName: '',
   img: '',
