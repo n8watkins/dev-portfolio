@@ -12,7 +12,7 @@ export const projects: Project[] = [
     slug: 'wren',
     title: 'Wren',
     subTitle: 'An AI assistant that researches and remembers',
-    des: `An AI assistant you can type or talk to, that researches the web for you and remembers what you save. Try it as a guest with no sign-up: Wren answers as it writes. Sign in with GitHub or an email link for saved chats, research runs that show every search and cite only the pages they read, and a Memory library you can search by meaning.`,
+    des: `An AI assistant you can type or talk to, that researches the web for you and remembers what you save. Try it as a guest with no sign-up: Wren answers as it writes. Sign in with GitHub or an email link for voice, saved chats, research runs that show every search and cite only the pages they read, and a Memory library you can search by meaning. It's a free demo on Gemini's free tier, so don't share anything private with it; for real use, add your own Gemini key.`,
     summary: `An AI assistant you can type or talk to, that researches the web for you and remembers what you save. Try it as a guest, no sign-up: it answers as it writes.`,
     highlight: `Each person gets their own Durable Object on Cloudflare, with their chats, memory and daily meter in its own SQLite database, so one person's data can't be reached through another's id.`,
     clip: {
@@ -37,12 +37,12 @@ export const projects: Project[] = [
     icon: '/projects/icons/wren.svg',
     mark: 'wren',
     accent: 'wren',
-    tags: ['Next.js', 'Cloudflare Workers', 'Durable Objects', 'Gemini', 'Better Auth'],
+    tags: ['Next.js', 'Cloudflare Workers', 'Durable Objects', 'Gemini', 'Gemini Live', 'Better Auth'],
     features: [
       'Answers as it writes',
+      'Talk to it, and talk over it to interrupt',
       'Research that cites its sources',
       'A Memory library searched by meaning',
-      'Try it as a guest',
     ],
     technologies: {
       Frontend: {
@@ -58,6 +58,10 @@ export const projects: Project[] = [
           {
             text: 'Gemini for chat, with a fallback model when one is busy, and embeddings for Memory',
             icons: [{ icon: 'gemini.svg' }],
+          },
+          {
+            text: "Voice through Gemini Live, relayed by each person's agent, landing in the same chat as text",
+            icons: [{ icon: 'gemini.svg' }, { icon: 'websocket.svg' }],
           },
           {
             text: 'GitHub and email sign-in with Better Auth, sessions in D1',
@@ -85,13 +89,15 @@ export const projects: Project[] = [
     highlights: [
       'Try it as a guest: 5 messages a day with no account, kept only in your tab, behind a Cloudflare Turnstile check and per-network limits so the free tier stays fair.',
       'Answers stream as Wren writes them, from the agent through the API route to the browser; Stop or closing the tab keeps what was written.',
+      'Voice: tap the mic and talk with Wren through Gemini Live, relayed by your own agent; talk over it to interrupt, and every spoken turn lands in the same chat as text.',
       'Each signed-in person has their own Durable Object (Cloudflare Agents SDK) holding their chats, memory and daily meter in its own SQLite database.',
       'Memory is a library you browse and edit: notes, links and files, searched by meaning with Gemini embeddings in Vectorize.',
       'Research runs show what they searched and read, and cite only the pages they opened.',
       'Sign in with GitHub or a one-time email link (Better Auth on D1); links expire in 10 minutes and are stored hashed.',
+      "A free demo on Gemini's free tier, and it says so: don't share anything private with it, and for real use add your own Gemini key, kept only in your browser and never stored or logged.",
     ],
     purpose: `Wren is my take on a ChatGPT-like assistant done well: one chat where typing and talking are always both there, research you can watch and check, and a memory you can see, edit and delete instead of a black box. It's also a study in running an AI product on a free tier honestly: a real guest mode with clear limits.`,
-    aiUsage: `Chat runs on Gemini (a Flash-Lite model with a fallback model when it's busy), streamed token by token. Memory turns what you save into Gemini embeddings in Cloudflare Vectorize, so you find things by meaning. Research runs search the web, read the pages and answer with citations to only the pages they opened.`,
+    aiUsage: `Chat runs on Gemini (a Flash-Lite model with a fallback model when it's busy), streamed token by token, and voice on Gemini Live. Memory turns what you save into Gemini embeddings in Cloudflare Vectorize, so you find things by meaning. Research runs search the web, read the pages and answer with citations to only the pages they opened.`,
     github: 'https://github.com/n8watkins/wren',
     liveSite: 'https://wren.n8builds.dev',
   },
