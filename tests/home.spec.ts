@@ -120,18 +120,21 @@ test('from 1280px, the resume, contact and build log cards are one row of three 
   await page.locator('[data-build-log]').scrollIntoViewIfNeeded()
   const box = async (text: string | RegExp) =>
     (await page.locator('#about .grid > div', { hasText: text }).last().boundingBox())!
-  const [resume, contact, log] = [
-    await box('Check out my resume!'),
-    await box("Have a project? Let's connect!"),
-    await box('changes shipped'),
-  ]
-  for (const b of [contact, log]) {
-    expect(Math.abs(b.y - resume.y)).toBeLessThan(2)
-    expect(Math.abs(b.width - resume.width)).toBeLessThan(2)
-    expect(Math.abs(b.height - resume.height)).toBeLessThan(2)
-  }
-  expect(resume.x).toBeLessThan(contact.x)
-  expect(contact.x).toBeLessThan(log.x)
+  // The cards slide in one after another, so measure again until they have landed.
+  await expect(async () => {
+    const [resume, contact, log] = [
+      await box('Check out my resume!'),
+      await box("Have a project? Let's connect!"),
+      await box('changes shipped'),
+    ]
+    for (const b of [contact, log]) {
+      expect(Math.abs(b.y - resume.y)).toBeLessThan(2)
+      expect(Math.abs(b.width - resume.width)).toBeLessThan(2)
+      expect(Math.abs(b.height - resume.height)).toBeLessThan(2)
+    }
+    expect(resume.x).toBeLessThan(contact.x)
+    expect(contact.x).toBeLessThan(log.x)
+  }).toPass({ timeout: 10_000 })
 })
 
 /**
