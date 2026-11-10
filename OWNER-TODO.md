@@ -51,21 +51,9 @@ Only you can edit the file, and it still shows the old names and address.
 **Unblocks.**
 A resume that matches the site.
 
-## 5. Lifeline Clinical Lab's link
+## 5. The clinical lab's link
 
-- [ ] Decided: ask the client to fix their certificate, or unlink the site.
-
-**What.**
-https://lifelineclinicallab.com/ in the Experience section fails its secure (TLS) connection, so visitors get a browser warning.
-
-**Steps.**
-Ask the client to renew or fix the site's certificate, or tell Claude to show the project without a link until it works.
-
-**Why.**
-The certificate is the client's, and contacting them is yours.
-
-**Unblocks.**
-No broken link on the hire-me page.
+- [x] Decided (2026-11-09): the site is not linked or named by its domain anywhere; Experience describes the client as a clinical lab.
 
 ## 6. Decide: keep Sentry's feedback button?
 
@@ -83,21 +71,9 @@ It is a product choice about inviting feedback from visitors.
 **Unblocks.**
 Closing backlog item 1 in [docs/HANDOFF.md](docs/HANDOFF.md).
 
-## 7. primeshows.live is a parked domain
+## 7. The streaming service's link
 
-- [ ] Decide what the Appturnity entry's primeshows.live link should do.
-
-**What.**
-On 2026-11-08 https://primeshows.live showed a registrar's "This domain may be for sale" page, and the Experience section links to it (`data/experience.tsx`).
-
-**Steps.**
-Tell Claude to drop the link, or to point it at the project's new address if it has one.
-
-**Why.**
-Only you know whether the site moved or ended.
-
-**Unblocks.**
-No link from the portfolio to a parked domain.
+- [x] Decided (2026-11-09): the site is not linked or named by its domain anywhere; Experience describes the client as a streaming service.
 
 ## 8. Photos for the About page
 

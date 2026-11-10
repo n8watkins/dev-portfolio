@@ -9,27 +9,27 @@ const feed = (updatedAt: number, services: unknown[]) => ({ updatedAt, groups: [
 test('a fresh feed keeps each service as reported', () => {
   const map = toStatusMap(
     feed(NOW - 60_000, [
-      { name: 'Echo', state: 'operational', uptime90d: 92.914, bars: [], description: null },
-      { name: 'Scout', state: 'down', uptime90d: 81 },
+      { name: 'Demo A', state: 'operational', uptime90d: 92.914, bars: [], description: null },
+      { name: 'Demo B', state: 'down', uptime90d: 81 },
     ]),
     NOW,
   )
-  assert.deepEqual(map, { Echo: { state: 'operational', uptime90d: 92.914 }, Scout: { state: 'down', uptime90d: 81 } })
+  assert.deepEqual(map, { 'Demo A': { state: 'operational', uptime90d: 92.914 }, 'Demo B': { state: 'down', uptime90d: 81 } })
 })
 
 test('a stale feed (off-hours, nothing checking) reads as asleep, but keeps a real outage', () => {
   const map = toStatusMap(
     feed(NOW - STALE_AFTER_MS - 1, [
-      { name: 'Echo', state: 'operational', uptime90d: 93 },
-      { name: 'Scout', state: 'degraded', uptime90d: 93 },
-      { name: 'GeminiGPT', state: 'down', uptime90d: 93 },
+      { name: 'Demo A', state: 'operational', uptime90d: 93 },
+      { name: 'Demo B', state: 'degraded', uptime90d: 93 },
+      { name: 'Demo C', state: 'down', uptime90d: 93 },
       { name: 'Net', state: 'maintenance', uptime90d: 93 },
     ]),
     NOW,
   )
-  assert.equal(map.Echo.state, 'scheduled_off')
-  assert.equal(map.Scout.state, 'scheduled_off')
-  assert.equal(map.GeminiGPT.state, 'down')
+  assert.equal(map['Demo A'].state, 'scheduled_off')
+  assert.equal(map['Demo B'].state, 'scheduled_off')
+  assert.equal(map['Demo C'].state, 'down')
   assert.equal(map.Net.state, 'maintenance')
 })
 

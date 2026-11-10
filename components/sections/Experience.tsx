@@ -34,20 +34,28 @@ const SiteCard = ({ site }: { site: NonNullable<WorkExperienceItem['sites']>[num
   </a>
 )
 
-/** A role's bullets, then the sites I built there as small preview cards. */
+/** A list of what I did, as small sky dots. */
+const Bullets = ({ items, className = '' }: { items: string[]; className?: string }) => (
+  <ul className={`space-y-2 ${className}`}>
+    {items.map((bullet) => (
+      <li
+        key={bullet}
+        className="flex items-start gap-3 text-sm leading-relaxed text-slate-400 md:text-base/6"
+      >
+        <span
+          className="mt-[9px] h-[5px] w-[5px] shrink-0 rounded-full bg-sky-400/60"
+          aria-hidden="true"
+        />
+        <span>{bullet}</span>
+      </li>
+    ))}
+  </ul>
+)
+
+/** An open role's rest: more of what I did, then the sites I built there as small preview cards. */
 const Details = ({ item }: { item: WorkExperienceItem }) => (
   <div className="flex flex-col gap-5">
-    <ul className="space-y-2.5">
-      {item.bullets.map((bullet, i) => (
-        <li
-          key={i}
-          className="flex items-start gap-3 text-sm leading-relaxed text-slate-400 md:text-base/6"
-        >
-          <span className="mt-[9px] h-[5px] w-[5px] shrink-0 rounded-full bg-sky-400/60" />
-          <span>{bullet}</span>
-        </li>
-      ))}
-    </ul>
+    {item.more && <Bullets items={item.more} />}
     {item.sites && (
       <ul aria-label="Sites I built there" className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {item.sites.map((site) => (
@@ -62,13 +70,15 @@ const Details = ({ item }: { item: WorkExperienceItem }) => (
 
 /**
  * Experience as a compact timeline (owner, 2026-11-08): each role's title,
- * company and years; clicking anywhere on a role (or Enter or Space on it)
- * opens what I did in place, and "Expand all" opens every role. Only Tech for Pros links out
- * from its name; an open role shows the sites I built there as preview cards.
+ * company, years and a short list of what I did, always shown (round 5 of
+ * 2026-11-09). The roles with more to say open in place ("More"): clicking
+ * anywhere on such a role, or Enter or Space on it, shows the rest and the sites
+ * I built there, and "Expand all" opens them all. The others have no expand.
  */
 const Experience = () => {
   const [open, setOpen] = useState<Set<number>>(() => new Set())
-  const allOpen = open.size === workExperience.length
+  const expandable = workExperience.filter((w) => w.more || w.sites)
+  const allOpen = open.size === expandable.length
   const toggle = (id: number) =>
     setOpen((prev) => {
       const next = new Set(prev)
@@ -83,7 +93,7 @@ const Experience = () => {
         <SectionHeading eyebrow="Experience" title="Where I've built" />
         <button
           type="button"
-          onClick={() => setOpen(allOpen ? new Set() : new Set(workExperience.map((w) => w.id)))}
+          onClick={() => setOpen(allOpen ? new Set() : new Set(expandable.map((w) => w.id)))}
           aria-expanded={allOpen}
           className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl border border-white/12 bg-white/4 px-3 py-2 text-sm font-semibold text-slate-200 transition-colors hover:border-sky-400/50 hover:bg-white/8 hover:text-sky-200 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-sky-400"
         >
@@ -103,7 +113,8 @@ const Experience = () => {
           {workExperience.map((item, index) => {
             const showDivider =
               item.additional && workExperience[index - 1] && !workExperience[index - 1].additional
-            const isOpen = open.has(item.id)
+            const canOpen = Boolean(item.more || item.sites)
+            const isOpen = canOpen && open.has(item.id)
             const image = item.image
             return (
               <React.Fragment key={item.id}>
@@ -135,7 +146,7 @@ const Experience = () => {
                     {image && (
                       <div
                         aria-hidden="true"
-                        className={`pointer-events-none absolute inset-y-0 right-0 hidden w-[26%] overflow-hidden mask-[linear-gradient(to_left,black_45%,transparent)] transition-opacity duration-500 md:block ${isOpen ? 'opacity-50' : 'opacity-0 group-has-[[data-role-toggle]:hover]/card:opacity-80'}`}
+                        className={`pointer-events-none absolute inset-y-0 right-0 hidden w-[26%] overflow-hidden mask-[linear-gradient(to_left,black_45%,transparent)] transition-opacity duration-500 md:block ${isOpen ? 'opacity-50' : 'opacity-0 group-hover/card:opacity-80'}`}
                         data-role-image
                       >
                         <Image
@@ -143,24 +154,27 @@ const Experience = () => {
                           alt=""
                           fill
                           sizes="22vw"
-                          className="object-cover object-left-top transition-transform duration-700 group-has-[[data-role-toggle]:hover]/card:scale-105"
+                          className="object-cover object-left-top transition-transform duration-700 group-hover/card:scale-105"
                         />
                         <div className="absolute inset-0 bg-darkBlue/40" />
                       </div>
                     )}
                     <div className="group/role relative p-4 md:p-5">
-                      <button
-                        type="button"
-                        data-role-toggle
-                        onClick={() => toggle(item.id)}
-                        aria-expanded={isOpen}
-                        aria-controls={`role-${item.id}`}
-                        className="absolute inset-0 z-10 cursor-pointer rounded-xl focus:outline-hidden"
-                      >
-                        <span className="sr-only">
-                          {item.role}, {item.company}: {isOpen ? 'hide' : 'show'} what I did
-                        </span>
-                      </button>
+                      {canOpen && (
+                        <button
+                          type="button"
+                          data-role-toggle
+                          onClick={() => toggle(item.id)}
+                          aria-expanded={isOpen}
+                          aria-controls={`role-${item.id}`}
+                          className="absolute inset-0 z-10 cursor-pointer rounded-xl focus:outline-hidden"
+                        >
+                          <span className="sr-only">
+                            {item.role}, {item.company}: {isOpen ? 'hide' : 'show'} more of what I
+                            did
+                          </span>
+                        </button>
+                      )}
                       <div className={`relative ${image ? 'md:max-w-[72%]' : ''}`}>
                         <div className="mb-2 flex flex-wrap items-center gap-x-2 gap-y-1">
                           <span className="rounded-full border border-sky-500/20 bg-sky-500/10 px-2.5 py-0.5 text-xs font-semibold tracking-wider text-sky-400 uppercase">
@@ -187,33 +201,39 @@ const Experience = () => {
                             item.company
                           )}
                         </p>
-                        {/* "What I did", on the left as before */}
-                        <span
-                          aria-hidden="true"
-                          className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-slate-300 transition-colors group-has-[[data-role-toggle]:hover]/role:text-sky-300"
-                        >
-                          What I did
-                          <FiChevronDown
-                            className={`h-4 w-4 transition-transform duration-300 motion-reduce:transition-none ${isOpen ? 'rotate-180' : ''}`}
-                          />
-                        </span>
+                        {/* What I did, in short, for every role */}
+                        <Bullets items={item.basics} className="mt-3" />
+                        {/* "More" only on the roles with more to say */}
+                        {canOpen && (
+                          <span
+                            aria-hidden="true"
+                            className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-slate-300 transition-colors group-has-[[data-role-toggle]:hover]/role:text-sky-300"
+                          >
+                            {isOpen ? 'Less' : 'More'}
+                            <FiChevronDown
+                              className={`h-4 w-4 transition-transform duration-300 motion-reduce:transition-none ${isOpen ? 'rotate-180' : ''}`}
+                            />
+                          </span>
+                        )}
                       </div>
                     </div>
                     {/* Opens smoothly: its row eases from 0fr to 1fr while it fades in
                         (instant under reduced motion); closed, it is hidden and inert. */}
-                    <div
-                      id={`role-${item.id}`}
-                      inert={!isOpen}
-                      className={`grid transition-[grid-template-rows,opacity,visibility] duration-[350ms] ease-out motion-reduce:transition-none ${isOpen ? 'visible grid-rows-[1fr] opacity-100' : 'invisible grid-rows-[0fr] opacity-0'}`}
-                    >
-                      <div className="min-h-0 overflow-hidden">
-                        <div
-                          className={`relative px-4 pb-5 md:px-5 ${image ? 'md:max-w-[74%]' : ''}`}
-                        >
-                          <Details item={item} />
+                    {canOpen && (
+                      <div
+                        id={`role-${item.id}`}
+                        inert={!isOpen}
+                        className={`grid transition-[grid-template-rows,opacity,visibility] duration-[350ms] ease-out motion-reduce:transition-none ${isOpen ? 'visible grid-rows-[1fr] opacity-100' : 'invisible grid-rows-[0fr] opacity-0'}`}
+                      >
+                        <div className="min-h-0 overflow-hidden">
+                          <div
+                            className={`relative px-4 pb-5 md:px-5 ${image ? 'md:max-w-[74%]' : ''}`}
+                          >
+                            <Details item={item} />
+                          </div>
                         </div>
                       </div>
-                    </div>
+                    )}
                   </div>
                 </motion.div>
               </React.Fragment>
