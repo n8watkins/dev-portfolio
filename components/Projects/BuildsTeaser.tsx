@@ -2,7 +2,13 @@
 
 import React, { useEffect, useState } from 'react'
 import Image from 'next/image'
-import { FiArrowUpRight, FiChevronLeft, FiChevronRight, FiExternalLink } from 'react-icons/fi'
+import {
+  FiArrowUpRight,
+  FiBell,
+  FiChevronLeft,
+  FiChevronRight,
+  FiExternalLink,
+} from 'react-icons/fi'
 import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion'
 import ProjectClip from './ProjectClip'
 import { trackProjectEvent } from '@/lib/analytics'
@@ -27,6 +33,12 @@ interface Build {
   tagline: string
   desc: string
   liveSite?: string
+  /**
+   * Still being built (n8builds-web's data/upcoming.ts): "Coming soon", its
+   * landing page, and "Join the waitlist" on n8builds.dev in place of the
+   * build's page (owner, round 4 of 2026-11-09).
+   */
+  upcoming?: { landing: string }
   /** A screenshot beside the copy (contain: a small popup, shown whole on a dark frame). */
   shot?: { src: string; alt: string; contain?: boolean }
   /**
@@ -151,7 +163,67 @@ const BUILDS: Build[] = [
       rgb: '251 146 60',
     },
   },
+  {
+    slug: 'keysready',
+    name: 'KeysReady',
+    icon: '/builds/keysready/icon.svg',
+    shot: {
+      src: '/builds/keysready/shot-2026-11.webp',
+      alt: 'KeysReady\'s landing page: Stop answering "Is my car ready?"',
+    },
+    kind: 'Coming soon',
+    tagline: 'Booking and live repair status for auto shops',
+    desc: 'For small auto repair shops: customers book online, follow their repair live, and approve and pay from their phone.',
+    upcoming: { landing: 'https://keysready.n8builds.dev' },
+    accent: {
+      text: 'text-red-300',
+      glow: 'from-red-400/[0.14]',
+      bar: 'bg-red-400',
+      rgb: '255 90 78',
+    },
+  },
+  {
+    slug: 'relink',
+    name: 'Relink',
+    icon: '/builds/relink/icon.svg',
+    shot: {
+      src: '/builds/relink/shot-2026-11.webp',
+      alt: "Relink's landing page: Catch every 404",
+    },
+    kind: 'Coming soon',
+    tagline: 'Sends broken links to the right page',
+    desc: 'When a visitor follows a broken link to your website, it sends them to the page they meant instead of an error page.',
+    upcoming: { landing: 'https://relink.n8builds.dev' },
+    accent: {
+      text: 'text-orange-300',
+      glow: 'from-orange-400/[0.14]',
+      bar: 'bg-orange-400',
+      rgb: '255 138 76',
+    },
+  },
+  {
+    slug: 'pivot',
+    name: 'Pivot',
+    icon: '/builds/pivot/icon.svg',
+    shot: {
+      src: '/builds/pivot/shot-2026-11.webp',
+      alt: "Pivot's landing page: A pause button for the urge",
+    },
+    kind: 'Coming soon',
+    tagline: 'A pause button for everyday urges',
+    desc: 'When the pull to scroll, snack or check your email hits, it gives you one small next step you already picked.',
+    upcoming: { landing: 'https://pivot.n8builds.dev/welcome' },
+    accent: {
+      text: 'text-emerald-300',
+      glow: 'from-emerald-400/[0.14]',
+      bar: 'bg-emerald-400',
+      rgb: '143 191 159',
+    },
+  },
 ]
+
+/** n8builds.dev's waitlist, with this build ticked (its public `?interest=` contract). */
+const waitlistHref = (slug: string) => `https://n8builds.dev/upcoming?interest=${slug}#waitlist`
 
 const INTERVAL_MS = 7000
 
@@ -161,18 +233,18 @@ const ArrowButton = ({ side, onClick }: { side: 'prev' | 'next'; onClick: () => 
     type="button"
     onClick={onClick}
     aria-label={side === 'prev' ? 'Previous build' : 'Next build'}
-    className="flex h-8 w-8 items-center justify-center rounded-full border border-white/12 text-slate-300 hover:bg-white/8 hover:text-white focus:outline-hidden focus-visible:ring-2 focus-visible:ring-sky-400"
+    className="flex h-10 w-10 items-center justify-center rounded-full border border-white/12 text-slate-300 hover:bg-white/8 hover:text-white focus:outline-hidden focus-visible:ring-2 focus-visible:ring-sky-400"
   >
     {side === 'prev' ? (
-      <FiChevronLeft className="h-4 w-4" aria-hidden="true" />
+      <FiChevronLeft className="h-5 w-5" aria-hidden="true" />
     ) : (
-      <FiChevronRight className="h-4 w-4" aria-hidden="true" />
+      <FiChevronRight className="h-5 w-5" aria-hidden="true" />
     )}
   </button>
 )
 
 const BUTTON =
-  'inline-flex items-center gap-1.5 h-9 rounded-lg px-3.5 text-sm font-semibold transition-colors duration-200 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-sky-400'
+  'inline-flex items-center gap-2 h-11 rounded-xl px-4 text-base font-semibold transition-colors duration-200 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-sky-400'
 
 export default function BuildsTeaser() {
   const [index, setIndex] = useState(0)
@@ -197,7 +269,8 @@ export default function BuildsTeaser() {
 
   return (
     <section
-      aria-labelledby="building-in-public" aria-describedby="building-in-public-sub"
+      aria-labelledby="building-in-public"
+      aria-describedby="building-in-public-sub"
       className="w-full text-left"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
@@ -212,12 +285,12 @@ export default function BuildsTeaser() {
           <Image
             src="/tab/n8-icon.png"
             alt=""
-            width={40}
-            height={40}
-            className="h-10 w-10 shrink-0 rounded-xl ring-1 ring-white/10"
+            width={48}
+            height={48}
+            className="h-12 w-12 shrink-0 rounded-xl ring-1 ring-white/10"
           />
           <div className="min-w-0">
-            <h3 id="building-in-public" className="text-xl font-bold sm:text-2xl">
+            <h3 id="building-in-public" className="text-2xl font-bold sm:text-3xl">
               <a
                 href="https://n8builds.dev"
                 target="_blank"
@@ -226,13 +299,15 @@ export default function BuildsTeaser() {
               >
                 n8builds.dev
                 <FiArrowUpRight
-                  className="h-5 w-5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+                  className="h-6 w-6 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
                   aria-hidden="true"
                 />
                 <span className="sr-only"> (opens in a new tab)</span>
               </a>
             </h3>
-            <p id="building-in-public-sub" className="text-sm text-slate-400 sm:text-base">See more of my selected work</p>
+            <p id="building-in-public-sub" className="text-base text-slate-300 sm:text-lg">
+              See more of my selected work
+            </p>
           </div>
         </div>
       </div>
@@ -260,24 +335,24 @@ export default function BuildsTeaser() {
               <Image
                 src={build.icon}
                 alt=""
-                width={44}
-                height={44}
+                width={56}
+                height={56}
                 unoptimized={build.icon.endsWith('.svg')}
-                className="h-10 w-10 shrink-0 rounded-xl"
+                className="h-12 w-12 shrink-0 rounded-xl sm:h-14 sm:w-14"
               />
               <div className="min-w-0">
-                <h3 className="text-xl font-bold tracking-tight text-slate-50">
+                <h3 className="text-2xl font-bold tracking-tight text-slate-50 sm:text-3xl">
                   {build.wordmark ?? build.name}
                 </h3>
-                <p className={`text-sm font-semibold ${build.accent.text}`}>
+                <p className={`text-base font-semibold ${build.accent.text}`}>
                   {build.kind} · {build.tagline}
                 </p>
               </div>
             </div>
-            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-300">
+            <p className="mt-3 max-w-2xl text-base leading-relaxed text-slate-300 sm:text-lg">
               {build.desc}
             </p>
-            <div className="mt-3 flex flex-wrap gap-2">
+            <div className="mt-4 flex flex-wrap gap-2.5">
               {build.liveSite && (
                 <a
                   href={build.liveSite}
@@ -288,25 +363,64 @@ export default function BuildsTeaser() {
                   }
                   className={`${BUTTON} bg-linear-to-r from-blue-600 to-cyan-700 text-white hover:from-blue-700 hover:to-cyan-800`}
                 >
-                  <FiExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
+                  <FiExternalLink className="h-4 w-4" aria-hidden="true" />
                   Live site<span className="sr-only"> of {build.name} (opens in a new tab)</span>
                 </a>
               )}
-              <a
-                href={`https://n8builds.dev/builds/${build.slug}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label={`See the build: ${build.name} on n8builds.dev`}
-                onClick={() =>
-                  trackProjectEvent('more_builds_click', build.name, {
-                    url: `https://n8builds.dev/builds/${build.slug}`,
-                  })
-                }
-                className={`${BUTTON} border border-white/12 bg-white/4 text-slate-200 hover:bg-white/8`}
-              >
-                See the build
-                <FiArrowUpRight className="h-4 w-4" aria-hidden="true" />
-              </a>
+              {build.upcoming && (
+                <>
+                  <a
+                    href={waitlistHref(build.slug)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() =>
+                      trackProjectEvent('more_builds_click', build.name, {
+                        url: waitlistHref(build.slug),
+                      })
+                    }
+                    className={`${BUTTON} bg-linear-to-r from-blue-600 to-cyan-700 text-white hover:from-blue-700 hover:to-cyan-800`}
+                  >
+                    <FiBell className="h-4 w-4" aria-hidden="true" />
+                    Join the waitlist
+                    <span className="sr-only">
+                      {' '}
+                      for {build.name} on n8builds.dev (opens in a new tab)
+                    </span>
+                  </a>
+                  <a
+                    href={build.upcoming.landing}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() =>
+                      trackProjectEvent('more_builds_click', build.name, {
+                        url: build.upcoming!.landing,
+                      })
+                    }
+                    className={`${BUTTON} border border-white/12 bg-white/4 text-slate-200 hover:bg-white/8`}
+                  >
+                    Its landing page
+                    <FiArrowUpRight className="h-4 w-4" aria-hidden="true" />
+                    <span className="sr-only"> (opens in a new tab)</span>
+                  </a>
+                </>
+              )}
+              {!build.upcoming && (
+                <a
+                  href={`https://n8builds.dev/builds/${build.slug}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={`See the build: ${build.name} on n8builds.dev`}
+                  onClick={() =>
+                    trackProjectEvent('more_builds_click', build.name, {
+                      url: `https://n8builds.dev/builds/${build.slug}`,
+                    })
+                  }
+                  className={`${BUTTON} border border-white/12 bg-white/4 text-slate-200 hover:bg-white/8`}
+                >
+                  See the build
+                  <FiArrowUpRight className="h-4 w-4" aria-hidden="true" />
+                </a>
+              )}
             </div>
           </div>
           {/* The product in use, a screenshot, or the icon on its own frame when there is neither */}
@@ -319,31 +433,36 @@ export default function BuildsTeaser() {
               frameClassName="border-white/10 shadow-2xl shadow-black/40"
               className="hidden md:block"
               onOpen={() =>
-                window.open(`https://n8builds.dev/builds/${build.slug}`, '_blank', 'noopener,noreferrer')
+                window.open(
+                  `https://n8builds.dev/builds/${build.slug}`,
+                  '_blank',
+                  'noopener,noreferrer'
+                )
               }
             />
           ) : (
-          <div className="relative hidden aspect-16/10 overflow-hidden rounded-xl border border-white/10 bg-[#0a1322] shadow-2xl shadow-black/40 md:block">
-            {build.shot ? (
-              <Image
-                src={build.shot.src}
-                alt={build.shot.alt}
-                fill
-                sizes="(max-width: 1024px) 40vw, 440px"
-                className={build.shot.contain ? 'object-contain p-4' : 'object-cover object-top'}
-              />
-            ) : (
-              <div className="flex h-full items-center justify-center">
+            <div className="relative hidden aspect-16/10 overflow-hidden rounded-xl border border-white/10 bg-[#0a1322] shadow-2xl shadow-black/40 md:block">
+              {build.shot ? (
                 <Image
-                  src={build.icon}
-                  alt=""
-                  width={96}
-                  height={96}
-                  className="h-24 w-24 rounded-3xl"
+                  src={build.shot.src}
+                  alt={build.shot.alt}
+                  fill
+                  sizes="(max-width: 1024px) 40vw, 440px"
+                  className={build.shot.contain ? 'object-contain p-4' : 'object-cover object-top'}
                 />
-              </div>
-            )}
-          </div>
+              ) : (
+                <div className="flex h-full items-center justify-center">
+                  <Image
+                    src={build.icon}
+                    alt=""
+                    width={96}
+                    height={96}
+                    unoptimized={build.icon.endsWith('.svg')}
+                    className="h-24 w-24 rounded-3xl"
+                  />
+                </div>
+              )}
+            </div>
           )}
         </div>
 
