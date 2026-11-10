@@ -106,7 +106,7 @@ test('the build log card moves on through the months by itself, and holds when a
 }) => {
   test.skip(isMobile, 'Hover is a desktop pointer; the timing is the same on phones.')
   // Moving the page's clock on runs every timer on it (the dino, the marquees), slowly in WebKit.
-  test.setTimeout(90_000)
+  test.setTimeout(150_000)
   await page.clock.install()
   await page.goto('/')
   const card = page.locator('[data-build-log]')
@@ -119,9 +119,9 @@ test('the build log card moves on through the months by itself, and holds when a
   // Moves the clock on in small steps until the card shows `text`.
   const movesOnTo = (text: string) =>
     expect(async () => {
-      await page.clock.runFor(500)
-      await expect(month).toHaveText(text, { timeout: 200 })
-    }).toPass({ timeout: 30_000 })
+      await page.clock.runFor(1000)
+      await expect(month).toHaveText(text, { timeout: 500 })
+    }).toPass({ timeout: 40_000 })
   // This month first, then back through the months, round again, every 5 s.
   await expect(month).toHaveText('November 2026')
   await movesOnTo('October 2026')

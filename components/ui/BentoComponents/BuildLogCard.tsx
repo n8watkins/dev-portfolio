@@ -97,13 +97,35 @@ export default function BuildLogCard() {
   const count = months?.length ?? 0
   const cycling = count > 1 && !reduceMotion && !hovered && !focused && inView && tabVisible
 
-  // The next month after AUTO_MS, or once the hold after an arrow click is over.
+  // When the month last changed, and when the months last stopped moving on (null: moving).
+  const lastMove = useRef(0)
+  const pausedAt = useRef<number | null>(null)
+  useEffect(() => {
+    lastMove.current = Date.now()
+  }, [index])
+  // A real pause (a second or more: a hover, a scroll away) starts the 5 s over when it ends;
+  // a blip (the pointer crossing a corner) doesn't, so the months still move on.
+  useEffect(() => {
+    const now = Date.now()
+    if (!cycling) pausedAt.current ??= now
+    else {
+      if (pausedAt.current !== null && now - pausedAt.current >= 1000) lastMove.current = now
+      pausedAt.current = null
+    }
+  }, [cycling])
+  // The next month AUTO_MS after the last change, and not before the hold after an arrow is over.
+  // A short tick checks the time rather than one long timer, so a busy page can't lose the move.
   useEffect(() => {
     if (!cycling) return
-    const wait = Math.max(AUTO_MS, manualAt + MANUAL_HOLD_MS - Date.now())
-    const id = setTimeout(() => setIndex((i) => (i + 1) % count), wait)
-    return () => clearTimeout(id)
-  }, [cycling, index, count, manualAt])
+    const id = setInterval(() => {
+      const due = Math.max(lastMove.current + AUTO_MS, manualAt + MANUAL_HOLD_MS)
+      if (Date.now() >= due) {
+        lastMove.current = Date.now()
+        setIndex((i) => (i + 1) % count)
+      }
+    }, 250)
+    return () => clearInterval(id)
+  }, [cycling, count, manualAt])
   // Older is one step on in the list (newest first); both ends go round.
   const step = (by: number) => {
     if (!months) return
