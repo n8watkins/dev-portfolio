@@ -2,8 +2,8 @@ export type WorkExperienceItem = {
   id: number
   company: string
   /**
-   * The company's site. Only Tech for Pros has one now (owner, 2026-11-08):
-   * the other companies show as plain text, with no client-site links.
+   * The company's site, linked from its name. Only Tech for Pros has one
+   * (owner, 2026-11-08); the sites built for clients are `sites`.
    */
   companyUrl?: string
   location: string
@@ -11,10 +11,18 @@ export type WorkExperienceItem = {
   period: string
   bullets: string[]
   /**
-   * Small screenshots of the work, shown with the bullets when a role is
-   * opened ("What I did"). Pictures only, never links.
+   * The role's own picture, on the right of its row: a glimpse on hover that
+   * stays, faded into the row, while the role is open (owner, round 4 of
+   * 2026-11-09). Each role keeps its own: Tech for Pros a site it drafted,
+   * Appturnity its own home page (the role is historical, so it stays
+   * Appturnity, though the firm became Tech for Pros on 2026-11-01).
    */
-  visuals?: { src: string; alt: string }[]
+  image?: { src: string; alt: string }
+  /**
+   * Sites I built there, still live: small preview cards that link to them,
+   * under the bullets when the role is open (owner, round 4 of 2026-11-09).
+   */
+  sites?: { label: string; url: string; shot: string }[]
   additional?: boolean
 }
 
@@ -33,7 +41,10 @@ export const workExperience: WorkExperienceItem[] = [
       'Developing automated follow-up for leads and quotes, appointment and maintenance reminders, referrals and missed-call text-back.',
       'Consulting with businesses on AI alongside it: where it saves them time, and the tools and automations that put it to work.',
     ],
-    visuals: [{ src: '/work/landscaping-verdant.webp', alt: 'A landscaping website drafted by Tech for Pros' }],
+    image: {
+      src: '/work/landscaping-verdant.webp',
+      alt: 'A landscaping website drafted by Tech for Pros',
+    },
   },
   {
     id: 1,
@@ -47,9 +58,20 @@ export const workExperience: WorkExperienceItem[] = [
       "Built Riverwood Ranch's searchable document repository and reusable Comfort1 HVAC landing templates with ISR and analytics, improving LCP and INP ~35%.",
       'Set up a repeatable AWS deployment path with Docker and Terraform, pre-deploy checks in GitHub Actions and a documented rollback procedure.',
     ],
-    visuals: [
-      { src: '/experience/riverwoodranch.webp', alt: "Riverwood Ranch's site: a private community in Southern California" },
-      { src: '/experience/comfort1hvac.webp', alt: "Comfort1 HVAC's landing page: Climate control you can count on" },
+    image: { src: '/experience/appturnity.webp', alt: "Appturnity's home page" },
+    // lifelineclinicallab.com no longer resolves and primeshows.live is a parked
+    // domain (checked 2026-11-09), so they are left out.
+    sites: [
+      {
+        label: 'riverwoodranch.web.app',
+        url: 'https://riverwoodranch.web.app/',
+        shot: '/experience/riverwoodranch.webp',
+      },
+      {
+        label: 'comfort1hvac.com',
+        url: 'https://comfort1hvac.com/',
+        shot: '/experience/comfort1hvac.webp',
+      },
     ],
   },
   {
@@ -62,7 +84,14 @@ export const workExperience: WorkExperienceItem[] = [
       'Built course and event sites and a staff CMS with React, Next.js and Firebase, reaching 90+ Lighthouse performance and accessibility scores.',
       'Integrated Cloudinary media and Google Analytics, so staff update content and track visitors without a developer.',
     ],
-    visuals: [{ src: '/experience/arroyoseco.webp', alt: "Arroyo Seco Golf Course's site" }],
+    image: { src: '/experience/arroyoseco.webp', alt: "Arroyo Seco Golf Course's site" },
+    sites: [
+      {
+        label: 'arroyosecogc.com',
+        url: 'https://www.arroyosecogc.com/',
+        shot: '/experience/arroyoseco.webp',
+      },
+    ],
   },
   {
     id: 3,
@@ -85,6 +114,13 @@ export const workExperience: WorkExperienceItem[] = [
     bullets: [
       'Teach JavaScript, Python and application development, guiding students through debugging and the responsible use of LLM-assisted coding tools.',
     ],
-    visuals: [{ src: '/experience/coderschool.webp', alt: "The Coder School Santa Monica's site" }],
+    image: { src: '/experience/coderschool.webp', alt: "The Coder School Santa Monica's site" },
+    sites: [
+      {
+        label: 'thecoderschool.com',
+        url: 'https://www.thecoderschool.com/locations/santamonica/',
+        shot: '/experience/coderschool.webp',
+      },
+    ],
   },
 ]
