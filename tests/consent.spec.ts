@@ -104,10 +104,20 @@ test.describe('in a European time zone', () => {
     const bar = banner(page)
     await expect(bar).toBeVisible()
     await bar.getByRole('button', { name: 'Decline' }).focus()
-    await page.keyboard.press('Enter')
     // Mid-exit: still on screen, marked closing and inert (no double clicks).
-    await expect(bar).toHaveAttribute('data-closing', 'true')
-    await expect(bar).toHaveAttribute('inert', '')
+    // Read both in one frame: the exit lasts a few hundred milliseconds, and an
+    // inert dialog leaves the accessibility tree, so two separate role-based
+    // checks could miss it (seen on mobile-chrome under load).
+    const closing = page.waitForFunction(
+      () => {
+        const dialog = document.querySelector('[role="dialog"][data-closing="true"]')
+        return dialog && { inert: dialog.hasAttribute('inert') }
+      },
+      undefined,
+      { polling: 'raf' }
+    )
+    await page.keyboard.press('Enter')
+    expect(await (await closing).jsonValue()).toEqual({ inert: true })
     await expect(page.locator('#main-content')).toBeFocused()
     // Then unmounted, with the choice applied.
     await expect(page.getByRole('dialog', { name: 'Cookies', includeHidden: true })).toHaveCount(0)

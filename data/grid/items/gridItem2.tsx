@@ -15,7 +15,7 @@ export const gridItem2: GridItemConfig = {
   title: 'Ready to relocate',
   description: '',
   gridItemContainer:
-    'col-span-2 row-span-4 md:col-span-2 md:row-span-3 lg:col-span-2 lg:row-span-3 xl:col-span-2 xl:row-span-4',
+    'col-span-2 row-span-4 md:col-span-2 md:row-span-3 lg:col-span-2 lg:row-span-3 xl:col-span-5 xl:row-span-4',
 
   imgContainerClass: 'relative w-full h-full group overflow-hidden rounded-3xl',
   imgClassName: 'absolute top-0   rounded-3xl  z-10  transition duration-500',
@@ -45,7 +45,10 @@ export const gridItem2: GridItemConfig = {
           src="/bento/globe.jpeg"
           fill
           sizes="100%"
-          className="absolute top-0   rounded-3xl  z-10  transition duration-500"
+          // From 1280px the card is narrower than the globe was drawn for: it
+          // covers the card from the bottom left, unstretched, so Los Angeles
+          // stays under the pin and the arcs.
+          className="absolute top-0   rounded-3xl  z-10  transition duration-500 xl:object-cover xl:object-left-bottom"
           alt=""
           loading="lazy"
         />

@@ -1,13 +1,17 @@
+'use client'
+
 import { FaXTwitter, FaTwitch, FaYoutube } from 'react-icons/fa6'
 import { motion } from 'motion/react'
 import Image from 'next/image'
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
+import { SCROLL_TO_KEY } from '@/components/Projects/BackToHome'
+import PauseOffscreen from '@/components/ui/PauseOffscreen'
 import { FiGithub, FiMail } from 'react-icons/fi'
 import { CiLinkedin } from 'react-icons/ci'
 import { fadeInVariants, defaultAnimationConfig } from '@/lib/animations'
 import SectionHeading from '@/components/ui/SectionHeading'
 import SiteDoors from '@/components/ui/SiteDoors'
-import { projects } from '@/data/projects'
 import { RESUME_VIEW_URL } from '@/lib/resume'
 import CookieSettingsButton from '@/components/consent/CookieSettingsButton'
 import SiteIcon from '@/components/ui/SiteIcon'
@@ -49,25 +53,31 @@ type SitemapLink = {
   label: string
   href: string
   external?: boolean
+  /** A home page section: from another page, go home and scroll there (as the nav does). */
+  home?: string
   /** A site of mine, shown with its mark. */
   site?: 'n8builds' | 'techforpros'
 }
 
-/** The site map: this page's sections, the project pages, and my other sites. */
+/** The site map (owner, 2026-11-08): the home page's sections, the pages, and my other sites. */
 const sitemap: { title: string; links: SitemapLink[] }[] = [
   {
-    title: 'On this page',
+    title: 'Home',
     links: [
-      { label: 'About', href: '/#about' },
-      { label: 'Projects', href: '/#projects' },
-      { label: 'Experience', href: '/#experience' },
-      { label: 'My workshop', href: '/#workshop' },
-      { label: 'Contact', href: '/#contact' },
+      { label: 'About', href: '/#about', home: 'about' },
+      { label: 'Projects', href: '/#projects', home: 'projects' },
+      { label: 'Experience', href: '/#experience', home: 'experience' },
+      { label: 'Contact', href: '/#contact', home: 'contact' },
     ],
   },
   {
-    title: 'Projects',
-    links: projects.map((p) => ({ label: p.title, href: `/projects/${p.slug}` })),
+    title: 'Pages',
+    links: [
+      { label: 'Projects', href: '/projects' },
+      { label: 'Stack', href: '/stack' },
+      { label: 'About me', href: '/about' },
+      { label: 'Resume', href: RESUME_VIEW_URL, external: true },
+    ],
   },
   {
     title: 'My sites',
@@ -76,14 +86,39 @@ const sitemap: { title: string; links: SitemapLink[] }[] = [
       { label: TECH_FOR_PROS.domain, href: TECH_FOR_PROS.url, external: true, site: 'techforpros' },
       { label: 'Build log', href: `${N8BUILDS.url}/builds`, external: true },
       { label: 'Source code', href: 'https://github.com/n8watkins/dev-portfolio', external: true },
-      { label: 'Resume', href: RESUME_VIEW_URL, external: true },
     ],
   },
 ]
 
+/** A link to a home page section: scrolls there on the home page, or goes home and then scrolls. */
+function HomeLink({ id, children }: { id: string; children: React.ReactNode }) {
+  const pathname = usePathname()
+  return (
+    <Link
+      href={pathname === '/' ? `#${id}` : '/'}
+      scroll={pathname === '/' ? undefined : false}
+      onClick={(e) => {
+        if (pathname === '/') {
+          e.preventDefault()
+          document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+          return
+        }
+        try {
+          sessionStorage.setItem(SCROLL_TO_KEY, id)
+        } catch {
+          // Storage blocked: the link still goes home, to the top.
+        }
+      }}
+      className={LINK}
+    >
+      {children}
+    </Link>
+  )
+}
+
 const Footer = () => {
   return (
-    <footer className="xl:max-w-5xl pt-0 pb-20 lg:pb-12">
+    <footer className="xl:max-w-6xl 2xl:max-w-7xl pt-0 pb-20 lg:pb-12">
       {/* background grid */}
       <div className="w-full absolute left-0 1sm:-translate-y-52 -bottom-72 min-h-96 pointer-events-none">
         <Image
@@ -109,12 +144,12 @@ const Footer = () => {
 
         {/* One centred block, framed in the site's cyan-to-blue like the hero's
             cards: the address, LinkedIn and X, then the form on n8builds.dev. */}
-        <motion.div
-          variants={fadeInVariants}
-          {...defaultAnimationConfig}
-          className="mx-auto mt-8 mb-8 w-full rounded-3xl bg-linear-to-br from-cyan-400/40 via-blue-500/20 to-blue-600/40 p-px shadow-xl shadow-black/30"
-        >
-          <div className="relative overflow-hidden rounded-[23px] bg-[#0b1324] px-5 py-8 text-center sm:px-10 sm:py-10">
+        {/* A slow light runs around the card's edge, inviting contact
+            (.contact-glow in globals.css): still under reduced motion,
+            paused off screen. */}
+        <motion.div variants={fadeInVariants} {...defaultAnimationConfig} className="mx-auto mt-8 mb-8 w-full">
+          <PauseOffscreen className="contact-glow rounded-3xl p-[1.5px] shadow-xl shadow-black/30">
+          <div className="relative overflow-hidden rounded-[22.5px] bg-[#0b1324] px-5 py-8 text-center sm:px-10 sm:py-10">
             <div
               aria-hidden="true"
               className="pointer-events-none absolute -top-24 left-1/2 h-48 w-md -translate-x-1/2 rounded-full bg-cyan-500/12 blur-3xl"
@@ -165,6 +200,7 @@ const Footer = () => {
               </p>
             </div>
           </div>
+          </PauseOffscreen>
         </motion.div>
       </div>
 
@@ -173,7 +209,7 @@ const Footer = () => {
         <div className="grid gap-10 border-t border-white/8 pt-10 lg:grid-cols-[minmax(0,1.45fr)_minmax(0,1fr)] lg:gap-12">
           <div className="flex flex-col gap-4">
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-300">
-              Where else I build
+              Where I build and work
             </p>
             <SiteDoors />
           </div>
@@ -201,6 +237,8 @@ const Footer = () => {
                           {l.label}
                           <span className="sr-only"> (opens in a new tab)</span>
                         </a>
+                      ) : l.home ? (
+                        <HomeLink id={l.home}>{l.label}</HomeLink>
                       ) : (
                         <Link href={l.href} className={LINK}>
                           {l.label}

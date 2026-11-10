@@ -1,16 +1,33 @@
+'use client'
+
 import React, { useState } from 'react'
 import { motion } from 'motion/react'
 import { Link } from 'react-scroll'
+import NextLink from 'next/link'
+import { SCROLL_TO_KEY } from '@/components/Projects/BackToHome'
 import CornerLinks from './CornerLinks'
 
 const cn = (...classes: (string | boolean | undefined | null)[]): string =>
   classes.filter(Boolean).join(' ')
 
-type NavItem = {
+/**
+ * A nav item: `link` scrolls to a section on this page; `href` with `home`
+ * goes to a home page section from another page (it leaves a note for the home
+ * page to scroll there, as the footer's site map does, so no "#section" stays in
+ * the address).
+ */
+export type NavItem = {
   name: string
-  link: string
+  link?: string
+  href?: string
+  home?: string
+  /** This item is the page being shown. */
+  current?: boolean
   icon?: React.ReactElement
 }
+
+const LINK_CLASS =
+  'flex items-center rounded focus:outline-hidden focus-visible:ring-2 focus-visible:ring-sky-400'
 
 export const FloatingNav = ({
   navItems,
@@ -49,18 +66,37 @@ export const FloatingNav = ({
               }
               onMouseLeave={() => setHovered(null)}
             >
-              <Link
-                to={item.link}
-                activeClass="active"
-                spy={true}
-                smooth={true}
-                offset={-80}
-                duration={300}
-                className="flex items-center rounded focus:outline-hidden focus-visible:ring-2 focus-visible:ring-sky-400"
-                aria-label={`Navigate to ${item.name} section`}
-              >
-                <span className="text-xs sm:text-sm lg:text-base">{item.name}</span>
-              </Link>
+              {item.link ? (
+                <Link
+                  to={item.link}
+                  activeClass="active"
+                  spy={true}
+                  smooth={true}
+                  offset={-80}
+                  duration={300}
+                  className={LINK_CLASS}
+                  aria-label={`Navigate to ${item.name} section`}
+                >
+                  <span className="text-xs sm:text-sm lg:text-base">{item.name}</span>
+                </Link>
+              ) : (
+                <NextLink
+                  href={item.href ?? '/'}
+                  scroll={item.home ? false : undefined}
+                  aria-current={item.current ? 'page' : undefined}
+                  onClick={() => {
+                    if (!item.home) return
+                    try {
+                      sessionStorage.setItem(SCROLL_TO_KEY, item.home)
+                    } catch {
+                      // Storage blocked: the link still goes home, to the top.
+                    }
+                  }}
+                  className={`${LINK_CLASS} ${item.current ? 'text-sky-300' : ''}`}
+                >
+                  <span className="text-xs sm:text-sm lg:text-base">{item.name}</span>
+                </NextLink>
+              )}
             </div>
           ))}
           <motion.div

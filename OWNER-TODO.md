@@ -6,61 +6,34 @@ No secrets go in this file: keys live in pass-env (entries `dev-portfolio/<NAME>
 The cross-project list of keys to rotate is `SECURITY-TODO.md` in the private [secret-handling-review](https://github.com/n8watkins/secret-handling-review/blob/main/SECURITY-TODO.md) repo.
 n8builds.dev's own owner list is Part 1 of `docs/NEXT_STEPS.md` in [n8builds-web](https://github.com/n8watkins/n8builds-web/blob/main/docs/NEXT_STEPS.md).
 
-Last checked: 2026-11-02.
+Last checked: 2026-11-08.
 
-## 1. Subdomains for the demos: rank, trailers and echo
+## 1. Subdomains for the demos: rank and trailers
 
-- [ ] `rank.n8builds.dev`, `trailers.n8builds.dev` and `echo.n8builds.dev` resolve to their apps.
+- [ ] `rank.n8builds.dev` and `trailers.n8builds.dev` resolve to their apps.
 
 **What.**
-Give Portfolio Rank, Net Trailers and Echo addresses on n8builds.dev.
+Give Portfolio Rank and Net Trailers addresses on n8builds.dev (Echo was retired on 2026-11-08).
 
 **Steps.**
 
-1. Add each domain to its host: Portfolio Rank and Net Trailers in their Vercel projects (Settings, Domains), Echo on its Render service (Settings, Custom Domains).
-2. In Cloudflare DNS for `n8builds.dev`, add the CNAME record each host shows (DNS only, not proxied, for Vercel and Render).
+1. Add each domain to its Vercel project (Settings, Domains).
+2. In Cloudflare DNS for `n8builds.dev`, add the CNAME record each host shows (DNS only, not proxied, for Vercel).
 3. Tell Claude, who then switches the portfolio's project links to the new addresses.
 
 **Why.**
-Claude's Cloudflare login can only read DNS, and none of the three names resolved on 2026-11-02.
+Claude's Cloudflare login can only read DNS, and none of these names resolved on 2026-11-02.
 
 **Unblocks.**
 Shorter, branded demo links on the portfolio and on n8builds.dev.
 
 ## 2. Fix Render auto-deploy for Scout and GeminiGPT
 
-- [ ] Both Render services deploy their latest `main`.
-
-**What.**
-Scout's and GeminiGPT's fixes (including the titles without em dashes) are merged in their repos but not live.
-
-**Steps.**
-
-1. In the Render dashboard, open each service, then Settings, Build and Deploy: reconnect the GitHub repository if Render asks, and set Auto-Deploy to "On Commit".
-2. Run **Manual Deploy**, "Deploy latest commit", once for each.
-3. Tell Claude, who checks the live titles.
-
-**Why.**
-Reconnecting a Git provider needs your Render login.
-
-**Unblocks.**
-The live demos match their repos again.
+- [x] Dropped 2026-11-08: Echo, Scout and GeminiGPT were retired (repos private and archived, Render demos down), to be replaced by one new AI app.
 
 ## 3. A Gemini key for GeminiGPT
 
-- [ ] GeminiGPT runs on Gemini 3.5 Flash-Lite.
-
-**What.**
-GeminiGPT's move to Gemini 3.5 Flash-Lite (GeminiGPT #3) waits on a working key.
-
-**Steps.**
-Create a key in Google AI Studio, store it with `pass-env set geminigpt/GEMINI_API_KEY`, and set it on GeminiGPT's Render service (Environment); then tell Claude.
-
-**Why.**
-Keys come from your Google account.
-
-**Unblocks.**
-GeminiGPT on the new model, then this site's "Gemini 3.1 Flash Lite" copy updated to match.
+- [x] Dropped 2026-11-08: GeminiGPT was retired (see 2).
 
 ## 4. Update the resume
 
@@ -78,21 +51,9 @@ Only you can edit the file, and it still shows the old names and address.
 **Unblocks.**
 A resume that matches the site.
 
-## 5. Lifeline Clinical Lab's link
+## 5. The clinical lab's link
 
-- [ ] Decided: ask the client to fix their certificate, or unlink the site.
-
-**What.**
-https://lifelineclinicallab.com/ in the Experience section fails its secure (TLS) connection, so visitors get a browser warning.
-
-**Steps.**
-Ask the client to renew or fix the site's certificate, or tell Claude to show the project without a link until it works.
-
-**Why.**
-The certificate is the client's, and contacting them is yours.
-
-**Unblocks.**
-No broken link on the hire-me page.
+- [x] Decided (2026-11-09): the site is not linked or named by its domain anywhere; Experience describes the client as a clinical lab.
 
 ## 6. Decide: keep Sentry's feedback button?
 
@@ -109,3 +70,29 @@ It is a product choice about inviting feedback from visitors.
 
 **Unblocks.**
 Closing backlog item 1 in [docs/HANDOFF.md](docs/HANDOFF.md).
+
+## 7. The streaming service's link
+
+- [x] Decided (2026-11-09): the site is not linked or named by its domain anywhere; Experience describes the client as a streaming service.
+
+## 8. Photos for the About page
+
+- [ ] Pick the portrait, and send three photos for the About page's scenes.
+
+**What.**
+The About page (owner, 2026-11-08) uses one portrait and three photo scenes; until the photos arrive, the scenes show placeholders ("Photo to come").
+
+**Steps.**
+
+1. Pick the portrait: the photo (`public/hero/portrait.jpg`, used for now) or the watercolor (`public/hero/portrait-watercolor.jpg`), or send a new one (4:5 portrait, at least 800x1000).
+2. Send three landscape photos, 4:3, at least 1200x900:
+   - **At work**: you at your desk, or with a client or team.
+   - **Los Angeles**: you outdoors somewhere in LA you like.
+   - **The setup**: the desk, screens, keyboard and mic you build and stream from.
+3. Tell Claude, who adds them to `public/about/` and sets each scene's `src` in `data/about.tsx`.
+
+**Why.**
+Only you have these photos.
+
+**Unblocks.**
+A finished About page.

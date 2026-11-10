@@ -54,19 +54,16 @@ const nextConfig = {
         permanent: true,
       },
       {
-        source: '/about',
-        destination: '/',
-        permanent: false,
-      },
-      {
         source: '/contact',
         destination: '/',
         permanent: false,
       },
+      // Echo, Scout and GeminiGPT were retired on 2026-11-08; Wren replaces
+      // them, so their old pages land on Wren's instead of a 404.
       {
-        source: '/projects',
-        destination: '/',
-        permanent: false,
+        source: '/projects/:slug(echo|scout|geminigpt)',
+        destination: '/projects/wren',
+        permanent: true,
       },
       {
         source: '/blog/:path*',

@@ -40,17 +40,17 @@ test('the home page has one title and a share card that matches it', async ({ pa
 test('a project page is titled after the project, with a short share description', async ({
   page,
 }) => {
-  await page.goto('/projects/echo')
-  await expect(page).toHaveTitle(/^Echo - .+ \| Nathan Watkins$/)
+  await page.goto('/projects/net-trailer')
+  await expect(page).toHaveTitle(/^Net-Trailer - .+ \| Nathan Watkins$/)
   expect((await meta(page, 'og:description'))!.length).toBeLessThanOrEqual(120)
   expect(await meta(page, 'twitter:card')).toBe('summary_large_image')
   expect(await page.locator('link[rel="canonical"]').getAttribute('href')).toBe(
-    'https://portfolio.n8builds.dev/projects/echo'
+    'https://portfolio.n8builds.dev/projects/net-trailer'
   )
 })
 
 test('no visible copy uses an em dash', async ({ page }) => {
-  for (const path of ['/', '/projects/echo', '/projects/scout']) {
+  for (const path of ['/', '/projects', '/stack', '/about', '/projects/net-trailer', '/projects/portfolio-rank']) {
     await page.goto(path)
     // Sections fade in on scroll; walk the page so all of them render.
     await page.evaluate(async () => {

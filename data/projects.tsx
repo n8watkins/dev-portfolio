@@ -1,236 +1,99 @@
 import type { Project } from '@/lib/types'
 
+/**
+ * The projects, Wren first: it replaced Echo, Scout and GeminiGPT, retired on
+ * 2026-11-08 (their old pages redirect to Wren's, next.config.mjs).
+ */
 export const projects: Project[] = [
   {
-    id: 3,
-    slug: 'echo',
-    title: 'Echo',
-    subTitle: 'Realtime Voice Agent',
-    des: `A browser-based realtime voice AI - speak and it speaks back, streamed and interruptible. Echo closes the whole spoken loop (mic → transcribe → think → speak) with function-calling tools in the middle and a turn-taking state machine that lets you talk over it. The model was the easy part; the ~800 milliseconds of perceived latency were the hard part.`,
-    // The real UI leads; the title card repeats the card's own heading, so it is only the share image.
-    images: [
-      { src: '/projects/echo/1-app.webp', alt: 'Echo: the voice orb, ready to talk, with suggested things to say' },
-      { src: '/projects/echo/2-intro.webp', alt: "Echo's welcome: what it is and its key features" },
-      { src: '/projects/echo/3-dev.webp', alt: "Echo's under-the-hood view, beside the conversation" },
-      { src: '/projects/echo/4-settings.webp', alt: "Echo's settings: voice, wake word and bring your own key" },
-    ],
-    shareImage: '/projects/echo1.webp',
-    icon: '/projects/icons/echo.svg',
-    accent: 'echo',
-    tags: ['Next.js', 'Gemini', 'Web Speech API', 'SSE', 'WebSocket'],
-    features: ['Real-time voice chat', 'Interrupt it anytime', 'Speaks while it thinks', 'Calls tools mid-reply'],
-    technologies: {
-      Frontend: {
-        descriptionParts: [
-          {
-            text: 'Realtime voice UI - a turn-state orb, streamed live captions, 6 personas, and a first-class typed fallback',
-            icons: [{ icon: 're.svg' }, { icon: 'tail.svg' }],
-          },
-          {
-            text: 'Next.js 16 App Router on React 19, end-to-end type-safe',
-            icons: [{ icon: 'next.svg' }, { icon: 'ts.svg' }],
-          },
-        ],
-      },
-      Backend: {
-        descriptionParts: [
-          {
-            text: 'Gemini streams tokens and calls tools mid-conversation - weather, time-zone, and web search',
-            icons: [{ icon: 'gemini.svg' }],
-          },
-          {
-            text: 'Speak-as-you-stream: a sentence chunker fires text-to-speech on the first sentence to beat the ~800ms latency budget',
-            icons: [{ icon: 'node.png' }],
-          },
-          {
-            text: 'Browser-side STT/TTS (Web Speech API) with the model streamed over Server-Sent Events; turn-taking is an explicit state machine',
-            icons: [{ icon: 'ts.svg' }],
-          },
-          {
-            text: 'Optional Live engine: native Gemini Live speech-to-speech over a raw WebSocket opened from the browser straight to Gemini, with single-use ephemeral tokens',
-            icons: [{ icon: 'websocket.svg' }],
-          },
-        ],
-      },
-      Cloud: {
-        descriptionParts: [
-          {
-            text: 'Ships to Render (free tier) - browser-side audio means no audio infrastructure to provision',
-            icons: [{ icon: 'render.svg' }],
-          },
-          {
-            text: 'Version control and CI via GitHub',
-            icons: [{ icon: 'github.png' }],
-          },
-        ],
-      },
+    // Live and public since 2026-11-09 (it was the "New AI app, in progress" card); a full
+    // project card since round 5 of 2026-11-09. Copy from its README and docs/DECISIONS.md.
+    id: 7,
+    slug: 'wren',
+    title: 'Wren',
+    subTitle: 'An AI assistant that researches and remembers',
+    des: `An AI assistant you can type or talk to, that researches the web for you and remembers what you save. Try it as a guest with no sign-up: Wren answers as it writes. Sign in with GitHub or an email link for saved chats, research runs that show every search and cite only the pages they read, and a Memory library you can search by meaning.`,
+    summary: `An AI assistant you can type or talk to, that researches the web for you and remembers what you save. Try it as a guest, no sign-up: it answers as it writes.`,
+    highlight: `Each person gets their own Durable Object on Cloudflare, with their chats, memory and daily meter in its own SQLite database, so one person's data can't be reached through another's id.`,
+    clip: {
+      src: '/projects/clips/wren.mp4',
+      poster: '/projects/clips/wren-poster.webp',
+      alt: 'Wren as a guest: asking what to look for in an e-bike under $1,500, and the answer streaming in',
     },
-    highlights: [
-      'Closes the whole spoken loop - mic → transcribe → think → speak - and lets you cut Echo off mid-sentence. Barge-in interruption is what makes it feel like a conversation instead of dictation.',
-      'The hard part is the ~800ms latency budget, not the model: a sentence chunker starts text-to-speech on the first complete sentence while the rest of the reply is still generating.',
-      'Gemini answers stream token-by-token over Server-Sent Events and can call weather, time-zone, and web-search tools mid-reply.',
-      'Turn-taking is a single explicit state machine (idle → listening → thinking → speaking → barge-in), so the many out-of-order async voice events become no-ops instead of bugs.',
-      'Two voice engines behind one toggle: a hand-built Classic pipeline (browser STT/TTS) and Gemini’s native Live API - PCM speech-to-speech over WebSocket, connected with single-use ephemeral tokens.',
-      'Zero-setup demo on a shared key with a usage meter, plus bring-your-own-key for unlimited use; STT/TTS run in the browser, so no audio ever leaves your machine.',
-    ],
-    purpose: `Echo is my deep-dive into the part of voice AI that isn't the model - the ~800 milliseconds of perceived latency and the barge-in turn-taking. The question I wanted to answer: what does it actually take to make a spoken AI conversation feel alive instead of like a 1970s answering machine? The finding that made it click is that the fix is structural - overlap the pipeline stages with a sentence chunker, model turn-taking as an explicit state machine - not "buy a faster model."`,
-    aiUsage: `Echo runs on Google Gemini. The text-and-tools model (gemini-3.1-flash-lite by default) streams tokens over Server-Sent Events and calls functions - weather, time-zone, web search - mid-conversation. Speech-to-text and text-to-speech run in the browser via the Web Speech API, so the model is the only thing that ever touches the network. A second "Live" engine swaps in Gemini's native Live API for full speech-to-speech over a WebSocket. The model is the easy part; the orchestration around it - the sentence chunker that starts talking on the first sentence, the turn-taking state machine, the barge-in handling - is where the real engineering lives.`,
-    github: 'https://github.com/n8watkins/echo-genai-voice-agent',
-    liveSite: 'https://echo-kzw1.onrender.com',
-    statusName: 'Echo',
-  },
-  {
-    id: 4,
-    slug: 'scout',
-    title: 'Scout',
-    subTitle: 'Agentic Research Assistant',
-    des: `An AI agent that plans, searches the live web, reads sources, and writes a cited report - streaming each step as it happens. Scout is a from-scratch ReAct loop on Gemini with function calling and SSE: no agent framework, no black box. It doesn't hand you an answer, it shows you the reasoning loop that produced it. The process is the product.`,
     images: [
-      { src: '/projects/scout/1-dark.webp', alt: 'Scout: ask a hard research question and watch it plan, search, read and cite' },
-      { src: '/projects/scout/2-app.webp', alt: 'Scout in light mode, with suggested research topics' },
-      { src: '/projects/scout/3-intro.webp', alt: "Scout's welcome: what it is and its key features" },
+      {
+        src: '/projects/wren/1-welcome.webp',
+        alt: "Wren's first screen: What are we working on? with three suggested questions",
+      },
+      {
+        src: '/projects/wren/2-answer.webp',
+        alt: 'Wren answering a guest: what to look for in an e-bike under $1,500',
+      },
+      {
+        src: '/projects/wren/3-how-it-works.webp',
+        alt: 'How Wren works: talk or type, research, memory, and your key and limits',
+      },
     ],
-    shareImage: '/projects/scout1.webp',
-    icon: '/projects/icons/scout.svg',
-    accent: 'scout',
-    tags: ['Next.js', 'Gemini', 'ReAct agent', 'SSE', 'SQLite'],
-    features: ['Plans its own research', 'Reads the live web', 'Writes cited reports', 'Streams every step'],
+    icon: '/projects/icons/wren.svg',
+    mark: 'wren',
+    accent: 'wren',
+    tags: ['Next.js', 'Cloudflare Workers', 'Durable Objects', 'Gemini', 'Better Auth'],
+    features: [
+      'Answers as it writes',
+      'Research that cites its sources',
+      'A Memory library searched by meaning',
+      'Try it as a guest',
+    ],
     technologies: {
       Frontend: {
         descriptionParts: [
           {
-            text: 'Live agent trace - plan, think, search, and read steps stream in one at a time, so latency reads as progress',
-            icons: [{ icon: 're.svg' }, { icon: 'tail.svg' }],
-          },
-          {
-            text: 'Next.js 16 App Router on React 19, type-safe; cited reports rendered from Markdown',
-            icons: [{ icon: 'next.svg' }, { icon: 'ts.svg' }],
+            text: 'One chat where typing and talking are both always there, streamed as Wren writes',
+            icons: [{ icon: 'next.svg' }, { icon: 're.svg' }, { icon: 'ts.svg' }],
           },
         ],
       },
       Backend: {
         descriptionParts: [
           {
-            text: 'From-scratch ReAct loop on Gemini with function calling: web_search, fetch_url, and an explicit finish tool',
+            text: 'Gemini for chat, with a fallback model when one is busy, and embeddings for Memory',
             icons: [{ icon: 'gemini.svg' }],
           },
           {
-            text: 'Every agent step streamed to the UI over Server-Sent Events',
-            icons: [{ icon: 'node.png' }],
-          },
-          {
-            text: 'SSRF-hardened fetcher - per-hop host re-validation through redirects, blocked private IPs, size/time caps, DOMPurify',
-            icons: [{ icon: 'ts.svg' }],
-          },
-          {
-            text: 'better-sqlite3 run history, session-scoped with payload caps and a write rate limit',
+            text: 'GitHub and email sign-in with Better Auth, sessions in D1',
             icons: [{ icon: 'sqlite.svg' }],
           },
-        ],
-      },
-      Cloud: {
-        descriptionParts: [
           {
-            text: 'Its own web_search tool needs no search key - Tavily and Google CSE when keyed, falling back to keyless Wikipedia and DuckDuckGo so the demo always cites real sources',
+            text: 'Research runs search and read the web, and cite only the pages they opened',
             icons: [{ icon: 'websearch.svg' }],
           },
-          {
-            text: 'Ships to Render (free tier); source and CI on GitHub',
-            icons: [{ icon: 'render.svg' }, { icon: 'github.png' }],
-          },
-        ],
-      },
-    },
-    highlights: [
-      'An agent is a while-loop with a budget and a stop condition - and “decide when you’re done” is the hard part. Scout makes that loop legible: every plan, thought, search, and read streams to the screen.',
-      'Cited by contract: the synthesis step may only assert facts from a fetched source, every claim carries a [n] marker, and a fabricated citation with no source renders as plain, visibly-unsupported text.',
-      'A step budget plus an explicit finish tool tame the two classic agent failure modes - pacing the room without ever stopping, and answering from a single snippet it never opened.',
-      'Each observation is summarized before it enters working memory, so an 8-step run never blows the context window - full page text lives only in the Sources panel.',
-      'fetch_url is treated as the SSRF footgun it is: http/https only, per-hop host re-validation through redirects, blocked private/link-local IPs, 8s/2MB caps, and DOMPurify on the content.',
-      'Zero-setup on a shared demo key with a live capacity meter; bring-your-own Gemini key (stored only in your browser) for unlimited runs, with heavier models server-gated to BYOK.',
-    ],
-    purpose: `Scout is my exploration of what an AI agent really is once you strip away the frameworks: a while-loop with a budget and a stop condition. The research question is how you make a tool-using agent legible and trustworthy - grounding every claim in a real source, citing by contract, knowing when to stop, and treating each tool as an attack surface. The engineering lives in the scaffolding around the model, which is exactly where I think the interesting work in agents actually is.`,
-    aiUsage: `Scout is a from-scratch ReAct agent on Gemini - no agent framework, the whole loop is a few hundred lines on purpose. Each iteration the model decides its next move via function calling (search the web, read a page, or finish); Scout runs that tool, summarizes the result so it doesn't blow the context window, and feeds it back. A separate synthesis call writes the final report and is only allowed to cite sources it actually fetched, so the model can't invent references. The whole point is to make the reasoning loop legible rather than hiding it behind a black box.`,
-    github: 'https://github.com/n8watkins/scout-agentic-ai-researcher',
-    liveSite: 'https://scout-agentic-researcher.onrender.com',
-    statusName: 'Scout',
-  },
-  {
-    id: 1,
-    slug: 'geminigpt',
-    title: 'GeminiGPT',
-    subTitle: 'AI Chat Platform',
-    des: `A full-stack AI chat platform powered by Google's Gemini 3.1 Flash Lite. Supports multi-chat sessions, cross-chat semantic search over LanceDB vector embeddings, PDF and DOCX document understanding, and real-time response streaming over WebSockets - with a bring-your-own-key model that keeps usage private.`,
-    images: [
-      { src: '/projects/geminigpt/1-app.webp', alt: 'GeminiGPT: a new chat with suggested prompts' },
-      { src: '/projects/geminigpt/2-intro.webp', alt: "GeminiGPT's welcome: what it is and its key features" },
-    ],
-    icon: '/projects/icons/geminigpt.svg',
-    accent: 'geminigpt',
-    tags: ['Next.js', 'Gemini', 'Socket.IO', 'LanceDB', 'SQLite'],
-    features: ['Memory across chats', 'Semantic chat search', 'Reads PDFs and DOCX', 'Streaming replies'],
-    technologies: {
-      Frontend: {
-        descriptionParts: [
-          {
-            text: 'Responsive chat UI with modern components',
-            icons: [{ icon: 're.svg' }, { icon: 'tail.svg' }],
-          },
-          {
-            text: 'Next.js App Router with server-side rendering',
-            icons: [{ icon: 'next.svg' }],
-          },
-          {
-            text: 'End-to-end type safety',
-            icons: [{ icon: 'ts.svg' }],
-          },
-        ],
-      },
-      Backend: {
-        descriptionParts: [
-          {
-            text: 'Gemini 3.1 Flash Lite with streaming responses and function calling',
-            icons: [{ icon: 'gemini.svg' }],
-          },
-          {
-            text: 'Real-time message streaming over WebSockets',
-            icons: [{ icon: 'socketio.svg' }],
-          },
-          {
-            text: 'SQLite chat persistence + LanceDB vector search across conversations',
-            icons: [{ icon: 'sqlite.svg' }],
-          },
-          {
-            text: 'Custom Node server with PDF / DOCX document processing',
-            icons: [{ icon: 'node.png' }],
-          },
         ],
       },
       Cloud: {
         descriptionParts: [
           {
-            text: 'Ships to Render as a Docker container',
-            icons: [{ icon: 'render.svg' }, { icon: 'dock.svg' }],
+            text: 'One Worker on Cloudflare through OpenNext, with a Durable Object per person, Vectorize for Memory and R2 for files',
+            icons: [{ icon: 'cloudflare.svg' }],
           },
           {
-            text: 'Version control and CI via GitHub',
+            text: 'Open source on GitHub, released with release-kit',
             icons: [{ icon: 'github.png' }],
           },
         ],
       },
     },
     highlights: [
-      'Responses stream token-by-token from Gemini 3.1 Flash Lite over Socket.IO WebSockets, so answers render as they generate - no waiting on the full completion.',
-      'Every message is embedded and indexed in a LanceDB vector database, enabling semantic search that recalls context across all of your past chats, not just the current one.',
-      'Drop in PDFs and DOCX files - a custom Node.js pipeline parses them server-side so the model can reason over your documents.',
-      'Bring-your-own-key design: your Gemini API key stays client-side, so usage and conversations remain private.',
-      'Chats persist in SQLite; the whole app ships as a Docker container deployed on Render with CI through GitHub.',
+      'Try it as a guest: 5 messages a day with no account, kept only in your tab, behind a Cloudflare Turnstile check and per-network limits so the free tier stays fair.',
+      'Answers stream as Wren writes them, from the agent through the API route to the browser; Stop or closing the tab keeps what was written.',
+      'Each signed-in person has their own Durable Object (Cloudflare Agents SDK) holding their chats, memory and daily meter in its own SQLite database.',
+      'Memory is a library you browse and edit: notes, links and files, searched by meaning with Gemini embeddings in Vectorize.',
+      'Research runs show what they searched and read, and cite only the pages they opened.',
+      'Sign in with GitHub or a one-time email link (Better Auth on D1); links expire in 10 minutes and are stored hashed.',
     ],
-    purpose: `GeminiGPT is where I explore making AI chat useful beyond a single thread. The question: what makes a chat assistant feel like it actually remembers you? What I'm testing is semantic memory - every message embedded and searchable across all your past conversations - plus document understanding and token-by-token streaming, all on a bring-your-own-key model so your data stays yours.`,
-    aiUsage: `GeminiGPT wraps Gemini 3.1 Flash Lite with streaming and function calling. The interesting AI piece is memory: every message is embedded and stored in a LanceDB vector index, so semantic search can pull relevant context from any past conversation - not just the current thread. A custom Node pipeline parses uploaded PDFs and DOCX files so the model can reason over your own documents, and a bring-your-own-key model keeps every conversation private to you.`,
-    github: 'https://github.com/n8watkins/GeminiGPT',
-    liveSite: 'https://geminigpt-n8.onrender.com',
-    statusName: 'GeminiGPT',
+    purpose: `Wren is my take on a ChatGPT-like assistant done well: one chat where typing and talking are always both there, research you can watch and check, and a memory you can see, edit and delete instead of a black box. It's also a study in running an AI product on a free tier honestly: a real guest mode with clear limits.`,
+    aiUsage: `Chat runs on Gemini (a Flash-Lite model with a fallback model when it's busy), streamed token by token. Memory turns what you save into Gemini embeddings in Cloudflare Vectorize, so you find things by meaning. Research runs search the web, read the pages and answer with citations to only the pages they opened.`,
+    github: 'https://github.com/n8watkins/wren',
+    liveSite: 'https://wren.n8builds.dev',
   },
   {
     id: 2,
@@ -238,15 +101,36 @@ export const projects: Project[] = [
     title: 'Net-Trailer',
     subTitle: 'AI-Powered Netflix Clone',
     des: `A Netflix-style streaming app with an AI brain. Describe what you're in the mood for in plain language and Gemini turns it into tailored picks, while a personalized "Recommended For You" engine learns from your watch history and feedback. Plus TMDB-powered browsing and trailers, secure auth, and Firebase-backed persistence.`,
+    summary: `A Netflix-style streaming app with an AI brain: describe your mood in plain language and Gemini turns it into picks, while a recommender learns your taste and explains each one.`,
+    highlight: `A Gemini analyzer turns a plain-language mood into a media type, genres and a vibe, behind a router that falls back to another model when one is busy, and every pick says why it surfaced.`,
+    clip: {
+      src: '/projects/clips/net-trailer.mp4',
+      poster: '/projects/clips/net-trailer-poster.webp',
+      alt: "Net-Trailer's home page: the featured titles, then the Trending and Top Rated rows",
+    },
     images: [
-      { src: '/projects/net-trailer/1-app.webp', alt: 'Net-Trailer: a featured title with Play and More Info' },
-      { src: '/projects/net-trailer/2-rows.webp', alt: 'Net-Trailer: Trending and Top Rated rows from TMDB' },
-      { src: '/projects/net-trailer/3-intro.webp', alt: "Net-Trailer's welcome: quick start, browse features or watch a demo" },
+      {
+        src: '/projects/net-trailer/1-app.webp',
+        alt: 'Net-Trailer: a featured title with Play and More Info',
+      },
+      {
+        src: '/projects/net-trailer/2-rows.webp',
+        alt: 'Net-Trailer: Trending and Top Rated rows from TMDB',
+      },
+      {
+        src: '/projects/net-trailer/3-intro.webp',
+        alt: "Net-Trailer's welcome: quick start, browse features or watch a demo",
+      },
     ],
     icon: '/projects/icons/net-trailer.png',
     accent: 'net-trailer',
     tags: ['Next.js', 'Gemini', 'TMDB', 'Firebase'],
-    features: ['Describe a mood, get picks', 'Learns your taste', 'Explains every pick', 'Voice search'],
+    features: [
+      'Describe a mood, get picks',
+      'Learns your taste',
+      'Explains every pick',
+      'Voice search',
+    ],
     technologies: {
       Frontend: {
         descriptionParts: [
@@ -305,6 +189,120 @@ export const projects: Project[] = [
     aiUsage: `Net-Trailer's AI is a Gemini-powered recommendation layer over a TMDB catalog. Natural-language search sends your phrasing to Gemini, which extracts intent - media type, genres, mood - and turns it into a tailored row, behind a multi-model router that falls back automatically when a model is busy. A separate personalized engine builds a profile from your full watch and rating history, with a real-time feedback loop that reshapes future picks and a "why this was recommended" explanation attached to each title.`,
     github: 'https://github.com/n8watkins/net_trailer',
     liveSite: 'https://net-trailers.vercel.app/',
+  },
+  {
+    id: 6,
+    slug: 'portfolio-rank',
+    title: 'Portfolio Rank',
+    wordmark: (
+      <>
+        Portfolio <span className="text-[#fbbf24]">Rank</span>
+      </>
+    ),
+    subTitle: 'The Developer Portfolio Leaderboard',
+    des: `2,000+ developer portfolios from Emma Bostian's open developer-portfolios list, ranked by head-to-head votes instead of A to Z. Pick the better of two in about five seconds, browse every site with a real screenshot, Lighthouse scores and an AI review, or add your own portfolio and see how it compares.`,
+    summary: `2,000+ developer portfolios from Emma Bostian's open list, ranked by head-to-head votes instead of A to Z. Vote on a matchup, or add your own portfolio and see how it compares.`,
+    highlight: `Gemini judges portfolios head to head, so the leaderboard means something before anyone votes; then ELO takes over, with one vote per person per matchup enforced in the database.`,
+    clip: {
+      src: '/projects/clips/portfolio-rank.mp4',
+      poster: '/projects/clips/portfolio-rank-poster.webp',
+      alt: 'Portfolio Rank: voting between two portfolios, head to head',
+    },
+    images: [
+      {
+        src: '/projects/portfolio-rank/1-home.webp',
+        alt: 'Portfolio Rank: the best developer portfolios, ranked, with the top ranked right now',
+      },
+      {
+        src: '/projects/portfolio-rank/2-rank.webp',
+        alt: 'Portfolio Rank: which portfolio is better? Two portfolios side by side',
+      },
+      {
+        src: '/projects/portfolio-rank/3-top.webp',
+        alt: "Portfolio Rank's leaderboard, ranked by ELO from head-to-head votes",
+      },
+    ],
+    icon: '/projects/icons/portfolio-rank.png',
+    accent: 'portfolio-rank',
+    tags: ['Next.js', 'Gemini', 'Turso', 'Playwright', 'Vercel'],
+    features: [
+      'Head-to-head voting',
+      'ELO leaderboard',
+      'A screenshot of every site',
+      'Lighthouse scores and AI reviews',
+    ],
+    technologies: {
+      Frontend: {
+        descriptionParts: [
+          {
+            text: 'Face-off voting, the leaderboard and a searchable catalog of every portfolio',
+            icons: [{ icon: 'next.svg' }, { icon: 're.svg' }, { icon: 'ts.svg' }],
+          },
+          {
+            text: 'Browse UI and portfolio cards',
+            icons: [{ icon: 'tail.svg' }],
+          },
+        ],
+      },
+      Backend: {
+        descriptionParts: [
+          {
+            text: 'GitHub sign-in, so each person gets one vote per matchup',
+            icons: [{ icon: 'nextAuth.png' }],
+          },
+          {
+            text: 'Votes, ELO scores and the catalog in Turso (libSQL), written atomically',
+            icons: [{ icon: 'sqlite.svg' }],
+          },
+          {
+            text: 'Gemini judges portfolios head to head to seed the rankings, and grades each site on a 6-axis rubric',
+            icons: [{ icon: 'gemini.svg' }],
+          },
+        ],
+      },
+      Cloud: {
+        descriptionParts: [
+          {
+            text: 'A screenshot of every portfolio, taken with Playwright',
+            icons: [{ icon: 'playwright.svg' }],
+          },
+          {
+            text: 'Hosted on Vercel, with daily GitHub Actions that sync the list, judge new matchups and refresh scores',
+            icons: [{ icon: 'vercel.png' }, { icon: 'github.png' }],
+          },
+        ],
+      },
+    },
+    highlights: [
+      "Built on Emma Bostian's developer-portfolios list, a community resource since 2019, sorted A to Z. Portfolio Rank gives it a real frontend and a ranking system, so you can find the good ones.",
+      'Face-off voting: two portfolios side by side, pick the better one, and ELO decides the leaderboard. Ten practice votes need no account; official votes take a GitHub sign-in, one per person per matchup.',
+      'Rankings start from AI: Gemini judges portfolios head to head, so the leaderboard is useful before human votes pile up, then the crowd takes over.',
+      'Every site gets a real screenshot, Lighthouse scores from PageSpeed Insights, polish checks and an AI review on a 6-axis rubric.',
+      'Vote integrity is guarded hardest: a UNIQUE constraint and a single write transaction, so concurrent requests cannot race past the duplicate check or the daily cap.',
+      'The pipeline runs itself: daily GitHub Actions sync the upstream list, judge new matchups and refresh screenshots and scores.',
+    ],
+    purpose: `A list of 2,000 portfolios sorted alphabetically is a phone book: nobody can find the good ones. Portfolio Rank asks what it takes to turn a giant community list into something fun to browse, and what keeps a crowd-voted leaderboard honest enough to trust.`,
+    aiUsage: `Gemini bootstraps the rankings: it judges portfolios pairwise on design and content, so the leaderboard means something before people have voted, then human votes take over through ELO. It also grades each site on a 6-axis rubric, shown beside objective Lighthouse scores, so the AI's opinion is never the only signal.`,
+    credits: [
+      {
+        name: "Emma Bostian's developer-portfolios",
+        href: 'https://github.com/emmabostian/developer-portfolios',
+        note: 'The community list every portfolio here comes from, curated by Emma and thousands of contributors since 2019. Go star it.',
+      },
+      {
+        name: 'Ali Spittel',
+        href: 'https://twitter.com/ASpittel/status/1171604728951779328',
+        note: 'Her 2019 tweet asking developers to share their portfolios is what started the list.',
+      },
+    ],
+    invite: {
+      heading: 'Vote, or add your portfolio',
+      body: 'Pick the better of two portfolios in about five seconds, or add yours: it gets a screenshot, Lighthouse scores and an AI review, and joins the head-to-head rankings.',
+      label: 'Add yours on Portfolio Rank',
+      href: 'https://portfoliorank.n8builds.dev/',
+    },
+    github: 'https://github.com/n8watkins/portfolio-rank',
+    liveSite: 'https://portfoliorank.n8builds.dev',
   },
 ]
 
@@ -378,6 +376,8 @@ export const techNameMapping = {
 
   //----->Containerization & Orchestration
   'dock.svg': 'Docker',
+  'playwright.svg': 'Playwright',
   'kubernetes.png': 'Kubernetes',
   'github.svg': 'GitHub',
+  'cloudflare.svg': 'Cloudflare',
 }

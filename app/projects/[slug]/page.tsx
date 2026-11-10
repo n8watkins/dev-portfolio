@@ -2,8 +2,9 @@ import { shareSummary, summarize } from '@/lib/seo'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { projects } from '@/data/projects'
-import CornerLinks from '@/components/layout/CornerLinks'
-import PageFooter from '@/components/layout/PageFooter'
+import { FloatingNav } from '@/components/layout/FloatingNav'
+import Footer from '@/components/layout/Footer'
+import { subpageNavItems } from '@/data/navigation'
 import ProjectDetail from '@/components/Projects/ProjectDetail'
 
 export function generateStaticParams() {
@@ -37,9 +38,13 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
   if (!project) notFound()
   return (
     <>
-      <CornerLinks />
+      <FloatingNav navItems={subpageNavItems} />
       <ProjectDetail project={project} />
-      <PageFooter />
+      <div className="relative overflow-hidden bg-darkBlue">
+        <div className="mx-auto max-w-md sm:max-w-xl md:max-w-3xl lg:max-w-4xl xl:max-w-6xl 2xl:max-w-7xl">
+          <Footer />
+        </div>
+      </div>
     </>
   )
 }

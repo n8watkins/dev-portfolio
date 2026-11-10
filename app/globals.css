@@ -480,6 +480,74 @@
   }
 }
 
+/* The build log card's day bars rise in, one after another, when a month shows
+   (components/ui/BentoComponents/BuildLogCard.tsx). Not under reduced motion. */
+@keyframes log-bar-rise {
+  from {
+    transform: scaleY(0);
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .log-bar {
+    animation: log-bar-rise 0.5s cubic-bezier(0.25, 0.1, 0.25, 1) both;
+  }
+}
+
+/* The Wren mark's idle life (components/Projects/WrenMark.tsx, from Wren's own
+   globals.css): an occasional tail flick and head tilt. Held still under
+   reduced motion. */
+svg.wren .tail,
+svg.wren .head {
+  transform-box: view-box;
+}
+svg.wren .tail {
+  transform-origin: 9.2px 16px;
+}
+svg.wren .head {
+  transform-origin: 21px 16.5px;
+}
+@keyframes w-flick {
+  0%,
+  84%,
+  100% {
+    transform: rotate(0);
+  }
+  87% {
+    transform: rotate(14deg);
+  }
+  90% {
+    transform: rotate(-4deg);
+  }
+  93% {
+    transform: rotate(9deg);
+  }
+  96% {
+    transform: rotate(0);
+  }
+}
+@keyframes w-tilt {
+  0%,
+  62%,
+  100% {
+    transform: rotate(0);
+  }
+  66%,
+  80% {
+    transform: rotate(-12deg);
+  }
+  84% {
+    transform: rotate(3deg);
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  svg.wren.idle .tail {
+    animation: w-flick 6s ease-in-out infinite;
+  }
+  svg.wren.idle .head {
+    animation: w-tilt 7.5s ease-in-out 1.8s infinite;
+  }
+}
+
 /* The hero grid's fade (components/sections/HeroGrid.tsx, from n8builds.dev):
    out at the top and bottom, and toward the left and right edges, the two
    masks intersected, so the grid melts into the page. */
@@ -499,8 +567,9 @@
    in the HTML at full size; a clip-path steps across it one character per
    step (font-mono, so a step is exactly 1ch), and a block cursor rides the end
    of the typed text. --chars, --start and --hold come from the component.
-   Clip-path and transform only: no layout shift. Reduced motion shows the
-   text, and the prompt, at once. */
+   The last line keeps a blinking cursor at its end (.whoami-cursor, the
+   caret's box and place). Clip-path, transform and opacity only: no layout
+   shift. Reduced motion shows the text and the cursor at once. */
 .whoami-type {
   position: relative;
   display: inline-block;
@@ -517,10 +586,16 @@
   pointer-events: none;
 }
 .whoami-cursor {
-  display: inline-block;
+  position: absolute;
+  left: calc(var(--chars) * 1ch);
+  top: 0.2em;
+  width: 0.62em;
+  height: 1.15em;
+  background: rgb(34 211 238 / 0.85);
+  pointer-events: none;
 }
 @media (prefers-reduced-motion: no-preference) {
-  .whoami-type > span {
+  .whoami-type > span:first-child {
     display: inline-block;
     animation: whoami-type calc(var(--chars) * 32ms) steps(var(--chars), end) var(--start) both;
   }
@@ -529,11 +604,9 @@
       whoami-caret-move calc(var(--chars) * 32ms) steps(var(--chars), end) var(--start) both,
       whoami-caret-on var(--hold) linear var(--start);
   }
-  .whoami-prompt {
-    animation: whoami-show 1ms linear var(--start) both;
-  }
   .whoami-cursor {
-    animation: whoami-blink 1.06s step-end var(--start) infinite;
+    opacity: 0;
+    animation: whoami-blink 1.06s step-end var(--end) infinite;
   }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -559,14 +632,6 @@
 }
 @keyframes whoami-caret-on {
   from,
-  to {
-    opacity: 1;
-  }
-}
-@keyframes whoami-show {
-  from {
-    opacity: 0;
-  }
   to {
     opacity: 1;
   }
@@ -679,4 +744,67 @@ select:focus-visible {
 }
 .consent-out {
   animation: consent-out 0.22s cubic-bezier(0.4, 0, 1, 1) both;
+}
+
+/* The contact card's border: a slow light running around it (owner,
+   2026-11-08). The angle is a registered property so it can animate; under
+   reduced motion the light rests at the top, and it pauses off screen. */
+@property --contact-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+.contact-glow {
+  background: conic-gradient(
+    from var(--contact-angle),
+    rgb(34 211 238 / 0.22) 0deg,
+    rgb(56 189 248 / 0.22) 250deg,
+    rgb(125 211 252 / 0.95) 300deg,
+    rgb(37 99 235 / 0.55) 330deg,
+    rgb(34 211 238 / 0.22) 360deg
+  );
+  animation: contact-orbit 10s linear infinite;
+}
+[data-offscreen].contact-glow {
+  animation-play-state: paused;
+}
+@keyframes contact-orbit {
+  to {
+    --contact-angle: 360deg;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .contact-glow {
+    animation: none;
+  }
+}
+
+/* The About page's stickers (components/about/Decals.tsx): a slow drift and
+   sway around their resting tilt. Still under reduced motion; paused while
+   their scene is off screen (PauseOffscreen marks it data-offscreen). */
+.decal {
+  transform: rotate(var(--tilt, 0deg));
+  animation-name: decal-drift;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  animation-direction: alternate;
+}
+[data-offscreen] .decal {
+  animation-play-state: paused;
+}
+@keyframes decal-drift {
+  0% {
+    transform: translate(0, 0) rotate(var(--tilt, 0deg));
+  }
+  50% {
+    transform: translate(6px, -9px) rotate(calc(var(--tilt, 0deg) + 5deg));
+  }
+  100% {
+    transform: translate(-5px, 4px) rotate(calc(var(--tilt, 0deg) - 4deg));
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .decal {
+    animation: none;
+  }
 }

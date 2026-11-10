@@ -4,8 +4,7 @@ import type { Project } from '@/lib/types'
  * Each project's own brand colour, as on n8builds.dev's Lab rows: its row's
  * glow (`rgb`, read by `.lab-row-wash` in globals.css), the screenshot's
  * outline, the feature checks and the main button. Taken from each app:
- * Echo's teal orb, Scout's violet-to-fuchsia icon, GeminiGPT's blue and
- * Net-Trailer's Netflix red. Every button pairing passes WCAG AA.
+ * Wren's ember, Net-Trailer's Netflix red and Portfolio Rank's gold (#fbbf24, its "Rank"). Every button pairing passes WCAG AA.
  */
 export const accents: Record<
   Project['accent'],
@@ -21,33 +20,15 @@ export const accents: Record<
     subtitle: string
   }
 > = {
-  echo: {
-    rgb: '45 212 191',
-    check: 'text-teal-400',
-    outline: 'border-teal-400/25 group-hover:border-teal-300/50',
-    shadow: 'group-hover:shadow-[0_10px_30px_-16px_rgba(45,212,191,0.4)]',
-    dot: 'bg-teal-300',
-    primary: 'bg-teal-400 text-slate-950 hover:bg-teal-300',
-    subtitle: 'text-teal-300',
-  },
-  scout: {
-    rgb: '192 132 252',
-    check: 'text-fuchsia-400',
-    outline: 'border-fuchsia-400/25 group-hover:border-fuchsia-300/50',
-    shadow: 'group-hover:shadow-[0_10px_30px_-16px_rgba(192,132,252,0.4)]',
-    dot: 'bg-fuchsia-400',
-    primary:
-      'bg-linear-to-r from-violet-600 to-fuchsia-700 text-white hover:from-violet-700 hover:to-fuchsia-800',
-    subtitle: 'text-fuchsia-300',
-  },
-  geminigpt: {
-    rgb: '59 130 246',
-    check: 'text-blue-400',
-    outline: 'border-blue-400/25 group-hover:border-blue-300/50',
-    shadow: 'group-hover:shadow-[0_10px_30px_-16px_rgba(59,130,246,0.4)]',
-    dot: 'bg-blue-500',
-    primary: 'bg-blue-600 text-white hover:bg-blue-700',
-    subtitle: 'text-blue-300',
+  // Wren's ember, as it shows on dark (#ff7d4d); its main button is dark ink on it.
+  wren: {
+    rgb: '255 125 77',
+    check: 'text-orange-400',
+    outline: 'border-orange-400/25 group-hover:border-orange-300/50',
+    shadow: 'group-hover:shadow-[0_10px_30px_-16px_rgba(255,125,77,0.4)]',
+    dot: 'bg-orange-400',
+    primary: 'bg-[#ff7d4d] text-slate-950 hover:bg-[#ff9670]',
+    subtitle: 'text-orange-300',
   },
   'net-trailer': {
     rgb: '229 9 20',
@@ -57,5 +38,14 @@ export const accents: Record<
     dot: 'bg-red-500',
     primary: 'bg-red-600 text-white hover:bg-red-700',
     subtitle: 'text-red-400',
+  },
+  'portfolio-rank': {
+    rgb: '251 191 36',
+    check: 'text-amber-400',
+    outline: 'border-amber-400/25 group-hover:border-amber-300/50',
+    shadow: 'group-hover:shadow-[0_10px_30px_-16px_rgba(251,191,36,0.4)]',
+    dot: 'bg-amber-400',
+    primary: 'bg-amber-400 text-slate-950 hover:bg-amber-300',
+    subtitle: 'text-amber-300',
   },
 }

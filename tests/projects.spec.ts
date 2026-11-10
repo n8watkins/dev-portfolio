@@ -1,103 +1,93 @@
 import { test, expect, type Page } from '@playwright/test'
 
 /**
- * Live-demo status from OpenPing, against the fixed statuses the test server
- * serves (STATUS_FIXTURE=1 in playwright.config.ts): Echo online, Scout asleep
- * (off-hours), GeminiGPT down. Net-Trailer isn't monitored.
+ * The project rows: Wren first, as a full project card like the others (owner,
+ * round 5 of 2026-11-09), then Net-Trailer and Portfolio Rank. Echo, Scout and
+ * GeminiGPT were retired on 2026-11-08; nothing links to them or their demos,
+ * and their old pages redirect to Wren's.
  */
 
 async function projectsInView(page: Page) {
   await page.goto('/')
-  await page.getByText('Realtime Voice Agent').first().scrollIntoViewIfNeeded()
+  await page.getByText('AI-Powered Netflix Clone').first().scrollIntoViewIfNeeded()
 }
 
 const card = (page: Page, title: string) => page.getByRole('article', { name: title, exact: true })
 
-test('each monitored project card shows its live-demo status, and the unmonitored one shows none', async ({
-  page,
-}) => {
-  await projectsInView(page)
-  const pill = (title: string) => card(page, title).getByRole('link', { name: /^Live demo:/ })
-
-  // The state only: the demos are monitored on weekdays, so no uptime number.
-  await expect(pill('Echo')).toHaveText(/Live demo\s*Online/)
-  await expect(pill('Echo')).toHaveAttribute('data-status', 'up')
-  await expect(pill('Scout')).toHaveText(/Live demo\s*Asleep/)
-  await expect(pill('Scout')).toHaveAttribute('title', /first visit wakes the demo/)
-  await expect(pill('GeminiGPT')).toHaveText(/Live demo\s*Down/)
-  await expect(pill('Net-Trailer')).toHaveCount(0)
-
-  // It links to the public status page.
-  await expect(pill('Echo')).toHaveAttribute('href', 'https://openping.n8builds.dev/status')
+test('the projects open with Wren, then Net-Trailer and Portfolio Rank', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.goto('/')
+  const titles = page.locator('#projects article h3')
+  await expect(titles).toHaveText(['Wren', 'Net-Trailer', 'Portfolio Rank'])
+  const wren = card(page, 'Wren')
+  // The same card as the others: its clip, a summary, what's interesting, Live demo and Full story.
+  await expect(wren.locator('video, img[alt*="Wren as a guest"]').first()).toBeAttached()
+  await expect(wren).toContainText("What's interesting:")
+  await expect(wren.getByRole('link', { name: 'Try the Wren live demo (new tab)' })).toHaveAttribute(
+    'href',
+    'https://wren.n8builds.dev'
+  )
+  await expect(wren.getByRole('link', { name: 'Read the full story of Wren' })).toHaveAttribute(
+    'href',
+    '/projects/wren'
+  )
+  // Its icon is the animated bird, not a picture.
+  await expect(wren.locator('svg.wren')).toHaveCount(1)
 })
 
-test('the status arriving moves nothing on the card', async ({ page }) => {
-  // Hold the status back so the card renders without it first.
-  let release!: () => void
-  const held = new Promise<void>((resolve) => (release = resolve))
-  await page.route('**/api/status', async (route) => {
-    await held
-    await route.continue()
+test("Wren's page has its screenshots, features, stack and source", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.goto('/projects/wren')
+  await expect(page.getByRole('heading', { level: 1, name: 'Wren' })).toBeVisible()
+  await expect(page.getByRole('list', { name: 'What Wren does' }).getByRole('listitem')).toHaveCount(4)
+  await expect(page.getByRole('link', { name: /source/i }).first()).toHaveAttribute(
+    'href',
+    'https://github.com/n8watkins/wren'
+  )
+  await expect(page.locator('img[src*="projects%2Fwren"], img[src*="/projects/wren/"]').first()).toBeAttached()
+})
+
+test('nothing links to the retired apps or their demos', async ({ page }) => {
+  await page.goto('/')
+  await page.evaluate(async () => {
+    for (let y = 0; y < document.body.scrollHeight; y += 600) {
+      window.scrollTo(0, y)
+      await new Promise((r) => setTimeout(r, 60))
+    }
   })
-  await projectsInView(page)
-  const echo = card(page, 'Echo')
-  const description = echo.getByText(/browser-based realtime voice AI/)
-  await expect(description).toBeVisible()
-  // Measured against the card, so its fade-in and the page's smooth scroll don't count.
-  const offset = () =>
-    description.evaluate((el) => {
-      const card = el.closest('article')!.getBoundingClientRect()
-      const box = el.getBoundingClientRect()
-      return {
-        top: Math.round(box.top - card.top),
-        left: Math.round(box.left - card.left),
-        height: Math.round(box.height),
-      }
-    })
-  // Wait out the card's entrance (it fades and scales in) before measuring.
-  let before = await offset()
-  await expect
-    .poll(async () => {
-      await page.waitForTimeout(300)
-      const now = await offset()
-      const settled = JSON.stringify(now) === JSON.stringify(before)
-      before = now
-      return settled
-    })
-    .toBe(true)
-  release()
-  await expect(echo.getByRole('link', { name: /^Live demo:/ })).toBeVisible()
-  // Within a pixel: the description can sit on a half pixel, which rounds
-  // either way from one measurement to the next (399 or 400) without moving.
-  const after = await offset()
-  for (const key of ['top', 'left', 'height'] as const) {
-    expect(Math.abs(after[key] - before[key]), key).toBeLessThanOrEqual(1)
+  const hrefs = await page.locator('a[href]').evaluateAll((links) =>
+    links.map((a) => (a as HTMLAnchorElement).href)
+  )
+  for (const href of hrefs) {
+    expect(href).not.toMatch(/onrender\.com|echo-genai|scout-agentic|GeminiGPT|\/projects\/(echo|scout|geminigpt)\b/i)
   }
-})
-
-test('a project page shows the status next to its links', async ({ page }) => {
-  await page.goto('/projects/scout')
-  await expect(page.getByRole('link', { name: /^Live demo: Asleep/ }).first()).toBeVisible()
-})
-
-test('no status is shown when it cannot be read', async ({ page }) => {
-  await page.route('**/api/status', (route) => route.fulfill({ status: 502, body: 'bad gateway' }))
-  await projectsInView(page)
-  await expect(card(page, 'Echo').getByText('Realtime Voice Agent')).toBeVisible()
-  await page.waitForTimeout(500)
+  // No monitored demo is on the page now, so no status pill and no weekday note.
   await expect(page.getByRole('link', { name: /^Live demo:/ })).toHaveCount(0)
+  await expect(page.getByText(/Live demos run/)).toHaveCount(0)
+})
+
+test("old links to the retired project pages land on Wren's, which replaced them", async ({ request }) => {
+  for (const slug of ['echo', 'scout', 'geminigpt']) {
+    const res = await request.get(`/projects/${slug}`, { maxRedirects: 0 })
+    expect(res.status(), slug).toBe(308)
+    expect(res.headers().location, slug).toMatch(/\/projects\/wren$/)
+  }
+  // And the retired pages are nowhere in the sitemap.
+  const sitemap = await (await request.get('/sitemap.xml')).text()
+  expect(sitemap).not.toMatch(/projects\/(echo|scout|geminigpt)\b/)
+  expect(sitemap).toContain('/projects/wren<')
 })
 
 test('the status API answers with names, states and uptime only', async ({ request }) => {
   const body = await (await request.get('/api/status')).json()
-  expect(body.services.Echo).toEqual({ state: 'operational', uptime90d: 92.914 })
+  expect(body.services['Demo Up']).toEqual({ state: 'operational', uptime90d: 92.914 })
   expect(JSON.stringify(body)).not.toMatch(/https?:\/\//)
 })
 
 test('a project page shows its screenshot whole, not cropped to a strip', async ({ page }) => {
   for (const width of [375, 1280]) {
     await page.setViewportSize({ width, height: 900 })
-    for (const slug of ['echo', 'scout', 'geminigpt', 'net-trailer']) {
+    for (const slug of ['net-trailer', 'portfolio-rank']) {
       await page.goto(`/projects/${slug}`)
       const image = page.locator('main [data-gallery] img').first()
       await expect(image).toBeVisible()
@@ -114,21 +104,66 @@ test('a project page shows its screenshot whole, not cropped to a strip', async 
   }
 })
 
-test('a project row opens its page, its live demo and its source', async ({ page }) => {
+test('a project card opens its page and its live demo', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await projectsInView(page)
-  const echo = card(page, 'Echo')
+  const net = card(page, 'Net-Trailer')
   await expect(
-    echo.getByRole('link', { name: 'Try the Echo live demo (new tab)' })
-  ).toHaveAttribute('href', 'https://echo-kzw1.onrender.com')
+    net.getByRole('link', { name: 'Try the Net-Trailer live demo (new tab)' })
+  ).toHaveAttribute('href', 'https://net-trailers.vercel.app/')
+  // The card stays big and simple: the source, tech and features are on /projects and its page.
+  await expect(net.getByRole('list', { name: 'What Net-Trailer does' })).toHaveCount(0)
+  await net.getByRole('link', { name: 'Read the full story of Net-Trailer' }).click()
+  await expect(page).toHaveURL(/\/projects\/net-trailer$/, { timeout: 30000 })
   await expect(
-    echo.getByRole('link', { name: 'View Echo source on GitHub (new tab)' })
-  ).toHaveAttribute('href', /github\.com\/n8watkins\//)
-  await expect(
-    echo.getByRole('list', { name: 'What Echo does' }).getByRole('listitem')
+    page.getByRole('list', { name: 'What Net-Trailer does' }).getByRole('listitem')
   ).not.toHaveCount(0)
-  await echo.getByRole('link', { name: 'View Echo details' }).click()
-  await expect(page).toHaveURL(/\/projects\/echo$/, { timeout: 30000 })
+})
+
+test('"Detailed view" opens /projects, with every project at full size', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.goto('/')
+  await page.locator('#projects').getByRole('link', { name: 'Detailed view' }).click()
+  await expect(page).toHaveURL(/\/projects$/)
+  await expect(page.getByRole('heading', { level: 1, name: 'Projects, in detail' })).toBeVisible()
+  for (const title of ['Wren', 'Net-Trailer', 'Portfolio Rank']) {
+    const full = card(page, title)
+    await expect(full.getByRole('link', { name: `View ${title} source on GitHub (new tab)` })).toHaveAttribute(
+      'href',
+      /github\.com\/n8watkins\//
+    )
+    await expect(full.getByRole('list', { name: `What ${title} does` }).getByRole('listitem')).not.toHaveCount(0)
+    await expect(full.getByRole('link', { name: `Read the full story of ${title}` })).toHaveAttribute(
+      'href',
+      new RegExp(`/projects/`)
+    )
+  }
+})
+
+/**
+ * Portfolio Rank moved here from n8builds.dev's featured rows (owner,
+ * 2026-11-08): last of the projects, crediting Emma Bostian's list and
+ * inviting visitors to vote and add their own portfolio.
+ */
+test('Portfolio Rank credits its list and invites you to add your portfolio', async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.goto('/')
+  const rank = card(page, 'Portfolio Rank')
+  await expect(
+    rank.getByRole('link', { name: /Emma Bostian's developer-portfolios/ })
+  ).toHaveAttribute('href', 'https://github.com/emmabostian/developer-portfolios')
+  await expect(
+    rank.getByRole('link', { name: 'Try the Portfolio Rank live demo (new tab)' })
+  ).toHaveAttribute('href', 'https://portfoliorank.n8builds.dev')
+
+  await page.goto('/projects/portfolio-rank')
+  await expect(page.getByRole('heading', { name: 'Credits' })).toBeVisible()
+  await expect(page.getByRole('link', { name: /Add yours on Portfolio Rank/ })).toHaveAttribute(
+    'href',
+    'https://portfoliorank.n8builds.dev/'
+  )
 })
 
 /**
@@ -136,8 +171,8 @@ test('a project row opens its page, its live demo and its source', async ({ page
  * then "Built in public at n8builds.dev" (owner, 2026-11-01).
  */
 test("a project page's footer links my sites with their marks", async ({ page }) => {
-  await page.goto('/projects/echo')
-  const sites = page.getByRole('navigation', { name: 'My sites' })
+  await page.goto('/projects/net-trailer')
+  const sites = page.getByRole('navigation', { name: 'Site map' })
   await sites.scrollIntoViewIfNeeded()
   await expect(sites.getByRole('link', { name: 'n8builds.dev' })).toHaveAttribute(
     'href',

@@ -1,3 +1,5 @@
+import Link from 'next/link'
+import { FiArrowRight } from 'react-icons/fi'
 import { TechStack } from '@/components/features/TechStack'
 import type { GridItemConfig } from '@/lib/types/gridItem'
 
@@ -14,7 +16,7 @@ export const gridItem3: GridItemConfig = {
   title: 'My tech stack',
   description: 'I constantly try to improve',
   gridItemContainer:
-    'col-span-2 row-span-4 md:col-span-2 md:row-span-3 lg:col-span-2 lg:row-span-3 xl:col-span-2 xl:row-span-4',
+    'col-span-2 row-span-4 md:col-span-2 md:row-span-3 lg:col-span-2 lg:row-span-3 xl:col-span-7 xl:row-span-4',
 
   imgClassName: '',
   img: '',
@@ -35,5 +37,19 @@ export const gridItem3: GridItemConfig = {
 
   // The dino measures the rows once it loads; a scaling entrance would skew that.
   entrance: 'fade',
-  renderForeground: () => <TechStack />,
+  // The card's own link to /stack (owner, 2026-11-08): every tool by layer, and
+  // the dino with more room. It sits in the title band's right corner, above
+  // the band (which lets the pointer through to the tiles).
+  renderForeground: () => (
+    <>
+      <TechStack />
+      <Link
+        href="/stack"
+        className="absolute right-4 bottom-4 z-[600] inline-flex items-center gap-1.5 rounded-xl border border-white/15 bg-[#0d304c]/80 px-3 py-1.5 text-sm font-semibold text-slate-100 backdrop-blur-xs transition-colors hover:border-sky-300/60 hover:text-sky-200 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-sky-400 sm:right-5 sm:bottom-5"
+      >
+        See my stack
+        <FiArrowRight className="h-4 w-4" aria-hidden="true" />
+      </Link>
+    </>
+  ),
 }

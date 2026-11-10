@@ -1,90 +1,71 @@
 import React from 'react'
+import Link from 'next/link'
 import { motion } from 'motion/react'
+import { FiArrowRight } from 'react-icons/fi'
 import { fadeInUpVariants, defaultAnimationConfig } from '@/lib/animations'
 import { projects } from '@/data/projects'
-import { accents } from '@/lib/accents'
-import ProjectCard from './ProjectCard'
+import ProjectShowcase from './ProjectShowcase'
 import BuildsTeaser from './BuildsTeaser'
 import { DemoSleepNote } from './StatusPill'
 import SectionHeading from '@/components/ui/SectionHeading'
 
 const BLURB =
-  'AI is changing what software can do and how it gets made. Each project here puts a different kind of AI to work: a voice agent you can talk over, a research agent that cites its sources, a chat platform with memory, and a recommender that learns your taste.'
+  'AI is changing what software can do and how it gets made. Each project here puts AI to work: Wren, an assistant that researches and remembers, a recommender that learns your taste, and a leaderboard that Gemini helps rank.'
 
+/**
+ * The home page's projects, first after the hero (owner, 2026-11-08): the
+ * each project as one big card (Wren first), then the
+ * n8builds.dev teaser. "Detailed view" opens /projects, with every project at
+ * full size.
+ */
 const Projects: React.FC = () => {
   return (
-    <div className="flex flex-col my-20 items-center justify-center gap-5 w-full text-slate-200 mb-6 md:mb-16">
-      <SectionHeading
-        eyebrow="Selected projects"
-        title={
-          <>
-            Building for the <span className="text-sky-400">AI-native web</span>
-          </>
-        }
-        className="px-2 md:px-4 pt-14 md:pt-16 mb-4"
-      >
-        {/* Blurb streams in word by word, like LLM token generation */}
-        <motion.p
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, amount: 0.5 }}
-          variants={{
-            hidden: {},
-            visible: { transition: { staggerChildren: 0.035 } },
-          }}
-          className="select-none"
+    <div className="flex w-full flex-col gap-5 pt-14 pb-6 text-slate-200 md:pt-16 md:pb-12">
+      <div className="flex flex-col gap-4 px-2 sm:flex-row sm:items-end sm:justify-between md:px-4">
+        <SectionHeading
+          eyebrow="Selected projects"
+          title={
+            <>
+              Building for the <span className="text-sky-400">AI-native web</span>
+            </>
+          }
+        />
+        <Link
+          href="/projects"
+          className="group inline-flex shrink-0 items-center gap-1.5 self-start rounded-xl border border-white/12 bg-white/4 px-3.5 py-2 text-sm font-semibold whitespace-nowrap text-slate-100 transition-colors hover:border-sky-400/50 hover:bg-white/8 hover:text-sky-200 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-sky-400 sm:self-auto"
         >
-          {BLURB.split(' ').map((word, i) => (
-            <motion.span
-              key={i}
-              variants={{
-                hidden: { opacity: 0 },
-                visible: { opacity: 1, transition: { duration: 0.12 } },
-              }}
-            >
-              {word}{' '}
-            </motion.span>
-          ))}
-        </motion.p>
-        <DemoSleepNote className="mt-4" />
-      </SectionHeading>
+          Detailed view
+          <FiArrowRight
+            className="h-4 w-4 transition-transform group-hover:translate-x-0.5"
+            aria-hidden="true"
+          />
+        </Link>
+      </div>
+      <motion.p
+        variants={fadeInUpVariants}
+        {...defaultAnimationConfig}
+        className="max-w-3xl px-2 text-base leading-relaxed text-slate-400 md:px-4 md:text-lg/7"
+      >
+        {BLURB}
+      </motion.p>
+      {/* The weekday note only matters while a monitored demo is on the page. */}
+      {projects.some((p) => p.statusName) && <DemoSleepNote className="px-2 md:px-4" />}
 
-      {/* Each row sits in a full-bleed wash of its project's colour, glowing
-          in from the page edge on its screenshot's side (`.lab-row-wash`). */}
-      <div className="flex w-full flex-col">
-        {projects.map((project, index) => (
+      <div className="mt-4 flex w-full flex-col gap-8 px-2 md:gap-10 md:px-4">
+        {projects.map((project) => (
           <motion.div
             key={project.id}
             variants={fadeInUpVariants}
             {...defaultAnimationConfig}
-            viewport={{ once: true, amount: 0.15 }}
-            className="relative py-8 md:py-10"
+            viewport={{ once: true, amount: 0.1 }}
           >
-            <div
-              aria-hidden="true"
-              className="lab-row-wash pointer-events-none absolute inset-y-0 left-1/2 w-screen -translate-x-1/2"
-              style={
-                {
-                  '--lab-from': accents[project.accent].rgb,
-                  '--lab-x': index % 2 === 1 ? '100%' : '0%',
-                } as React.CSSProperties
-              }
-            />
-            <div className="relative px-2 md:px-4">
-              <ProjectCard project={project} index={index} />
-            </div>
+            <ProjectShowcase project={project} />
           </motion.div>
         ))}
+        <motion.div variants={fadeInUpVariants} {...defaultAnimationConfig} className="select-none">
+          <BuildsTeaser />
+        </motion.div>
       </div>
-
-      {/* The n8builds.dev teaser: the rest of what I build, one build at a time */}
-      <motion.div
-        variants={fadeInUpVariants}
-        {...defaultAnimationConfig}
-        className="w-full px-2 md:px-4 pt-10 select-none"
-      >
-        <BuildsTeaser />
-      </motion.div>
     </div>
   )
 }

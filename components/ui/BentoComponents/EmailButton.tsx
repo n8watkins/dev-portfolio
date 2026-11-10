@@ -47,12 +47,16 @@ const EmailButton: React.FC<ResumeButtonsProps> = ({ buttonContainer, buttonClas
     })
   }
 
-
   return (
-    <div className="">
-      <BackgroundGradientAnimation interactive={false} className="h-full pb-32 group pointer-events-none ">
-        <div className="z-50 flex justify-center group-hover:scale-105 duration-200  text-2xl pt-5  font-sans font-bold ">
-          <h2 className="text-slate-800 dark:text-white text-2xl text-center  lg:text-2xl xl:text-3xl pt-3    ">
+    <div className="h-full">
+      {/* The heading and the button sit together, centred in the card (owner, round 5 of
+          2026-11-09: closer together). */}
+      <BackgroundGradientAnimation
+        interactive={false}
+        className="group pointer-events-none flex h-full flex-col items-center justify-center gap-5"
+      >
+        <div className="z-50 flex justify-center group-hover:scale-105 duration-200 text-2xl font-sans font-bold">
+          <h2 className="text-slate-800 dark:text-white text-2xl text-center text-balance px-5 lg:text-2xl xl:text-3xl">
             Have a project? Let&apos;s connect!{' '}
           </h2>
         </div>
@@ -71,13 +75,15 @@ const EmailButton: React.FC<ResumeButtonsProps> = ({ buttonContainer, buttonClas
         <div
           className={`${buttonContainer} transition-opacity duration-500 ${
             isVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'
-          }`}>
+          }`}
+        >
           <button
             className={`${buttonClass} pointer-events-auto gap-3 bg-[linear-gradient(1100deg,#5b21b6,45%,#6d28d9,55%,#5b21b6)] dark:bg-[linear-gradient(1100deg,#001f54,45%,#002b76,55%,#001f54)] border-white/30 dark:bg-animate-duration-[4000ms] `}
             onClick={handleEmailClick}
             onPointerEnter={preloadConfetti}
             onFocus={preloadConfetti}
-            disabled={!isVisible}>
+            disabled={!isVisible}
+          >
             <AnimatePresence mode="wait">
               <motion.span
                 key={copiedEmail ? 'copied' : 'copy'}

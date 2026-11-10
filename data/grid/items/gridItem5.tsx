@@ -14,7 +14,7 @@ const EmailButton = dynamic(() => import('@/components/ui/BentoComponents/EmailB
  * - Animated shimmer effect on button
  * - Opens contact form modal on click
  */
-const buttonContainer = 'flex items-center  justify-evenly z-50     w-full h-full pt-10 '
+const buttonContainer = 'flex items-center justify-center z-50 w-full'
 const buttonClass =
   'inline-flex h-12  py-2 px-6  z-5000 animate-shimmer items-center justify-center rounded-md border border-slate-800  bg-size-[200%_100%] font-medium text-slate-200 transition-transform focus:outline-hidden focus:ring-0 focus:ring-offset-slate-50 hover:scale-105 animate-duration-[3000ms]'
 
@@ -22,7 +22,8 @@ export const gridItem5: GridItemConfig = {
   id: 5,
   title: '',
   description: '',
-  gridItemContainer: 'col-span-2 row-span-2 md:row-span-1 lg:col-span-2 xl:row-span-2 ',
+  gridItemContainer:
+    'col-span-2 row-span-2 md:row-span-1 lg:col-span-2 xl:col-span-4 xl:row-span-3 ',
 
   imgClassName: '',
   img: '',

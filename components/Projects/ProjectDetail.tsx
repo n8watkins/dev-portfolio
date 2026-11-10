@@ -8,8 +8,9 @@ import { Project } from '@/lib/types'
 import { accents } from '@/lib/accents'
 import ProjectGallery from './ProjectGallery'
 import TechStackCycle from './TechStackCycle'
-import BackToProjects from './BackToProjects'
+import BackToHome from './BackToHome'
 import StatusPill, { DemoSleepNote } from './StatusPill'
+import ProjectIcon from '@/components/Projects/ProjectIcon'
 
 function Heading({ id, children }: { id: string; children: React.ReactNode }) {
   return (
@@ -94,6 +95,7 @@ export default function ProjectDetail({ project }: { project: Project }) {
     project.purpose && { id: 'goal', label: 'The goal' },
     project.aiUsage && { id: 'ai', label: 'How it uses AI' },
     project.highlights?.length && { id: 'how', label: 'How it works' },
+    project.credits?.length && { id: 'credits', label: 'Credits' },
     { id: 'stack', label: 'The stack' },
   ].filter(Boolean) as { id: string; label: string }[]
 
@@ -106,22 +108,15 @@ export default function ProjectDetail({ project }: { project: Project }) {
         style={{ '--lab-from': accent.rgb, '--lab-x': '0%' } as React.CSSProperties}
       />
       <div className="relative max-w-5xl xl:max-w-6xl 2xl:max-w-7xl mx-auto px-4 sm:px-6 pt-24 pb-12 md:pt-28 md:pb-16">
-        <BackToProjects />
+        <BackToHome />
 
         {/* Header */}
         <header className="mb-8">
           <div className="flex items-center gap-4">
-            <Image
-              src={project.icon}
-              alt=""
-              width={64}
-              height={64}
-              unoptimized={project.icon.endsWith('.svg')}
-              className="h-14 w-14 shrink-0 rounded-2xl shadow-lg shadow-black/40 sm:h-16 sm:w-16"
-            />
+            <ProjectIcon project={project} size={64} className="h-14 w-14 sm:h-16 sm:w-16" />
             <div className="min-w-0">
               <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-slate-50">
-                {project.title}
+                {project.wordmark ?? project.title}
               </h1>
               <p className={`mt-1 text-base font-semibold ${accent.subtitle}`}>
                 {project.subTitle}
@@ -217,6 +212,55 @@ export default function ProjectDetail({ project }: { project: Project }) {
                     </li>
                   ))}
                 </ul>
+              </section>
+            )}
+
+            {project.credits && project.credits.length > 0 && (
+              <section>
+                <Heading id="credits">Credits</Heading>
+                <ul className="flex flex-col gap-4">
+                  {project.credits.map((credit) => (
+                    <li
+                      key={credit.href}
+                      className="text-lg md:text-xl/7 leading-relaxed text-slate-300"
+                    >
+                      <a
+                        href={credit.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={`font-semibold underline decoration-current/40 underline-offset-4 hover:text-white transition-colors ${accent.subtitle}`}
+                      >
+                        {credit.name}
+                        <span className="sr-only"> (opens in a new tab)</span>
+                      </a>
+                      : {credit.note}
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+
+            {project.invite && (
+              <section
+                aria-labelledby="invite"
+                className="rounded-2xl border border-white/10 bg-white/3 p-6 sm:p-8"
+              >
+                <h2 id="invite" className="text-2xl font-bold tracking-tight text-slate-50">
+                  {project.invite.heading}
+                </h2>
+                <p className="mt-2 text-base leading-relaxed text-slate-300 md:text-lg/7">
+                  {project.invite.body}
+                </p>
+                <a
+                  href={project.invite.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`${BUTTON} ${accent.primary} mt-5`}
+                >
+                  {project.invite.label}
+                  <FiArrowUpRight className="h-4 w-4" aria-hidden="true" />
+                  <span className="sr-only"> (opens in a new tab)</span>
+                </a>
               </section>
             )}
           </article>

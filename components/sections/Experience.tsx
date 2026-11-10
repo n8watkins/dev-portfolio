@@ -1,44 +1,130 @@
 'use client'
 
-import React from 'react'
+import React, { useState } from 'react'
 import Image from 'next/image'
 import { motion } from 'motion/react'
-import { FiArrowUpRight } from 'react-icons/fi'
-import { workExperience } from '@/data/experience'
+import { FiChevronDown, FiExternalLink } from 'react-icons/fi'
+import { workExperience, type WorkExperienceItem } from '@/data/experience'
 import SectionHeading from '@/components/ui/SectionHeading'
 import { staggerItemVariants } from '@/lib/animations'
 
-const Experience = () => {
-  return (
-    <div className="relative pt-0 md:pt-8 pb-12 md:pb-20 xl:max-w-6xl 2xl:max-w-7xl m-auto select-none">
-      <SectionHeading
-        eyebrow="Experience"
-        title="Where I've built"
-        className="px-2 md:px-4 pt-6 pb-6"
+/** A site I built in the role: a small preview card, the whole card a link to it. */
+const SiteCard = ({ site }: { site: NonNullable<WorkExperienceItem['sites']>[number] }) => (
+  <a
+    href={site.url}
+    target="_blank"
+    rel="noopener noreferrer"
+    className="group/site flex flex-col overflow-hidden rounded-xl border border-white/10 bg-[#0a1322] shadow-md shadow-black/40 transition-colors duration-200 hover:border-sky-400/50 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-sky-400"
+  >
+    <span className="relative block aspect-16/9 overflow-hidden">
+      <Image
+        src={site.shot}
+        alt=""
+        fill
+        sizes="(max-width: 640px) 90vw, 14rem"
+        // Top left: a 16:9 shot keeps its logo when the frame trims it.
+        className="object-cover object-left-top transition-transform duration-500 group-hover/site:scale-[1.03]"
       />
+    </span>
+    <span className="flex items-center justify-between gap-2 px-3 py-2 text-sm font-semibold text-slate-200 transition-colors group-hover/site:text-sky-300">
+      <span className="truncate">{site.label}</span>
+      <FiExternalLink className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+      <span className="sr-only"> (opens in a new tab)</span>
+    </span>
+  </a>
+)
 
-      {/* Each card fades in on its own as it scrolls into view: the whole list is
-          taller than a phone's screen many times over, so waiting for a share of
-          it to show (as a stagger on the list would) left it hidden on phones. */}
-      <div className="relative mt-4 px-2 md:px-4">
+/** A list of what I did, as small sky dots. */
+const Bullets = ({ items, className = '' }: { items: string[]; className?: string }) => (
+  <ul className={`space-y-2 ${className}`}>
+    {items.map((bullet) => (
+      <li
+        key={bullet}
+        className="flex items-start gap-3 text-sm leading-relaxed text-slate-400 md:text-base/6"
+      >
+        <span
+          className="mt-[9px] h-[5px] w-[5px] shrink-0 rounded-full bg-sky-400/60"
+          aria-hidden="true"
+        />
+        <span>{bullet}</span>
+      </li>
+    ))}
+  </ul>
+)
+
+/** An open role's rest: more of what I did, then the sites I built there as small preview cards. */
+const Details = ({ item }: { item: WorkExperienceItem }) => (
+  <div className="flex flex-col gap-5">
+    {item.more && <Bullets items={item.more} />}
+    {item.sites && (
+      <ul aria-label="Sites I built there" className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {item.sites.map((site) => (
+          <li key={site.url}>
+            <SiteCard site={site} />
+          </li>
+        ))}
+      </ul>
+    )}
+  </div>
+)
+
+/**
+ * Experience as a compact timeline (owner, 2026-11-08): each role's title,
+ * company, years and a short list of what I did, always shown (round 5 of
+ * 2026-11-09). The roles with more to say open in place ("More"): clicking
+ * anywhere on such a role, or Enter or Space on it, shows the rest and the sites
+ * I built there, and "Expand all" opens them all. The others have no expand.
+ */
+const Experience = () => {
+  const [open, setOpen] = useState<Set<number>>(() => new Set())
+  const expandable = workExperience.filter((w) => w.more || w.sites)
+  const allOpen = open.size === expandable.length
+  const toggle = (id: number) =>
+    setOpen((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+
+  return (
+    <div className="relative m-auto pt-0 pb-12 select-none md:pt-8 md:pb-20 xl:max-w-6xl 2xl:max-w-7xl">
+      <div className="flex items-end justify-between gap-4 px-2 pt-6 pb-6 md:px-4">
+        <SectionHeading eyebrow="Experience" title="Where I've built" />
+        <button
+          type="button"
+          onClick={() => setOpen(allOpen ? new Set() : new Set(expandable.map((w) => w.id)))}
+          aria-expanded={allOpen}
+          className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl border border-white/12 bg-white/4 px-3 py-2 text-sm font-semibold text-slate-200 transition-colors hover:border-sky-400/50 hover:bg-white/8 hover:text-sky-200 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-sky-400"
+        >
+          {allOpen ? 'Collapse all' : 'Expand all'}
+          <FiChevronDown
+            className={`h-4 w-4 transition-transform duration-200 ${allOpen ? 'rotate-180' : ''}`}
+            aria-hidden="true"
+          />
+        </button>
+      </div>
+
+      <div className="relative mt-2 px-2 md:px-4">
         {/* Vertical timeline line */}
-        <div className="absolute left-[9px] md:left-[11px] top-2 bottom-4 w-px bg-linear-to-b from-sky-500 via-sky-400/40 to-transparent" />
+        <div className="absolute top-2 bottom-4 left-[9px] w-px bg-linear-to-b from-sky-500 via-sky-400/40 to-transparent md:left-[11px]" />
 
-        <div className="space-y-6">
+        <div className="space-y-4">
           {workExperience.map((item, index) => {
             const showDivider =
               item.additional && workExperience[index - 1] && !workExperience[index - 1].additional
-
+            const canOpen = Boolean(item.more || item.sites)
+            const isOpen = canOpen && open.has(item.id)
+            const image = item.image
             return (
               <React.Fragment key={item.id}>
                 {showDivider && (
-                  <div className="relative pl-10 md:pl-12 pt-2">
-                    <p className="text-xs font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-400">
+                  <div className="relative pt-2 pl-10 md:pl-12">
+                    <p className="text-xs font-semibold tracking-widest text-slate-400 uppercase">
                       Additional Experience
                     </p>
                   </div>
                 )}
-
                 <motion.div
                   variants={staggerItemVariants}
                   initial="hidden"
@@ -46,101 +132,108 @@ const Experience = () => {
                   viewport={{ once: true, amount: 0.2 }}
                   className="group/exp relative pl-10 md:pl-12"
                 >
-                  {/* Timeline dot */}
-                  <div className="absolute left-0 top-[14px] w-[19px] h-[19px] rounded-full bg-sky-500 border-[3px] border-slate-900 shadow-lg shadow-sky-500/40" />
-
-                  {/* Card */}
-                  {/* On hover, one soft glow wraps the whole card evenly, in its hover
-                      image's colour (item.hoverGlow), light blue on a card with no image.
-                      Kept tight, so it never reaches the cards next to it. */}
+                  <div className="absolute top-[14px] left-0 h-[19px] w-[19px] rounded-full border-[3px] border-slate-900 bg-sky-500 shadow-lg shadow-sky-500/40" />
+                  {/* The whole role header is one button (stretched over it): click
+                      or press Enter or Space anywhere on it to open what I did.
+                      Tech for Pros' link sits above that layer, so it still opens
+                      the site. */}
                   <div
-                    aria-hidden="true"
-                    className={`pointer-events-none absolute -inset-y-1 -right-1 left-9 rounded-2xl opacity-0 blur-lg transition-opacity duration-500 group-hover/exp:opacity-100 md:left-11 ${item.hoverGlow ?? 'bg-sky-400/16'}`}
-                  />
-                  <div
-                    className={`group relative overflow-hidden rounded-xl p-5 md:p-6 bg-slate-900 border border-white/5 shadow-[0_20px_25px_-5px_rgba(0,0,0,0.3)] hover:border-sky-500/30 transition-all duration-300`}
+                    className={`group/card relative overflow-hidden rounded-xl border bg-slate-900 shadow-[0_20px_25px_-5px_rgba(0,0,0,0.3)] transition-colors duration-200 has-[[data-role-toggle]:hover]:border-sky-400/40 has-[[data-role-toggle]:hover]:bg-slate-800/80 has-[[data-role-toggle]:focus-visible]:ring-2 has-[[data-role-toggle]:focus-visible]:ring-sky-400 ${isOpen ? 'border-sky-500/30' : 'border-white/5'}`}
                   >
-                    {/* Hover image reveal (desktop only): its frame fades in from the left, so
-                        the picture never hard-cuts against the copy */}
-                    {item.hoverImage && (
+                    {/* The role's own picture on the right (desktop), faded into the row:
+                        a glimpse on hover, and it stays, a little quieter, while the role
+                        is open (owner, round 4 of 2026-11-09), across the whole card. */}
+                    {image && (
                       <div
-                        className="absolute inset-y-0 right-0 w-[30%] overflow-hidden mask-[linear-gradient(to_left,black_45%,transparent)] opacity-0 group-hover:opacity-80 transition-opacity duration-500 pointer-events-none hidden md:block"
                         aria-hidden="true"
+                        className={`pointer-events-none absolute inset-y-0 right-0 hidden w-[26%] overflow-hidden mask-[linear-gradient(to_left,black_45%,transparent)] transition-opacity duration-500 md:block ${isOpen ? 'opacity-50' : 'opacity-0 group-hover/card:opacity-80'}`}
+                        data-role-image
                       >
                         <Image
-                          src={item.hoverImage}
+                          src={image.src}
                           alt=""
                           fill
-                          sizes="30vw"
-                          className={`object-cover transition-transform duration-700 ${item.hoverFrame ?? 'object-top-right origin-top-right scale-[1.18] group-hover:scale-110'}`}
+                          sizes="22vw"
+                          className="object-cover object-left-top transition-transform duration-700 group-hover/card:scale-105"
                         />
-                        {/* Dimmed, so a bright page doesn't wash out the card */}
-                        <div className="absolute inset-0 bg-darkBlue/45" />
+                        <div className="absolute inset-0 bg-darkBlue/40" />
                       </div>
                     )}
-
-                    {/* With an image, the copy stops short of it, so it never sits on the picture */}
-                    <div className={`relative z-10 ${item.hoverImage ? 'md:max-w-[68%]' : ''}`}>
-                      {/* Period + location */}
-                      <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mb-2">
-                        <span className="text-xs font-semibold tracking-wider uppercase text-sky-400 bg-sky-500/10 px-2.5 py-0.5 rounded-full border border-sky-500/20">
-                          {item.period}
-                        </span>
-                        <span className="text-xs text-slate-400">{item.location}</span>
-                      </div>
-
-                      {/* Role */}
-                      <h3 className="text-xl md:text-2xl/8 font-bold text-slate-100 leading-snug">
-                        {item.role}
-                      </h3>
-
-                      {/* Company */}
-                      <p className="text-base font-semibold mt-0.5 mb-4">
-                        {item.companyUrl ? (
-                          <a
-                            href={item.companyUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-sky-400 hover:text-sky-300 transition-colors"
-                          >
-                            {item.company}
-                          </a>
-                        ) : (
-                          <span className="text-sky-400">{item.company}</span>
-                        )}
-                      </p>
-
-                      {/* Bullets */}
-                      <ul className="space-y-2.5">
-                        {item.bullets.map((bullet, i) => (
-                          <li
-                            key={i}
-                            className="flex items-start gap-3 text-sm md:text-base/6 text-slate-400 leading-relaxed"
-                          >
-                            <span className="mt-[9px] shrink-0 w-[5px] h-[5px] rounded-full bg-sky-400/60" />
-                            <span>{bullet}</span>
-                          </li>
-                        ))}
-                      </ul>
-
-                      {/* Related links */}
-                      {item.links && item.links.length > 0 && (
-                        <div className="flex flex-wrap gap-2 mt-4">
-                          {item.links.map((link) => (
+                    <div className="group/role relative p-4 md:p-5">
+                      {canOpen && (
+                        <button
+                          type="button"
+                          data-role-toggle
+                          onClick={() => toggle(item.id)}
+                          aria-expanded={isOpen}
+                          aria-controls={`role-${item.id}`}
+                          className="absolute inset-0 z-10 cursor-pointer rounded-xl focus:outline-hidden"
+                        >
+                          <span className="sr-only">
+                            {item.role}, {item.company}: {isOpen ? 'hide' : 'show'} more of what I
+                            did
+                          </span>
+                        </button>
+                      )}
+                      <div className={`relative ${image ? 'md:max-w-[72%]' : ''}`}>
+                        <div className="mb-2 flex flex-wrap items-center gap-x-2 gap-y-1">
+                          <span className="rounded-full border border-sky-500/20 bg-sky-500/10 px-2.5 py-0.5 text-xs font-semibold tracking-wider text-sky-400 uppercase">
+                            {item.period}
+                          </span>
+                          <span className="text-xs text-slate-400">{item.location}</span>
+                        </div>
+                        <h3 className="text-xl leading-snug font-bold text-slate-100 md:text-2xl/8">
+                          {item.role}
+                        </h3>
+                        <p className="mt-0.5 text-base font-semibold text-sky-400">
+                          {item.companyUrl ? (
                             <a
-                              key={link.url}
-                              href={link.url}
+                              href={item.companyUrl}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1 text-xs text-sky-400 hover:text-sky-300 bg-sky-500/10 px-2.5 py-1 rounded-full border border-sky-500/20 hover:border-sky-500/40 transition-colors"
+                              className="relative z-20 inline-flex items-center gap-1.5 rounded transition-colors hover:text-sky-300 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-sky-400"
                             >
-                              {link.label}
-                              <FiArrowUpRight className="w-3 h-3" />
+                              {item.company}
+                              <FiExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
+                              <span className="sr-only"> (opens in a new tab)</span>
                             </a>
-                          ))}
-                        </div>
-                      )}
+                          ) : (
+                            item.company
+                          )}
+                        </p>
+                        {/* What I did, in short, for every role */}
+                        <Bullets items={item.basics} className="mt-3" />
+                        {/* "More" only on the roles with more to say */}
+                        {canOpen && (
+                          <span
+                            aria-hidden="true"
+                            className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-slate-300 transition-colors group-has-[[data-role-toggle]:hover]/role:text-sky-300"
+                          >
+                            {isOpen ? 'Less' : 'More'}
+                            <FiChevronDown
+                              className={`h-4 w-4 transition-transform duration-300 motion-reduce:transition-none ${isOpen ? 'rotate-180' : ''}`}
+                            />
+                          </span>
+                        )}
+                      </div>
                     </div>
+                    {/* Opens smoothly: its row eases from 0fr to 1fr while it fades in
+                        (instant under reduced motion); closed, it is hidden and inert. */}
+                    {canOpen && (
+                      <div
+                        id={`role-${item.id}`}
+                        inert={!isOpen}
+                        className={`grid transition-[grid-template-rows,opacity,visibility] duration-[350ms] ease-out motion-reduce:transition-none ${isOpen ? 'visible grid-rows-[1fr] opacity-100' : 'invisible grid-rows-[0fr] opacity-0'}`}
+                      >
+                        <div className="min-h-0 overflow-hidden">
+                          <div
+                            className={`relative px-4 pb-5 md:px-5 ${image ? 'md:max-w-[74%]' : ''}`}
+                          >
+                            <Details item={item} />
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </motion.div>
               </React.Fragment>
