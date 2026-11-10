@@ -66,14 +66,15 @@ export interface Project {
   statusName?: string
 }
 
-/** A project still being built: a compact card with no name, links or screenshots yet. */
-export interface InProgressProject {
-  /** A neutral label in place of a name, until it has one. */
-  label: string
-  /** What it will do, in one sentence. */
-  pitch: string
-  /** A few words each on what it does, shown as small chips. */
-  points: string[]
+/** The newest app, live and public: a one-line card above the projects (Wren, 2026-11-09). */
+export interface FeaturedApp {
+  name: string
+  /** What it is, in one line. */
+  line: string
+  /** The live app ("Try it"). */
+  site: string
+  /** Its public repository ("Source"). */
+  source: string
 }
 
 export type TechNameMappingInterface = {

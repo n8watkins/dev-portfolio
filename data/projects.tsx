@@ -1,4 +1,4 @@
-import type { InProgressProject, Project } from '@/lib/types'
+import type { FeaturedApp, Project } from '@/lib/types'
 
 /**
  * The AI app being built now, shown first as a compact "In progress" card with
@@ -6,11 +6,15 @@ import type { InProgressProject, Project } from '@/lib/types'
  * Scout and GeminiGPT, retired that day. When it ships, delete this and add
  * it to `projects` as a regular entry (first in the list).
  */
-export const inProgress: InProgressProject | null = {
-  label: 'New AI app - in progress',
-  pitch:
-    "An AI assistant that talks with you, researches for you, and remembers what you've worked on together.",
-  points: ['Talks with you', 'Researches for you', 'Remembers your work'],
+/**
+ * Wren, the AI app that was "in progress" here until it went live (owner,
+ * round 4 of 2026-11-09): anyone can try it as a guest, and its code is public.
+ */
+export const featuredApp: FeaturedApp | null = {
+  name: 'Wren',
+  line: 'An AI assistant you can type or talk to, that researches and remembers.',
+  site: 'https://wren.n8builds.dev',
+  source: 'https://github.com/n8watkins/wren',
 }
 
 export const projects: Project[] = [
