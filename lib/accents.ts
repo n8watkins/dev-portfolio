@@ -4,7 +4,7 @@ import type { Project } from '@/lib/types'
  * Each project's own brand colour, as on n8builds.dev's Lab rows: its row's
  * glow (`rgb`, read by `.lab-row-wash` in globals.css), the screenshot's
  * outline, the feature checks and the main button. Taken from each app:
- * Net-Trailer's Netflix red and Portfolio Rank's gold (#fbbf24, its "Rank"). Every button pairing passes WCAG AA.
+ * Wren's ember, Net-Trailer's Netflix red and Portfolio Rank's gold (#fbbf24, its "Rank"). Every button pairing passes WCAG AA.
  */
 export const accents: Record<
   Project['accent'],
@@ -20,6 +20,16 @@ export const accents: Record<
     subtitle: string
   }
 > = {
+  // Wren's ember, as it shows on dark (#ff7d4d); its main button is dark ink on it.
+  wren: {
+    rgb: '255 125 77',
+    check: 'text-orange-400',
+    outline: 'border-orange-400/25 group-hover:border-orange-300/50',
+    shadow: 'group-hover:shadow-[0_10px_30px_-16px_rgba(255,125,77,0.4)]',
+    dot: 'bg-orange-400',
+    primary: 'bg-[#ff7d4d] text-slate-950 hover:bg-[#ff9670]',
+    subtitle: 'text-orange-300',
+  },
   'net-trailer': {
     rgb: '229 9 20',
     check: 'text-red-500',

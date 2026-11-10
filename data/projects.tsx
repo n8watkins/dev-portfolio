@@ -1,23 +1,100 @@
-import type { FeaturedApp, Project } from '@/lib/types'
+import type { Project } from '@/lib/types'
 
 /**
- * The AI app being built now, shown first as a compact "In progress" card with
- * no name, links or screenshots yet (owner, 2026-11-08). It replaces Echo,
- * Scout and GeminiGPT, retired that day. When it ships, delete this and add
- * it to `projects` as a regular entry (first in the list).
+ * The projects, Wren first: it replaced Echo, Scout and GeminiGPT, retired on
+ * 2026-11-08 (their old pages redirect to Wren's, next.config.mjs).
  */
-/**
- * Wren, the AI app that was "in progress" here until it went live (owner,
- * round 4 of 2026-11-09): anyone can try it as a guest, and its code is public.
- */
-export const featuredApp: FeaturedApp | null = {
-  name: 'Wren',
-  line: 'An AI assistant you can type or talk to, that researches and remembers.',
-  site: 'https://wren.n8builds.dev',
-  source: 'https://github.com/n8watkins/wren',
-}
-
 export const projects: Project[] = [
+  {
+    // Live and public since 2026-11-09 (it was the "New AI app, in progress" card); a full
+    // project card since round 5 of 2026-11-09. Copy from its README and docs/DECISIONS.md.
+    id: 7,
+    slug: 'wren',
+    title: 'Wren',
+    subTitle: 'An AI assistant that researches and remembers',
+    des: `An AI assistant you can type or talk to, that researches the web for you and remembers what you save. Try it as a guest with no sign-up: Wren answers as it writes. Sign in with GitHub or an email link for saved chats, research runs that show every search and cite only the pages they read, and a Memory library you can search by meaning.`,
+    summary: `An AI assistant you can type or talk to, that researches the web for you and remembers what you save. Try it as a guest, no sign-up: it answers as it writes.`,
+    highlight: `Each person gets their own Durable Object on Cloudflare, with their chats, memory and daily meter in its own SQLite database, so one person's data can't be reached through another's id.`,
+    clip: {
+      src: '/projects/clips/wren.mp4',
+      poster: '/projects/clips/wren-poster.webp',
+      alt: 'Wren as a guest: asking what to look for in an e-bike under $1,500, and the answer streaming in',
+    },
+    images: [
+      {
+        src: '/projects/wren/1-welcome.webp',
+        alt: "Wren's first screen: What are we working on? with three suggested questions",
+      },
+      {
+        src: '/projects/wren/2-answer.webp',
+        alt: 'Wren answering a guest: what to look for in an e-bike under $1,500',
+      },
+      {
+        src: '/projects/wren/3-how-it-works.webp',
+        alt: 'How Wren works: talk or type, research, memory, and your key and limits',
+      },
+    ],
+    icon: '/projects/icons/wren.svg',
+    mark: 'wren',
+    accent: 'wren',
+    tags: ['Next.js', 'Cloudflare Workers', 'Durable Objects', 'Gemini', 'Better Auth'],
+    features: [
+      'Answers as it writes',
+      'Research that cites its sources',
+      'A Memory library searched by meaning',
+      'Try it as a guest',
+    ],
+    technologies: {
+      Frontend: {
+        descriptionParts: [
+          {
+            text: 'One chat where typing and talking are both always there, streamed as Wren writes',
+            icons: [{ icon: 'next.svg' }, { icon: 're.svg' }, { icon: 'ts.svg' }],
+          },
+        ],
+      },
+      Backend: {
+        descriptionParts: [
+          {
+            text: 'Gemini for chat, with a fallback model when one is busy, and embeddings for Memory',
+            icons: [{ icon: 'gemini.svg' }],
+          },
+          {
+            text: 'GitHub and email sign-in with Better Auth, sessions in D1',
+            icons: [{ icon: 'sqlite.svg' }],
+          },
+          {
+            text: 'Research runs search and read the web, and cite only the pages they opened',
+            icons: [{ icon: 'websearch.svg' }],
+          },
+        ],
+      },
+      Cloud: {
+        descriptionParts: [
+          {
+            text: 'One Worker on Cloudflare through OpenNext, with a Durable Object per person, Vectorize for Memory and R2 for files',
+            icons: [{ icon: 'cloudflare.svg' }],
+          },
+          {
+            text: 'Open source on GitHub, released with release-kit',
+            icons: [{ icon: 'github.png' }],
+          },
+        ],
+      },
+    },
+    highlights: [
+      'Try it as a guest: 5 messages a day with no account, kept only in your tab, behind a Cloudflare Turnstile check and per-network limits so the free tier stays fair.',
+      'Answers stream as Wren writes them, from the agent through the API route to the browser; Stop or closing the tab keeps what was written.',
+      'Each signed-in person has their own Durable Object (Cloudflare Agents SDK) holding their chats, memory and daily meter in its own SQLite database.',
+      'Memory is a library you browse and edit: notes, links and files, searched by meaning with Gemini embeddings in Vectorize.',
+      'Research runs show what they searched and read, and cite only the pages they opened.',
+      'Sign in with GitHub or a one-time email link (Better Auth on D1); links expire in 10 minutes and are stored hashed.',
+    ],
+    purpose: `Wren is my take on a ChatGPT-like assistant done well: one chat where typing and talking are always both there, research you can watch and check, and a memory you can see, edit and delete instead of a black box. It's also a study in running an AI product on a free tier honestly: a real guest mode with clear limits.`,
+    aiUsage: `Chat runs on Gemini (a Flash-Lite model with a fallback model when it's busy), streamed token by token. Memory turns what you save into Gemini embeddings in Cloudflare Vectorize, so you find things by meaning. Research runs search the web, read the pages and answer with citations to only the pages they opened.`,
+    github: 'https://github.com/n8watkins/wren',
+    liveSite: 'https://wren.n8builds.dev',
+  },
   {
     id: 2,
     slug: 'net-trailer',
@@ -32,14 +109,28 @@ export const projects: Project[] = [
       alt: "Net-Trailer's home page: the featured titles, then the Trending and Top Rated rows",
     },
     images: [
-      { src: '/projects/net-trailer/1-app.webp', alt: 'Net-Trailer: a featured title with Play and More Info' },
-      { src: '/projects/net-trailer/2-rows.webp', alt: 'Net-Trailer: Trending and Top Rated rows from TMDB' },
-      { src: '/projects/net-trailer/3-intro.webp', alt: "Net-Trailer's welcome: quick start, browse features or watch a demo" },
+      {
+        src: '/projects/net-trailer/1-app.webp',
+        alt: 'Net-Trailer: a featured title with Play and More Info',
+      },
+      {
+        src: '/projects/net-trailer/2-rows.webp',
+        alt: 'Net-Trailer: Trending and Top Rated rows from TMDB',
+      },
+      {
+        src: '/projects/net-trailer/3-intro.webp',
+        alt: "Net-Trailer's welcome: quick start, browse features or watch a demo",
+      },
     ],
     icon: '/projects/icons/net-trailer.png',
     accent: 'net-trailer',
     tags: ['Next.js', 'Gemini', 'TMDB', 'Firebase'],
-    features: ['Describe a mood, get picks', 'Learns your taste', 'Explains every pick', 'Voice search'],
+    features: [
+      'Describe a mood, get picks',
+      'Learns your taste',
+      'Explains every pick',
+      'Voice search',
+    ],
     technologies: {
       Frontend: {
         descriptionParts: [
@@ -118,14 +209,28 @@ export const projects: Project[] = [
       alt: 'Portfolio Rank: voting between two portfolios, head to head',
     },
     images: [
-      { src: '/projects/portfolio-rank/1-home.webp', alt: 'Portfolio Rank: the best developer portfolios, ranked, with the top ranked right now' },
-      { src: '/projects/portfolio-rank/2-rank.webp', alt: 'Portfolio Rank: which portfolio is better? Two portfolios side by side' },
-      { src: '/projects/portfolio-rank/3-top.webp', alt: "Portfolio Rank's leaderboard, ranked by ELO from head-to-head votes" },
+      {
+        src: '/projects/portfolio-rank/1-home.webp',
+        alt: 'Portfolio Rank: the best developer portfolios, ranked, with the top ranked right now',
+      },
+      {
+        src: '/projects/portfolio-rank/2-rank.webp',
+        alt: 'Portfolio Rank: which portfolio is better? Two portfolios side by side',
+      },
+      {
+        src: '/projects/portfolio-rank/3-top.webp',
+        alt: "Portfolio Rank's leaderboard, ranked by ELO from head-to-head votes",
+      },
     ],
     icon: '/projects/icons/portfolio-rank.png',
     accent: 'portfolio-rank',
     tags: ['Next.js', 'Gemini', 'Turso', 'Playwright', 'Vercel'],
-    features: ['Head-to-head voting', 'ELO leaderboard', 'A screenshot of every site', 'Lighthouse scores and AI reviews'],
+    features: [
+      'Head-to-head voting',
+      'ELO leaderboard',
+      'A screenshot of every site',
+      'Lighthouse scores and AI reviews',
+    ],
     technologies: {
       Frontend: {
         descriptionParts: [
@@ -274,4 +379,5 @@ export const techNameMapping = {
   'playwright.svg': 'Playwright',
   'kubernetes.png': 'Kubernetes',
   'github.svg': 'GitHub',
+  'cloudflare.svg': 'Cloudflare',
 }

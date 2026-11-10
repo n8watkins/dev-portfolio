@@ -10,6 +10,7 @@ import { BUTTON, QUIET, CreditLine } from './ProjectShowcase'
 import { accents } from '@/lib/accents'
 import { trackProjectEvent } from '@/lib/analytics'
 import type { Project } from '@/lib/types'
+import ProjectIcon from '@/components/Projects/ProjectIcon'
 
 /** The row's three buttons share the width, so a little less padding. */
 const B = BUTTON.replace('px-4', 'px-3')
@@ -44,14 +45,7 @@ export default function ProjectFull({ project }: { project: Project }) {
         />
         <div className="min-w-0">
           <div className="flex items-center gap-3">
-            <Image
-              src={project.icon}
-              alt=""
-              width={56}
-              height={56}
-              unoptimized={project.icon.endsWith('.svg')}
-              className="h-12 w-12 shrink-0 rounded-2xl shadow-lg shadow-black/40 sm:h-14 sm:w-14"
-            />
+            <ProjectIcon project={project} size={56} className="h-12 w-12 sm:h-14 sm:w-14" />
             <div className="min-w-0">
               <h2 className="text-2xl font-bold tracking-tight text-slate-50 sm:text-3xl">
                 {project.wordmark ?? project.title}
@@ -71,8 +65,14 @@ export default function ProjectFull({ project }: { project: Project }) {
             className="mt-4 grid gap-x-5 gap-y-1.5 sm:grid-cols-2"
           >
             {project.features.map((feature) => (
-              <li key={feature} className="flex items-start gap-2 text-sm font-medium text-slate-200">
-                <FiCheck className={`mt-[3px] h-4 w-4 shrink-0 ${accent.check}`} aria-hidden="true" />
+              <li
+                key={feature}
+                className="flex items-start gap-2 text-sm font-medium text-slate-200"
+              >
+                <FiCheck
+                  className={`mt-[3px] h-4 w-4 shrink-0 ${accent.check}`}
+                  aria-hidden="true"
+                />
                 {feature}
               </li>
             ))}
@@ -94,7 +94,9 @@ export default function ProjectFull({ project }: { project: Project }) {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label={`Try the ${project.title} live demo (new tab)`}
-                onClick={() => trackProjectEvent('live_site_click', project.title, { source: 'projects' })}
+                onClick={() =>
+                  trackProjectEvent('live_site_click', project.title, { source: 'projects' })
+                }
                 className={`${B} ${accent.primary}`}
               >
                 <FiExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
@@ -107,7 +109,9 @@ export default function ProjectFull({ project }: { project: Project }) {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label={`View ${project.title} source on GitHub (new tab)`}
-                onClick={() => trackProjectEvent('github_click', project.title, { source: 'projects' })}
+                onClick={() =>
+                  trackProjectEvent('github_click', project.title, { source: 'projects' })
+                }
                 className={`${B} ${QUIET}`}
               >
                 <FiGithub className="h-4 w-4" aria-hidden="true" />

@@ -42,8 +42,10 @@ export interface Project {
   clip?: { src: string; poster: string; alt: string }
   /** The app's own icon, shown left of its name. */
   icon: string
+  /** An animated mark shown in place of the icon (Wren's bird, components/Projects/WrenMark.tsx). */
+  mark?: 'wren'
   /** The app's brand colour: its row's glow, outline, checks and main button (lib/accents.ts). */
-  accent: 'net-trailer' | 'portfolio-rank'
+  accent: 'wren' | 'net-trailer' | 'portfolio-rank'
   /** A few pills for the tech, shown on the project's page. */
   tags: string[]
   /** What it actually does, shown on its page as checks in its colour (from each app's own Key Features). */
@@ -66,18 +68,6 @@ export interface Project {
   statusName?: string
 }
 
-/** The newest app, live and public: a one-line card above the projects (Wren, 2026-11-09). */
-export interface FeaturedApp {
-  name: string
-  /** What it is, in one line. */
-  line: string
-  /** The live app ("Try it"). */
-  site: string
-  /** Its public repository ("Source"). */
-  source: string
-}
-
 export type TechNameMappingInterface = {
   [key: string]: string
 }
-

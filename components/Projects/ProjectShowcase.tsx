@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { FiBookOpen, FiExternalLink } from 'react-icons/fi'
 import ProjectClip from './ProjectClip'
+import ProjectIcon from './ProjectIcon'
 import StatusPill from './StatusPill'
 import { accents } from '@/lib/accents'
 import { trackProjectEvent } from '@/lib/analytics'
@@ -94,14 +95,7 @@ export default function ProjectShowcase({ project }: { project: Project }) {
         <div className="flex flex-col gap-5 px-1 pt-5 pb-2 sm:px-3 md:flex-row md:items-end md:justify-between md:gap-10">
           <div className="min-w-0 md:max-w-3xl">
             <div className="flex items-center gap-3">
-              <Image
-                src={project.icon}
-                alt=""
-                width={56}
-                height={56}
-                unoptimized={project.icon.endsWith('.svg')}
-                className="h-11 w-11 shrink-0 rounded-2xl shadow-lg shadow-black/40 sm:h-14 sm:w-14"
-              />
+              <ProjectIcon project={project} size={56} className="h-11 w-11 sm:h-14 sm:w-14" />
               <div className="min-w-0">
                 <h3 className="text-2xl font-bold tracking-tight text-slate-50 sm:text-3xl">
                   {project.wordmark ?? project.title}
@@ -119,7 +113,9 @@ export default function ProjectShowcase({ project }: { project: Project }) {
             </p>
             {project.highlight && (
               <p className="mt-3 text-sm leading-relaxed text-slate-300 sm:text-[0.95rem]">
-                <span className={`font-semibold ${accent.subtitle}`}>What&apos;s interesting: </span>
+                <span className={`font-semibold ${accent.subtitle}`}>
+                  What&apos;s interesting:{' '}
+                </span>
                 {project.highlight}
               </p>
             )}
@@ -132,7 +128,9 @@ export default function ProjectShowcase({ project }: { project: Project }) {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label={`Try the ${project.title} live demo (new tab)`}
-                onClick={() => trackProjectEvent('live_site_click', project.title, { source: 'grid' })}
+                onClick={() =>
+                  trackProjectEvent('live_site_click', project.title, { source: 'grid' })
+                }
                 className={`${BUTTON} ${accent.primary}`}
               >
                 <FiExternalLink className="h-3.5 w-3.5" aria-hidden="true" />

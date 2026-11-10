@@ -4,11 +4,10 @@ import React from 'react'
 import dynamic from 'next/dynamic'
 import { FloatingNav } from '@/components/layout/FloatingNav'
 import Footer from '@/components/layout/Footer'
-import WrenCard from '@/components/Projects/WrenCard'
 import ProjectFull from '@/components/Projects/ProjectFull'
 import BackToHome from '@/components/Projects/BackToHome'
 import { subpageNavItems } from '@/data/navigation'
-import { featuredApp, projects } from '@/data/projects'
+import { projects } from '@/data/projects'
 
 const ScrollToTop = dynamic(() => import('@/components/ui/ScrollToTop'), { ssr: false })
 
@@ -35,7 +34,6 @@ export default function ProjectsPage() {
             Projects, in detail
           </h1>
           <div className="mt-10 mb-24 flex flex-col gap-8 md:gap-10">
-            {featuredApp && <WrenCard app={featuredApp} />}
             {projects.map((project) => (
               <ProjectFull key={project.id} project={project} />
             ))}

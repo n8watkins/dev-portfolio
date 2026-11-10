@@ -1,9 +1,10 @@
 import { test, expect, type Page } from '@playwright/test'
 
 /**
- * The project rows (owner, 2026-11-08): the new AI app's "In progress" card
- * first, then Net-Trailer and Portfolio Rank. Echo, Scout and GeminiGPT were
- * retired that day; nothing links to them or their demos any more.
+ * The project rows: Wren first, as a full project card like the others (owner,
+ * round 5 of 2026-11-09), then Net-Trailer and Portfolio Rank. Echo, Scout and
+ * GeminiGPT were retired on 2026-11-08; nothing links to them or their demos,
+ * and their old pages redirect to Wren's.
  */
 
 async function projectsInView(page: Page) {
@@ -13,19 +14,37 @@ async function projectsInView(page: Page) {
 
 const card = (page: Page, title: string) => page.getByRole('article', { name: title, exact: true })
 
-test('the projects open with the in-progress AI app, then Net-Trailer and Portfolio Rank', async ({
-  page,
-}) => {
+test('the projects open with Wren, then Net-Trailer and Portfolio Rank', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.goto('/')
   const titles = page.locator('#projects article h3')
-  await expect(titles).toHaveText(['New AI app - in progress', 'Net-Trailer', 'Portfolio Rank'])
-  const upcoming = card(page, 'New AI app - in progress')
-  await expect(upcoming.getByText('In progress', { exact: true })).toBeVisible()
-  await expect(upcoming).toContainText('talks with you, researches for you, and remembers')
-  // No name, links or screenshots until it ships.
-  await expect(upcoming.getByRole('link')).toHaveCount(0)
-  await expect(upcoming.locator('img')).toHaveCount(0)
+  await expect(titles).toHaveText(['Wren', 'Net-Trailer', 'Portfolio Rank'])
+  const wren = card(page, 'Wren')
+  // The same card as the others: its clip, a summary, what's interesting, Live demo and Full story.
+  await expect(wren.locator('video, img[alt*="Wren as a guest"]').first()).toBeAttached()
+  await expect(wren).toContainText("What's interesting:")
+  await expect(wren.getByRole('link', { name: 'Try the Wren live demo (new tab)' })).toHaveAttribute(
+    'href',
+    'https://wren.n8builds.dev'
+  )
+  await expect(wren.getByRole('link', { name: 'Read the full story of Wren' })).toHaveAttribute(
+    'href',
+    '/projects/wren'
+  )
+  // Its icon is the animated bird, not a picture.
+  await expect(wren.locator('svg.wren')).toHaveCount(1)
+})
+
+test("Wren's page has its screenshots, features, stack and source", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.goto('/projects/wren')
+  await expect(page.getByRole('heading', { level: 1, name: 'Wren' })).toBeVisible()
+  await expect(page.getByRole('list', { name: 'What Wren does' }).getByRole('listitem')).toHaveCount(4)
+  await expect(page.getByRole('link', { name: /source/i }).first()).toHaveAttribute(
+    'href',
+    'https://github.com/n8watkins/wren'
+  )
+  await expect(page.locator('img[src*="projects%2Fwren"], img[src*="/projects/wren/"]').first()).toBeAttached()
 })
 
 test('nothing links to the retired apps or their demos', async ({ page }) => {
@@ -47,12 +66,16 @@ test('nothing links to the retired apps or their demos', async ({ page }) => {
   await expect(page.getByText(/Live demos run/)).toHaveCount(0)
 })
 
-test('old links to the retired project pages land on the projects', async ({ request }) => {
+test("old links to the retired project pages land on Wren's, which replaced them", async ({ request }) => {
   for (const slug of ['echo', 'scout', 'geminigpt']) {
     const res = await request.get(`/projects/${slug}`, { maxRedirects: 0 })
     expect(res.status(), slug).toBe(308)
-    expect(res.headers().location, slug).toMatch(/\/#projects$/)
+    expect(res.headers().location, slug).toMatch(/\/projects\/wren$/)
   }
+  // And the retired pages are nowhere in the sitemap.
+  const sitemap = await (await request.get('/sitemap.xml')).text()
+  expect(sitemap).not.toMatch(/projects\/(echo|scout|geminigpt)\b/)
+  expect(sitemap).toContain('/projects/wren<')
 })
 
 test('the status API answers with names, states and uptime only', async ({ request }) => {
@@ -103,8 +126,7 @@ test('"Detailed view" opens /projects, with every project at full size', async (
   await page.locator('#projects').getByRole('link', { name: 'Detailed view' }).click()
   await expect(page).toHaveURL(/\/projects$/)
   await expect(page.getByRole('heading', { level: 1, name: 'Projects, in detail' })).toBeVisible()
-  await expect(page.getByRole('article', { name: 'New AI app - in progress' })).toBeVisible()
-  for (const title of ['Net-Trailer', 'Portfolio Rank']) {
+  for (const title of ['Wren', 'Net-Trailer', 'Portfolio Rank']) {
     const full = card(page, title)
     await expect(full.getByRole('link', { name: `View ${title} source on GitHub (new tab)` })).toHaveAttribute(
       'href',

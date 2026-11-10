@@ -3,19 +3,18 @@ import Link from 'next/link'
 import { motion } from 'motion/react'
 import { FiArrowRight } from 'react-icons/fi'
 import { fadeInUpVariants, defaultAnimationConfig } from '@/lib/animations'
-import { featuredApp, projects } from '@/data/projects'
+import { projects } from '@/data/projects'
 import ProjectShowcase from './ProjectShowcase'
 import BuildsTeaser from './BuildsTeaser'
-import WrenCard from './WrenCard'
 import { DemoSleepNote } from './StatusPill'
 import SectionHeading from '@/components/ui/SectionHeading'
 
 const BLURB =
-  "AI is changing what software can do and how it gets made. Each project here puts AI to work: Wren, an assistant that researches and remembers, a recommender that learns your taste, and a leaderboard that Gemini helps rank."
+  'AI is changing what software can do and how it gets made. Each project here puts AI to work: Wren, an assistant that researches and remembers, a recommender that learns your taste, and a leaderboard that Gemini helps rank.'
 
 /**
  * The home page's projects, first after the hero (owner, 2026-11-08): the
- * Wren (live), then each project as one big card, then the
+ * each project as one big card (Wren first), then the
  * n8builds.dev teaser. "Detailed view" opens /projects, with every project at
  * full size.
  */
@@ -53,11 +52,6 @@ const Projects: React.FC = () => {
       {projects.some((p) => p.statusName) && <DemoSleepNote className="px-2 md:px-4" />}
 
       <div className="mt-4 flex w-full flex-col gap-8 px-2 md:gap-10 md:px-4">
-        {featuredApp && (
-          <motion.div variants={fadeInUpVariants} {...defaultAnimationConfig} viewport={{ once: true, amount: 0.15 }}>
-            <WrenCard app={featuredApp} />
-          </motion.div>
-        )}
         {projects.map((project) => (
           <motion.div
             key={project.id}

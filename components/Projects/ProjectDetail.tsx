@@ -10,6 +10,7 @@ import ProjectGallery from './ProjectGallery'
 import TechStackCycle from './TechStackCycle'
 import BackToHome from './BackToHome'
 import StatusPill, { DemoSleepNote } from './StatusPill'
+import ProjectIcon from '@/components/Projects/ProjectIcon'
 
 function Heading({ id, children }: { id: string; children: React.ReactNode }) {
   return (
@@ -112,14 +113,7 @@ export default function ProjectDetail({ project }: { project: Project }) {
         {/* Header */}
         <header className="mb-8">
           <div className="flex items-center gap-4">
-            <Image
-              src={project.icon}
-              alt=""
-              width={64}
-              height={64}
-              unoptimized={project.icon.endsWith('.svg')}
-              className="h-14 w-14 shrink-0 rounded-2xl shadow-lg shadow-black/40 sm:h-16 sm:w-16"
-            />
+            <ProjectIcon project={project} size={64} className="h-14 w-14 sm:h-16 sm:w-16" />
             <div className="min-w-0">
               <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-slate-50">
                 {project.wordmark ?? project.title}
@@ -226,7 +220,10 @@ export default function ProjectDetail({ project }: { project: Project }) {
                 <Heading id="credits">Credits</Heading>
                 <ul className="flex flex-col gap-4">
                   {project.credits.map((credit) => (
-                    <li key={credit.href} className="text-lg md:text-xl/7 leading-relaxed text-slate-300">
+                    <li
+                      key={credit.href}
+                      className="text-lg md:text-xl/7 leading-relaxed text-slate-300"
+                    >
                       <a
                         href={credit.href}
                         target="_blank"
