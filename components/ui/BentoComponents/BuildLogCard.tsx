@@ -1,10 +1,17 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 import { FiArrowUpRight, FiChevronLeft, FiChevronRight } from 'react-icons/fi'
 import { BUILD_LOG_PAGE, type LogMonth } from '@/lib/buildLog'
 import { N8BUILDS } from '@/lib/sites'
+import { latestEntry } from '@/lib/intersection'
+import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion'
+
+/** The months move on by themselves this often (owner, 2026-11-09: "give it movement"). */
+const AUTO_MS = 5000
+/** After an arrow is used, the months hold still this long before moving on again. */
+const MANUAL_HOLD_MS = 15000
 
 // One request per page view; null while it loads, [] when the log can't be read.
 let request: Promise<LogMonth[]> | null = null
@@ -38,6 +45,13 @@ const ARROW =
  * months and round again. On top, "n8builds.dev" opens the site and "Build
  * log" the full build log; the rest of the card is not a link.
  *
+ * The months also move on by themselves (owner, 2026-11-09): this month first,
+ * then back through the months with something shipped, round again, one every
+ * 5 seconds with a short fade. They hold still while the card is hovered or
+ * has keyboard focus, for 15 seconds after an arrow is used, while the card is
+ * off screen or the tab is hidden, and always under reduced motion (WCAG
+ * 2.2.2). Only a month picked with the arrows is announced.
+ *
  * While the months load, the card holds its final layout, so nothing shifts;
  * if they can't be read, it is a plain link to the build log.
  */
@@ -45,6 +59,14 @@ export default function BuildLogCard() {
   const [months, setMonths] = useState<LogMonth[] | null>(null)
   const [index, setIndex] = useState(0)
   const [announce, setAnnounce] = useState('')
+  const [hovered, setHovered] = useState(false)
+  const [focused, setFocused] = useState(false)
+  const [inView, setInView] = useState(false)
+  const [tabVisible, setTabVisible] = useState(true)
+  /** When an arrow was last used (ms since the epoch); the months hold until MANUAL_HOLD_MS after it. */
+  const [manualAt, setManualAt] = useState(0)
+  const reduceMotion = usePrefersReducedMotion()
+  const root = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     let live = true
@@ -54,21 +76,79 @@ export default function BuildLogCard() {
     }
   }, [])
 
+  // On screen, and the tab shown: the only times the months may move on.
+  useEffect(() => {
+    const el = root.current
+    if (!el) return
+    const observer = new IntersectionObserver((entries) =>
+      setInView(latestEntry(entries).isIntersecting)
+    )
+    observer.observe(el)
+    const onVisibility = () => setTabVisible(document.visibilityState === 'visible')
+    onVisibility()
+    document.addEventListener('visibilitychange', onVisibility)
+    return () => {
+      observer.disconnect()
+      document.removeEventListener('visibilitychange', onVisibility)
+    }
+  }, [])
+
   const month = months?.[index]
   const count = months?.length ?? 0
+  const cycling = count > 1 && !reduceMotion && !hovered && !focused && inView && tabVisible
+
+  // When the month last changed, and when the months last stopped moving on (null: moving).
+  const lastMove = useRef(0)
+  const pausedAt = useRef<number | null>(null)
+  useEffect(() => {
+    lastMove.current = Date.now()
+  }, [index])
+  // A real pause (a second or more: a hover, a scroll away) starts the 5 s over when it ends;
+  // a blip (the pointer crossing a corner) doesn't, so the months still move on.
+  useEffect(() => {
+    const now = Date.now()
+    if (!cycling) pausedAt.current ??= now
+    else {
+      if (pausedAt.current !== null && now - pausedAt.current >= 1000) lastMove.current = now
+      pausedAt.current = null
+    }
+  }, [cycling])
+  // The next month AUTO_MS after the last change, and not before the hold after an arrow is over.
+  // A short tick checks the time rather than one long timer, so a busy page can't lose the move.
+  useEffect(() => {
+    if (!cycling) return
+    const id = setInterval(() => {
+      const due = Math.max(lastMove.current + AUTO_MS, manualAt + MANUAL_HOLD_MS)
+      if (Date.now() >= due) {
+        lastMove.current = Date.now()
+        setIndex((i) => (i + 1) % count)
+      }
+    }, 250)
+    return () => clearInterval(id)
+  }, [cycling, count, manualAt])
   // Older is one step on in the list (newest first); both ends go round.
   const step = (by: number) => {
     if (!months) return
     const next = (index + by + count) % count
     setIndex(next)
+    setManualAt(Date.now())
     setAnnounce(`${months[next].title}: ${months[next].changes} changes shipped`)
   }
   const peak = Math.max(1, ...(month?.days.map((d) => d.count) ?? [1]))
 
   return (
     <div
+      ref={root}
       className="relative flex h-full w-full flex-col p-5 sm:p-6 xl:p-6"
       data-build-log={months === null ? 'loading' : count ? 'ready' : 'fallback'}
+      data-cycling={cycling ? '' : undefined}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      // Keyboard focus holds it; a click on an arrow doesn't (its own hold covers that).
+      onFocus={(e) => setFocused(e.target.matches(':focus-visible'))}
+      onBlur={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setFocused(false)
+      }}
     >
       {/* Two plain links on top (owner, round 5 of 2026-11-09): the site on the
           left, the build log on the right. The rest of the card is not a link. */}
@@ -106,7 +186,8 @@ export default function BuildLogCard() {
               <FiChevronLeft className="h-4 w-4" aria-hidden="true" />
             </button>
             <h3
-              className="truncate text-center text-xl font-bold tracking-tight text-slate-50 lg:text-2xl"
+              key={month.id}
+              className="log-month-in truncate text-center text-xl font-bold tracking-tight text-slate-50 lg:text-2xl"
               data-month
             >
               {month.title}
@@ -121,7 +202,7 @@ export default function BuildLogCard() {
             </button>
           </div>
 
-          <p className="mt-3 flex items-baseline gap-2">
+          <p key={month.id} className="log-month-in mt-3 flex items-baseline gap-2">
             <span
               className="text-5xl font-bold tracking-tight text-slate-50 tabular-nums"
               data-changes

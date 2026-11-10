@@ -487,9 +487,19 @@
     transform: scaleY(0);
   }
 }
+/* The month's name and number fade up as the month changes. */
+@keyframes log-month-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
 @media (prefers-reduced-motion: no-preference) {
   .log-bar {
     animation: log-bar-rise 0.5s cubic-bezier(0.25, 0.1, 0.25, 1) both;
+  }
+  .log-month-in {
+    animation: log-month-in 0.4s cubic-bezier(0.25, 0.1, 0.25, 1) both;
   }
 }
 

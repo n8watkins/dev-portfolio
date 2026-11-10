@@ -100,6 +100,60 @@ test('the build log card shows a month, cycles the months, and links the site an
   await expect(card.getByRole('link', { name: /^Build log/ })).toHaveAttribute('href', 'https://n8builds.dev/builds')
 })
 
+test('the build log card moves on through the months by itself, and holds when asked', async ({
+  page,
+  isMobile,
+}) => {
+  test.skip(isMobile, 'Hover is a desktop pointer; the timing is the same on phones.')
+  // Moving the page's clock on runs every timer on it (the dino, the marquees), slowly in WebKit.
+  test.setTimeout(150_000)
+  await page.clock.install()
+  await page.goto('/')
+  const card = page.locator('[data-build-log]')
+  const month = card.locator('[data-month]')
+  // Well inside the screen: at its edge, the card's own entrance can carry it in and out of view.
+  await card.evaluate((el) => el.scrollIntoView({ block: 'center', behavior: 'instant' }))
+  await expect(card).toHaveAttribute('data-build-log', 'ready')
+  await page.mouse.move(2, 2)
+  await expect(card).toHaveAttribute('data-cycling', '')
+  // Moves the clock on in small steps until the card shows `text`.
+  const movesOnTo = (text: string) =>
+    expect(async () => {
+      await page.clock.runFor(1000)
+      await expect(month).toHaveText(text, { timeout: 500 })
+    }).toPass({ timeout: 40_000 })
+  // This month first, then back through the months, round again, every 5 s.
+  await expect(month).toHaveText('November 2026')
+  await movesOnTo('October 2026')
+  await movesOnTo('September 2026')
+  await movesOnTo('November 2026')
+  // Hovered, it holds.
+  await card.hover()
+  await expect(card).not.toHaveAttribute('data-cycling', '')
+  await page.clock.runFor(6_000)
+  await expect(month).toHaveText('November 2026')
+  // After an arrow, it holds about 15 s, then moves on again.
+  await card.getByRole('button', { name: 'Older month' }).click()
+  await page.mouse.move(2, 2)
+  await expect(month).toHaveText('October 2026')
+  await expect(card).toHaveAttribute('data-cycling', '')
+  await page.clock.runFor(10_000)
+  await expect(month).toHaveText('October 2026')
+  await movesOnTo('September 2026')
+})
+
+test('the build log card never moves on by itself under reduced motion', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.clock.install()
+  await page.goto('/')
+  const card = page.locator('[data-build-log]')
+  await card.scrollIntoViewIfNeeded()
+  await expect(card).toHaveAttribute('data-build-log', 'ready')
+  await expect(card).not.toHaveAttribute('data-cycling', '')
+  await page.clock.runFor(6_000)
+  await expect(card.locator('[data-month]')).toHaveText('November 2026')
+})
+
 test('the build log card falls back to a plain card when the log cannot be read', async ({ page }) => {
   await page.route('**/api/build-log', (route) => route.fulfill({ json: { months: [] } }))
   await page.goto('/')
