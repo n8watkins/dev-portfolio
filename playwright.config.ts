@@ -85,6 +85,8 @@ export default defineConfig({
         NEXT_PUBLIC_GA_ID: 'G-E2ETEST000',
         // Fixed live-demo statuses instead of OpenPing's real ones (app/api/status).
         STATUS_FIXTURE: '1',
+        // n8builds.dev's build log months from a fixture, never the live feed (app/api/build-log).
+        BUILD_LOG_FIXTURE: '1',
       }).filter(([, value]) => value !== undefined)
     ) as Record<string, string>,
   },

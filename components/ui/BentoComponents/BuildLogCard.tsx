@@ -23,15 +23,20 @@ const shortDay = (day: string) =>
     timeZone: 'UTC',
   })
 
+/** The card's two links: a clear pill that lights up sky on hover. */
+const LINK =
+  'group/link inline-flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/4 px-2.5 py-1.5 text-sm font-semibold text-slate-200 underline-offset-4 transition-colors hover:border-sky-400/60 hover:bg-sky-400/10 hover:text-sky-200 hover:underline focus:outline-hidden focus-visible:ring-2 focus-visible:ring-sky-400'
+
 const ARROW =
-  'relative z-20 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/12 bg-white/4 text-slate-300 transition-colors hover:border-sky-400/50 hover:bg-white/10 hover:text-sky-200 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-sky-400'
+  'relative flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/12 bg-white/4 text-slate-300 transition-colors hover:border-sky-400/50 hover:bg-white/10 hover:text-sky-200 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-sky-400'
 
 /**
  * The bento's build log card (owner, round 4 of 2026-11-09): a month of
  * n8builds.dev's build log at a glance, live from its public JSON
  * (lib/buildLog.ts). The month, how many changes shipped, and a bar per day
  * (the days still to come as faint slots). The arrows step back through the
- * months and round again; the rest of the card links to the full build log.
+ * months and round again. On top, "n8builds.dev" opens the site and "Build
+ * log" the full build log; the rest of the card is not a link.
  *
  * While the months load, the card holds its final layout, so nothing shifts;
  * if they can't be read, it is a plain link to the build log.
@@ -65,30 +70,29 @@ export default function BuildLogCard() {
       className="relative flex h-full w-full flex-col p-5 sm:p-6 xl:p-6"
       data-build-log={months === null ? 'loading' : count ? 'ready' : 'fallback'}
     >
-      {/* The whole card links to the build log; the arrows sit above this layer. */}
-      <a
-        href={BUILD_LOG_PAGE}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="peer absolute inset-0 z-10 rounded-3xl focus:outline-hidden focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-sky-400"
-      >
-        <span className="sr-only">The full build log on n8builds.dev (opens in a new tab)</span>
-      </a>
-
-      <p className="flex items-center gap-2 text-sm font-semibold text-slate-300">
-        <Image
-          src={N8BUILDS.icon}
-          alt=""
-          width={20}
-          height={20}
-          className="h-5 w-5 rounded-md ring-1 ring-white/10"
-        />
-        Build log
-        <FiArrowUpRight
-          aria-hidden="true"
-          className="ml-auto h-5 w-5 text-slate-400 transition-[color,transform] duration-200 group-has-[a.peer:hover]:-translate-y-0.5 group-has-[a.peer:hover]:translate-x-0.5 group-has-[a.peer:hover]:text-sky-300"
-        />
-      </p>
+      {/* Two plain links on top (owner, round 5 of 2026-11-09): the site on the
+          left, the build log on the right. The rest of the card is not a link. */}
+      <div className="flex items-center justify-between gap-2">
+        <a href={N8BUILDS.url} target="_blank" rel="noopener noreferrer" className={LINK}>
+          <Image
+            src={N8BUILDS.icon}
+            alt=""
+            width={20}
+            height={20}
+            className="h-5 w-5 rounded-md ring-1 ring-white/10"
+          />
+          {N8BUILDS.name}
+          <span className="sr-only"> (opens in a new tab)</span>
+        </a>
+        <a href={BUILD_LOG_PAGE} target="_blank" rel="noopener noreferrer" className={LINK}>
+          Build log
+          <FiArrowUpRight
+            aria-hidden="true"
+            className="h-4 w-4 transition-transform duration-200 group-hover/link:translate-x-0.5 group-hover/link:-translate-y-0.5"
+          />
+          <span className="sr-only"> on n8builds.dev (opens in a new tab)</span>
+        </a>
+      </div>
 
       {count > 0 && month ? (
         <>

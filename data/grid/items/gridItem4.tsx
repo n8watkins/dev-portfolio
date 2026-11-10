@@ -24,7 +24,7 @@ export const gridItem4: GridItemConfig = {
   title: 'Check out my resume!',
   description: '',
   gridItemContainer:
-    'col-span-2 row-span-2 md:row-span-1 md:col-span-2  lg:col-span-2 xl:row-span-3 xl:col-span-5 group  ',
+    'col-span-2 row-span-2 md:row-span-1 md:col-span-2  lg:col-span-2 xl:row-span-3 xl:col-span-4 group  ',
 
   imgContainerClass: '  ',
   imgClassName,
@@ -60,5 +60,7 @@ export const gridItem4: GridItemConfig = {
     </div>
   ),
 
-  renderContent: () => <ResumeButtons buttonClass={buttonClass} buttonContainer={buttonContainer} />,
+  renderContent: () => (
+    <ResumeButtons buttonClass={buttonClass} buttonContainer={buttonContainer} />
+  ),
 }
