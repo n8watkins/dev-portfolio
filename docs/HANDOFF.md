@@ -9,17 +9,18 @@ Last updated: 2026-11-08.
 - `main` matches n8builds.dev's copy (audit fixes #12) and its dino game files are byte-identical (`npm run check:sync`); dino stats post to `https://n8builds.dev/api/game` (#14).
 - **Production is behind `main`.** It's stuck at #10: #11 to #14 merged while Vercel's 100-deployments-per-24-hours limit was hit, so no production deploy was made for them.
 - Vercel builds on Node 24.x; `nathansportfolio.vercel.app` and `n8sportfolio.vercel.app` redirect here (#9).
-- Echo, Scout and GeminiGPT were retired on 2026-11-08 (owner): their repos went private and archived, and their Render demos came down. One new AI app, not yet named, will replace them; until it ships, an "In progress" card stands in (see "Featured projects").
+- Echo, Scout and GeminiGPT were retired on 2026-11-08 (owner): their repos went private and archived, and their Render demos came down.
+  Wren (https://wren.n8builds.dev, n8watkins/wren) replaced them and is the first project; their old `/projects/<slug>` pages redirect (308) to `/projects/wren`.
 - OpenPing has a bug: during scheduled off-hours its public feed reports monitors as "operational" (fix tracked in open-ping, `docs/BUG-public-scheduled-off.md`). This site already works around it: a feed older than 30 minutes reads as Asleep (see "Live-demo status" below). Once OpenPing reports `scheduled_off`, check `lib/status.ts` maps it to Asleep.
 
 ### Next
 
-1. When the new AI app ships, replace `inProgress` in `data/projects.tsx` with its regular project entry (first in the list), and give it a `statusName` if OpenPing monitors it.
+1. Wren's clip is recorded with demo-kit (`~/projects/demo-kit/storyboards/wren.ts`): re-record it there when Wren's first screen or answers change, then encode it to 960x600 as `public/projects/clips/wren.mp4`.
 2. Keep the shared files in sync with n8builds-web after any change there (`npm run check:sync`): the dino, the marquee and its tiles, and the tile list `data/stack.tsx` (edit it in n8builds-web, then copy it here).
 
 ### Blocked on the owner
 
-The owner's open steps (the rank and trailers subdomains, the resume, Lifeline's certificate, the Sentry button, the parked primeshows.live link) are in [../OWNER-TODO.md](../OWNER-TODO.md); keep that file current instead of listing them here.
+The owner's open steps (the rank and trailers subdomains, the resume, the Sentry button) are in [../OWNER-TODO.md](../OWNER-TODO.md); keep that file current instead of listing them here.
 
 ## What this is
 
@@ -58,8 +59,9 @@ It funnels visitors to the two other sites:
 
 - **Separate from n8builds.dev, on purpose** (confirmed 2026-10-25): different readers (people hiring vs. people following the work), and a repo people can be sent to on its own.
   It is not a page of n8builds.dev.
-- **Featured projects** (owner, 2026-11-08): the new AI app's "In progress" card first, then Net-Trailer and Portfolio Rank, then the n8builds.dev teaser.
-  The "In progress" card (`inProgress` in `data/projects.tsx`, `components/Projects/InProgressCard.tsx`) has a neutral label ("New AI app - in progress"), one sentence on what it will do, three chips, and no name, links or screenshots; the real project row replaces it when the app ships.
+- **Featured projects** (owner, round 5 of 2026-11-09): Wren, Net-Trailer and Portfolio Rank as the same big cards, then the n8builds.dev teaser.
+  Wren's icon is its animated bird (`components/Projects/WrenMark.tsx`, from the wren repo, via `mark: 'wren'` and `ProjectIcon.tsx`); its accent is Wren's ember.
+  Its clip shows the live app in guest mode; the answer is replayed from one genuine answer of Wren's own model, because a guest's first message runs a Turnstile check a recording must not get around (demo-kit PR #6).
   Echo, Scout and GeminiGPT were retired that day: their pages, screenshots and status wiring are gone, and `/projects/echo|scout|geminigpt` redirect (308) to `/#projects` (`next.config.mjs`), since n8builds.dev and old shares link them.
   Portfolio Rank moved here from n8builds.dev's featured rows: its card credits Emma Bostian's developer-portfolios list, and its page credits her and Ali Spittel and invites visitors to vote and add their portfolio.
   On the home page each is one big, full-width card (see "The layout" below); `/projects` shows every project at full size; `/projects/<slug>` tells its full story. Colours per app in `lib/accents.ts`.
@@ -92,19 +94,22 @@ It funnels visitors to the two other sites:
 The owner picked layout B (a work-first home page plus detail pages) over A (one long page) and asked for this rework, bringing in A's visuals.
 
 - **Home** (owner's review, 2026-11-08): the hero, About (the intro, then the bento exactly as before: Ready to relocate, the tech stack card with the dino, the resume card, "Have a project? Let's connect"), Projects, Experience, Contact.
+  Since round 4 of 2026-11-09 the bento has a fifth card, the n8builds.dev build log (`components/ui/BentoComponents/BuildLogCard.tsx`): a month, its changes and a bar per day, live from https://n8builds.dev/builds/months.json through `app/api/build-log` (an hour of cache; a plain card when it cannot be read), with arrows that go round the months, and links to n8builds.dev (top left) and the build log (top right).
+  From 1280px the grid has 12 columns: Ready to relocate (5) and the stack (7), then the resume, "Have a project?" and the build log as three equal columns (round 5).
   About on the home page is a short intro (two sentences, owner's round 3) ending in "More about me" (to `/about`), where the full story lives; the tech stack card has "See my stack" (to `/stack`).
   `/projects` and the project pages lead "Back to home" (`components/Projects/BackToHome.tsx`, to the top of `/`).
   The nav (on every page) jumps to these sections; on other pages it goes home first (`subpageNavItems` in `data/navigation.tsx`). The detail pages are reached from the sections.
 - **Hero terminal**: two lines, "I build AI products end to end." and "Open to full-time, part-time or contract roles.", with no "$" prompt line; a blinking block cursor stays at the end of the last line, in the typing caret's own box (`.whoami-cursor`).
-- **Projects**: the "In progress" card, then each project as a big, full-width card (`components/Projects/ProjectShowcase.tsx`): its looping clip (or first screenshot) across the top, wide and short (16:9 on phones, 21:9 from 768px), then icon, name, a sentence or two, a "What's interesting" line (`highlight`), Live demo and Full story. "Detailed view" (right of the heading) opens `/projects` (`components/ProjectsPage.tsx`, `ProjectFull.tsx`): every screenshot, the whole description, features, tech, and Live demo / Source / Full story.
+- **Projects**: each project as a big, full-width card (`components/Projects/ProjectShowcase.tsx`): its looping clip (or first screenshot) across the top, wide and short (16:9 on phones, 21:9 from 768px), then icon, name, a sentence or two, a "What's interesting" line (`highlight`), Live demo and Full story. "Detailed view" (right of the heading) opens `/projects` (`components/ProjectsPage.tsx`, `ProjectFull.tsx`): every screenshot, the whole description, features, tech, and Live demo / Source / Full story.
   The n8builds.dev card comes after them: "n8builds.dev" on top as a heading that is plainly a link (underlined, an arrow, a hover state), "See more of my selected work" under it, then its builds one at a time, its featured ones first.
   OpenPing and Solara show the product in use: n8builds.dev's own build-page clips (`public/builds/<slug>/clip.mp4` and `clip-poster.webp`, recorded by n8builds-web's `scripts/product-clips/`), played by `ProjectClip`; the others keep their screenshots. Re-copy the clips when n8builds-web re-records them.
 - **Clips** (from layout A): `clip` in `data/projects.tsx`, files in `public/projects/clips/` (about 7 seconds, about 200 KB, H.264 MP4 and a WebP poster), played by `components/Projects/ProjectClip.tsx`: loaded only near the screen, paused off screen, the poster under reduced motion, a pause button.
   Record one with Playwright's `recordVideo` at 1280x800, then trim, speed up and encode with ffmpeg to 960x600 at 24 fps (`libx264 -crf 30 -preset slow -movflags +faststart`, no audio).
   Net-Trailer's clip predates its rebrand (n8watkins/net_trailers#20) and shows browsing (its AI search answered "API key not valid" on 2026-11-08): re-record it once that lands.
-- **Experience** stays on the home page, compact: title, company and dates per role, with "What I did" under them on the left. The whole role header is one button (a stretched `[data-role-toggle]` over it, with a clear hover and focus ring) that opens what I did in place, easing open (row height and opacity, 350ms; instant under reduced motion); "Expand all" on the right opens every role.
-  Hovering a role (desktop) fades in a small glimpse of its site on the right (its first `visuals` image), as the old hover image did; it steps aside once the role is open.
-  Only Tech for Pros links out (with a link icon); every other company is plain text, and no client sites are linked. A role's small screenshots (`visuals` in `data/experience.tsx`, pictures only) show when it is opened.
+- **Experience** stays on the home page, compact: title, company, dates and a short list of what I did (`basics`) for every role (owner, round 5 of 2026-11-09).
+  Only the roles with more to say (`more` or `sites` in `data/experience.tsx`: Tech for Pros, Appturnity, Donovan Golf) open, with "More"; Realtek and The Coder School have no expand. The whole header of an expandable role is one button (a stretched `[data-role-toggle]`), and "Expand all" opens those three.
+  Each role's own picture (`image`) fades in on the right on hover (desktop) and stays, quieter, while it is open (round 4). Tech for Pros has a site it drafted, Appturnity its own home page.
+  An open role shows the client sites still live as small preview cards that link to them (`sites`). Clients whose sites are gone are described ("a clinical lab", "a streaming service") and never linked or named by domain (owner, round 5).
 - **Stack**: the home page's tech stack card (in the bento, with the dino as before) has "See my stack" to `/stack` (`components/StackPage.tsx`): the dino game as a full-width play area (30rem tall on phones), then every tool by layer with its one-line reason (`data/stackLayers.ts` sorts `data/stack.tsx`'s tiles by name; that file stays byte-identical with n8builds-web).
   The resume stays the header button too.
 - **About** (`/about`, `components/AboutPage.tsx`) is only about the owner: one portrait (the photo, until the owner picks), then the story in three photo scenes (at work, Los Angeles, the setup) from `data/about.tsx`, with stickers drifting around them (`components/about/Decals.tsx`, `.decal` in `app/globals.css`: still under reduced motion, paused off screen, absolute so nothing shifts).
@@ -137,7 +142,7 @@ The owner picked layout B (a work-first home page plus detail pages) over A (one
 ## Live-demo status (OpenPing)
 
 - The pill shows the state, not the uptime number: the demos are monitored on weekdays only, on purpose (2026-10-26); a note says they sleep on weekends.
-- No project on the site is monitored since Echo, Scout and GeminiGPT were retired (2026-11-08); the wiring stays for the new AI app.
+- No project on the site is monitored since Echo, Scout and GeminiGPT were retired (2026-11-08); the wiring stays for a project that gets a `statusName`.
   A project with a `statusName` shows a status pill on its card and page: "Live demo" and Online, Slow, Down, Maintenance or Asleep, linking to https://openping.n8builds.dev/status, and the projects intro shows the weekday note.
 - `app/api/status` reads OpenPing's public feed on the server (it sends no CORS headers) and caches it a minute; `lib/status.ts` maps it; `components/Projects/StatusPill.tsx` shows it.
 - A project opts in with `statusName` in `data/projects.tsx` (its monitor's name on the status page).
@@ -148,6 +153,7 @@ The owner picked layout B (a work-first home page plus detail pages) over A (one
 ## The n8builds.dev teaser
 
 Under the projects, `components/Projects/BuildsTeaser.tsx` shows n8builds.dev's builds one at a time (Scribe, OpenPing, Solara, TubeVault, Piper TTS, TL;DW; Portfolio Rank left it for the project rows on 2026-11-08), each with its real icon (`public/builds/<slug>/`), its accent, a Live site link when it has one and "See the build" on n8builds.dev (owner, 2026-10-26; it replaced the "Building in public" bento card and the More builds strip).
+  Since round 4 of 2026-11-09 it also shows three upcoming builds (KeysReady, Relink, Pivot, from n8builds-web's `data/upcoming.ts`) with "Join the waitlist" (`https://n8builds.dev/upcoming?interest=<slug>#waitlist`) and their landing pages.
 
 ## Conventions
 
@@ -169,7 +175,7 @@ Under the projects, `components/Projects/BuildsTeaser.tsx` shows n8builds.dev's 
 
 - `lib/seo.ts`: site address, titles, descriptions, `shareSummary`.
 - `app/layout.tsx`: metadata, fonts, GA snippet. `app/opengraph-image.tsx` (+ `twitter-image.tsx`): the share card.
-- `components/Projects/ProjectShowcase.tsx` (home cards), `ProjectFull.tsx` (/projects), `ProjectClip.tsx`, `ProjectGallery.tsx`, `InProgressCard.tsx`, `lib/accents.ts`.
+- `components/Projects/ProjectShowcase.tsx` (home cards), `ProjectFull.tsx` (/projects), `ProjectClip.tsx`, `ProjectGallery.tsx`, `ProjectIcon.tsx`, `WrenMark.tsx`, `lib/accents.ts`.
 - `components/Projects/ProjectDetail.tsx`, `app/projects/[slug]/page.tsx`: project detail pages.
 - `components/Projects/BuildsTeaser.tsx`: the n8builds.dev teaser. `components/sections/HeroGrid.tsx`: the hero grid (from n8builds.dev).
 - `components/sections/AboutTeaser.tsx`, `StackRow.tsx`, `Experience.tsx`, `Hero.tsx`; the pages `components/ProjectsPage.tsx`, `StackPage.tsx`, `AboutPage.tsx` (with `components/about/Decals.tsx`).

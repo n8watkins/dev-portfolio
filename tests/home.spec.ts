@@ -54,6 +54,84 @@ test('the n8builds.dev teaser links each build to its n8builds.dev page', async 
     if (live) await expect(site).toHaveAttribute('href', live)
     else await expect(site).toHaveCount(0)
   }
+  // An upcoming build offers its waitlist on n8builds.dev, with it ticked, and its landing page.
+  await expect(async () => {
+    await teaser.getByRole('button', { name: 'Show KeysReady' }).click()
+    await expect(teaser.getByText(/^KeysReady, \d+ of \d+$/)).toBeVisible({ timeout: 1000 })
+  }).toPass()
+  await expect(teaser.getByRole('link', { name: /^Join the waitlist for KeysReady/ })).toHaveAttribute(
+    'href',
+    'https://n8builds.dev/upcoming?interest=keysready#waitlist'
+  )
+  await expect(teaser.getByRole('link', { name: /^Its landing page/ })).toHaveAttribute(
+    'href',
+    'https://keysready.n8builds.dev'
+  )
+  await expect(teaser.getByRole('link', { name: /See the build: KeysReady/ })).toHaveCount(0)
+})
+
+/**
+ * The bento's build log card (rounds 4 and 5 of 2026-11-09): a month of
+ * n8builds.dev's build log, from its JSON (here the fixture), with arrows that
+ * go round the months, and two links on top: n8builds.dev and the build log.
+ */
+test('the build log card shows a month, cycles the months, and links the site and the log', async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.goto('/')
+  const card = page.locator('[data-build-log]')
+  await card.scrollIntoViewIfNeeded()
+  await expect(card).toHaveAttribute('data-build-log', 'ready')
+  await expect(card.locator('[data-month]')).toHaveText('November 2026')
+  await expect(card.locator('[data-changes]')).toHaveText('49')
+  await expect(card.locator('[data-bars] > span')).toHaveCount(30)
+  await card.getByRole('button', { name: 'Older month' }).click()
+  await expect(card.locator('[data-month]')).toHaveText('October 2026')
+  await expect(card.locator('[data-changes]')).toHaveText('275')
+  // Round and round: newer from the newest is the oldest.
+  await card.getByRole('button', { name: 'Newer month' }).click()
+  await card.getByRole('button', { name: 'Newer month' }).click()
+  await expect(card.locator('[data-month]')).toHaveText('September 2026')
+  // Two links, and the card itself is not one.
+  const links = card.getByRole('link')
+  await expect(links).toHaveCount(2)
+  await expect(card.getByRole('link', { name: /^n8builds\.dev/ })).toHaveAttribute('href', 'https://n8builds.dev')
+  await expect(card.getByRole('link', { name: /^Build log/ })).toHaveAttribute('href', 'https://n8builds.dev/builds')
+})
+
+test('the build log card falls back to a plain card when the log cannot be read', async ({ page }) => {
+  await page.route('**/api/build-log', (route) => route.fulfill({ json: { months: [] } }))
+  await page.goto('/')
+  const card = page.locator('[data-build-log]')
+  await card.scrollIntoViewIfNeeded()
+  await expect(card).toHaveAttribute('data-build-log', 'fallback')
+  await expect(card).toContainText("What I'm shipping")
+  await expect(card.getByRole('link', { name: /^Build log/ })).toHaveAttribute('href', 'https://n8builds.dev/builds')
+})
+
+test('from 1280px, the resume, contact and build log cards are one row of three equal columns', async ({
+  page,
+  isMobile,
+}) => {
+  test.skip(isMobile, 'A desktop layout.')
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await page.goto('/')
+  await page.locator('[data-build-log]').scrollIntoViewIfNeeded()
+  const box = async (text: string | RegExp) =>
+    (await page.locator('#about .grid > div', { hasText: text }).last().boundingBox())!
+  const [resume, contact, log] = [
+    await box('Check out my resume!'),
+    await box("Have a project? Let's connect!"),
+    await box('changes shipped'),
+  ]
+  for (const b of [contact, log]) {
+    expect(Math.abs(b.y - resume.y)).toBeLessThan(2)
+    expect(Math.abs(b.width - resume.width)).toBeLessThan(2)
+    expect(Math.abs(b.height - resume.height)).toBeLessThan(2)
+  }
+  expect(resume.x).toBeLessThan(contact.x)
+  expect(contact.x).toBeLessThan(log.x)
 })
 
 /**
@@ -118,7 +196,7 @@ test("Tech for Pros' cards name techforpros.com, show its mark and link to it", 
  * out from Experience (with a link icon); every other company is plain text,
  * and no client site is linked anywhere.
  */
-test('Experience links only Tech for Pros, and Appturnity shows only as a past role', async ({
+test('Experience links Tech for Pros and the live client sites only, and Appturnity is a past role', async ({
   page,
 }) => {
   await page.goto('/')
@@ -141,13 +219,18 @@ test('Experience links only Tech for Pros, and Appturnity shows only as a past r
   expect(outside).toEqual([])
   await expect(page.locator('head')).not.toContainText(/appturnity/i)
 
-  const links = experience.locator('a[href]')
-  await expect(links).toHaveCount(1)
-  await expect(links.first()).toHaveAttribute('href', 'https://techforpros.com')
-  await expect(links.first().locator('svg')).toHaveCount(1)
-  for (const site of ['riverwoodranch', 'lifelineclinicallab', 'comfort1hvac', 'primeshows', 'arroyosecogc', 'thecoderschool']) {
-    await expect(page.locator(`a[href*="${site}"]`), site).toHaveCount(0)
-  }
+  // Exactly these: the company's site, and the client sites still live (round 5 of
+  // 2026-11-09: clients whose sites are gone are described, never linked).
+  const hrefs = await experience.locator('a[href]').evaluateAll((links) =>
+    links.map((a) => (a as HTMLAnchorElement).href).sort()
+  )
+  expect(hrefs).toEqual([
+    'https://comfort1hvac.com/',
+    'https://riverwoodranch.web.app/',
+    'https://techforpros.com/',
+    'https://www.arroyosecogc.com/',
+  ])
+  await expect(experience).toContainText('a clinical lab, a streaming service')
 
   const about = page.locator('#about')
   await expect(about).toContainText('three years building client apps at a consulting firm')
@@ -157,21 +240,44 @@ test('Experience links only Tech for Pros, and Appturnity shows only as a past r
   )
 })
 
-test('"Expand all" opens every role in place, and closes them again', async ({ page }) => {
+test('every role shows its basics; only the roles with more to say expand', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.goto('/')
+  const experience = page.locator('#experience')
+  await experience.getByRole('button', { name: 'Expand all' }).scrollIntoViewIfNeeded()
+  const role = (name: string) => experience.locator('div.group\\/exp', { hasText: name })
+  // The basics show with no click, for every role.
+  await expect(role('Tech for Pros').getByText(/Building Tech for Pros, a SaaS/)).toBeVisible()
+  await expect(role('Realtek Solutions').getByText(/Launched 5\+ small-business websites/)).toBeVisible()
+  await expect(role('The Coder School').getByText(/Teach JavaScript, Python/)).toBeVisible()
+  // Three roles expand; Realtek and The Coder School don't, and the school's site isn't linked.
+  for (const name of ['Tech for Pros', 'Appturnity', 'Donovan Golf']) {
+    await expect(role(name).locator('[data-role-toggle]'), name).toHaveCount(1)
+  }
+  for (const name of ['Realtek Solutions', 'The Coder School']) {
+    await expect(role(name).locator('[data-role-toggle]'), name).toHaveCount(0)
+    await expect(role(name).getByText('More', { exact: true }), name).toHaveCount(0)
+  }
+  await expect(page.locator('a[href*="thecoderschool"]')).toHaveCount(0)
+})
+
+test('"Expand all" opens the roles with more in place, and closes them again', async ({ page }) => {
   await page.goto('/')
   const experience = page.locator('#experience')
   const toggles = experience.locator('[data-role-toggle]')
   await experience.getByRole('button', { name: 'Expand all' }).scrollIntoViewIfNeeded()
-  const count = await toggles.count()
-  expect(count).toBeGreaterThan(3)
-  await expect(experience.getByText(/Building Tech for Pros, a SaaS/)).toBeHidden()
+  await expect(toggles).toHaveCount(3)
+  const more = experience.getByText(/Architecting a shared delivery layer/)
+  await expect(more).toBeHidden()
   await experience.getByRole('button', { name: 'Expand all' }).click()
-  for (let i = 0; i < count; i++) await expect(toggles.nth(i)).toHaveAttribute('aria-expanded', 'true')
-  await expect(experience.getByText(/Building Tech for Pros, a SaaS/)).toBeVisible()
-  // The work's screenshots come with it, as pictures only.
-  await expect(experience.getByRole('img', { name: /Riverwood Ranch/ })).toBeVisible()
+  for (let i = 0; i < 3; i++) await expect(toggles.nth(i)).toHaveAttribute('aria-expanded', 'true')
+  await expect(more).toBeVisible()
+  // The sites built there come with it, as preview cards that link to them.
+  const site = experience.getByRole('link', { name: /riverwoodranch\.web\.app/ })
+  await expect(site).toBeVisible()
+  await expect(site).toHaveAttribute('href', 'https://riverwoodranch.web.app/')
   await experience.getByRole('button', { name: 'Collapse all' }).click()
-  for (let i = 0; i < count; i++) await expect(toggles.nth(i)).toHaveAttribute('aria-expanded', 'false')
+  for (let i = 0; i < 3; i++) await expect(toggles.nth(i)).toHaveAttribute('aria-expanded', 'false')
 })
 
 test('a whole role row opens on a click or from the keyboard, and its link still works', async ({
@@ -182,7 +288,9 @@ test('a whole role row opens on a click or from the keyboard, and its link still
   const experience = page.locator('#experience')
   const role = experience.locator('div.group\\/exp', { hasText: 'Web Developer' })
   await role.scrollIntoViewIfNeeded()
-  const bullet = role.getByText(/Built course and event sites/)
+  // Its basics show; the rest opens with the row.
+  await expect(role.getByText(/Built course and event sites/)).toBeVisible()
+  const bullet = role.getByText(/Integrated Cloudinary media/)
   await expect(bullet).toBeHidden()
   // Anywhere on the row: here, where the role's title is (the row's button lies over it).
   const title = (await role.getByRole('heading', { name: 'Web Developer' }).boundingBox())!
@@ -267,22 +375,28 @@ test('the top corner offers the resume and no Message me', async ({ page, isMobi
   await expect(page.getByRole('link', { name: /^Resume/ }).first()).toBeVisible()
 })
 
-test("hovering a role shows a glimpse of its site, which steps aside once it's open", async ({
+test("hovering a role shows its own picture, which stays, quieter, while it's open", async ({
   page,
   isMobile,
 }) => {
-  test.skip(isMobile, 'The glimpse is a desktop hover; phones open the role to see the screenshots.')
+  test.skip(isMobile, 'The picture is a desktop hover; phones show the basics and the site cards.')
   await page.goto('/')
   const role = page.locator('#experience div.group\\/exp', { hasText: 'Web Developer' })
   await role.scrollIntoViewIfNeeded()
-  const glimpse = role.locator('div[aria-hidden="true"]:has(img)').first()
-  const opacity = () => glimpse.evaluate((el) => Number(getComputedStyle(el).opacity))
+  const picture = role.locator('[data-role-image]')
+  const opacity = () => picture.evaluate((el) => Number(getComputedStyle(el).opacity))
   expect(await opacity()).toBe(0)
   const title = (await role.getByRole('heading', { name: 'Web Developer' }).boundingBox())!
   await page.mouse.move(title.x + 20, title.y + 10)
   await expect.poll(opacity).toBeGreaterThan(0.5)
   await page.mouse.click(title.x + 20, title.y + 10)
-  await expect.poll(opacity).toBe(0)
+  // Open, it stays (round 4 of 2026-11-09), even once the pointer leaves.
+  await page.mouse.move(5, 5)
+  await expect.poll(opacity).toBeCloseTo(0.5, 1)
+  // Each role keeps its own: Appturnity's is Appturnity's home page.
+  await expect(
+    page.locator('#experience div.group\\/exp', { hasText: 'Appturnity' }).locator('[data-role-image] img')
+  ).toHaveAttribute('src', /appturnity/)
 })
 
 test('/projects and the project pages lead back to the home page', async ({ page }) => {
