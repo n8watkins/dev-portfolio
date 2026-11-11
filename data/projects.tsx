@@ -103,8 +103,8 @@ export const projects: Project[] = [
   },
   {
     id: 2,
-    slug: 'net-trailer',
-    title: 'Net-Trailer',
+    slug: 'net-trailers',
+    title: 'NetTrailers',
     subTitle: 'AI-Powered Netflix Clone',
     des: `A Netflix-style streaming app with an AI brain. Describe what you're in the mood for in plain language and Gemini turns it into tailored picks, while a personalized "Recommended For You" engine learns from your watch history and feedback. Plus TMDB-powered browsing and trailers, secure auth, and Firebase-backed persistence.`,
     summary: `A Netflix-style streaming app with an AI brain: describe your mood in plain language and Gemini turns it into picks, while a recommender learns your taste and explains each one.`,
@@ -112,20 +112,20 @@ export const projects: Project[] = [
     clip: {
       src: '/projects/clips/net-trailer.mp4',
       poster: '/projects/clips/net-trailer-poster.webp',
-      alt: "Net-Trailer's home page: the featured titles, then the Trending and Top Rated rows",
+      alt: "NetTrailers' home page: the featured titles, then the Trending and Top Rated rows",
     },
     images: [
       {
         src: '/projects/net-trailer/1-app.webp',
-        alt: 'Net-Trailer: a featured title with Play and More Info',
+        alt: 'NetTrailers: a featured title with Play and More Info',
       },
       {
         src: '/projects/net-trailer/2-rows.webp',
-        alt: 'Net-Trailer: Trending and Top Rated rows from TMDB',
+        alt: 'NetTrailers: Trending and Top Rated rows from TMDB',
       },
       {
         src: '/projects/net-trailer/3-intro.webp',
-        alt: "Net-Trailer's welcome: quick start, browse features or watch a demo",
+        alt: "NetTrailers' welcome: quick start, browse features or watch a demo",
       },
     ],
     icon: '/projects/icons/net-trailer.png',
@@ -191,10 +191,10 @@ export const projects: Project[] = [
       'Your watchlist and profile persist in Firebase, syncing in real time across sessions.',
       'Server-rendered with Next.js and deployed on Vercel, with Cloudinary handling optimized image delivery.',
     ],
-    purpose: `Net-Trailer started as a full-stack streaming clone and became my testbed for grafting AI onto an existing product. The thing I'm exploring: can "what should I watch?" feel like asking a person who actually knows your taste? So it pairs natural-language search with a recommendation engine that learns from your behavior - and explains why it picked each title.`,
-    aiUsage: `Net-Trailer's AI is a Gemini-powered recommendation layer over a TMDB catalog. Natural-language search sends your phrasing to Gemini, which extracts intent - media type, genres, mood - and turns it into a tailored row, behind a multi-model router that falls back automatically when a model is busy. A separate personalized engine builds a profile from your full watch and rating history, with a real-time feedback loop that reshapes future picks and a "why this was recommended" explanation attached to each title.`,
-    github: 'https://github.com/n8watkins/net_trailer',
-    liveSite: 'https://net-trailers.vercel.app/',
+    purpose: `NetTrailers started as a full-stack streaming clone and became my testbed for grafting AI onto an existing product. The thing I'm exploring: can "what should I watch?" feel like asking a person who actually knows your taste? So it pairs natural-language search with a recommendation engine that learns from your behavior - and explains why it picked each title.`,
+    aiUsage: `NetTrailers' AI is a Gemini-powered recommendation layer over a TMDB catalog. Natural-language search sends your phrasing to Gemini, which extracts intent - media type, genres, mood - and turns it into a tailored row, behind a multi-model router that falls back automatically when a model is busy. A separate personalized engine builds a profile from your full watch and rating history, with a real-time feedback loop that reshapes future picks and a "why this was recommended" explanation attached to each title.`,
+    github: 'https://github.com/n8watkins/net_trailers',
+    liveSite: 'https://net-trailers.n8builds.dev',
   },
   {
     id: 6,

@@ -53,6 +53,12 @@ const nextConfig = {
         destination: 'https://portfolio.n8builds.dev/:path*',
         permanent: true,
       },
+      // NetTrailers' page moved from the singular slug to the plural one.
+      {
+        source: '/projects/net-trailer',
+        destination: '/projects/net-trailers',
+        permanent: true,
+      },
       {
         source: '/contact',
         destination: '/',
