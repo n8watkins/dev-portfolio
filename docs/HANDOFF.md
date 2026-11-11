@@ -154,7 +154,7 @@ The owner picked layout B (a work-first home page plus detail pages) over A (one
 ## The n8builds.dev teaser
 
 Under the projects, `components/Projects/BuildsTeaser.tsx` shows n8builds.dev's builds one at a time (Scribe, OpenPing, Solara, TubeVault, Piper TTS, TL;DW; Portfolio Rank left it for the project rows on 2026-11-08), each with its real icon (`public/builds/<slug>/`), its accent, a Live site link when it has one and "See the build" on n8builds.dev (owner, 2026-10-26; it replaced the "Building in public" bento card and the More builds strip).
-  Since round 4 of 2026-11-09 it also shows three upcoming builds (KeysReady, Relink, Pivot, from n8builds-web's `data/upcoming.ts`) with "Join the waitlist" (`https://n8builds.dev/upcoming?interest=<slug>#waitlist`) and their landing pages.
+  Since round 4 of 2026-11-09 it also shows two upcoming builds (KeysReady, Pivot, from n8builds-web's `data/upcoming.ts`) with "Join the waitlist" (`https://n8builds.dev/upcoming?interest=<slug>#waitlist`) and their landing pages.
 
 ## Conventions
 

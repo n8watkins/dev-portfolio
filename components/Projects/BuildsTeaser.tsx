@@ -183,25 +183,6 @@ const BUILDS: Build[] = [
     },
   },
   {
-    slug: 'relink',
-    name: 'Relink',
-    icon: '/builds/relink/icon.svg',
-    shot: {
-      src: '/builds/relink/shot-2026-11.webp',
-      alt: "Relink's landing page: Catch every 404",
-    },
-    kind: 'Coming soon',
-    tagline: 'Sends broken links to the right page',
-    desc: 'When a visitor follows a broken link to your website, it sends them to the page they meant instead of an error page.',
-    upcoming: { landing: 'https://relink.n8builds.dev' },
-    accent: {
-      text: 'text-orange-300',
-      glow: 'from-orange-400/[0.14]',
-      bar: 'bg-orange-400',
-      rgb: '255 138 76',
-    },
-  },
-  {
     slug: 'pivot',
     name: 'Pivot',
     icon: '/builds/pivot/icon.svg',
