@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test'
+import { test, expect } from './fixtures/test'
 
 /**
  * The About page, only about me (owner, 2026-11-08): one portrait, then the

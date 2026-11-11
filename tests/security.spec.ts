@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test'
+import { test, expect } from './fixtures/test'
 
 /**
  * The CSP (lib/security/headers.mjs) is sent, and the page runs under it:

@@ -1,4 +1,4 @@
-import { test, expect, type BrowserContext, type Page } from '@playwright/test'
+import { test, expect, type BrowserContext, type Page } from './fixtures/test'
 import AxeBuilder from '@axe-core/playwright'
 const E2E_BASE_URL = `http://localhost:${Number(process.env.E2E_PORT) || 4829}`
 

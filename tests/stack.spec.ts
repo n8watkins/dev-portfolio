@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test'
+import { test, expect } from './fixtures/test'
 
 /**
  * The stack (owner, 2026-11-08): the home page's tech stack card (with the
