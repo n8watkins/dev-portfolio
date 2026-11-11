@@ -4,6 +4,7 @@
 import * as Sentry from '@sentry/cloudflare'
 import openNext from '../.open-next/worker.js'
 import { SENTRY_DSN } from '../lib/sentryDsn.mjs'
+import { healthCheck } from './health.js'
 
 // The ISR revalidation queue's Durable Object (wrangler.jsonc durable_objects).
 export { DOQueueHandler } from '../.open-next/worker.js'
@@ -30,7 +31,7 @@ const worker = {
    * @param {ExecutionContext} ctx
    */
   async fetch(request, env, ctx) {
-    return forBrowsers(await openNext.fetch(request, env, ctx))
+    return healthCheck(request) ?? forBrowsers(await openNext.fetch(request, env, ctx))
   },
 }
 
