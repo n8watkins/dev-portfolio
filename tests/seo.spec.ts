@@ -40,17 +40,24 @@ test('the home page has one title and a share card that matches it', async ({ pa
 test('a project page is titled after the project, with a short share description', async ({
   page,
 }) => {
-  await page.goto('/projects/net-trailer')
-  await expect(page).toHaveTitle(/^Net-Trailer - .+ \| Nathan Watkins$/)
+  await page.goto('/projects/net-trailers')
+  await expect(page).toHaveTitle(/^NetTrailers - .+ \| Nathan Watkins$/)
   expect((await meta(page, 'og:description'))!.length).toBeLessThanOrEqual(120)
   expect(await meta(page, 'twitter:card')).toBe('summary_large_image')
   expect(await page.locator('link[rel="canonical"]').getAttribute('href')).toBe(
-    'https://portfolio.n8builds.dev/projects/net-trailer'
+    'https://portfolio.n8builds.dev/projects/net-trailers'
   )
 })
 
 test('no visible copy uses an em dash', async ({ page }) => {
-  for (const path of ['/', '/projects', '/stack', '/about', '/projects/net-trailer', '/projects/portfolio-rank']) {
+  for (const path of [
+    '/',
+    '/projects',
+    '/stack',
+    '/about',
+    '/projects/net-trailers',
+    '/projects/portfolio-rank',
+  ]) {
     await page.goto(path)
     // Sections fade in on scroll; walk the page so all of them render.
     await page.evaluate(async () => {
@@ -80,4 +87,15 @@ test('the old vercel.app addresses redirect to portfolio.n8builds.dev, keeping t
   // The real address and preview deploys are served as they are.
   const own = await request.get('/', { maxRedirects: 0 })
   expect(own.status()).toBe(200)
+})
+
+test('the old NetTrailers page redirects permanently to the plural slug, keeping the query', async ({
+  request,
+}) => {
+  const res = await request.get('/projects/net-trailer?x=1', { maxRedirects: 0 })
+  expect(res.status()).toBe(308)
+  expect(
+    new URL(res.headers().location, 'http://x').pathname +
+      new URL(res.headers().location, 'http://x').search
+  ).toBe('/projects/net-trailers?x=1')
 })

@@ -6,7 +6,7 @@ import { test, expect } from '@playwright/test'
  * (owner, 2026-11-08; the big workshop pitches are gone).
  */
 test("every page's footer has my two sites' cards and the site map", async ({ page }) => {
-  for (const path of ['/', '/projects', '/stack', '/about', '/projects/net-trailer']) {
+  for (const path of ['/', '/projects', '/stack', '/about', '/projects/net-trailers']) {
     await page.goto(path)
     const footer = page.locator('footer')
     await expect(footer.getByRole('link', { name: /I build in public\s*n8builds\.dev/ }), path).toHaveAttribute(
@@ -457,7 +457,7 @@ test("hovering a role shows its own picture, which stays, quieter, while it's op
 })
 
 test('/projects and the project pages lead back to the home page', async ({ page }) => {
-  for (const path of ['/projects', '/projects/net-trailer']) {
+  for (const path of ['/projects', '/projects/net-trailers']) {
     await page.goto(path)
     const back = page.getByRole('link', { name: 'Back to home' })
     await expect(back, path).toHaveAttribute('href', '/')

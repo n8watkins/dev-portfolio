@@ -21,7 +21,7 @@ export interface Technologies {
 
 export interface Project {
   id: number
-  /** URL slug for the project's detail page, e.g. /projects/net-trailer */
+  /** URL slug for the project's detail page, e.g. /projects/net-trailers */
   slug: string
   title: string
   /** The title as the app writes it (Portfolio Rank's gold "Rank"); `title` otherwise. */

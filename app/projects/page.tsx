@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import ProjectsPage from '@/components/ProjectsPage'
 
 const description =
-  "Nathan Watkins' projects in detail: the AI app he's building now, Net-Trailer and Portfolio Rank, with screenshots, features and tech."
+  "Nathan Watkins' projects in detail: the AI app he's building now, NetTrailers and Portfolio Rank, with screenshots, features and tech."
 
 export const metadata: Metadata = {
   title: 'Projects',

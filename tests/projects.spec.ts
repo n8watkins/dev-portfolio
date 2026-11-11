@@ -2,7 +2,7 @@ import { test, expect, type Page } from '@playwright/test'
 
 /**
  * The project rows: Wren first, as a full project card like the others (owner,
- * round 5 of 2026-11-09), then Net-Trailer and Portfolio Rank. Echo, Scout and
+ * round 5 of 2026-11-09), then NetTrailers and Portfolio Rank. Echo, Scout and
  * GeminiGPT were retired on 2026-11-08; nothing links to them or their demos,
  * and their old pages redirect to Wren's.
  */
@@ -14,11 +14,11 @@ async function projectsInView(page: Page) {
 
 const card = (page: Page, title: string) => page.getByRole('article', { name: title, exact: true })
 
-test('the projects open with Wren, then Net-Trailer and Portfolio Rank', async ({ page }) => {
+test('the projects open with Wren, then NetTrailers and Portfolio Rank', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.goto('/')
   const titles = page.locator('#projects article h3')
-  await expect(titles).toHaveText(['Wren', 'Net-Trailer', 'Portfolio Rank'])
+  await expect(titles).toHaveText(['Wren', 'NetTrailers', 'Portfolio Rank'])
   const wren = card(page, 'Wren')
   // The same card as the others: its clip, a summary, what's interesting, Live demo and Full story.
   await expect(wren.locator('video, img[alt*="Wren as a guest"]').first()).toBeAttached()
@@ -87,7 +87,7 @@ test('the status API answers with names, states and uptime only', async ({ reque
 test('a project page shows its screenshot whole, not cropped to a strip', async ({ page }) => {
   for (const width of [375, 1280]) {
     await page.setViewportSize({ width, height: 900 })
-    for (const slug of ['net-trailer', 'portfolio-rank']) {
+    for (const slug of ['net-trailers', 'portfolio-rank']) {
       await page.goto(`/projects/${slug}`)
       const image = page.locator('main [data-gallery] img').first()
       await expect(image).toBeVisible()
@@ -107,16 +107,16 @@ test('a project page shows its screenshot whole, not cropped to a strip', async 
 test('a project card opens its page and its live demo', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await projectsInView(page)
-  const net = card(page, 'Net-Trailer')
+  const net = card(page, 'NetTrailers')
   await expect(
-    net.getByRole('link', { name: 'Try the Net-Trailer live demo (new tab)' })
-  ).toHaveAttribute('href', 'https://net-trailers.vercel.app/')
+    net.getByRole('link', { name: 'Try the NetTrailers live demo (new tab)' })
+  ).toHaveAttribute('href', 'https://net-trailers.n8builds.dev')
   // The card stays big and simple: the source, tech and features are on /projects and its page.
-  await expect(net.getByRole('list', { name: 'What Net-Trailer does' })).toHaveCount(0)
-  await net.getByRole('link', { name: 'Read the full story of Net-Trailer' }).click()
-  await expect(page).toHaveURL(/\/projects\/net-trailer$/, { timeout: 30000 })
+  await expect(net.getByRole('list', { name: 'What NetTrailers does' })).toHaveCount(0)
+  await net.getByRole('link', { name: 'Read the full story of NetTrailers' }).click()
+  await expect(page).toHaveURL(/\/projects\/net-trailers$/, { timeout: 30000 })
   await expect(
-    page.getByRole('list', { name: 'What Net-Trailer does' }).getByRole('listitem')
+    page.getByRole('list', { name: 'What NetTrailers does' }).getByRole('listitem')
   ).not.toHaveCount(0)
 })
 
@@ -126,7 +126,7 @@ test('"Detailed view" opens /projects, with every project at full size', async (
   await page.locator('#projects').getByRole('link', { name: 'Detailed view' }).click()
   await expect(page).toHaveURL(/\/projects$/)
   await expect(page.getByRole('heading', { level: 1, name: 'Projects, in detail' })).toBeVisible()
-  for (const title of ['Wren', 'Net-Trailer', 'Portfolio Rank']) {
+  for (const title of ['Wren', 'NetTrailers', 'Portfolio Rank']) {
     const full = card(page, title)
     await expect(full.getByRole('link', { name: `View ${title} source on GitHub (new tab)` })).toHaveAttribute(
       'href',
@@ -171,7 +171,7 @@ test('Portfolio Rank credits its list and invites you to add your portfolio', as
  * then "Built in public at n8builds.dev" (owner, 2026-11-01).
  */
 test("a project page's footer links my sites with their marks", async ({ page }) => {
-  await page.goto('/projects/net-trailer')
+  await page.goto('/projects/net-trailers')
   const sites = page.getByRole('navigation', { name: 'Site map' })
   await sites.scrollIntoViewIfNeeded()
   await expect(sites.getByRole('link', { name: 'n8builds.dev' })).toHaveAttribute(

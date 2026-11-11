@@ -15,7 +15,7 @@ The portfolio application is optimized with Next.js 16 App Router features and k
 | Route | Type |
 |-------|------|
 | `/` (Home) | Static |
-| `/projects/[slug]` - net-trailer, portfolio-rank | SSG |
+| `/projects/[slug]` - net-trailers, portfolio-rank | SSG |
 | `/sitemap.xml` | Static |
 | `/_not-found`, `/sentry-example-page` | Static |
 | `/api/health`, `/api/health/error`, `/api/sentry-example-api` | Dynamic |
