@@ -1,4 +1,4 @@
-import { test, expect, type Page } from '@playwright/test'
+import { test, expect, GAME_STATS_URL, type Page } from './fixtures/test'
 
 // The tech stack card (and its dino) is on /stack here (owner, 2026-11-08); n8builds.dev's copy runs on its home page.
 const STACK_PAGE = '/stack'
@@ -688,6 +688,19 @@ test.describe('dino easter egg (motion allowed)', () => {
     await expect.poll(() => sent.length, { timeout: 15_000 }).toBe(2)
     expect(sent[1].body).toEqual({ type: 'end', round: 'b'.repeat(24), score: 1 })
     expect(sent.every((s) => s.cookie === null)).toBe(true)
+  })
+
+  test('a round never reaches the real game stats: the fixture answers the call', async ({ page }) => {
+    await dinoTiming(page, { reactions: ['dash'], round: 7 })
+    const answers: unknown[] = []
+    page.on('response', async (response) => {
+      if (response.url() === GAME_STATS_URL) answers.push(await response.json())
+    })
+    await onTopRow(page)
+    await pokeDino(page)
+    await expect.poll(() => answers.length).toBeGreaterThan(0)
+    // The stand-in's round id and record, not a real one.
+    expect(answers[0]).toEqual({ round: 'a'.repeat(24), record: 0 })
   })
 
   test('the first click starts a catch round with a scoreboard', async ({ page }) => {

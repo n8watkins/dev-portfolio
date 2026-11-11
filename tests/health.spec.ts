@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test'
+import { test, expect } from './fixtures/test'
 
 // /api/health is a public liveness check: status ok and nothing else.
 test('the health check answers ok and leaks nothing', async ({ request }) => {

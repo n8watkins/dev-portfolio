@@ -1,4 +1,4 @@
-import { test, expect, type Page } from '@playwright/test'
+import { test, expect, type Page } from './fixtures/test'
 
 /**
  * The project rows: Wren first, as a full project card like the others (owner,

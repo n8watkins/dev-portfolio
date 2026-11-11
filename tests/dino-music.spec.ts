@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs'
-import { test, expect, type Page } from '@playwright/test'
+import { test, expect, type Page } from './fixtures/test'
 import ts from 'typescript'
 
 // The tech stack card (and its dino) is on /stack here (owner, 2026-11-08); n8builds.dev's copy runs on its home page.
