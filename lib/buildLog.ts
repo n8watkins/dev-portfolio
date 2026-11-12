@@ -8,6 +8,13 @@
  */
 
 export const BUILD_LOG_FEED = 'https://n8builds.dev/builds/months.json'
+
+/**
+ * Sent with every server-side fetch of the owner's own feeds. n8builds.dev
+ * challenges requests with no User-Agent (a Cloudflare rule since 2026-11-11),
+ * which answered the build log with a 403 and left the card empty.
+ */
+export const FEED_HEADERS = { 'User-Agent': 'n8builds-portfolio (+https://portfolio.n8builds.dev)' }
 /** Where the card links: the full build log. */
 export const BUILD_LOG_PAGE = 'https://n8builds.dev/builds'
 
