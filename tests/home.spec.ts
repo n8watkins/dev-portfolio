@@ -56,18 +56,26 @@ test('the n8builds.dev teaser links each build to its n8builds.dev page', async 
   }
   // An upcoming build offers its waitlist on n8builds.dev, with it ticked, and its landing page.
   await expect(async () => {
-    await teaser.getByRole('button', { name: 'Show KeysReady' }).click()
-    await expect(teaser.getByText(/^KeysReady, \d+ of \d+$/)).toBeVisible({ timeout: 1000 })
+    await teaser.getByRole('button', { name: 'Show Pivot' }).click()
+    await expect(teaser.getByText(/^Pivot, \d+ of \d+$/)).toBeVisible({ timeout: 1000 })
   }).toPass()
-  await expect(teaser.getByRole('link', { name: /^Join the waitlist for KeysReady/ })).toHaveAttribute(
+  await expect(teaser.getByRole('link', { name: /^Join the waitlist for Pivot/ })).toHaveAttribute(
     'href',
-    'https://n8builds.dev/upcoming?interest=keysready#waitlist'
+    'https://n8builds.dev/upcoming?interest=pivot#waitlist'
   )
   await expect(teaser.getByRole('link', { name: /^Its landing page/ })).toHaveAttribute(
     'href',
-    'https://keysready.n8builds.dev'
+    'https://pivot.n8builds.dev/welcome'
   )
-  await expect(teaser.getByRole('link', { name: /See the build: KeysReady/ })).toHaveCount(0)
+  await expect(teaser.getByRole('link', { name: /See the build: Pivot/ })).toHaveCount(0)
+  // Seven in all, a dot each, as the hero's n8builds.dev card says ("7 builds"): KeysReady left the
+  // teaser on 2026-11-11 (owner: it is not teased for now).
+  await expect(teaser.getByRole('button', { name: /^Show / })).toHaveCount(7)
+  await expect(teaser.getByText(/^Pivot, 7 of 7$/)).toBeVisible()
+  await expect(teaser.getByRole('button', { name: 'Show KeysReady' })).toHaveCount(0)
+  await expect(teaser).not.toContainText('KeysReady')
+  await expect(page.locator('a[href*="keysready"], img[src*="keysready"]')).toHaveCount(0)
+  await expect(page.getByRole('link', { name: /7 builds · all open source/ }).first()).toBeVisible()
 })
 
 /**

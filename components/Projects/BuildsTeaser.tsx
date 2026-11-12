@@ -164,25 +164,6 @@ const BUILDS: Build[] = [
     },
   },
   {
-    slug: 'keysready',
-    name: 'KeysReady',
-    icon: '/builds/keysready/icon.svg',
-    shot: {
-      src: '/builds/keysready/shot-2026-11.webp',
-      alt: 'KeysReady\'s landing page: Stop answering "Is my car ready?"',
-    },
-    kind: 'Coming soon',
-    tagline: 'Booking and live repair status for auto shops',
-    desc: 'For small auto repair shops: customers book online, follow their repair live, and approve and pay from their phone.',
-    upcoming: { landing: 'https://keysready.n8builds.dev' },
-    accent: {
-      text: 'text-red-300',
-      glow: 'from-red-400/[0.14]',
-      bar: 'bg-red-400',
-      rgb: '255 90 78',
-    },
-  },
-  {
     slug: 'pivot',
     name: 'Pivot',
     icon: '/builds/pivot/icon.svg',
