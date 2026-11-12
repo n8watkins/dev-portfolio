@@ -1,4 +1,4 @@
-import { BUILD_LOG_FEED, toLogMonths } from '@/lib/buildLog'
+import { BUILD_LOG_FEED, FEED_HEADERS, toLogMonths } from '@/lib/buildLog'
 import fixture from '@/tests/fixtures/build-log-months.json'
 
 /**
@@ -15,6 +15,7 @@ export async function GET() {
   if (process.env.BUILD_LOG_FIXTURE === '1') return Response.json({ months: toLogMonths(fixture) })
   try {
     const response = await fetch(BUILD_LOG_FEED, {
+      headers: FEED_HEADERS,
       next: { revalidate },
       signal: AbortSignal.timeout(5000),
     })

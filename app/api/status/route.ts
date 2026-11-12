@@ -1,3 +1,4 @@
+import { FEED_HEADERS } from '@/lib/buildLog'
 import { STATUS_FEED, toStatusMap, type StatusMap } from '@/lib/status'
 
 /**
@@ -18,7 +19,7 @@ const FIXTURE: StatusMap = {
 export async function GET() {
   if (process.env.STATUS_FIXTURE === '1') return Response.json({ services: FIXTURE })
   try {
-    const response = await fetch(STATUS_FEED, { next: { revalidate }, signal: AbortSignal.timeout(5000) })
+    const response = await fetch(STATUS_FEED, { headers: FEED_HEADERS, next: { revalidate }, signal: AbortSignal.timeout(5000) })
     if (!response.ok) throw new Error(`status feed answered ${response.status}`)
     return Response.json(
       { services: toStatusMap(await response.json()) },

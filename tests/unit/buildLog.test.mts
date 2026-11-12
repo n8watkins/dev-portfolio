@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { toLogMonths } from '../../lib/buildLog.ts'
+import { FEED_HEADERS, toLogMonths } from '../../lib/buildLog.ts'
 
 test('a version 1 feed keeps each month, newest first, as sent', () => {
   const months = toLogMonths({
@@ -31,4 +31,8 @@ test('anything malformed is dropped, so a change upstream can only fall back', (
 test('at most a year of months', () => {
   const month = (i: number) => ({ id: `m${i}`, title: `M ${i}`, changes: 0, days: [{ day: '2026-01-01', count: 0 }] })
   assert.equal(toLogMonths({ version: 1, months: Array.from({ length: 20 }, (_, i) => month(i)) }).length, 12)
+})
+
+test('server fetches name themselves, since n8builds.dev challenges nameless clients', () => {
+  assert.match(FEED_HEADERS['User-Agent'], /^n8builds-portfolio /)
 })
