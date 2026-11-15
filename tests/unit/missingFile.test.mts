@@ -21,7 +21,6 @@ test('every real route and static file passes through', () => {
     '/does-not-exist',
     '/sitemap.xml',
     '/robots.txt',
-    '/.well-known/security.txt',
     '/blog/old-post.html',
     '/portfolio/old/page.html',
   ]) {
@@ -39,6 +38,8 @@ test('file-like paths that are not routes are refused', () => {
     '/vercel.json',
     '/.env',
     '/.git/config',
+    '/.well-known/.env',
+    '/.well-known/security.txt',
     '/wp-login.php',
     '/backup.sql',
     '/api/config.json',

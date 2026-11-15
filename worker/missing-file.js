@@ -17,9 +17,9 @@ const DOTTED_ROUTES = new Set(['/sitemap.xml', '/robots.txt'])
 
 /**
  * Prefixes that next.config.mjs redirects to the home page whatever follows
- * (old /blog/... and /portfolio/... links), and the well-known files.
+ * (old /blog/... and /portfolio/... links).
  */
-const DOTTED_PREFIXES = ['/blog/', '/portfolio/', '/.well-known/']
+const DOTTED_PREFIXES = ['/blog/', '/portfolio/']
 
 /**
  * Whether a path is file-like (a dot in any segment) and not a known route.
