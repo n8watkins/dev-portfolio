@@ -1,8 +1,8 @@
 import { test, expect, type Page } from './fixtures/test'
 
 /**
- * The project rows: Wren first, as a full project card like the others (owner,
- * round 5 of 2026-11-09), then NetTrailers and Portfolio Rank. Echo, Scout and
+ * The project rows: Portfolio Rank, NetTrailers, then Wren (owner, 2026-11-24);
+ * Wren is a full project card like the others (round 5 of 2026-11-09). Echo, Scout and
  * GeminiGPT were retired on 2026-11-08; nothing links to them or their demos,
  * and their old pages redirect to Wren's.
  */
@@ -14,11 +14,11 @@ async function projectsInView(page: Page) {
 
 const card = (page: Page, title: string) => page.getByRole('article', { name: title, exact: true })
 
-test('the projects open with Wren, then NetTrailers and Portfolio Rank', async ({ page }) => {
+test('the projects open with Portfolio Rank, then NetTrailers and Wren', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.goto('/')
   const titles = page.locator('#projects article h3')
-  await expect(titles).toHaveText(['Wren', 'NetTrailers', 'Portfolio Rank'])
+  await expect(titles).toHaveText(['Portfolio Rank', 'NetTrailers', 'Wren'])
   const wren = card(page, 'Wren')
   // The same card as the others: its clip, a summary, what's interesting, Live demo and Full story.
   await expect(wren.locator('video, img[alt*="Wren as a guest"]').first()).toBeAttached()
@@ -126,7 +126,7 @@ test('"Detailed view" opens /projects, with every project at full size', async (
   await page.locator('#projects').getByRole('link', { name: 'Detailed view' }).click()
   await expect(page).toHaveURL(/\/projects$/)
   await expect(page.getByRole('heading', { level: 1, name: 'Projects, in detail' })).toBeVisible()
-  for (const title of ['Wren', 'NetTrailers', 'Portfolio Rank']) {
+  for (const title of ['Portfolio Rank', 'NetTrailers', 'Wren']) {
     const full = card(page, title)
     await expect(full.getByRole('link', { name: `View ${title} source on GitHub (new tab)` })).toHaveAttribute(
       'href',
