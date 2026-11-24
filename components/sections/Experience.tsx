@@ -1,9 +1,9 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 import { motion } from 'motion/react'
-import { FiChevronDown, FiExternalLink } from 'react-icons/fi'
+import { FiChevronDown, FiChevronLeft, FiChevronRight, FiExternalLink } from 'react-icons/fi'
 import { workExperience, type WorkExperienceItem } from '@/data/experience'
 import SectionHeading from '@/components/ui/SectionHeading'
 import { staggerItemVariants } from '@/lib/animations'
@@ -52,19 +52,93 @@ const Bullets = ({ items, className = '' }: { items: string[]; className?: strin
   </ul>
 )
 
-/** An open role's rest: more of what I did, then the sites I built there as small preview cards. */
-const Details = ({ item }: { item: WorkExperienceItem }) => (
-  <div className="flex flex-col gap-5">
-    {item.more && <Bullets items={item.more} />}
-    {item.sites && (
-      <ul aria-label="Sites I built there" className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {item.sites.map((site) => (
-          <li key={site.url}>
+const PAGE_BUTTON =
+  'inline-flex h-9 w-9 items-center justify-center rounded-xl border border-white/12 bg-white/4 text-slate-200 transition-colors hover:border-sky-400/50 hover:bg-white/8 hover:text-sky-200 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-sky-400 disabled:cursor-default disabled:opacity-40 disabled:hover:border-white/12 disabled:hover:bg-white/4 disabled:hover:text-slate-200'
+
+/**
+ * The sites I built in a role: one row that scrolls and snaps (three cards at a time from md,
+ * one with the next peeking on a phone), with Previous and Next once the cards don't all fit.
+ * Whether it overflows, and where it has got to, is read from the row's own scroll position.
+ */
+const SiteCarousel = ({ sites }: { sites: NonNullable<WorkExperienceItem['sites']> }) => {
+  const list = useRef<HTMLUListElement>(null)
+  const [edges, setEdges] = useState({ overflows: false, atStart: true, atEnd: true })
+  const measure = useCallback(() => {
+    const el = list.current
+    if (!el) return
+    const overflows = el.scrollWidth - el.clientWidth > 1
+    const next = {
+      overflows,
+      atStart: el.scrollLeft <= 1,
+      atEnd: el.scrollLeft + el.clientWidth >= el.scrollWidth - 1,
+    }
+    setEdges((prev) =>
+      prev.overflows === next.overflows && prev.atStart === next.atStart && prev.atEnd === next.atEnd
+        ? prev
+        : next
+    )
+  }, [])
+  useEffect(() => {
+    const el = list.current
+    if (!el) return
+    const observer = new ResizeObserver(measure)
+    observer.observe(el)
+    // The cards size the scroll width; they change with the layout, not only the row.
+    for (const child of Array.from(el.children)) observer.observe(child)
+    measure()
+    return () => observer.disconnect()
+  }, [measure, sites.length])
+  const page = (direction: -1 | 1) => {
+    const el = list.current
+    if (el) el.scrollBy({ left: direction * el.clientWidth })
+  }
+
+  return (
+    <div className="flex min-w-0 flex-col gap-2">
+      {edges.overflows && (
+        <div className="flex justify-end gap-2">
+          <button
+            type="button"
+            aria-label="Previous sites"
+            disabled={edges.atStart}
+            onClick={() => page(-1)}
+            className={PAGE_BUTTON}
+          >
+            <FiChevronLeft className="h-4 w-4" aria-hidden="true" />
+          </button>
+          <button
+            type="button"
+            aria-label="Next sites"
+            disabled={edges.atEnd}
+            onClick={() => page(1)}
+            className={PAGE_BUTTON}
+          >
+            <FiChevronRight className="h-4 w-4" aria-hidden="true" />
+          </button>
+        </div>
+      )}
+      <ul
+        ref={list}
+        aria-label="Sites I built there"
+        onScroll={measure}
+        // p-1 and -m-1 leave room for the cards' focus rings, which the scroller would clip.
+        className="-m-1 flex snap-x snap-mandatory scroll-pl-1 gap-3 overflow-x-auto overscroll-x-contain p-1 [scrollbar-width:none] motion-safe:scroll-smooth [&::-webkit-scrollbar]:hidden"
+      >
+        {sites.map((site) => (
+          <li key={site.url} className="w-[88%] shrink-0 snap-start md:w-[calc((100%-1.5rem)/3)]">
             <SiteCard site={site} />
           </li>
         ))}
       </ul>
-    )}
+    </div>
+  )
+}
+
+/** An open role's rest: more of what I did, then the sites I built there as a row of preview cards. */
+const Details = ({ item }: { item: WorkExperienceItem }) => (
+  <div className="flex flex-col gap-5">
+    {item.more && <Bullets items={item.more} />}
+    {item.sites && <SiteCarousel sites={item.sites} />}
   </div>
 )
 

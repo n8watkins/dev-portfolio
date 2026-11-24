@@ -115,6 +115,13 @@ test('the build log card moves on through the months by itself, and holds when a
   test.skip(isMobile, 'Hover is a desktop pointer; the timing is the same on phones.')
   // Moving the page's clock on runs every timer on it (the dino, the marquees), slowly in WebKit.
   test.setTimeout(150_000)
+  // Sentry loads itself when the page is idle, in the middle of this test. Its Session Replay
+  // clears a timer by an id it no longer owns, and on the page's fake clock that id can be this
+  // card's interval, which then never fires again (about one run in six in WebKit). Keep the SDK
+  // from loading here: the card's timing is all this test is about.
+  await page.addInitScript(() => {
+    window.requestIdleCallback = () => 0
+  })
   await page.clock.install()
   await page.goto('/')
   const card = page.locator('[data-build-log]')
@@ -269,7 +276,7 @@ test('Experience links Tech for Pros and the live client sites only, and Appturn
   const experience = page.locator('#experience')
   const card = experience.locator('div.group\\/exp', { hasText: 'Appturnity' })
   await expect(card).toHaveCount(1)
-  await expect(card.getByRole('heading', { name: 'Full Stack Developer', exact: true })).toBeAttached()
+  await expect(card.getByRole('heading', { name: 'Full-Stack Developer', exact: true })).toBeAttached()
   await expect(card.getByText('Appturnity', { exact: true })).toBeAttached()
   // Nowhere outside Experience.
   const outside = await page.evaluate(() => {
@@ -291,11 +298,29 @@ test('Experience links Tech for Pros and the live client sites only, and Appturn
   )
   expect(hrefs).toEqual([
     'https://comfort1hvac.com/',
+    'https://debellgolf.com/',
+    'https://lcfcountryclub.com/',
     'https://riverwoodranch.web.app/',
     'https://techforpros.com/',
+    'https://www.alhambragolf.com/',
+    'https://www.angelesnational.com/',
     'https://www.arroyosecogc.com/',
+    'https://www.mpgolfclub.com/',
   ])
-  await expect(experience).toContainText('a clinical lab, a streaming service')
+  // The six golf course sites, each with its own screenshot (the resume of November 2026).
+  const golf = experience.locator('div.group\\/exp', { hasText: 'Donovan Golf' })
+  await expect(golf).toContainText('Rebuilt six golf course websites')
+  // The role is closed here, so its cards are inert: count them in the DOM, not by role.
+  const cards = golf.locator('ul[aria-label="Sites I built there"]')
+  await expect(cards.locator('a')).toHaveCount(6)
+  const shots = await cards
+    .locator('img')
+    .evaluateAll((imgs) => imgs.map((img) => decodeURIComponent((img as HTMLImageElement).src)))
+  expect(new Set(shots.map((src) => src.match(/experience\/(\w+)\.webp/)?.[1])).size).toBe(6)
+  // The clinical lab is its own role, named and never linked.
+  const lab = experience.locator('div.group\\/exp', { hasText: 'Lifeline Clinical Labs' })
+  await expect(lab).toHaveCount(1)
+  await expect(lab.getByRole('link')).toHaveCount(0)
 
   const about = page.locator('#about')
   await expect(about).toContainText('three years building client apps at a consulting firm')
@@ -305,6 +330,64 @@ test('Experience links Tech for Pros and the live client sites only, and Appturn
   )
 })
 
+test("a role's site cards are one scrolling row, paged by Previous and Next when they do not all fit", async ({
+  page,
+  isMobile,
+}) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.goto('/')
+  const experience = page.locator('#experience')
+  const role = (name: string) => experience.locator('div.group\\/exp', { hasText: name })
+  const golf = role('Donovan Golf')
+  await golf.locator('[data-role-toggle]').scrollIntoViewIfNeeded()
+  await golf.locator('[data-role-toggle]').click()
+  const row = golf.getByRole('list', { name: 'Sites I built there' })
+  await row.scrollIntoViewIfNeeded()
+  const first = row.locator('a[href="https://www.arroyosecogc.com/"]')
+  const last = row.locator('a[href="https://lcfcountryclub.com/"]')
+  await expect(row.getByRole('link')).toHaveCount(6)
+  await expect(first).toBeInViewport({ ratio: 0.9 })
+  await expect(last).not.toBeInViewport()
+  const previous = golf.getByRole('button', { name: 'Previous sites' })
+  const next = golf.getByRole('button', { name: 'Next sites' })
+  await expect(previous).toBeDisabled()
+  // Next until the end (a phone shows one card a page: more clicks than cards is plenty). The first click is a real one. The row then snaps on after it, and the
+  // buttons follow the position it settles at, so the rest wait for the row to be still and
+  // click through the DOM: a button that has just become disabled ignores it, where a pointer
+  // click would wait on it.
+  const scrolled = () => row.evaluate((el) => el.scrollLeft)
+  const still = () =>
+    expect
+      .poll(async () => {
+        const at = await scrolled()
+        await page.waitForTimeout(150)
+        return (await scrolled()) === at
+      })
+      .toBe(true)
+  await next.click()
+  for (let clicks = 1; clicks < 10; clicks++) {
+    await still()
+    await next.dispatchEvent('click')
+  }
+  await still()
+  await expect(next).toBeDisabled()
+  await expect(previous).toBeEnabled()
+  await expect(last).toBeInViewport({ ratio: 0.9 })
+  await expect(first).not.toBeInViewport()
+  // The page itself never scrolls sideways.
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
+  // Appturnity's two cards fit on a desktop, so it has no buttons there (a phone shows one at a time).
+  const appturnity = role('Appturnity')
+  await appturnity.locator('[data-role-toggle]').click()
+  await expect(appturnity.getByRole('list', { name: 'Sites I built there' })).toBeVisible()
+  const wide = await appturnity.evaluate((el) => {
+    const ul = el.querySelector('ul[aria-label="Sites I built there"]') as HTMLElement
+    return ul.scrollWidth <= ul.clientWidth + 1
+  })
+  if (!isMobile) expect(wide).toBe(true)
+  await expect(appturnity.getByRole('button', { name: 'Next sites' })).toHaveCount(wide ? 0 : 1)
+})
+
 test('every role shows its basics; only the roles with more to say expand', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.goto('/')
@@ -312,14 +395,15 @@ test('every role shows its basics; only the roles with more to say expand', asyn
   await experience.getByRole('button', { name: 'Expand all' }).scrollIntoViewIfNeeded()
   const role = (name: string) => experience.locator('div.group\\/exp', { hasText: name })
   // The basics show with no click, for every role.
-  await expect(role('Tech for Pros').getByText(/Building Tech for Pros, a SaaS/)).toBeVisible()
+  await expect(role('Tech for Pros').getByText(/Deployed AI receptionists in a 12-client pilot/)).toBeVisible()
+  await expect(role('Lifeline Clinical Labs').getByText(/Python order-entry pipeline/)).toBeVisible()
   await expect(role('Realtek Solutions').getByText(/Launched 5\+ small-business websites/)).toBeVisible()
   await expect(role('The Coder School').getByText(/Teach JavaScript, Python/)).toBeVisible()
   // Three roles expand; Realtek and The Coder School don't, and the school's site isn't linked.
   for (const name of ['Tech for Pros', 'Appturnity', 'Donovan Golf']) {
     await expect(role(name).locator('[data-role-toggle]'), name).toHaveCount(1)
   }
-  for (const name of ['Realtek Solutions', 'The Coder School']) {
+  for (const name of ['Lifeline Clinical Labs', 'Realtek Solutions', 'The Coder School']) {
     await expect(role(name).locator('[data-role-toggle]'), name).toHaveCount(0)
     await expect(role(name).getByText('More', { exact: true }), name).toHaveCount(0)
   }
@@ -332,7 +416,7 @@ test('"Expand all" opens the roles with more in place, and closes them again', a
   const toggles = experience.locator('[data-role-toggle]')
   await experience.getByRole('button', { name: 'Expand all' }).scrollIntoViewIfNeeded()
   await expect(toggles).toHaveCount(3)
-  const more = experience.getByText(/Architecting a shared delivery layer/)
+  const more = experience.getByText(/single configuration-driven Cloudflare Worker/)
   await expect(more).toBeHidden()
   await experience.getByRole('button', { name: 'Expand all' }).click()
   for (let i = 0; i < 3; i++) await expect(toggles.nth(i)).toHaveAttribute('aria-expanded', 'true')
@@ -354,8 +438,8 @@ test('a whole role row opens on a click or from the keyboard, and its link still
   const role = experience.locator('div.group\\/exp', { hasText: 'Web Developer' })
   await role.scrollIntoViewIfNeeded()
   // Its basics show; the rest opens with the row.
-  await expect(role.getByText(/Built course and event sites/)).toBeVisible()
-  const bullet = role.getByText(/Integrated Cloudinary media/)
+  await expect(role.getByText(/Rebuilt six golf course websites/)).toBeVisible()
+  const bullet = role.getByText(/Coordinated pre-launch booking integration testing/)
   await expect(bullet).toBeHidden()
   // Anywhere on the row: here, where the role's title is (the row's button lies over it).
   const title = (await role.getByRole('heading', { name: 'Web Developer' }).boundingBox())!

@@ -37,16 +37,17 @@ Shorter, branded demo links on the portfolio and on n8builds.dev.
 
 ## 4. Update the resume
 
-- [ ] The resume names Tech for Pros and links https://portfolio.n8builds.dev.
+- [ ] The site's resume links open the resume of November 2026.
 
 **What.**
 The resume is a Google Drive file (`lib/resume.ts` links to it for the card, the hero and the navbar).
+The Experience section follows the new resume since 2026-11-23, but the links still open the old PDF.
 
 **Steps.**
-Rename SiteForge to Tech for Pros, title the role "Full Stack Engineer and AI Consultant" as the Experience section does, replace the old portfolio address with https://portfolio.n8builds.dev, and upload it over the same Drive file (File, Manage versions) so the links keep working.
+Download the new resume (the Google Doc "Nathan Watkins Resume - 2026 - Full Stack - 2p") as a PDF and upload it over the same Drive file (File, Manage versions) so the links keep working.
 
 **Why.**
-Only you can edit the file, and it still shows the old names and address.
+Only you can replace the file, and it is public: it carries your phone number, so what goes up is your call.
 
 **Unblocks.**
 A resume that matches the site.
@@ -54,6 +55,7 @@ A resume that matches the site.
 ## 5. The clinical lab's link
 
 - [x] Decided (2026-11-09): the site is not linked or named by its domain anywhere; Experience describes the client as a clinical lab.
+  Since 2026-11-23 the lab is its own role, named Lifeline Clinical Labs as on the resume, still with no link or domain.
 
 ## 6. Decide: keep Sentry's feedback button?
 
