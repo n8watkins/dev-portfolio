@@ -2,14 +2,15 @@
  * LAB (exp/project-marks): the pixel marks drawn from the Projects section's
  * grid squares, one per project, beside its card on wide screens.
  *
- * One character per 52px grid cell:
- *   X  the project's colour, full
- *   m  the same at 75% (Portfolio Rank's second place)
- *   d  the same at 55% (third place, the bird's legs and perch)
- *   #  the bright highlight (the leader's cap)
+ * Every pose is a bitmap, one character per 52px grid cell:
+ *   X  the project's colour
+ *   d  the same, dimmer (the bird's legs)
  *   B  Wren's ember beak
  *   o  a body cell carrying the bird's eye
+ *   H  a brighter cell (the play button's playhead)
  *   .  open grid
+ * All poses of a mark share one box, so the mark never moves on the grid;
+ * going from one pose to the next flips only the cells that change.
  */
 import type { Project } from '@/lib/types'
 
@@ -18,26 +19,38 @@ export type MarkKind = 'rank' | 'play' | 'wren'
 /** How a mark builds: from the floor up, or swept the way it faces. */
 export type MarkOrder = 'up' | 'across'
 
-export const MARKS: Record<MarkKind, { rows: string[]; order: MarkOrder }> = {
-  // Portfolio Rank's icon as a podium: second, first (its gold cap sitting
-  // right on top), third.
-  rank: {
-    rows: ['..#..', '..X..', '..X..', 'm.X..', 'm.X..', 'm.X.d', 'm.X.d'],
-    order: 'up',
-  },
-  // NetTrailers: a play button.
-  play: {
-    rows: ['X.....', 'XXX...', 'XXXXX.', 'XXXXXX', 'XXXXX.', 'XXX...', 'X.....'],
-    order: 'across',
-  },
-  // Wren: a small perching bird, facing right: its tail cocked up behind, a
-  // round body, a head with an eye and an ember beak, two legs. No empty
-  // rows or columns around it.
-  wren: {
-    rows: ['X...XX.', 'XX.XXoB', '.XXXXX.', '..XXX..', '..d.d..'],
-    order: 'across',
-  },
+/** Portfolio Rank's three bars (left, middle, right), in cells, as a 5x7 bitmap. */
+export function rankPose(heights: readonly [number, number, number]): string[] {
+  const rows: string[] = []
+  for (let j = 0; j < RANK_H; j++) {
+    const lit = (h: number) => (RANK_H - j <= h ? 'X' : '.')
+    rows.push(`${lit(heights[0])}.${lit(heights[1])}.${lit(heights[2])}`)
+  }
+  return rows
 }
+export const RANK_H = 7
+/** The podium at rest: second, first, third. */
+export const RANK_BASE = [4, 7, 2] as const
+
+export const POSES = {
+  rank: { base: rankPose(RANK_BASE) },
+  play: {
+    base: ['X.....', 'XXX...', 'XXXXX.', 'XXXXXX', 'XXXXX.', 'XXX...', 'X.....'],
+    pause: ['......', 'XX.XX.', 'XX.XX.', 'XX.XX.', 'XX.XX.', 'XX.XX.', '......'],
+  },
+  // A small perching bird, facing right: tail cocked up behind, round body,
+  // head with an eye, ember beak, two legs.
+  wren: {
+    base: ['X...XX.', 'XX.XXoB', '.XXXXX.', '..XXX..', '..d.d..'],
+    // Head lowered a row, then down to the ground to eat.
+    peck1: ['X......', 'XX..XX.', '.XXXXoB', '..XXX..', '..d.d..'],
+    peck2: ['X......', 'XX.....', '.XXXXX.', '..XXXXo', '..d.d.B'],
+    // The tail swept down and back.
+    flick: ['....XX.', 'X..XXoB', 'XXXXXX.', '..XXX..', '..d.d..'],
+  },
+} satisfies Record<MarkKind, Record<string, string[]>>
+
+export const ORDER: Record<MarkKind, MarkOrder> = { rank: 'up', play: 'across', wren: 'across' }
 
 /** Which mark goes with which project, by its accent. */
 export const markFor: Record<Project['accent'], MarkKind> = {
@@ -46,11 +59,14 @@ export const markFor: Record<Project['accent'], MarkKind> = {
   wren: 'wren',
 }
 
-export type MarksMode = 'off' | 'quiet' | 'medium' | 'bold'
+export type MarksMode = 'off' | 'still' | 'quiet' | 'default' | 'bold'
 
-/** `?marks=0` is today's layout; `quiet` and `bold` set the loudness; anything else is the default. */
+/**
+ * `?marks=0` is today's layout; `quiet` and `bold` set the loudness around
+ * the default; `still` keeps the flips in and out but no idle actions.
+ */
 export function marksMode(value: string | null): MarksMode {
   if (value === '0' || value === 'off') return 'off'
-  if (value === 'quiet' || value === 'bold') return value
-  return 'medium'
+  if (value === 'quiet' || value === 'bold' || value === 'still') return value
+  return 'default'
 }
