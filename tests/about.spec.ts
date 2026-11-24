@@ -56,7 +56,7 @@ test('the About page tells the story in scenes with one portrait, and nothing el
   const main = page.locator('main')
   await expect(main.getByRole('img', { name: 'Photo of Nathan Watkins' })).toHaveCount(1)
   await expect(main.getByRole('img', { name: /watercolor/i })).toHaveCount(0)
-  for (const title of ['Building Tech for Pros', 'Teaching, in LA, and open to moving', 'Where I build in public']) {
+  for (const title of ['Building Tech for Pros', 'In LA, and open to moving', 'Where I build in public']) {
     await expect(main.getByRole('heading', { level: 2, name: title })).toBeAttached()
   }
   // The work lives on the home page and its detail pages.

@@ -2,8 +2,8 @@ export type WorkExperienceItem = {
   id: number
   company: string
   /**
-   * The company's site, linked from its name. Only Tech for Pros has one
-   * (owner, 2026-11-08); the sites built for clients are `sites`.
+   * The company's site, linked from its name. Tech for Pros (owner, 2026-11-08)
+   * and Donovan Golf (2026-11-24) have one; the sites built for clients are `sites`.
    */
   companyUrl?: string
   location: string
@@ -21,7 +21,8 @@ export type WorkExperienceItem = {
    * stays, faded into the row, while the role is open (owner, round 4 of
    * 2026-11-09). Each role keeps its own: Tech for Pros a site it drafted,
    * Appturnity its own home page (the role is historical, so it stays
-   * Appturnity, though the firm became Tech for Pros on 2026-11-01).
+   * Appturnity, though the firm became Tech for Pros on 2026-11-01), Donovan
+   * Golf its own site (owner, 2026-11-24).
    */
   image?: { src: string; alt: string }
   /**
@@ -101,6 +102,7 @@ export const workExperience: WorkExperienceItem[] = [
   {
     id: 2,
     company: 'Donovan Golf Course Management',
+    companyUrl: 'https://donovangolf.com',
     location: 'Pasadena, CA · Contract',
     role: 'Web Developer',
     period: 'June 2022 – January 2023',
@@ -111,7 +113,7 @@ export const workExperience: WorkExperienceItem[] = [
     more: [
       'Coordinated pre-launch booking integration testing with the web team, verifying tee-time and event reservations on the rebuilt frontends against the existing backend.',
     ],
-    image: { src: '/experience/arroyoseco.webp', alt: "Arroyo Seco Golf Course's site" },
+    image: { src: '/experience/donovangolf.webp', alt: "Donovan Golf's home page" },
     sites: [
       {
         label: 'arroyosecogc.com',
@@ -161,10 +163,10 @@ export const workExperience: WorkExperienceItem[] = [
     company: 'The Coder School',
     location: 'Santa Monica, CA',
     role: 'Programming Instructor',
-    period: 'June 2024 – Present',
+    period: 'June 2024 – November 2026',
     additional: true,
     basics: [
-      'Teach JavaScript, Python and application development, including the responsible use of AI coding tools.',
+      'Taught JavaScript, Python and application development, including the responsible use of AI coding tools.',
     ],
     image: { src: '/experience/coderschool.webp', alt: "The Coder School Santa Monica's site" },
   },

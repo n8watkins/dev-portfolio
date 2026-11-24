@@ -63,18 +63,41 @@ const PAGE_BUTTON =
  */
 const SiteCarousel = ({ sites }: { sites: NonNullable<WorkExperienceItem['sites']> }) => {
   const list = useRef<HTMLUListElement>(null)
-  const [edges, setEdges] = useState({ overflows: false, atStart: true, atEnd: true })
+  const [edges, setEdges] = useState({
+    overflows: false,
+    atStart: true,
+    atEnd: true,
+    first: 1,
+    last: sites.length,
+  })
   const measure = useCallback(() => {
     const el = list.current
     if (!el) return
     const overflows = el.scrollWidth - el.clientWidth > 1
+    // The cards in view, counted from one: those whole inside the row (a pixel of slack).
+    const box = el.getBoundingClientRect()
+    let first = 0
+    let last = 0
+    Array.from(el.children).forEach((child, i) => {
+      const r = child.getBoundingClientRect()
+      if (r.left >= box.left - 2 && r.right <= box.right + 2) {
+        if (!first) first = i + 1
+        last = i + 1
+      }
+    })
     const next = {
       overflows,
       atStart: el.scrollLeft <= 1,
       atEnd: el.scrollLeft + el.clientWidth >= el.scrollWidth - 1,
+      first: first || 1,
+      last: last || first || 1,
     }
     setEdges((prev) =>
-      prev.overflows === next.overflows && prev.atStart === next.atStart && prev.atEnd === next.atEnd
+      prev.overflows === next.overflows &&
+      prev.atStart === next.atStart &&
+      prev.atEnd === next.atEnd &&
+      prev.first === next.first &&
+      prev.last === next.last
         ? prev
         : next
     )
@@ -96,28 +119,48 @@ const SiteCarousel = ({ sites }: { sites: NonNullable<WorkExperienceItem['sites'
 
   return (
     <div className="flex min-w-0 flex-col gap-2">
-      {edges.overflows && (
-        <div className="flex justify-end gap-2">
-          <button
-            type="button"
-            aria-label="Previous sites"
-            disabled={edges.atStart}
-            onClick={() => page(-1)}
-            className={PAGE_BUTTON}
-          >
-            <FiChevronLeft className="h-4 w-4" aria-hidden="true" />
-          </button>
-          <button
-            type="button"
-            aria-label="Next sites"
-            disabled={edges.atEnd}
-            onClick={() => page(1)}
-            className={PAGE_BUTTON}
-          >
-            <FiChevronRight className="h-4 w-4" aria-hidden="true" />
-          </button>
-        </div>
-      )}
+      <div className="flex items-center justify-between gap-3">
+        <p data-site-count className="text-sm font-semibold text-slate-400">
+          {sites.length} {sites.length === 1 ? 'site' : 'sites'}
+        </p>
+        {edges.overflows && (
+          <div className="flex items-center gap-2">
+            {/* Polite: read out as the row scrolls, and never moves focus. */}
+            <p
+              data-site-position
+              aria-live="polite"
+              className="mr-1 text-sm tabular-nums text-slate-400"
+            >
+              <span className="hidden md:inline">
+                {edges.first === edges.last
+                  ? `${edges.first} of ${sites.length}`
+                  : `${edges.first} to ${edges.last} of ${sites.length}`}
+              </span>
+              <span className="md:hidden">
+                {edges.first} of {sites.length}
+              </span>
+            </p>
+            <button
+              type="button"
+              aria-label="Previous sites"
+              disabled={edges.atStart}
+              onClick={() => page(-1)}
+              className={PAGE_BUTTON}
+            >
+              <FiChevronLeft className="h-4 w-4" aria-hidden="true" />
+            </button>
+            <button
+              type="button"
+              aria-label="Next sites"
+              disabled={edges.atEnd}
+              onClick={() => page(1)}
+              className={PAGE_BUTTON}
+            >
+              <FiChevronRight className="h-4 w-4" aria-hidden="true" />
+            </button>
+          </div>
+        )}
+      </div>
       <ul
         ref={list}
         aria-label="Sites I built there"
