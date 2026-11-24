@@ -1,201 +1,11 @@
 import type { Project } from '@/lib/types'
 
 /**
- * The projects, Wren first: it replaced Echo, Scout and GeminiGPT, retired on
- * 2026-11-08 (their old pages redirect to Wren's, next.config.mjs).
+ * The projects, in the owner's order (2026-11-24): Portfolio Rank, NetTrailers, Wren.
+ * Wren replaced Echo, Scout and GeminiGPT, retired on 2026-11-08 (their old pages
+ * redirect to Wren's, next.config.mjs).
  */
 export const projects: Project[] = [
-  {
-    // Live and public since 2026-11-09 (it was the "New AI app, in progress" card); a full
-    // project card since round 5 of 2026-11-09. Copy from its README and docs/DECISIONS.md.
-    id: 7,
-    slug: 'wren',
-    title: 'Wren',
-    subTitle: 'An AI assistant that researches and remembers',
-    des: `An AI assistant you can type or talk to, that researches the web for you and remembers what you save. Try it as a guest with no sign-up: Wren answers as it writes. Sign in with GitHub or an email link for voice, saved chats, research runs that show every search and cite only the pages they read, and a Memory library you can search by meaning. It's a free demo on Gemini's free tier, so don't share anything private with it; for real use, add your own Gemini key.`,
-    summary: `An AI assistant you can type or talk to, that researches the web for you and remembers what you save. Try it as a guest, no sign-up: it answers as it writes.`,
-    highlight: `Each person gets their own Durable Object on Cloudflare, with their chats, memory and daily meter in its own SQLite database, so one person's data can't be reached through another's id.`,
-    clip: {
-      src: '/projects/clips/wren.mp4',
-      poster: '/projects/clips/wren-poster.webp',
-      alt: 'Wren as a guest: asking what to look for in an e-bike under $1,500, and the answer streaming in',
-    },
-    images: [
-      {
-        src: '/projects/wren/1-welcome.webp',
-        alt: "Wren's first screen: What are we working on? with three suggested questions",
-      },
-      {
-        src: '/projects/wren/2-answer.webp',
-        alt: 'Wren answering a guest: what to look for in an e-bike under $1,500',
-      },
-      {
-        src: '/projects/wren/3-how-it-works.webp',
-        alt: 'How Wren works: talk or type, research, memory, and your key and limits',
-      },
-    ],
-    icon: '/projects/icons/wren.svg',
-    mark: 'wren',
-    accent: 'wren',
-    tags: ['Next.js', 'Cloudflare Workers', 'Durable Objects', 'Gemini', 'Gemini Live', 'Better Auth'],
-    features: [
-      'Answers as it writes',
-      'Talk to it, and talk over it to interrupt',
-      'Research that cites its sources',
-      'A Memory library searched by meaning',
-    ],
-    technologies: {
-      Frontend: {
-        descriptionParts: [
-          {
-            text: 'One chat where typing and talking are both always there, streamed as Wren writes',
-            icons: [{ icon: 'next.svg' }, { icon: 're.svg' }, { icon: 'ts.svg' }],
-          },
-        ],
-      },
-      Backend: {
-        descriptionParts: [
-          {
-            text: 'Gemini for chat, with a fallback model when one is busy, and embeddings for Memory',
-            icons: [{ icon: 'gemini.svg' }],
-          },
-          {
-            text: "Voice through Gemini Live, relayed by each person's agent, landing in the same chat as text",
-            icons: [{ icon: 'gemini.svg' }, { icon: 'websocket.svg' }],
-          },
-          {
-            text: 'GitHub and email sign-in with Better Auth, sessions in D1',
-            icons: [{ icon: 'sqlite.svg' }],
-          },
-          {
-            text: 'Research runs search and read the web, and cite only the pages they opened',
-            icons: [{ icon: 'websearch.svg' }],
-          },
-        ],
-      },
-      Cloud: {
-        descriptionParts: [
-          {
-            text: 'One Worker on Cloudflare through OpenNext, with a Durable Object per person, Vectorize for Memory and R2 for files',
-            icons: [{ icon: 'cloudflare.svg' }],
-          },
-          {
-            text: 'Open source on GitHub, released with release-kit',
-            icons: [{ icon: 'github.png' }],
-          },
-        ],
-      },
-    },
-    highlights: [
-      'Try it as a guest: 5 messages a day with no account, kept only in your tab, behind a Cloudflare Turnstile check and per-network limits so the free tier stays fair.',
-      'Answers stream as Wren writes them, from the agent through the API route to the browser; Stop or closing the tab keeps what was written.',
-      'Voice: tap the mic and talk with Wren through Gemini Live, relayed by your own agent; talk over it to interrupt, and every spoken turn lands in the same chat as text.',
-      'Each signed-in person has their own Durable Object (Cloudflare Agents SDK) holding their chats, memory and daily meter in its own SQLite database.',
-      'Memory is a library you browse and edit: notes, links and files, searched by meaning with Gemini embeddings in Vectorize.',
-      'Research runs show what they searched and read, and cite only the pages they opened.',
-      'Sign in with GitHub or a one-time email link (Better Auth on D1); links expire in 10 minutes and are stored hashed.',
-      "A free demo on Gemini's free tier, and it says so: don't share anything private with it, and for real use add your own Gemini key, kept only in your browser and never stored or logged.",
-    ],
-    purpose: `Wren is my take on a ChatGPT-like assistant done well: one chat where typing and talking are always both there, research you can watch and check, and a memory you can see, edit and delete instead of a black box. It's also a study in running an AI product on a free tier honestly: a real guest mode with clear limits.`,
-    aiUsage: `Chat runs on Gemini (a Flash-Lite model with a fallback model when it's busy), streamed token by token, and voice on Gemini Live. Memory turns what you save into Gemini embeddings in Cloudflare Vectorize, so you find things by meaning. Research runs search the web, read the pages and answer with citations to only the pages they opened.`,
-    github: 'https://github.com/n8watkins/wren',
-    liveSite: 'https://wren.n8builds.dev',
-  },
-  {
-    id: 2,
-    slug: 'net-trailers',
-    title: 'NetTrailers',
-    subTitle: 'AI-Powered Netflix Clone',
-    des: `A Netflix-style streaming app with an AI brain. Describe what you're in the mood for in plain language and Gemini turns it into tailored picks, while a personalized "Recommended For You" engine learns from your watch history and feedback. Plus TMDB-powered browsing and trailers, secure auth, and Firebase-backed persistence.`,
-    summary: `A Netflix-style streaming app with an AI brain: describe your mood in plain language and Gemini turns it into picks, while a recommender learns your taste and explains each one.`,
-    highlight: `A Gemini analyzer turns a plain-language mood into a media type, genres and a vibe, behind a router that falls back to another model when one is busy, and every pick says why it surfaced.`,
-    clip: {
-      src: '/projects/clips/net-trailer.mp4',
-      poster: '/projects/clips/net-trailer-poster.webp',
-      alt: "NetTrailers' home page: the featured titles, then the Trending and Top Rated rows",
-    },
-    images: [
-      {
-        src: '/projects/net-trailer/1-app.webp',
-        alt: 'NetTrailers: a featured title with Play and More Info',
-      },
-      {
-        src: '/projects/net-trailer/2-rows.webp',
-        alt: 'NetTrailers: Trending and Top Rated rows from TMDB',
-      },
-      {
-        src: '/projects/net-trailer/3-intro.webp',
-        alt: "NetTrailers' welcome: quick start, browse features or watch a demo",
-      },
-    ],
-    icon: '/projects/icons/net-trailer.png',
-    accent: 'net-trailer',
-    tags: ['Next.js', 'Gemini', 'TMDB', 'Firebase'],
-    features: [
-      'Describe a mood, get picks',
-      'Learns your taste',
-      'Explains every pick',
-      'Voice search',
-    ],
-    technologies: {
-      Frontend: {
-        descriptionParts: [
-          {
-            text: 'A responsive design with modern UI components',
-            icons: [{ icon: 're.svg' }, { icon: 'tail.svg' }],
-          },
-          {
-            text: 'Leveraging Next.js for SSR, SSG, and efficient routing',
-            icons: [{ icon: 'next.svg' }],
-          },
-          {
-            text: 'Enhancing reliability with type safety',
-            icons: [{ icon: 'ts.svg' }],
-          },
-        ],
-      },
-      Backend: {
-        descriptionParts: [
-          {
-            text: 'AI recommendations powered by Gemini - natural-language search that reads your intent, plus a personalized engine that learns from your history with a feedback loop',
-            icons: [{ icon: 'gemini.svg' }],
-          },
-          {
-            text: 'Implemented secure authentication and authorization',
-            icons: [{ icon: 'nextAuth.png' }],
-          },
-        ],
-      },
-      Cloud: {
-        descriptionParts: [
-          {
-            text: 'Deployed with modern hosting and version control',
-            icons: [{ icon: 'vercel.png' }, { icon: 'github.png' }],
-          },
-          {
-            text: 'Utilized image hosting for optimized content delivery',
-            icons: [{ icon: 'cloud.svg' }],
-          },
-          {
-            text: 'Leveraged Firebase for real-time database and storage',
-            icons: [{ icon: 'firebase.png' }],
-          },
-        ],
-      },
-    },
-    highlights: [
-      'Tell it what you’re in the mood for in plain English - a Gemini-powered analyzer reads your intent (media type, genres, vibe) and builds a matching suggestion row on the fly, with a multi-model router that falls back automatically.',
-      'A personalized “Recommended For You” engine learns from your full watch and rating history with a real-time feedback loop - dislikes and skips reshape future picks, and each suggestion can explain why it surfaced.',
-      'Browses live TMDB data - trending titles, genre rows, and trailer playback - with a cinematic, Netflix-style UI built in React and Tailwind CSS.',
-      'Secure sign-in with NextAuth; sessions gate the watchlist and profile.',
-      'Your watchlist and profile persist in Firebase, syncing in real time across sessions.',
-      'Server-rendered with Next.js and deployed on Vercel, with Cloudinary handling optimized image delivery.',
-    ],
-    purpose: `NetTrailers started as a full-stack streaming clone and became my testbed for grafting AI onto an existing product. The thing I'm exploring: can "what should I watch?" feel like asking a person who actually knows your taste? So it pairs natural-language search with a recommendation engine that learns from your behavior - and explains why it picked each title.`,
-    aiUsage: `NetTrailers' AI is a Gemini-powered recommendation layer over a TMDB catalog. Natural-language search sends your phrasing to Gemini, which extracts intent - media type, genres, mood - and turns it into a tailored row, behind a multi-model router that falls back automatically when a model is busy. A separate personalized engine builds a profile from your full watch and rating history, with a real-time feedback loop that reshapes future picks and a "why this was recommended" explanation attached to each title.`,
-    github: 'https://github.com/n8watkins/net_trailers',
-    liveSite: 'https://net-trailers.n8builds.dev',
-  },
   {
     id: 6,
     slug: 'portfolio-rank',
@@ -309,6 +119,197 @@ export const projects: Project[] = [
     },
     github: 'https://github.com/n8watkins/portfolio-rank',
     liveSite: 'https://portfoliorank.n8builds.dev',
+  },
+  {
+    id: 2,
+    slug: 'net-trailers',
+    title: 'NetTrailers',
+    subTitle: 'AI-Powered Netflix Clone',
+    des: `A Netflix-style streaming app with an AI brain. Describe what you're in the mood for in plain language and Gemini turns it into tailored picks, while a personalized "Recommended For You" engine learns from your watch history and feedback. Plus TMDB-powered browsing and trailers, secure auth, and Firebase-backed persistence.`,
+    summary: `A Netflix-style streaming app with an AI brain: describe your mood in plain language and Gemini turns it into picks, while a recommender learns your taste and explains each one.`,
+    highlight: `A Gemini analyzer turns a plain-language mood into a media type, genres and a vibe, behind a router that falls back to another model when one is busy, and every pick says why it surfaced.`,
+    clip: {
+      src: '/projects/clips/net-trailer.mp4',
+      poster: '/projects/clips/net-trailer-poster.webp',
+      alt: "NetTrailers' home page: the featured titles, then the Trending and Top Rated rows",
+    },
+    images: [
+      {
+        src: '/projects/net-trailer/1-app.webp',
+        alt: 'NetTrailers: a featured title with Play and More Info',
+      },
+      {
+        src: '/projects/net-trailer/2-rows.webp',
+        alt: 'NetTrailers: Trending and Top Rated rows from TMDB',
+      },
+      {
+        src: '/projects/net-trailer/3-intro.webp',
+        alt: "NetTrailers' welcome: quick start, browse features or watch a demo",
+      },
+    ],
+    icon: '/projects/icons/net-trailer.png',
+    accent: 'net-trailer',
+    tags: ['Next.js', 'Gemini', 'TMDB', 'Firebase'],
+    features: [
+      'Describe a mood, get picks',
+      'Learns your taste',
+      'Explains every pick',
+      'Voice search',
+    ],
+    technologies: {
+      Frontend: {
+        descriptionParts: [
+          {
+            text: 'A responsive design with modern UI components',
+            icons: [{ icon: 're.svg' }, { icon: 'tail.svg' }],
+          },
+          {
+            text: 'Leveraging Next.js for SSR, SSG, and efficient routing',
+            icons: [{ icon: 'next.svg' }],
+          },
+          {
+            text: 'Enhancing reliability with type safety',
+            icons: [{ icon: 'ts.svg' }],
+          },
+        ],
+      },
+      Backend: {
+        descriptionParts: [
+          {
+            text: 'AI recommendations powered by Gemini - natural-language search that reads your intent, plus a personalized engine that learns from your history with a feedback loop',
+            icons: [{ icon: 'gemini.svg' }],
+          },
+          {
+            text: 'Implemented secure authentication and authorization',
+            icons: [{ icon: 'nextAuth.png' }],
+          },
+        ],
+      },
+      Cloud: {
+        descriptionParts: [
+          {
+            text: 'Deployed with modern hosting and version control',
+            icons: [{ icon: 'vercel.png' }, { icon: 'github.png' }],
+          },
+          {
+            text: 'Utilized image hosting for optimized content delivery',
+            icons: [{ icon: 'cloud.svg' }],
+          },
+          {
+            text: 'Leveraged Firebase for real-time database and storage',
+            icons: [{ icon: 'firebase.png' }],
+          },
+        ],
+      },
+    },
+    highlights: [
+      'Tell it what you’re in the mood for in plain English - a Gemini-powered analyzer reads your intent (media type, genres, vibe) and builds a matching suggestion row on the fly, with a multi-model router that falls back automatically.',
+      'A personalized “Recommended For You” engine learns from your full watch and rating history with a real-time feedback loop - dislikes and skips reshape future picks, and each suggestion can explain why it surfaced.',
+      'Browses live TMDB data - trending titles, genre rows, and trailer playback - with a cinematic, Netflix-style UI built in React and Tailwind CSS.',
+      'Secure sign-in with NextAuth; sessions gate the watchlist and profile.',
+      'Your watchlist and profile persist in Firebase, syncing in real time across sessions.',
+      'Server-rendered with Next.js and deployed on Vercel, with Cloudinary handling optimized image delivery.',
+    ],
+    purpose: `NetTrailers started as a full-stack streaming clone and became my testbed for grafting AI onto an existing product. The thing I'm exploring: can "what should I watch?" feel like asking a person who actually knows your taste? So it pairs natural-language search with a recommendation engine that learns from your behavior - and explains why it picked each title.`,
+    aiUsage: `NetTrailers' AI is a Gemini-powered recommendation layer over a TMDB catalog. Natural-language search sends your phrasing to Gemini, which extracts intent - media type, genres, mood - and turns it into a tailored row, behind a multi-model router that falls back automatically when a model is busy. A separate personalized engine builds a profile from your full watch and rating history, with a real-time feedback loop that reshapes future picks and a "why this was recommended" explanation attached to each title.`,
+    github: 'https://github.com/n8watkins/net_trailers',
+    liveSite: 'https://net-trailers.n8builds.dev',
+  },
+  {
+    // Live and public since 2026-11-09 (it was the "New AI app, in progress" card); a full
+    // project card since round 5 of 2026-11-09. Copy from its README and docs/DECISIONS.md.
+    id: 7,
+    slug: 'wren',
+    title: 'Wren',
+    subTitle: 'An AI assistant that researches and remembers',
+    des: `An AI assistant you can type or talk to, that researches the web for you and remembers what you save. Try it as a guest with no sign-up: Wren answers as it writes. Sign in with GitHub or an email link for voice, saved chats, research runs that show every search and cite only the pages they read, and a Memory library you can search by meaning. It's a free demo on Gemini's free tier, so don't share anything private with it; for real use, add your own Gemini key.`,
+    summary: `An AI assistant you can type or talk to, that researches the web for you and remembers what you save. Try it as a guest, no sign-up: it answers as it writes.`,
+    highlight: `Each person gets their own Durable Object on Cloudflare, with their chats, memory and daily meter in its own SQLite database, so one person's data can't be reached through another's id.`,
+    clip: {
+      src: '/projects/clips/wren.mp4',
+      poster: '/projects/clips/wren-poster.webp',
+      alt: 'Wren as a guest: asking what to look for in an e-bike under $1,500, and the answer streaming in',
+    },
+    images: [
+      {
+        src: '/projects/wren/1-welcome.webp',
+        alt: "Wren's first screen: What are we working on? with three suggested questions",
+      },
+      {
+        src: '/projects/wren/2-answer.webp',
+        alt: 'Wren answering a guest: what to look for in an e-bike under $1,500',
+      },
+      {
+        src: '/projects/wren/3-how-it-works.webp',
+        alt: 'How Wren works: talk or type, research, memory, and your key and limits',
+      },
+    ],
+    icon: '/projects/icons/wren.svg',
+    mark: 'wren',
+    accent: 'wren',
+    tags: ['Next.js', 'Cloudflare Workers', 'Durable Objects', 'Gemini', 'Gemini Live', 'Better Auth'],
+    features: [
+      'Answers as it writes',
+      'Talk to it, and talk over it to interrupt',
+      'Research that cites its sources',
+      'A Memory library searched by meaning',
+    ],
+    technologies: {
+      Frontend: {
+        descriptionParts: [
+          {
+            text: 'One chat where typing and talking are both always there, streamed as Wren writes',
+            icons: [{ icon: 'next.svg' }, { icon: 're.svg' }, { icon: 'ts.svg' }],
+          },
+        ],
+      },
+      Backend: {
+        descriptionParts: [
+          {
+            text: 'Gemini for chat, with a fallback model when one is busy, and embeddings for Memory',
+            icons: [{ icon: 'gemini.svg' }],
+          },
+          {
+            text: "Voice through Gemini Live, relayed by each person's agent, landing in the same chat as text",
+            icons: [{ icon: 'gemini.svg' }, { icon: 'websocket.svg' }],
+          },
+          {
+            text: 'GitHub and email sign-in with Better Auth, sessions in D1',
+            icons: [{ icon: 'sqlite.svg' }],
+          },
+          {
+            text: 'Research runs search and read the web, and cite only the pages they opened',
+            icons: [{ icon: 'websearch.svg' }],
+          },
+        ],
+      },
+      Cloud: {
+        descriptionParts: [
+          {
+            text: 'One Worker on Cloudflare through OpenNext, with a Durable Object per person, Vectorize for Memory and R2 for files',
+            icons: [{ icon: 'cloudflare.svg' }],
+          },
+          {
+            text: 'Open source on GitHub, released with release-kit',
+            icons: [{ icon: 'github.png' }],
+          },
+        ],
+      },
+    },
+    highlights: [
+      'Try it as a guest: 5 messages a day with no account, kept only in your tab, behind a Cloudflare Turnstile check and per-network limits so the free tier stays fair.',
+      'Answers stream as Wren writes them, from the agent through the API route to the browser; Stop or closing the tab keeps what was written.',
+      'Voice: tap the mic and talk with Wren through Gemini Live, relayed by your own agent; talk over it to interrupt, and every spoken turn lands in the same chat as text.',
+      'Each signed-in person has their own Durable Object (Cloudflare Agents SDK) holding their chats, memory and daily meter in its own SQLite database.',
+      'Memory is a library you browse and edit: notes, links and files, searched by meaning with Gemini embeddings in Vectorize.',
+      'Research runs show what they searched and read, and cite only the pages they opened.',
+      'Sign in with GitHub or a one-time email link (Better Auth on D1); links expire in 10 minutes and are stored hashed.',
+      "A free demo on Gemini's free tier, and it says so: don't share anything private with it, and for real use add your own Gemini key, kept only in your browser and never stored or logged.",
+    ],
+    purpose: `Wren is my take on a ChatGPT-like assistant done well: one chat where typing and talking are always both there, research you can watch and check, and a memory you can see, edit and delete instead of a black box. It's also a study in running an AI product on a free tier honestly: a real guest mode with clear limits.`,
+    aiUsage: `Chat runs on Gemini (a Flash-Lite model with a fallback model when it's busy), streamed token by token, and voice on Gemini Live. Memory turns what you save into Gemini embeddings in Cloudflare Vectorize, so you find things by meaning. Research runs search the web, read the pages and answer with citations to only the pages they opened.`,
+    github: 'https://github.com/n8watkins/wren',
+    liveSite: 'https://wren.n8builds.dev',
   },
 ]
 

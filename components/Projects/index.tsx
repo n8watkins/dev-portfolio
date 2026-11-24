@@ -11,11 +11,11 @@ import SectionHeading from '@/components/ui/SectionHeading'
 import Reveal from '@/components/ui/Reveal'
 
 const BLURB =
-  'AI is changing what software can do and how it gets made. Each project here puts AI to work: Wren, an assistant that researches and remembers, a recommender that learns your taste, and a leaderboard that Gemini helps rank.'
+  'AI is changing what software can do and how it gets made. Each project here puts AI to work: a leaderboard that Gemini helps rank, a recommender that learns your taste, and Wren, an assistant that researches and remembers.'
 
 /**
  * The home page's projects, first after the hero (owner, 2026-11-08): the
- * each project as one big card (Wren first), then the
+ * each project as one big card (Portfolio Rank first), then the
  * n8builds.dev teaser. "Detailed view" opens /projects, with every project at
  * full size.
  */
