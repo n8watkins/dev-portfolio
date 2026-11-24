@@ -10,7 +10,7 @@ Last updated: 2026-11-08.
 - **Production is behind `main`.** It's stuck at #10: #11 to #14 merged while Vercel's 100-deployments-per-24-hours limit was hit, so no production deploy was made for them.
 - Vercel builds on Node 24.x; `nathansportfolio.vercel.app` and `n8sportfolio.vercel.app` redirect here (#9).
 - Echo, Scout and GeminiGPT were retired on 2026-11-08 (owner): their repos went private and archived, and their Render demos came down.
-  Wren (https://wren.n8builds.dev, n8watkins/wren) replaced them and is the first project; their old `/projects/<slug>` pages redirect (308) to `/projects/wren`.
+  Wren (https://wren.n8builds.dev, n8watkins/wren) replaced them (the projects run Portfolio Rank, NetTrailers, Wren, owner 2026-11-24, order in `data/projects.tsx`); their old `/projects/<slug>` pages redirect (308) to `/projects/wren`.
 - OpenPing has a bug: during scheduled off-hours its public feed reports monitors as "operational" (fix tracked in open-ping, `docs/BUG-public-scheduled-off.md`). This site already works around it: a feed older than 30 minutes reads as Asleep (see "Live-demo status" below). Once OpenPing reports `scheduled_off`, check `lib/status.ts` maps it to Asleep.
 
 ### Next
