@@ -46,7 +46,7 @@ export const aboutScenes: Omit<AboutScene, 'body'>[] = [
   {
     id: 'la',
     eyebrow: 'Los Angeles',
-    title: 'Teaching, in LA, and open to moving',
+    title: 'In LA, and open to moving',
     mood: 'la',
     photo: {
       alt: 'Nathan in Los Angeles',

@@ -46,8 +46,8 @@ const BODIES: Record<string, React.ReactNode> = {
         I live in Los Angeles, and I&apos;m ready to relocate for the right role.
       </p>
       <p>
-        Part of my week I teach JavaScript, Python and app development at The Coder School in Santa
-        Monica: how to debug, and how to use AI coding tools responsibly.
+        For about two years I taught JavaScript, Python and app development at The Coder School in
+        Santa Monica: how to debug, and how to use AI coding tools responsibly.
       </p>
     </>
   ),

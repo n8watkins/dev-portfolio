@@ -299,6 +299,7 @@ test('Experience links Tech for Pros and the live client sites only, and Appturn
   expect(hrefs).toEqual([
     'https://comfort1hvac.com/',
     'https://debellgolf.com/',
+    'https://donovangolf.com/',
     'https://lcfcountryclub.com/',
     'https://riverwoodranch.web.app/',
     'https://techforpros.com/',
@@ -351,6 +352,12 @@ test("a role's site cards are one scrolling row, paged by Previous and Next when
   const previous = golf.getByRole('button', { name: 'Previous sites' })
   const next = golf.getByRole('button', { name: 'Next sites' })
   await expect(previous).toBeDisabled()
+  // The total sits by the list, and the position beside the arrows ("1 to 3 of 6" on a desktop,
+  // "1 of 6" on a phone), announced politely.
+  await expect(golf.locator('[data-site-count]')).toHaveText('6 sites')
+  const position = golf.locator('[data-site-position]')
+  await expect(position).toHaveAttribute('aria-live', 'polite')
+  await expect(position).toHaveText(isMobile ? '1 of 6' : '1 to 3 of 6')
   // Next until the end (a phone shows one card a page: more clicks than cards is plenty). The first click is a real one. The row then snaps on after it, and the
   // buttons follow the position it settles at, so the rest wait for the row to be still and
   // click through the DOM: a button that has just become disabled ignores it, where a pointer
@@ -374,6 +381,7 @@ test("a role's site cards are one scrolling row, paged by Previous and Next when
   await expect(previous).toBeEnabled()
   await expect(last).toBeInViewport({ ratio: 0.9 })
   await expect(first).not.toBeInViewport()
+  await expect(position).toHaveText(isMobile ? '6 of 6' : '4 to 6 of 6')
   // The page itself never scrolls sideways.
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
   // Appturnity's two cards fit on a desktop, so it has no buttons there (a phone shows one at a time).
@@ -386,6 +394,9 @@ test("a role's site cards are one scrolling row, paged by Previous and Next when
   })
   if (!isMobile) expect(wide).toBe(true)
   await expect(appturnity.getByRole('button', { name: 'Next sites' })).toHaveCount(wide ? 0 : 1)
+  // Every role with sites says how many, with or without the arrows.
+  await expect(appturnity.locator('[data-site-count]')).toHaveText('2 sites')
+  await expect(appturnity.locator('[data-site-position]')).toHaveCount(wide ? 0 : 1)
 })
 
 test('every role shows its basics; only the roles with more to say expand', async ({ page }) => {
@@ -398,7 +409,7 @@ test('every role shows its basics; only the roles with more to say expand', asyn
   await expect(role('Tech for Pros').getByText(/Deployed AI receptionists in a 12-client pilot/)).toBeVisible()
   await expect(role('Lifeline Clinical Labs').getByText(/Python order-entry pipeline/)).toBeVisible()
   await expect(role('Realtek Solutions').getByText(/Launched 5\+ small-business websites/)).toBeVisible()
-  await expect(role('The Coder School').getByText(/Teach JavaScript, Python/)).toBeVisible()
+  await expect(role('The Coder School').getByText(/Taught JavaScript, Python/)).toBeVisible()
   // Three roles expand; Realtek and The Coder School don't, and the school's site isn't linked.
   for (const name of ['Tech for Pros', 'Appturnity', 'Donovan Golf']) {
     await expect(role(name).locator('[data-role-toggle]'), name).toHaveCount(1)
