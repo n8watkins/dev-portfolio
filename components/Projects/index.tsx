@@ -1,12 +1,21 @@
-import React from 'react'
+'use client'
+
+import React, { Suspense, useRef } from 'react'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import { motion } from 'motion/react'
 import { FiArrowRight } from 'react-icons/fi'
 import { fadeInUpVariants, defaultAnimationConfig } from '@/lib/animations'
+import { accents } from '@/lib/accents'
 import { projects } from '@/data/projects'
+import type { Project } from '@/lib/types'
+import PauseOffscreen from '@/components/ui/PauseOffscreen'
 import ProjectShowcase from './ProjectShowcase'
 import BuildsTeaser from './BuildsTeaser'
+import PixelMark from './PixelMark'
 import { DemoSleepNote } from './StatusPill'
+import { markFor, marksMode, type MarksMode } from './marks'
+import styles from './marks.module.css'
 import SectionHeading from '@/components/ui/SectionHeading'
 import Reveal from '@/components/ui/Reveal'
 
@@ -14,14 +23,56 @@ const BLURB =
   'AI is changing what software can do and how it gets made. Each project here puts AI to work: a leaderboard that Gemini helps rank, a recommender that learns your taste, and Wren, an assistant that researches and remembers.'
 
 /**
+ * LAB (exp/project-marks): one project's row with the marks on. On wide
+ * screens (xl, 1280px) the card takes 60% of the width, alternating sides,
+ * and its pixel mark stands in the open grid beside it; below that the card
+ * is full width and the mark is not drawn.
+ */
+function MarkRow({ project, index }: { project: Project; index: number }) {
+  const cardRef = useRef<HTMLDivElement>(null)
+  const side = index % 2 === 0 ? 'right' : 'left' // the mark's side
+  const kind = markFor[project.accent]
+  return (
+    <PauseOffscreen className={`relative flex ${side === 'right' ? '' : 'xl:justify-end'}`}>
+      <motion.div
+        ref={cardRef}
+        variants={fadeInUpVariants}
+        {...defaultAnimationConfig}
+        viewport={{ once: true, amount: 0.1 }}
+        className="w-full xl:w-[60%]"
+      >
+        <ProjectShowcase project={project} narrow />
+      </motion.div>
+      <PixelMark
+        kind={kind}
+        rgb={accents[project.accent].rgb}
+        side={side}
+        // The bird looks toward its card.
+        mirror={kind === 'wren' && side === 'right'}
+        cardRef={cardRef}
+      />
+    </PauseOffscreen>
+  )
+}
+
+/**
  * The home page's projects, first after the hero (owner, 2026-11-08): the
  * each project as one big card (Portfolio Rank first), then the
  * n8builds.dev teaser. "Detailed view" opens /projects, with every project at
  * full size.
+ *
+ * LAB: on this branch the section also carries the hero's grid and the pixel
+ * marks; `?marks=0` shows today's layout, `?marks=quiet|bold` the loudness.
  */
-const Projects: React.FC = () => {
+function ProjectsBody({ mode }: { mode: MarksMode }) {
+  const lab = mode !== 'off'
   return (
-    <div className="flex w-full flex-col gap-5 pt-14 pb-6 text-slate-200 md:pt-16 md:pb-12">
+    <div
+      data-marks-root={lab ? '' : undefined}
+      data-level={lab ? mode : undefined}
+      className={`flex w-full flex-col gap-5 pt-14 pb-6 text-slate-200 md:pt-16 md:pb-12 ${lab ? `${styles.root} relative isolate` : ''}`}
+    >
+      {lab && <div data-marks-grid="" aria-hidden="true" className={`${styles.grid} -z-10`} />}
       <div className="flex flex-col gap-4 px-2 sm:flex-row sm:items-end sm:justify-between md:px-4">
         <SectionHeading
           eyebrow="Selected projects"
@@ -55,16 +106,20 @@ const Projects: React.FC = () => {
       {projects.some((p) => p.statusName) && <DemoSleepNote className="px-2 md:px-4" />}
 
       <div className="mt-4 flex w-full flex-col gap-8 px-2 md:gap-10 md:px-4">
-        {projects.map((project) => (
-          <motion.div
-            key={project.id}
-            variants={fadeInUpVariants}
-            {...defaultAnimationConfig}
-            viewport={{ once: true, amount: 0.1 }}
-          >
-            <ProjectShowcase project={project} />
-          </motion.div>
-        ))}
+        {projects.map((project, index) =>
+          lab ? (
+            <MarkRow key={project.id} project={project} index={index} />
+          ) : (
+            <motion.div
+              key={project.id}
+              variants={fadeInUpVariants}
+              {...defaultAnimationConfig}
+              viewport={{ once: true, amount: 0.1 }}
+            >
+              <ProjectShowcase project={project} />
+            </motion.div>
+          )
+        )}
         <motion.div variants={fadeInUpVariants} {...defaultAnimationConfig} className="select-none">
           <BuildsTeaser />
         </motion.div>
@@ -72,5 +127,15 @@ const Projects: React.FC = () => {
     </div>
   )
 }
+
+function ProjectsFromQuery() {
+  return <ProjectsBody mode={marksMode(useSearchParams().get('marks'))} />
+}
+
+const Projects: React.FC = () => (
+  <Suspense fallback={<ProjectsBody mode="medium" />}>
+    <ProjectsFromQuery />
+  </Suspense>
+)
 
 export default Projects

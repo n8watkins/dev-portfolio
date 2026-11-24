@@ -45,7 +45,14 @@ export function CreditLine({ project }: { project: Project }) {
  * Everything else (the screenshots, tech and features) is on /projects and the
  * project's own page.
  */
-export default function ProjectShowcase({ project }: { project: Project }) {
+export default function ProjectShowcase({
+  project,
+  narrow = false,
+}: {
+  project: Project
+  /** LAB (exp/project-marks): the card is narrower on wide screens, so its buttons go under the copy there. */
+  narrow?: boolean
+}) {
   const router = useRouter()
   const accent = accents[project.accent]
   const open = () => {
@@ -92,7 +99,9 @@ export default function ProjectShowcase({ project }: { project: Project }) {
           </button>
         )}
 
-        <div className="flex flex-col gap-5 px-1 pt-5 pb-2 sm:px-3 md:flex-row md:items-end md:justify-between md:gap-10">
+        <div
+          className={`flex flex-col gap-5 px-1 pt-5 pb-2 sm:px-3 md:flex-row md:items-end md:justify-between md:gap-10 ${narrow ? 'xl:flex-col xl:items-start xl:gap-5' : ''}`}
+        >
           <div className="min-w-0 md:max-w-3xl">
             <div className="flex items-center gap-3">
               <ProjectIcon project={project} size={56} className="h-11 w-11 sm:h-14 sm:w-14" />
