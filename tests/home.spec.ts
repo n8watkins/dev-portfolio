@@ -356,8 +356,10 @@ test("a role's site cards are one scrolling row, paged by Previous and Next when
   // "1 of 6" on a phone), announced politely.
   await expect(golf.locator('[data-site-count]')).toHaveText('6 sites')
   const position = golf.locator('[data-site-position]')
+  // Two spans, one for each size; only the one in use is visible.
+  const shown = position.locator('span:visible')
   await expect(position).toHaveAttribute('aria-live', 'polite')
-  await expect(position).toHaveText(isMobile ? '1 of 6' : '1 to 3 of 6')
+  await expect(shown).toHaveText(isMobile ? '1 of 6' : '1 to 3 of 6')
   // Next until the end (a phone shows one card a page: more clicks than cards is plenty). The first click is a real one. The row then snaps on after it, and the
   // buttons follow the position it settles at, so the rest wait for the row to be still and
   // click through the DOM: a button that has just become disabled ignores it, where a pointer
@@ -381,7 +383,7 @@ test("a role's site cards are one scrolling row, paged by Previous and Next when
   await expect(previous).toBeEnabled()
   await expect(last).toBeInViewport({ ratio: 0.9 })
   await expect(first).not.toBeInViewport()
-  await expect(position).toHaveText(isMobile ? '6 of 6' : '4 to 6 of 6')
+  await expect(shown).toHaveText(isMobile ? '6 of 6' : '4 to 6 of 6')
   // The page itself never scrolls sideways.
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
   // Appturnity's two cards fit on a desktop, so it has no buttons there (a phone shows one at a time).
