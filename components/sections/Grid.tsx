@@ -3,13 +3,13 @@ import React from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { FiArrowRight } from 'react-icons/fi'
-import { MapPin, Rocket, GraduationCap } from 'lucide-react'
+import { Globe, PhoneCall, GitBranch } from 'lucide-react'
 import { motion } from 'motion/react'
 import { BentoGrid, BentoGridItem } from '@/components/ui/BentoGrid'
 import { gridItems } from '@/data/grid'
 import { staggerContainerVariants, defaultAnimationConfig } from '@/lib/animations'
 import SectionHeading from '@/components/ui/SectionHeading'
-import { TECH_FOR_PROS } from '@/lib/sites'
+import { N8BUILDS_BUILD_COUNT, TECH_FOR_PROS } from '@/lib/sites'
 
 const LINK =
   'font-semibold text-sky-400 underline decoration-sky-400/40 underline-offset-4 hover:text-sky-300 hover:decoration-sky-300 transition-colors duration-200'
@@ -21,11 +21,11 @@ const Out = ({ href, children }: { href: string; children: React.ReactNode }) =>
   </a>
 )
 
-/** Quick facts under the intro, as chips. */
+/** Proof numbers under the intro, as chips; they say what the paragraph beside them does not. */
 const FACTS = [
-  { icon: MapPin, text: 'Los Angeles, open to relocating' },
-  { icon: Rocket, text: 'Building Tech for Pros' },
-  { icon: GraduationCap, text: 'Teaching at The Coder School' },
+  { icon: Globe, text: '40+ client sites shipped' },
+  { icon: PhoneCall, text: '12-business AI receptionist pilot' },
+  { icon: GitBranch, text: `${N8BUILDS_BUILD_COUNT} open source builds` },
 ]
 
 const Grid = () => {

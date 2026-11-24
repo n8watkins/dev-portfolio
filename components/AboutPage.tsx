@@ -174,7 +174,7 @@ export default function AboutPage() {
         tabIndex={-1}
         className="relative w-full overflow-hidden bg-darkBlue text-slate-200 focus:outline-hidden"
       >
-        <div className="mx-auto max-w-md px-4 pt-28 sm:max-w-xl md:max-w-3xl md:pt-36 lg:max-w-4xl xl:max-w-6xl 2xl:max-w-7xl">
+        <div className="mx-auto max-w-md px-4 pt-14 sm:max-w-xl md:max-w-3xl md:pt-36 lg:max-w-4xl xl:max-w-6xl 2xl:max-w-7xl">
           <Breadcrumb current="About me" className="mb-8 md:mb-10" />
           <PauseOffscreen className="relative">
             <section

@@ -1,7 +1,7 @@
 import React from 'react'
 import { FiArrowUpRight } from 'react-icons/fi'
 import SiteIcon from '@/components/ui/SiteIcon'
-import { N8BUILDS, TECH_FOR_PROS } from '@/lib/sites'
+import { N8BUILDS, N8BUILDS_BUILD_COUNT, TECH_FOR_PROS } from '@/lib/sites'
 
 /**
  * The two sites this one leads to, each in its own brand: n8builds.dev's
@@ -22,7 +22,7 @@ const doors = [
     name: N8BUILDS.name,
     icon: 'n8builds' as const,
     pitch: 'Try my free tools, then fork one and make it your own.',
-    detail: '7 builds · all open source',
+    detail: `${N8BUILDS_BUILD_COUNT} builds · all open source`,
     frame:
       'from-cyan-400/50 via-blue-500/30 to-blue-600/50 group-hover:from-cyan-300 group-hover:to-blue-500',
     wash: 'from-cyan-500/25 via-blue-600/10',

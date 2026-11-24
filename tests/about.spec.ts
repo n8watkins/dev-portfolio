@@ -22,9 +22,9 @@ test('the home About teaser is one compact block with three quick facts', async 
   const teaser = page.locator('#about')
   const facts = teaser.getByRole('list', { name: 'Quick facts' }).getByRole('listitem')
   await expect(facts).toHaveText([
-    'Los Angeles, open to relocating',
-    'Building Tech for Pros',
-    'Teaching at The Coder School',
+    '40+ client sites shipped',
+    '12-business AI receptionist pilot',
+    '7 open source builds',
   ])
   // No dead gap: the paragraph starts right under the heading.
   const heading = teaser.getByRole('heading', { name: 'About me' })
