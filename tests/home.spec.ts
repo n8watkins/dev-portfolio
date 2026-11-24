@@ -548,6 +548,23 @@ test("hovering a role shows its own picture, which stays, quieter, while it's op
   await page.goto('/')
   const role = page.locator('#experience div.group\\/exp', { hasText: 'Web Developer' })
   await role.scrollIntoViewIfNeeded()
+  // The row reveals itself as it scrolls in (it fades up from 25px lower, at 95%
+  // size, for about half a second). Measured mid-reveal, its box is ~30px off by
+  // the time the click lands (WebKit on CI, 17 of 30 runs under load): wait until
+  // the row has settled, which is what a visitor sees before they reach for it.
+  await expect
+    .poll(() =>
+      role.evaluate((e) => {
+        let o = 1
+        let moved = false
+        for (let n: Element | null = e; n; n = n.parentElement) {
+          o *= Number(getComputedStyle(n).opacity)
+          if (getComputedStyle(n).transform !== 'none') moved = true
+        }
+        return o === 1 && !moved
+      })
+    )
+    .toBe(true)
   const picture = role.locator('[data-role-image]')
   const opacity = () => picture.evaluate((el) => Number(getComputedStyle(el).opacity))
   expect(await opacity()).toBe(0)
