@@ -1,8 +1,7 @@
 'use client'
 
 import React from 'react'
-import { motion } from 'motion/react'
-import { fadeInUpVariants, defaultAnimationConfig } from '@/lib/animations'
+import Reveal from './Reveal'
 
 /**
  * Every section's heading, in n8builds.dev's style: a small label, then a
@@ -20,13 +19,7 @@ export default function SectionHeading({
   className?: string
 }) {
   return (
-    <motion.div
-      variants={fadeInUpVariants}
-      {...defaultAnimationConfig}
-      // Shown as soon as its top edge enters: a tall block (About's copy) may
-      // never reach 30% in view, and the heading should peek in on its own.
-      viewport={{ once: true, amount: 0.05 }}
-      className={`w-full text-left select-none ${className}`}>
+    <Reveal className={`w-full text-left select-none ${className}`}>
       <p className="text-xs font-semibold uppercase tracking-[0.2em] text-sky-400">{eyebrow}</p>
       <h2 className="mt-3 text-3xl sm:text-4xl font-bold tracking-tight text-slate-100">{title}</h2>
       {children && (
@@ -34,6 +27,6 @@ export default function SectionHeading({
           {children}
         </div>
       )}
-    </motion.div>
+    </Reveal>
   )
 }
