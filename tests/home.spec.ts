@@ -269,7 +269,7 @@ test('Experience links Tech for Pros and the live client sites only, and Appturn
   const experience = page.locator('#experience')
   const card = experience.locator('div.group\\/exp', { hasText: 'Appturnity' })
   await expect(card).toHaveCount(1)
-  await expect(card.getByRole('heading', { name: 'Full Stack Developer', exact: true })).toBeAttached()
+  await expect(card.getByRole('heading', { name: 'Full-Stack Developer', exact: true })).toBeAttached()
   await expect(card.getByText('Appturnity', { exact: true })).toBeAttached()
   // Nowhere outside Experience.
   const outside = await page.evaluate(() => {
@@ -291,11 +291,29 @@ test('Experience links Tech for Pros and the live client sites only, and Appturn
   )
   expect(hrefs).toEqual([
     'https://comfort1hvac.com/',
+    'https://debellgolf.com/',
+    'https://lcfcountryclub.com/',
     'https://riverwoodranch.web.app/',
     'https://techforpros.com/',
+    'https://www.alhambragolf.com/',
+    'https://www.angelesnational.com/',
     'https://www.arroyosecogc.com/',
+    'https://www.mpgolfclub.com/',
   ])
-  await expect(experience).toContainText('a clinical lab, a streaming service')
+  // The six golf course sites, each with its own screenshot (the resume of November 2026).
+  const golf = experience.locator('div.group\\/exp', { hasText: 'Donovan Golf' })
+  await expect(golf).toContainText('Rebuilt six golf course websites')
+  // The role is closed here, so its cards are inert: count them in the DOM, not by role.
+  const cards = golf.locator('ul[aria-label="Sites I built there"]')
+  await expect(cards.locator('a')).toHaveCount(6)
+  const shots = await cards
+    .locator('img')
+    .evaluateAll((imgs) => imgs.map((img) => decodeURIComponent((img as HTMLImageElement).src)))
+  expect(new Set(shots.map((src) => src.match(/experience\/(\w+)\.webp/)?.[1])).size).toBe(6)
+  // The clinical lab is its own role, named and never linked.
+  const lab = experience.locator('div.group\\/exp', { hasText: 'Lifeline Clinical Labs' })
+  await expect(lab).toHaveCount(1)
+  await expect(lab.getByRole('link')).toHaveCount(0)
 
   const about = page.locator('#about')
   await expect(about).toContainText('three years building client apps at a consulting firm')
@@ -312,14 +330,15 @@ test('every role shows its basics; only the roles with more to say expand', asyn
   await experience.getByRole('button', { name: 'Expand all' }).scrollIntoViewIfNeeded()
   const role = (name: string) => experience.locator('div.group\\/exp', { hasText: name })
   // The basics show with no click, for every role.
-  await expect(role('Tech for Pros').getByText(/Building Tech for Pros, a SaaS/)).toBeVisible()
+  await expect(role('Tech for Pros').getByText(/Deployed AI receptionists in a 12-client pilot/)).toBeVisible()
+  await expect(role('Lifeline Clinical Labs').getByText(/Python order-entry pipeline/)).toBeVisible()
   await expect(role('Realtek Solutions').getByText(/Launched 5\+ small-business websites/)).toBeVisible()
   await expect(role('The Coder School').getByText(/Teach JavaScript, Python/)).toBeVisible()
   // Three roles expand; Realtek and The Coder School don't, and the school's site isn't linked.
   for (const name of ['Tech for Pros', 'Appturnity', 'Donovan Golf']) {
     await expect(role(name).locator('[data-role-toggle]'), name).toHaveCount(1)
   }
-  for (const name of ['Realtek Solutions', 'The Coder School']) {
+  for (const name of ['Lifeline Clinical Labs', 'Realtek Solutions', 'The Coder School']) {
     await expect(role(name).locator('[data-role-toggle]'), name).toHaveCount(0)
     await expect(role(name).getByText('More', { exact: true }), name).toHaveCount(0)
   }
@@ -332,7 +351,7 @@ test('"Expand all" opens the roles with more in place, and closes them again', a
   const toggles = experience.locator('[data-role-toggle]')
   await experience.getByRole('button', { name: 'Expand all' }).scrollIntoViewIfNeeded()
   await expect(toggles).toHaveCount(3)
-  const more = experience.getByText(/Architecting a shared delivery layer/)
+  const more = experience.getByText(/single configuration-driven Cloudflare Worker/)
   await expect(more).toBeHidden()
   await experience.getByRole('button', { name: 'Expand all' }).click()
   for (let i = 0; i < 3; i++) await expect(toggles.nth(i)).toHaveAttribute('aria-expanded', 'true')
@@ -354,8 +373,8 @@ test('a whole role row opens on a click or from the keyboard, and its link still
   const role = experience.locator('div.group\\/exp', { hasText: 'Web Developer' })
   await role.scrollIntoViewIfNeeded()
   // Its basics show; the rest opens with the row.
-  await expect(role.getByText(/Built course and event sites/)).toBeVisible()
-  const bullet = role.getByText(/Integrated Cloudinary media/)
+  await expect(role.getByText(/Rebuilt six golf course websites/)).toBeVisible()
+  const bullet = role.getByText(/Coordinated pre-launch booking integration testing/)
   await expect(bullet).toBeHidden()
   // Anywhere on the row: here, where the role's title is (the row's button lies over it).
   const title = (await role.getByRole('heading', { name: 'Web Developer' }).boundingBox())!

@@ -34,23 +34,24 @@ export type WorkExperienceItem = {
   additional?: boolean
 }
 
+/** The roles follow the resume of November 2026: its titles, dates and claims. */
 export const workExperience: WorkExperienceItem[] = [
   {
     id: 5,
     company: 'Tech for Pros',
     companyUrl: 'https://techforpros.com',
     location: 'Los Angeles, CA',
-    role: 'Full Stack Engineer and AI Consultant',
-    period: 'January 2026 – Present',
+    role: 'Full-Stack Software Developer',
+    period: 'August 2026 – Present',
     basics: [
-      'Building Tech for Pros, a SaaS that turns a service business’s details into a launch-ready website in minutes.',
-      'Consulting with businesses on AI: where it saves them time, and the tools and automations that put it to work.',
+      'Building managed websites, AI receptionists and customer workflow automation for service businesses.',
+      'Deployed AI receptionists in a 12-client pilot, handling ~120 missed calls a month per client, about 15% of them qualified leads.',
     ],
     more: [
-      'Trade-specific Next.js templates and an intake-driven site generator behind it.',
-      'Architecting a shared delivery layer on Cloudflare for domains, hosting, forms, analytics, reviews and client content, so a new business launches without a rebuild.',
-      'Shipped lead capture, review display and request flows, and an instant site-health check covering performance, mobile usability, SEO and accessibility.',
-      'Developing automated follow-up for leads and quotes, appointment and maintenance reminders, referrals and missed-call text-back.',
+      'Migrated client call flows from Twilio to Telnyx, with business-first routing, missed and after-hours call handling and conditional staff handoffs.',
+      'Re-architected separately deployed Next.js client sites into a single configuration-driven Cloudflare Worker serving multiple client websites, with reusable templates, lead capture and automated follow-up.',
+      'Designed a staging-first CI/CD workflow for AI-generated pull requests: comprehensive validation before merge, without redundant CI runs or wasted LLM tokens while iterating.',
+      'Interviewed business owners and staff to turn how they operate into client-specific SOPs, then built automations for warranty-expiration outreach and scheduling-gap recovery from customer records and appointment availability.',
     ],
     image: {
       src: '/work/landscaping-verdant.webp',
@@ -61,16 +62,16 @@ export const workExperience: WorkExperienceItem[] = [
     id: 1,
     company: 'Appturnity',
     location: 'Los Angeles, CA',
-    role: 'Full Stack Developer',
+    role: 'Full-Stack Developer',
     period: 'March 2023 – June 2026',
     basics: [
-      'Built and shipped client apps end to end, for a clinical lab, a streaming service, a private ranch community and an HVAC company.',
-      'Owned frontend and backend data flows, APIs, testing, code reviews and production releases.',
+      'Built or maintained 40+ Next.js client websites within a portfolio of 120+ accounts.',
+      'Integrated quote-request forms with multiple CRMs, with tests verifying that customer and quote details reached each business.',
     ],
     more: [
-      "Automated a clinical lab's data processing with Python, Cloudflare Workers and Gemini, saving ~$20K a year, with uncertain results routed to human review.",
-      "Built Riverwood Ranch's searchable document repository and reusable Comfort1 HVAC landing templates with ISR and analytics, improving LCP and INP ~35%.",
-      'Set up a repeatable AWS deployment path with Docker and Terraform, pre-deploy checks in GitHub Actions and a documented rollback procedure.',
+      'Architected searchable document retrieval with Next.js ISR for cacheable pages and Firestore metadata for indexing, enforcing property-staff access rules on protected documents.',
+      'Built an automated image-sizing audit script that checks images against their placement in responsive layouts and finds oversized assets that slow mobile page loads.',
+      'Built mobile-first Next.js sites with ISR and responsive components, scoring 90+ in Lighthouse for Performance, Accessibility, Best Practices and SEO and meeting Core Web Vitals.',
     ],
     image: { src: '/experience/appturnity.webp', alt: "Appturnity's home page" },
     sites: [
@@ -87,15 +88,28 @@ export const workExperience: WorkExperienceItem[] = [
     ],
   },
   {
+    id: 6,
+    company: 'Lifeline Clinical Labs',
+    location: 'Los Angeles, CA · Contract',
+    role: 'Full-Stack Developer',
+    period: 'February 2024 – June 2024',
+    basics: [
+      'Developed a Python order-entry pipeline that uses Gemini to extract patient information and requested tests from hospital requisitions, enters them into the lab software and cross-checks the records, ending manual re-entry across ~2,000 orders a month.',
+      'Built a clinical intake pipeline with React Hook Form and Zod validation, Next.js APIs and Firebase Functions for record sync, reducing duplicate entry.',
+    ],
+  },
+  {
     id: 2,
     company: 'Donovan Golf Course Management',
-    location: 'Pasadena, CA',
+    location: 'Pasadena, CA · Contract',
     role: 'Web Developer',
     period: 'June 2022 – January 2023',
-    basics: ['Built course and event sites and a staff CMS with React, Next.js and Firebase.'],
+    basics: [
+      'Rebuilt six golf course websites and integrated tee-time and event booking.',
+      'On select courses, comparable monthly off-peak online bookings rose from 200 to 260 (+30%) after rollout.',
+    ],
     more: [
-      'Reached 90+ Lighthouse performance and accessibility scores.',
-      'Integrated Cloudinary media and Google Analytics, so staff update content and track visitors without a developer.',
+      'Coordinated pre-launch booking integration testing with the web team, verifying tee-time and event reservations on the rebuilt frontends against the existing backend.',
     ],
     image: { src: '/experience/arroyoseco.webp', alt: "Arroyo Seco Golf Course's site" },
     sites: [
@@ -103,6 +117,31 @@ export const workExperience: WorkExperienceItem[] = [
         label: 'arroyosecogc.com',
         url: 'https://www.arroyosecogc.com/',
         shot: '/experience/arroyoseco.webp',
+      },
+      {
+        label: 'angelesnational.com',
+        url: 'https://www.angelesnational.com/',
+        shot: '/experience/angelesnational.webp',
+      },
+      {
+        label: 'alhambragolf.com',
+        url: 'https://www.alhambragolf.com/',
+        shot: '/experience/alhambragolf.webp',
+      },
+      {
+        label: 'debellgolf.com',
+        url: 'https://debellgolf.com/',
+        shot: '/experience/debellgolf.webp',
+      },
+      {
+        label: 'mpgolfclub.com',
+        url: 'https://www.mpgolfclub.com/',
+        shot: '/experience/mpgolfclub.webp',
+      },
+      {
+        label: 'lcfcountryclub.com',
+        url: 'https://lcfcountryclub.com/',
+        shot: '/experience/lcfcountryclub.webp',
       },
     ],
   },
