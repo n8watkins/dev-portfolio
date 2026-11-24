@@ -582,3 +582,18 @@ test("a link under the top bar's fade still takes the click", async ({ page }) =
   const fade = page.locator('div.fixed.top-0.w-full').first()
   expect(await fade.evaluate((el) => getComputedStyle(el).pointerEvents)).toBe('none')
 })
+
+test('the buttons beside a section heading arrive with it, in a reveal of their own', async ({ page }) => {
+  await page.goto('/')
+  for (const [heading, button] of [
+    ['Building for the', 'Detailed view'],
+    ["Where I've built", 'Expand all'],
+  ]) {
+    const row = page
+      .locator('div:has(> [data-reveal] h2)')
+      .filter({ has: page.getByRole('heading', { name: new RegExp(heading) }) })
+      .first()
+    await expect(row.locator('[data-reveal]'), heading).toHaveCount(2)
+    await expect(row.locator('[data-reveal]').filter({ hasText: button }), button).toHaveCount(1)
+  }
+})

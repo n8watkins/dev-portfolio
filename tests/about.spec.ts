@@ -16,6 +16,38 @@ test('the home page opens with About and the bento, and links to the full page',
   await expect(page.getByRole('heading', { level: 1, name: 'About me' })).toBeVisible()
 })
 
+test('the home About teaser is one compact block with three quick facts', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.goto('/')
+  const teaser = page.locator('#about')
+  const facts = teaser.getByRole('list', { name: 'Quick facts' }).getByRole('listitem')
+  await expect(facts).toHaveText([
+    '75+ client sites shipped end to end',
+    'Lighthouse 90+ on client sites',
+    '30+ open source projects',
+  ])
+  // No dead gap: the paragraph starts right under the heading.
+  const heading = teaser.getByRole('heading', { name: 'About me' })
+  const copy = teaser.getByText(/full-stack developer in Los Angeles/)
+  await expect(copy).toBeVisible()
+  const gap = (await copy.boundingBox())!.y - (await heading.boundingBox())!.y
+  expect(gap).toBeLessThan(110)
+})
+
+test('/about has a Home / About me breadcrumb above the intro, and Home leads to the home page', async ({
+  page,
+}) => {
+  await page.goto('/about')
+  const crumbs = page.getByRole('navigation', { name: 'Breadcrumb' })
+  await expect(crumbs.locator('li')).toHaveCount(3)
+  await expect(crumbs.getByRole('link', { name: 'Home' })).toHaveAttribute('href', '/')
+  await expect(crumbs.locator('[aria-current="page"]')).toHaveText('About me')
+  const above = (await crumbs.boundingBox())!.y < (await page.getByText('Get to know me').boundingBox())!.y
+  expect(above).toBe(true)
+  await crumbs.getByRole('link', { name: 'Home' }).click()
+  await expect(page).toHaveURL(/\/$/)
+})
+
 test('the About page tells the story in scenes with one portrait, and nothing else', async ({
   page,
 }) => {

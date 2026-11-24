@@ -7,6 +7,7 @@ import dynamic from 'next/dynamic'
 import { ArrowUp, Briefcase, CornerUpLeft, Monitor, TreePalm } from 'lucide-react'
 import { FloatingNav } from '@/components/layout/FloatingNav'
 import Footer from '@/components/layout/Footer'
+import Breadcrumb from '@/components/ui/Breadcrumb'
 import PauseOffscreen from '@/components/ui/PauseOffscreen'
 import Decals from '@/components/about/Decals'
 import { subpageNavItems } from '@/data/navigation'
@@ -173,13 +174,14 @@ export default function AboutPage() {
         tabIndex={-1}
         className="relative w-full overflow-hidden bg-darkBlue text-slate-200 focus:outline-hidden"
       >
-        <div className="mx-auto max-w-md px-4 pt-28 sm:max-w-xl md:max-w-3xl md:pt-36 lg:max-w-4xl xl:max-w-6xl 2xl:max-w-7xl">
+        <div className="mx-auto max-w-md px-4 pt-14 sm:max-w-xl md:max-w-3xl md:pt-36 lg:max-w-4xl xl:max-w-6xl 2xl:max-w-7xl">
+          <Breadcrumb current="About me" className="mb-8 md:mb-10" />
           <PauseOffscreen className="relative">
             <section
               aria-labelledby="about-heading"
-              className="relative flex flex-col-reverse gap-10 md:flex-row md:items-center md:gap-14"
+              className="relative flex flex-col-reverse gap-8 md:flex-row md:items-center md:justify-start md:gap-12"
             >
-              <div className="md:flex-1">
+              <div className="md:max-w-xl md:flex-1 lg:max-w-2xl">
                 <p className="text-xs font-semibold tracking-[0.2em] text-sky-400 uppercase">
                   Get to know me
                 </p>
@@ -195,7 +197,7 @@ export default function AboutPage() {
                   getting to do so much more of it with AI feels like a blessing.
                 </p>
               </div>
-              <figure className="relative mx-auto w-56 shrink-0 sm:w-64 md:mx-0 md:w-72 lg:w-80">
+              <figure className="relative mx-auto w-40 shrink-0 sm:w-44 md:mx-0 md:w-52 lg:w-56">
                 <div className="absolute inset-0 scale-105 rounded-3xl bg-linear-to-br from-cyan-500/25 to-blue-600/25 blur-xl" />
                 <div className="relative aspect-4/5 overflow-hidden rounded-3xl ring-1 ring-white/10 shadow-xl shadow-black/40">
                   <Image
@@ -203,7 +205,7 @@ export default function AboutPage() {
                     alt={aboutPortrait.alt}
                     fill
                     priority
-                    sizes="(max-width: 640px) 14rem, (max-width: 768px) 16rem, 20rem"
+                    sizes="(max-width: 640px) 10rem, (max-width: 768px) 11rem, 14rem"
                     className="object-cover object-top"
                   />
                 </div>
