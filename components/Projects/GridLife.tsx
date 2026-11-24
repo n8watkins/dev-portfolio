@@ -4,35 +4,44 @@ import { useEffect, useRef } from 'react'
 import styles from './marks.module.css'
 
 const CELL = 52
-// At most this many lit cells, and roughly one per this many free cells on
-// screen: sparser than the hero, so the cards stay the subject.
-const LIT = 7
-const DENSITY = 16
+// The hero's numbers (components/sections/HeroGrid.tsx): at most this many lit
+// cells, roughly one per this many free cells on screen.
+const LIT = 36
+const DENSITY = 12
 // The hero's deep blues. Its cells sit under a 35% wash of the page colour;
-// these have none, so their peak is scaled down to match.
+// these have none, so their peak is scaled to look the same.
 const TONES = ['#0c1836', '#13234d', '#0f1f52', '#16285a']
 const WASH = 0.65
-// The hero's soft sine ease, and its timings a touch calmer (ms).
+// The hero's soft sine ease and timings (ms): holds long next to the fades,
+// so most cells are lit at any moment.
 const EASE = 'cubic-bezier(0.37, 0, 0.63, 1)'
-const FADE = [1700, 2500] as const
-const HOLD = [3500, 7500] as const
-const GAP = [300, 900] as const
-// Kept off the section's faded top and bottom, and off the faded sides.
+const FADE = [1400, 2200] as const
+const HOLD = [2500, 6000] as const
+const GAP = [150, 700] as const
+// As in the hero, at most this share of the lit cells may be dark or fading
+// at once, so the lit count stays steady.
+const MAX_OUT = 0.25
+// Kept off the section's faded top and bottom rows, and, as in the hero, off a
+// sliver of the screen at each side.
 const TOP = 3
 const BOTTOM = 3
+const EDGE = 0.03
 
 type Spot = { x: number; y: number }
 const key = ({ x, y }: Spot) => `${x},${y}`
 const between = ([min, max]: readonly [number, number]) => min + Math.random() * (max - min)
 
 /**
- * LAB (exp/project-marks): the Projects grid's own life, as the hero's
- * (components/sections/HeroGrid.tsx): a few deep-blue cells fade in, hold,
- * fade out and come back somewhere else, each on its own random clock, never
- * touching each other. They only use open grid on screen: never under a
- * card, the heading or the copy (`[data-grid-avoid]`), never on or next to a
- * pixel mark. They rest while the section is off screen or the tab is
- * hidden. Reduced motion shows a few, still.
+ * LAB (exp/project-marks): the Projects grid's own life, as busy as the
+ * hero's (components/sections/HeroGrid.tsx), with its numbers: deep-blue
+ * cells fade in, hold, fade out and come back somewhere else, each on its own
+ * random clock, never touching each other, and only a quarter of them dark or
+ * fading at once. They use open grid on screen, the page margins beside the
+ * content column included: never under a card, the heading or the copy
+ * (`[data-grid-avoid]`), never on or next to a pixel mark. They rest while the
+ * section is off screen or the tab is hidden. Reduced motion shows a set,
+ * still, placed when the section first comes on screen (the hero places its
+ * still set on load, when it is on screen).
  */
 export default function GridLife() {
   const ref = useRef<HTMLDivElement>(null)
@@ -41,7 +50,7 @@ export default function GridLife() {
   useEffect(() => {
     const layer = ref.current?.parentElement
     const root = layer?.closest<HTMLElement>('[data-marks-root]')
-    if (!layer || !root) return
+    if (!layer || !root || typeof IntersectionObserver === 'undefined') return
     const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches
     const taken = new Set<string>()
     const timers = new Set<ReturnType<typeof setTimeout>>()
@@ -54,13 +63,16 @@ export default function GridLife() {
     }
     let onScreen = false
 
-    /** Free cells on screen, in grid coordinates (x from the middle line). */
-    const free = (): Spot[] => {
+    /**
+     * Free cells on screen, in grid coordinates (x from the middle line), and
+     * how many cells the band on screen has in all.
+     */
+    const free = (): Spot[] & { band?: number } => {
       const g = layer.getBoundingClientRect()
+      const width = document.documentElement.clientWidth
       const mid = g.left + g.width / 2
-      const fade = Math.min(320, Math.max(48, g.width * 0.16))
-      const minX = Math.ceil((g.left + fade * 0.7 - mid) / CELL)
-      const maxX = Math.floor((g.right - fade * 0.7 - mid) / CELL) - 1
+      const minX = Math.ceil((width * EDGE - mid) / CELL)
+      const maxX = Math.floor((width * (1 - EDGE) - mid) / CELL) - 1
       const minY = Math.max(TOP, Math.ceil(-g.top / CELL))
       const maxY = Math.min(
         Math.floor(g.height / CELL) - 1 - BOTTOM,
@@ -75,7 +87,8 @@ export default function GridLife() {
           .filter((el) => el.offsetParent)
           .map((el) => ({ r: el.getBoundingClientRect(), pad: CELL + 6 })),
       ]
-      const spots: Spot[] = []
+      const spots: Spot[] & { band?: number } = []
+      spots.band = Math.max(0, maxX - minX + 1) * Math.max(0, maxY - minY + 1)
       for (let y = minY; y <= maxY; y++)
         for (let x = minX; x <= maxX; x++) {
           const left = mid + x * CELL
@@ -92,6 +105,11 @@ export default function GridLife() {
         }
       return spots
     }
+    // As many as the hero would light in a band this size; the cards take
+    // much of it, so the free grid around them holds them more densely (the
+    // no-touching rule still caps it).
+    const countFor = (spots: Spot[] & { band?: number }) =>
+      Math.min(LIT, Math.round((spots.band ?? spots.length) / DENSITY))
     const clear = (spot: Spot) => {
       for (let dx = -1; dx <= 1; dx++)
         for (let dy = -1; dy <= 1; dy++)
@@ -99,7 +117,7 @@ export default function GridLife() {
       return true
     }
     const pick = (spots: Spot[]) => {
-      for (let tries = 0; tries < 40 && spots.length; tries++) {
+      for (let tries = 0; tries < 60 && spots.length; tries++) {
         const spot = spots[Math.floor(Math.random() * spots.length)]
         if (clear(spot)) return spot
       }
@@ -114,53 +132,83 @@ export default function GridLife() {
       el.style.transition = `opacity ${ms}ms ${EASE}`
       el.style.opacity = String(opacity)
     }
-    const peak = () => ((0.45 + Math.random() * 0.4) * WASH).toFixed(2)
+    const peak = () => Number(((0.45 + Math.random() * 0.4) * WASH).toFixed(2))
 
     if (reduce) {
-      const spots = free()
-      const count = Math.min(LIT, Math.round(spots.length / DENSITY))
-      cells.current.slice(0, count).forEach((el) => {
-        const spot = el && pick(spots)
-        if (!el || !spot) return
-        taken.add(key(spot))
-        place(el, spot)
-        el.style.opacity = peak()
-      })
-      return
+      // A still set, placed once the section fills most of the screen (just
+      // its top edge would leave no band to place them in).
+      const io = new IntersectionObserver(
+        (entries) => {
+          const e = entries[entries.length - 1]
+          const shown =
+            Math.min(innerHeight, e.boundingClientRect.bottom) -
+            Math.max(0, e.boundingClientRect.top)
+          if (!e.isIntersecting || shown < innerHeight * 0.75) return
+          const spots = free()
+          io.disconnect()
+          cells.current.slice(0, countFor(spots)).forEach((el) => {
+            const spot = el && pick(spots)
+            if (!el || !spot) return
+            taken.add(key(spot))
+            place(el, spot)
+            el.style.opacity = String(peak())
+          })
+        },
+        { threshold: Array.from({ length: 21 }, (_, i) => i / 40) }
+      )
+      io.observe(root)
+      return () => io.disconnect()
     }
 
     const resting = () => document.hidden || !onScreen
-    // One cell's life: find a spot, fade in, hold, fade out, wait, again.
-    const live = (i: number) => {
+    let out = 0
+    const maxOut = () => Math.max(1, Math.floor(countFor(free()) * MAX_OUT))
+
+    /**
+     * A dark cell lights up somewhere free, then holds. `counted` is a cell
+     * coming back from a fade-out: as in the hero, it stops counting as out
+     * once it is halfway in (or as soon as it gives up its turn).
+     */
+    const light = (i: number, counted = false) => {
       const el = cells.current[i]
       if (!el) return
-      if (resting()) return later(() => live(i), 1200)
+      const wait = (ms: number) => {
+        if (counted) out--
+        later(() => light(i), ms)
+      }
+      if (resting()) return wait(1000)
       const spots = free()
-      const count = Math.min(LIT, Math.round(spots.length / DENSITY))
-      if (i >= count) return later(() => live(i), between(HOLD))
+      if (i >= countFor(spots)) return wait(between(HOLD))
       const spot = pick(spots)
-      if (!spot) return later(() => live(i), 1500)
+      if (!spot) return wait(1000)
       taken.add(key(spot))
       place(el, spot)
       const fadeIn = between(FADE)
-      fade(el, Number(peak()), fadeIn)
-      later(
-        () => {
-          const fadeOut = between(FADE)
-          fade(el, 0, fadeOut)
-          later(() => {
-            taken.delete(key(spot))
-            later(() => live(i), between(GAP))
-          }, fadeOut)
-        },
-        fadeIn + between(HOLD)
-      )
+      fade(el, peak(), fadeIn)
+      if (counted) later(() => out--, fadeIn / 2)
+      later(() => cycle(i, spot), fadeIn + between(HOLD))
+    }
+    /** A lit cell fades out (when its turn comes), waits, and lights again elsewhere. */
+    const cycle = (i: number, spot: Spot) => {
+      const el = cells.current[i]
+      if (!el) return
+      if (resting()) return later(() => cycle(i, spot), 1000)
+      if (out >= maxOut()) return later(() => cycle(i, spot), 300 + Math.random() * 400)
+      out++
+      const fadeOut = between(FADE)
+      fade(el, 0, fadeOut)
+      later(() => {
+        // Its spot stays taken until it has fully faded out.
+        taken.delete(key(spot))
+        later(() => light(i, true), between(GAP))
+      }, fadeOut)
     }
     const io = new IntersectionObserver((entries) => {
       onScreen = entries[entries.length - 1].isIntersecting
     })
     io.observe(root)
-    cells.current.forEach((_, i) => later(() => live(i), between([400, 5000])))
+    // Warm-up, as in the hero: each cell first lights at a random moment.
+    cells.current.forEach((_, i) => later(() => light(i), between([300, 5000])))
     return () => {
       io.disconnect()
       timers.forEach(clearTimeout)
