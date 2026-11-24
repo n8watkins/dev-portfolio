@@ -330,6 +330,64 @@ test('Experience links Tech for Pros and the live client sites only, and Appturn
   )
 })
 
+test("a role's site cards are one scrolling row, paged by Previous and Next when they do not all fit", async ({
+  page,
+  isMobile,
+}) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.goto('/')
+  const experience = page.locator('#experience')
+  const role = (name: string) => experience.locator('div.group\\/exp', { hasText: name })
+  const golf = role('Donovan Golf')
+  await golf.locator('[data-role-toggle]').scrollIntoViewIfNeeded()
+  await golf.locator('[data-role-toggle]').click()
+  const row = golf.getByRole('list', { name: 'Sites I built there' })
+  await row.scrollIntoViewIfNeeded()
+  const first = row.locator('a[href="https://www.arroyosecogc.com/"]')
+  const last = row.locator('a[href="https://lcfcountryclub.com/"]')
+  await expect(row.getByRole('link')).toHaveCount(6)
+  await expect(first).toBeInViewport({ ratio: 0.9 })
+  await expect(last).not.toBeInViewport()
+  const previous = golf.getByRole('button', { name: 'Previous sites' })
+  const next = golf.getByRole('button', { name: 'Next sites' })
+  await expect(previous).toBeDisabled()
+  // Next until the end (a phone shows one card a page: more clicks than cards is plenty). The first click is a real one. The row then snaps on after it, and the
+  // buttons follow the position it settles at, so the rest wait for the row to be still and
+  // click through the DOM: a button that has just become disabled ignores it, where a pointer
+  // click would wait on it.
+  const scrolled = () => row.evaluate((el) => el.scrollLeft)
+  const still = () =>
+    expect
+      .poll(async () => {
+        const at = await scrolled()
+        await page.waitForTimeout(150)
+        return (await scrolled()) === at
+      })
+      .toBe(true)
+  await next.click()
+  for (let clicks = 1; clicks < 10; clicks++) {
+    await still()
+    await next.dispatchEvent('click')
+  }
+  await still()
+  await expect(next).toBeDisabled()
+  await expect(previous).toBeEnabled()
+  await expect(last).toBeInViewport({ ratio: 0.9 })
+  await expect(first).not.toBeInViewport()
+  // The page itself never scrolls sideways.
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
+  // Appturnity's two cards fit on a desktop, so it has no buttons there (a phone shows one at a time).
+  const appturnity = role('Appturnity')
+  await appturnity.locator('[data-role-toggle]').click()
+  await expect(appturnity.getByRole('list', { name: 'Sites I built there' })).toBeVisible()
+  const wide = await appturnity.evaluate((el) => {
+    const ul = el.querySelector('ul[aria-label="Sites I built there"]') as HTMLElement
+    return ul.scrollWidth <= ul.clientWidth + 1
+  })
+  if (!isMobile) expect(wide).toBe(true)
+  await expect(appturnity.getByRole('button', { name: 'Next sites' })).toHaveCount(wide ? 0 : 1)
+})
+
 test('every role shows its basics; only the roles with more to say expand', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.goto('/')
