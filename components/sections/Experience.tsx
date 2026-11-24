@@ -6,6 +6,7 @@ import { motion } from 'motion/react'
 import { FiChevronDown, FiChevronLeft, FiChevronRight, FiExternalLink } from 'react-icons/fi'
 import { workExperience, type WorkExperienceItem } from '@/data/experience'
 import SectionHeading from '@/components/ui/SectionHeading'
+import Reveal from '@/components/ui/Reveal'
 import { staggerItemVariants } from '@/lib/animations'
 
 /** A site I built in the role: a small preview card, the whole card a link to it. */
@@ -165,11 +166,12 @@ const Experience = () => {
     <div className="relative m-auto pt-0 pb-12 select-none md:pt-8 md:pb-20 xl:max-w-6xl 2xl:max-w-7xl">
       <div className="flex items-end justify-between gap-4 px-2 pt-6 pb-6 md:px-4">
         <SectionHeading eyebrow="Experience" title="Where I've built" />
+        <Reveal className="shrink-0">
         <button
           type="button"
           onClick={() => setOpen(allOpen ? new Set() : new Set(expandable.map((w) => w.id)))}
           aria-expanded={allOpen}
-          className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl border border-white/12 bg-white/4 px-3 py-2 text-sm font-semibold text-slate-200 transition-colors hover:border-sky-400/50 hover:bg-white/8 hover:text-sky-200 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-sky-400"
+          className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-xl border border-white/12 bg-white/4 px-3 py-2 text-sm font-semibold text-slate-200 transition-colors hover:border-sky-400/50 hover:bg-white/8 hover:text-sky-200 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-sky-400"
         >
           {allOpen ? 'Collapse all' : 'Expand all'}
           <FiChevronDown
@@ -177,6 +179,7 @@ const Experience = () => {
             aria-hidden="true"
           />
         </button>
+        </Reveal>
       </div>
 
       <div className="relative mt-2 px-2 md:px-4">

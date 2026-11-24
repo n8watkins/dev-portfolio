@@ -8,6 +8,7 @@ import ProjectShowcase from './ProjectShowcase'
 import BuildsTeaser from './BuildsTeaser'
 import { DemoSleepNote } from './StatusPill'
 import SectionHeading from '@/components/ui/SectionHeading'
+import Reveal from '@/components/ui/Reveal'
 
 const BLURB =
   'AI is changing what software can do and how it gets made. Each project here puts AI to work: a leaderboard that Gemini helps rank, a recommender that learns your taste, and Wren, an assistant that researches and remembers.'
@@ -30,9 +31,10 @@ const Projects: React.FC = () => {
             </>
           }
         />
+        <Reveal className="shrink-0 self-start sm:self-auto">
         <Link
           href="/projects"
-          className="group inline-flex shrink-0 items-center gap-1.5 self-start rounded-xl border border-white/12 bg-white/4 px-3.5 py-2 text-sm font-semibold whitespace-nowrap text-slate-100 transition-colors hover:border-sky-400/50 hover:bg-white/8 hover:text-sky-200 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-sky-400 sm:self-auto"
+          className="group inline-flex items-center gap-1.5 rounded-xl border border-white/12 bg-white/4 px-3.5 py-2 text-sm font-semibold whitespace-nowrap text-slate-100 transition-colors hover:border-sky-400/50 hover:bg-white/8 hover:text-sky-200 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-sky-400"
         >
           Detailed view
           <FiArrowRight
@@ -40,6 +42,7 @@ const Projects: React.FC = () => {
             aria-hidden="true"
           />
         </Link>
+        </Reveal>
       </div>
       <motion.p
         variants={fadeInUpVariants}
