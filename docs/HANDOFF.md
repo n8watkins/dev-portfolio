@@ -15,7 +15,7 @@ Last updated: 2026-11-08.
 
 ### Next
 
-1. Wren's clip is recorded with demo-kit (`~/projects/demo-kit/storyboards/wren.ts`): re-record it there when Wren's first screen or answers change, then encode it to 960x600 as `public/projects/clips/wren.mp4`.
+1. Wren's clip is recorded with demo-kit (`~/projects/dev-tools/demo-kit/storyboards/wren.ts`): re-record it there when Wren's first screen or answers change, then encode it to 960x600 as `public/projects/clips/wren.mp4`.
 2. Keep the shared files in sync with n8builds-web after any change there (`npm run check:sync`): the dino, the marquee and its tiles, and the tile list `data/stack.tsx` (edit it in n8builds-web, then copy it here).
 
 ### Blocked on the owner
