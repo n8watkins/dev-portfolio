@@ -10,6 +10,9 @@ export const N8BUILDS = {
   icon: '/tab/n8-icon.png',
 }
 
+/** Open source builds on n8builds.dev; the hero card and the About chips both read this. */
+export const N8BUILDS_BUILD_COUNT = 7
+
 export const TECH_FOR_PROS = {
   name: 'Tech for Pros',
   domain: 'techforpros.com',
