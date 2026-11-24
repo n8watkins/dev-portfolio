@@ -115,6 +115,13 @@ test('the build log card moves on through the months by itself, and holds when a
   test.skip(isMobile, 'Hover is a desktop pointer; the timing is the same on phones.')
   // Moving the page's clock on runs every timer on it (the dino, the marquees), slowly in WebKit.
   test.setTimeout(150_000)
+  // Sentry loads itself when the page is idle, in the middle of this test. Its Session Replay
+  // clears a timer by an id it no longer owns, and on the page's fake clock that id can be this
+  // card's interval, which then never fires again (about one run in six in WebKit). Keep the SDK
+  // from loading here: the card's timing is all this test is about.
+  await page.addInitScript(() => {
+    window.requestIdleCallback = () => 0
+  })
   await page.clock.install()
   await page.goto('/')
   const card = page.locator('[data-build-log]')
