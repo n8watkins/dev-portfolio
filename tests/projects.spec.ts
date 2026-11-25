@@ -120,6 +120,23 @@ test('a project card opens its page and its live demo', async ({ page }) => {
   ).not.toHaveCount(0)
 })
 
+/**
+ * The button beside a heading must hold still while it fades in: a pointer that
+ * goes down on a link that then moves comes up on something else, and the click
+ * is lost (Firefox on CI, 3 of 40 runs under load, 2026-11-25).
+ */
+test('the buttons beside a heading fade in without moving', async ({ page }) => {
+  await page.goto('/')
+  const link = page.locator('#projects').getByRole('link', { name: 'Detailed view' })
+  await link.scrollIntoViewIfNeeded()
+  const tops: number[] = []
+  for (let i = 0; i < 30; i++) {
+    tops.push(await link.evaluate((el) => el.getBoundingClientRect().top))
+    await page.waitForTimeout(30)
+  }
+  expect(new Set(tops.map((t) => Math.round(t))).size).toBe(1)
+})
+
 test('"Detailed view" opens /projects, with every project at full size', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.goto('/')

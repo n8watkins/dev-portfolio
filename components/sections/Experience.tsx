@@ -209,7 +209,7 @@ const Experience = () => {
     <div className="relative m-auto pt-0 pb-12 select-none md:pt-8 md:pb-20 xl:max-w-6xl 2xl:max-w-7xl">
       <div className="flex items-end justify-between gap-4 px-2 pt-6 pb-6 md:px-4">
         <SectionHeading eyebrow="Experience" title="Where I've built" />
-        <Reveal className="shrink-0">
+        <Reveal still className="shrink-0">
         <button
           type="button"
           onClick={() => setOpen(allOpen ? new Set() : new Set(expandable.map((w) => w.id)))}
