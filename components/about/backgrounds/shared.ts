@@ -32,7 +32,19 @@ export interface StoryLayout {
   /** Top of main in document coordinates (scrollY at which main's top meets the screen's top). */
   top: number
   /** The intro, then each scene, then the ways on: top and bottom. */
-  parts: { id: string; top: number; bottom: number; left: number; right: number }[]
+  parts: Box[]
+  /** The blocks of words (breadcrumb, intro, each scene's words, the ways on), to keep clear. */
+  words: Box[]
+  /** The portrait and each scene's photo (anything behind them is hidden). */
+  photos: Box[]
+}
+
+export interface Box {
+  id: string
+  top: number
+  bottom: number
+  left: number
+  right: number
 }
 
 /**
@@ -51,7 +63,7 @@ export function useStoryLayout(main: RefObject<HTMLElement | null>, enabled: boo
       frame = requestAnimationFrame(() => {
         const box = el.getBoundingClientRect()
         const top = box.top + window.scrollY
-        const at = (node: Element | null, id: string) => {
+        const at = (node: Element | null | undefined, id: string): Box | null => {
           if (!node) return null
           const r = node.getBoundingClientRect()
           return {
@@ -62,14 +74,26 @@ export function useStoryLayout(main: RefObject<HTMLElement | null>, enabled: boo
             right: r.right - box.left,
           }
         }
-        const parts = [
-          at(el.querySelector('section[aria-labelledby="about-heading"]'), 'intro'),
-          ...Array.from(el.querySelectorAll('section[aria-labelledby^="scene-"]')).map((s) =>
-            at(s, s.getAttribute('aria-labelledby')!.slice('scene-'.length))
-          ),
-          at(el.querySelector('nav[aria-label="Where to next"]'), 'end'),
-        ].filter((p): p is NonNullable<typeof p> => p !== null)
-        setLayout({ height: box.height, width: box.width, vh: window.innerHeight, top, parts })
+        const present = (list: (Box | null)[]) => list.filter((p): p is Box => p !== null)
+        const intro = el.querySelector('section[aria-labelledby="about-heading"]')
+        const scenes = Array.from(el.querySelectorAll('section[aria-labelledby^="scene-"]'))
+        const ways = el.querySelector('nav[aria-label="Where to next"]')
+        const parts = present([
+          at(intro, 'intro'),
+          ...scenes.map((s) => at(s, s.getAttribute('aria-labelledby')!.slice('scene-'.length))),
+          at(ways, 'end'),
+        ])
+        const words = present([
+          at(el.querySelector('nav[aria-label="Breadcrumb"]'), 'crumbs'),
+          at(intro?.children[0], 'intro'),
+          ...scenes.map((s) => at(s.children[1], `${s.getAttribute('aria-labelledby')}-words`)),
+          at(ways, 'end'),
+        ])
+        const photos = present([
+          at(intro?.children[1], 'portrait'),
+          ...scenes.map((s) => at(s.children[0], `${s.getAttribute('aria-labelledby')}-photo`)),
+        ])
+        setLayout({ height: box.height, width: box.width, vh: window.innerHeight, top, parts, words, photos })
       })
     }
     measure()

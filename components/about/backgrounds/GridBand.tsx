@@ -2,11 +2,23 @@
 
 import { useEffect, useMemo, useRef } from 'react'
 import { useMotionValueEvent, useScroll } from 'motion/react'
-import { smooth, type StoryLayout } from './shared'
+import { smooth, type Box, type StoryLayout } from './shared'
 
 const CELL = 52
-// Roughly one lit cell per this many cells: sparse, so each reads on its own.
-const DENSITY = 13
+// Resting cells: roughly one per this many free cells, sparse.
+const DENSITY = 16
+// Cells that wander (fade out, jump to a free cell on screen, fade back in),
+// like the home page hero's grid: at most this many, fewer on a phone.
+const WANDER = 14
+// Words keep this much clear grid around them (px), so no cell sits behind or
+// right against a line of text.
+const CLEARANCE = 20
+
+// Timings (ms), the hero grid's pace.
+const FADE = [1400, 2200] as const
+const HOLD = [2500, 6000] as const
+const GAP = [150, 700] as const
+const EASE = 'cubic-bezier(0.37, 0, 0.63, 1)'
 
 /** The tint of each part of the story, in the site's sky, blue and cyan. */
 const TINT: Record<string, string> = {
@@ -32,14 +44,8 @@ function random(seed: number) {
   }
 }
 
-interface Cell {
-  x: number
-  y: number
-  /** Page y of its centre, in px from the top of main. */
-  cy: number
-  fill: string
-  peak: number
-}
+type Spot = { x: number; y: number }
+const key = ({ x, y }: Spot) => `${x},${y}`
 
 /** The part of the story a page y belongs to: the last one that starts above it (with some lead). */
 function partAt(layout: StoryLayout, y: number) {
@@ -48,46 +54,81 @@ function partAt(layout: StoryLayout, y: number) {
   return id
 }
 
+const overlaps = (box: Box, l: number, t: number, r: number, b: number, pad: number) =>
+  l < box.right + pad && r > box.left - pad && t < box.bottom + pad && b > box.top - pad
+
 /**
- * Option 1: the site's square grid, faint, behind the whole story. Its cells
- * light up in a band around where you are reading, so the band travels with
- * your scroll, and they take the tint of the part of the story they sit in
- * (sky for the intro, blue at work, cyan in LA, indigo for the setup). Only
- * the cells' opacity changes, once per scroll frame. Reduced motion: the
- * cells rest, all softly lit.
+ * Option 1: the site's square grid, faint, behind the whole story, alive the
+ * way the home page hero's grid is. A few cells wander: each fades out, jumps
+ * to a free cell on screen and fades back in, on its own random clock. A
+ * sparse set of resting cells lights up in a band around where you are
+ * reading, so the band travels with your scroll. Every cell takes the tint of
+ * the part of the story it sits in (sky for the intro, blue at work, cyan in
+ * LA, indigo for the setup). The words are kept clear: no cell lights behind
+ * or right against a block of text, so the lively cells live in the margins,
+ * the gaps between scenes and around the photos. Only opacity and transform
+ * change. Wanderers rest while the tab is hidden. Reduced motion: the resting
+ * cells hold still, softly lit, and nothing wanders.
  */
 export default function GridBand({ layout, reduce }: { layout: StoryLayout; reduce: boolean }) {
   const { scrollY } = useScroll()
-  const nodes = useRef<(HTMLDivElement | null)[]>([])
+  const resting = useRef<(HTMLDivElement | null)[]>([])
+  const wanderers = useRef<(HTMLDivElement | null)[]>([])
 
   const cols = Math.ceil(layout.width / CELL) + 2
   const rows = Math.floor(layout.height / CELL)
-  const cells = useMemo(() => {
+  // The grid is centred, so its first column starts left of the page.
+  const originX = (layout.width - cols * CELL) / 2
+
+  /** Every cell a light may use: not behind or against words, not hidden behind a photo. */
+  const free = useMemo(() => {
+    const out: Spot[] = []
+    // Nothing lights in the footer: it ends a little under the ways on.
+    const end = layout.parts.find((p) => p.id === 'end')
+    const last = end ? Math.floor((end.bottom + 104) / CELL) : rows
+    for (let y = 1; y < Math.min(rows, last); y++)
+      for (let x = 0; x < cols; x++) {
+        const l = originX + x * CELL
+        const t = y * CELL
+        const r = l + CELL
+        const b = t + CELL
+        // Off the page's sides (only a sliver shows past the edge fade).
+        if (r < 8 || l > layout.width - 8) continue
+        if (layout.words.some((w) => overlaps(w, l, t, r, b, CLEARANCE))) continue
+        if (layout.photos.some((p) => l >= p.left && r <= p.right && t >= p.top && b <= p.bottom)) continue
+        out.push({ x, y })
+      }
+    return out
+  }, [cols, rows, originX, layout])
+
+  const tintAt = (y: number) => `rgb(${TINT[partAt(layout, y * CELL + CELL / 2)]})`
+
+  const rest = useMemo(() => {
     const rand = random(19)
     const taken = new Set<string>()
-    const out: Cell[] = []
-    const want = Math.round((cols * rows) / DENSITY)
+    const out: (Spot & { peak: number })[] = []
+    const want = Math.round(free.length / DENSITY)
     for (let tries = 0; out.length < want && tries < want * 40; tries++) {
-      const x = Math.floor(rand() * cols)
-      const y = 1 + Math.floor(rand() * (rows - 1))
+      const spot = free[Math.floor(rand() * free.length)]
       let clear = true
       for (let dx = -1; dx <= 1 && clear; dx++)
-        for (let dy = -1; dy <= 1; dy++) if (taken.has(`${x + dx},${y + dy}`)) clear = false
+        for (let dy = -1; dy <= 1; dy++) if (taken.has(key({ x: spot.x + dx, y: spot.y + dy }))) clear = false
       if (!clear) continue
-      taken.add(`${x},${y}`)
-      const cy = y * CELL + CELL / 2
-      out.push({ x, y, cy, fill: `rgb(${TINT[partAt(layout, cy)]})`, peak: 0.1 + rand() * 0.12 })
+      taken.add(key(spot))
+      out.push({ ...spot, peak: 0.1 + rand() * 0.1 })
     }
     return out
-  }, [cols, rows, layout])
+  }, [free])
 
+  // The resting cells: lit in a band around the reading line.
   const paint = (scroll: number) => {
     const focus = scroll - layout.top + layout.vh * 0.5
     const band = layout.vh * 0.6
-    cells.forEach((cell, i) => {
-      const node = nodes.current[i]
+    rest.forEach((cell, i) => {
+      const node = resting.current[i]
       if (!node) return
-      const v = reduce ? cell.peak * 0.6 : cell.peak * smooth(band, band * 0.15, Math.abs(cell.cy - focus))
+      const cy = cell.y * CELL + CELL / 2
+      const v = reduce ? cell.peak * 0.7 : cell.peak * smooth(band, band * 0.15, Math.abs(cy - focus))
       const next = v.toFixed(3)
       if (node.style.opacity !== next) node.style.opacity = next
     })
@@ -95,6 +136,82 @@ export default function GridBand({ layout, reduce }: { layout: StoryLayout; redu
   useEffect(() => paint(scrollY.get()))
   useMotionValueEvent(scrollY, 'change', paint)
 
+  // The wanderers: fade out, jump to a free cell on screen (clear of the
+  // resting cells and of each other), fade back in, hold, again.
+  const count = Math.min(WANDER, Math.max(5, Math.round(free.length / 40)))
+  useEffect(() => {
+    if (reduce) return
+    const nodes = wanderers.current
+    const timers: ReturnType<typeof setTimeout>[] = []
+    const later = (fn: () => void, ms: number) => timers.push(setTimeout(fn, ms))
+    const between = ([min, max]: readonly [number, number]) => min + Math.random() * (max - min)
+    const taken = new Set<string>(rest.map(key))
+    const spots: (Spot | null)[] = Array(count).fill(null)
+
+    const onScreen = () => {
+      const top = scrollY.get() - layout.top
+      const minY = Math.max(1, Math.ceil((top + 64) / CELL))
+      const maxY = Math.floor((top + layout.vh - 24) / CELL) - 1
+      return free.filter((s) => s.y >= minY && s.y <= maxY)
+    }
+    const clearSpot = () => {
+      const choices = onScreen()
+      for (let tries = 0; tries < 40 && choices.length; tries++) {
+        const s = choices[Math.floor(Math.random() * choices.length)]
+        let clear = true
+        for (let dx = -1; dx <= 1 && clear; dx++)
+          for (let dy = -1; dy <= 1; dy++) if (taken.has(key({ x: s.x + dx, y: s.y + dy }))) clear = false
+        if (clear) return s
+      }
+      return null
+    }
+    const fade = (node: HTMLDivElement, opacity: number, ms: number) => {
+      node.style.transition = `opacity ${Math.round(ms)}ms ${EASE}`
+      node.style.opacity = opacity.toFixed(2)
+    }
+    const appear = (i: number) => {
+      const node = nodes[i]
+      if (!node) return
+      if (document.hidden) return later(() => appear(i), 1000)
+      const spot = clearSpot()
+      if (!spot) return later(() => appear(i), 800)
+      spots[i] = spot
+      taken.add(key(spot))
+      node.style.transition = 'none'
+      node.style.transform = `translate3d(${spot.x * CELL + 1}px, ${spot.y * CELL + 1}px, 0)`
+      node.style.background = tintAt(spot.y)
+      // The jump lands while it is invisible; the fade starts on the next frame.
+      requestAnimationFrame(() => {
+        const fadeIn = between(FADE)
+        fade(node, 0.14 + Math.random() * 0.12, fadeIn)
+        later(() => vanish(i), fadeIn + between(HOLD))
+      })
+    }
+    const vanish = (i: number) => {
+      const node = nodes[i]
+      if (!node) return
+      if (document.hidden) return later(() => vanish(i), 1000)
+      const fadeOut = between(FADE)
+      fade(node, 0, fadeOut)
+      later(() => {
+        const spot = spots[i]
+        if (spot) taken.delete(key(spot))
+        spots[i] = null
+        appear(i)
+      }, fadeOut + between(GAP))
+    }
+    for (let i = 0; i < count; i++) later(() => appear(i), between([200, 4000]))
+    return () => {
+      timers.forEach(clearTimeout)
+      nodes.forEach((node) => {
+        if (node) node.style.opacity = '0'
+      })
+    }
+    // tintAt reads layout, which is a dependency already.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [reduce, count, free, rest, layout, scrollY])
+
+  const cellStyle = { width: CELL - 1, height: CELL - 1, opacity: 0 } as const
   return (
     <div
       aria-hidden="true"
@@ -102,29 +219,38 @@ export default function GridBand({ layout, reduce }: { layout: StoryLayout; redu
       style={{ maskImage: EDGES, WebkitMaskImage: EDGES, maskComposite: 'intersect', WebkitMaskComposite: 'source-in' }}
     >
       <div
-        className="absolute top-0 left-1/2 h-full -translate-x-1/2"
+        className="absolute top-0 h-full"
         style={{
+          left: originX,
           width: cols * CELL,
           backgroundImage:
             'linear-gradient(to right, rgba(255,255,255,0.045) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.045) 1px, transparent 1px)',
           backgroundSize: `${CELL}px ${CELL}px`,
         }}
       >
-        {cells.map((cell, i) => (
+        {rest.map((cell, i) => (
           <div
-            key={`${cell.x},${cell.y}`}
+            key={key(cell)}
             ref={(el) => {
-              nodes.current[i] = el
+              resting.current[i] = el
             }}
-            className="absolute"
+            className="absolute top-0 left-0"
             style={{
-              left: cell.x * CELL + 1,
-              top: cell.y * CELL + 1,
-              width: CELL - 1,
-              height: CELL - 1,
-              background: cell.fill,
-              opacity: 0,
+              ...cellStyle,
+              transform: `translate3d(${cell.x * CELL + 1}px, ${cell.y * CELL + 1}px, 0)`,
+              background: tintAt(cell.y),
             }}
+          />
+        ))}
+        {Array.from({ length: count }, (_, i) => (
+          <div
+            key={`w${i}`}
+            ref={(el) => {
+              wanderers.current[i] = el
+            }}
+            data-wander=""
+            className="absolute top-0 left-0"
+            style={cellStyle}
           />
         ))}
       </div>
