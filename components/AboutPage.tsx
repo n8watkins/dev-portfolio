@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
@@ -15,6 +15,12 @@ import { aboutPortrait, aboutScenes, type AboutPhoto, type AboutScene } from '@/
 import { TECH_FOR_PROS } from '@/lib/sites'
 import { homeSpot, returnToHomeSpot } from '@/lib/returnTo'
 import { SCROLL_TO_KEY } from '@/components/Projects/BackToHome'
+import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion'
+import { useAboutBg, useStoryLayout } from '@/components/about/backgrounds/shared'
+import { useSceneReveal } from '@/components/about/backgrounds/useSceneReveal'
+import GridBand from '@/components/about/backgrounds/GridBand'
+import ColorFields, { ParallaxStickers } from '@/components/about/backgrounds/ColorFields'
+import StoryLine from '@/components/about/backgrounds/StoryLine'
 
 const ScrollToTop = dynamic(() => import('@/components/ui/ScrollToTop'), { ssr: false })
 
@@ -166,15 +172,35 @@ function WaysOn() {
  * stack) lives on the home page and its detail pages.
  */
 export default function AboutPage() {
+  // Preview (owner picks): ?bg=1, 2 or 3 adds a scroll background and lets
+  // the scenes arrive as you scroll. No switch is the page as it was.
+  const bg = useAboutBg()
+  const reduce = usePrefersReducedMotion()
+  const mainRef = useRef<HTMLElement>(null)
+  const layout = useStoryLayout(mainRef, bg !== 0)
+  useSceneReveal(mainRef, bg !== 0 && !reduce)
+  const above = bg ? 'relative' : ''
+  const stickers = (mood: React.ComponentProps<typeof Decals>['mood']) =>
+    bg === 2 ? (
+      <ParallaxStickers reduce={reduce}>
+        <Decals mood={mood} />
+      </ParallaxStickers>
+    ) : (
+      <Decals mood={mood} />
+    )
   return (
     <>
       <FloatingNav navItems={subpageNavItems} />
       <main
+        ref={mainRef}
         id="main-content"
         tabIndex={-1}
         className="relative w-full overflow-hidden bg-darkBlue text-slate-200 focus:outline-hidden"
       >
-        <div className="mx-auto max-w-md px-4 pt-14 sm:max-w-xl md:max-w-3xl md:pt-36 lg:max-w-4xl xl:max-w-6xl 2xl:max-w-7xl">
+        {layout && bg === 1 && <GridBand layout={layout} reduce={reduce} />}
+        {layout && bg === 2 && <ColorFields layout={layout} reduce={reduce} />}
+        {layout && bg === 3 && <StoryLine layout={layout} reduce={reduce} />}
+        <div className={`${above} mx-auto max-w-md px-4 pt-14 sm:max-w-xl md:max-w-3xl md:pt-36 lg:max-w-4xl xl:max-w-6xl 2xl:max-w-7xl`.trim()}>
           <Breadcrumb current="About me" className="mb-8 md:mb-10" />
           <PauseOffscreen className="relative">
             <section
@@ -211,7 +237,7 @@ export default function AboutPage() {
                 </div>
               </figure>
             </section>
-            <Decals mood="intro" />
+            {stickers('intro')}
           </PauseOffscreen>
 
           <div className="mt-24 flex flex-col gap-24 md:mt-32 md:gap-32">
@@ -239,14 +265,14 @@ export default function AboutPage() {
                     </div>
                   </div>
                 </section>
-                <Decals mood={scene.mood} />
+                {stickers(scene.mood)}
               </PauseOffscreen>
             ))}
           </div>
 
           <WaysOn />
         </div>
-        <div className="mx-auto max-w-md sm:max-w-xl md:max-w-3xl lg:max-w-4xl xl:max-w-6xl 2xl:max-w-7xl">
+        <div className={`${above} mx-auto max-w-md sm:max-w-xl md:max-w-3xl lg:max-w-4xl xl:max-w-6xl 2xl:max-w-7xl`.trim()}>
           <Footer />
         </div>
         <ScrollToTop />
