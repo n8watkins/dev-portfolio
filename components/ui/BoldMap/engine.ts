@@ -249,6 +249,8 @@ export function createMapEngine(el: MapElements, opts: MapOptions): MapEngine {
     const b = el.card.getBoundingClientRect()
     return { x: a.left - b.left, y: a.top - b.top, w: a.width, h: a.height }
   }
+  // The avatar as drawn (its picture grows on hover), not its fixed hit box.
+  const pinRect = () => rectOf((el.pin.firstElementChild as HTMLElement | null) ?? el.pin)
   type Rect = ReturnType<typeof rectOf>
   const clear = (rects: Rect[], lx: number, ly: number, w: number, h: number, bottom: number) =>
     lx >= 6 &&
@@ -262,7 +264,7 @@ export function createMapEngine(el: MapElements, opts: MapOptions): MapEngine {
   let youPlaced = false
   function placeYou() {
     if (!visitor) return
-    const rects = [rectOf(el.pin), rectOf(el.chip)]
+    const rects = [pinRect(), rectOf(el.chip)]
     const w = el.you.offsetWidth
     const h = el.you.offsetHeight
     let spots: [number, number][]
@@ -320,7 +322,7 @@ export function createMapEngine(el: MapElements, opts: MapOptions): MapEngine {
     const [x, y] = screenOf(p)
     const w = el.label.offsetWidth
     const h = el.label.offsetHeight
-    const rects = [rectOf(el.pin), rectOf(el.chip)]
+    const rects = [pinRect(), rectOf(el.chip)]
     if (el.you.hasAttribute('data-on')) rects.push(rectOf(el.you))
     const spots: [number, number][] = [
       [x + 12, y - h / 2],
@@ -808,7 +810,8 @@ export function createMapEngine(el: MapElements, opts: MapOptions): MapEngine {
     const la = laTop()
     const top = cam.toPx([la[0], la[1] + 5.2, la[2]])
     const foot = cam.toPx(la)
-    el.pin.style.transform = `translate(${top[0] - 18}px, ${top[1] - 14 - 18}px)`
+    const half = el.pin.offsetWidth / 2 // 18px on a card, more on a large map
+    el.pin.style.transform = `translate(${top[0] - half}px, ${top[1] - 14 - half}px)`
     el.chip.style.transform = `translate(${Math.max(8, foot[0] - el.chip.offsetWidth / 2)}px, ${foot[1] + 12}px)`
     if (visitor && !youPlaced && el.you.hasAttribute('data-on')) {
       youPlaced = true

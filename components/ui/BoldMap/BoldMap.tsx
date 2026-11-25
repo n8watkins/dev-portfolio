@@ -1,14 +1,26 @@
 'use client'
 
 import Image from 'next/image'
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion'
 import { latestEntry } from '@/lib/intersection'
 import { createMapEngine } from './engine'
 import { formatMiles, type Visitor } from './geo'
 
-const MONO = 'font-mono font-semibold leading-none whitespace-nowrap'
-const TAG = `${MONO} pointer-events-none absolute top-0 left-0 opacity-0 data-[on]:opacity-100 [&_em]:not-italic [&_em]:text-[#7dd3fc]`
+const MONO = 'font-mono font-bold leading-none whitespace-nowrap'
+// Place labels: 12px on a phone card, 13px at the bento size, 15px on a large map
+// (owner, 2026-11-25: the old 11px semibold read too small and too thin).
+const TAG = `${MONO} pointer-events-none absolute top-0 left-0 px-2 py-1.5 text-xs opacity-0 data-[on]:opacity-100 @min-[400px]:text-[13px] @min-[700px]:px-2.5 @min-[700px]:py-[7px] @min-[700px]:text-[15px] [&_em]:not-italic [&_em]:text-[#8ee0ff]`
+/** Hidden until the engine has placed what is inside. */
+const PLACED = 'opacity-0 transition-opacity duration-300 group-data-[ready]/map:opacity-100'
+/** The avatar grows: card hovered, avatar hovered or keyboard-focused, or tapped. */
+const GROW = [
+  'group-hover/map:scale-100 group-hover/pin:scale-100 group-focus-visible/pin:scale-100 group-data-[big]/pin:scale-100',
+  'group-hover/map:shadow-[0_0_0_3px_#e0f2fe,0_0_46px_12px_rgba(34,211,238,.7),0_12px_28px_rgba(0,0,0,.55)]',
+  'group-hover/pin:shadow-[0_0_0_3px_#e0f2fe,0_0_46px_12px_rgba(34,211,238,.7),0_12px_28px_rgba(0,0,0,.55)]',
+  'group-focus-visible/pin:shadow-[0_0_0_3px_#fff,0_0_0_6px_#38bdf8,0_0_46px_12px_rgba(34,211,238,.7)]',
+  'group-data-[big]/pin:shadow-[0_0_0_3px_#e0f2fe,0_0_46px_12px_rgba(34,211,238,.7),0_12px_28px_rgba(0,0,0,.55)]',
+].join(' ')
 
 /** What the map says, for screen readers (the map itself is decorative). */
 export function boldMapText(visitor: Visitor | null) {
@@ -35,7 +47,8 @@ export default function BoldMap({ visitor }: { visitor: Visitor | null }) {
   const still = usePrefersReducedMotion()
   const card = useRef<HTMLDivElement>(null)
   const stage = useRef<HTMLDivElement>(null)
-  const pin = useRef<HTMLSpanElement>(null)
+  const pin = useRef<HTMLButtonElement>(null)
+  const [big, setBig] = useState(false)
   const chip = useRef<HTMLSpanElement>(null)
   const you = useRef<HTMLSpanElement>(null)
   const label = useRef<HTMLSpanElement>(null)
@@ -105,33 +118,50 @@ export default function BoldMap({ visitor }: { visitor: Visitor | null }) {
           LOS ANGELES · <b className="font-bold text-[#e0f2fe]">OPEN TO ANYWHERE</b>
         </span>
         {/* Placed by the engine; hidden until it has placed them. */}
-        <div className="opacity-0 transition-opacity duration-300 group-data-[ready]/map:opacity-100">
-          <span ref={pin} className="pointer-events-none absolute top-0 left-0 size-9">
-            <span className="absolute inset-0 overflow-hidden rounded-full bg-[#012485] shadow-[0_0_0_2px_#7dd3fc,0_0_20px_4px_rgba(34,211,238,.6),0_6px_14px_rgba(0,0,0,.5)]">
-              <Image
-                src="/hero/portrait.jpg"
-                alt=""
-                fill
-                sizes="36px"
-                className="object-cover object-[center_18%]"
-              />
-            </span>
-          </span>
+        <div className={PLACED}>
           <span
             ref={chip}
-            className={`${MONO} pointer-events-none absolute top-0 left-0 rounded-[7px] border border-[rgba(125,211,252,.45)] bg-[rgba(3,37,108,.92)] px-[9px] py-[7px] text-xs text-[#e0f2fe] shadow-[0_4px_14px_rgba(0,0,0,.35)]`}
+            className={`${MONO} pointer-events-none absolute top-0 left-0 rounded-[7px] border border-[rgba(125,211,252,.5)] bg-[rgba(3,37,108,.94)] px-2.5 py-[7px] text-[13px] text-white shadow-[0_4px_14px_rgba(0,0,0,.35)] @min-[400px]:text-sm @min-[700px]:px-3 @min-[700px]:py-2 @min-[700px]:text-base`}
           >
             Los Angeles, CA
           </span>
           <span
             ref={label}
-            className={`${TAG} rounded-md border border-[rgba(34,211,238,.4)] bg-[rgba(8,20,39,.88)] px-[7px] py-[5px] text-[11px] text-[#cffafe] transition-opacity duration-250 data-[hover]:border-[rgba(224,242,254,.8)] data-[hover]:text-white data-[hover]:transition-none`}
+            className={`${TAG} rounded-md border border-[rgba(34,211,238,.45)] bg-[rgba(8,20,39,.92)] text-[#e0f2fe] transition-opacity duration-250 data-[hover]:border-[rgba(224,242,254,.8)] data-[hover]:text-white data-[hover]:transition-none`}
           />
           <span
             ref={you}
-            className={`${TAG} rounded-md border border-[rgba(224,242,254,.85)] bg-[rgba(3,37,108,.94)] px-[7px] py-[5px] text-[11px] text-white transition-opacity duration-1000 [&_b]:font-bold [&_b]:text-[#a5f3fc]`}
+            className={`${TAG} rounded-md border border-[rgba(224,242,254,.85)] bg-[rgba(3,37,108,.95)] text-white transition-opacity duration-1000 [&_b]:text-[#a5f3fc]`}
           />
         </div>
+      </div>
+      {/* His face, over Los Angeles: it grows when the card is hovered, when it
+          is hovered or focused itself, and on a tap, so it reads as something
+          to look at. Drawn at its large size and scaled down at rest, so it
+          stays sharp when it grows. Last, so it sits over the labels. */}
+      <div className={PLACED}>
+        <button
+          ref={pin}
+          type="button"
+          aria-label="Nathan Watkins, in Los Angeles"
+          aria-pressed={big}
+          data-big={big || undefined}
+          onClick={() => setBig((b) => !b)}
+          onBlur={() => setBig(false)}
+          className="group/pin absolute top-0 left-0 size-9 cursor-default rounded-full outline-none @min-[700px]:size-12"
+        >
+          <span
+            className={`absolute bottom-0 left-[-14px] size-16 origin-bottom scale-(--rest) overflow-hidden [--rest:0.5625] @min-[700px]:left-[-20px] @min-[700px]:size-22 @min-[700px]:[--rest:0.5455] rounded-full bg-[#012485] shadow-[0_0_0_3.5px_#7dd3fc,0_0_34px_7px_rgba(34,211,238,.55),0_10px_24px_rgba(0,0,0,.5)] transition-[scale,box-shadow] duration-500 ease-[cubic-bezier(.2,.9,.3,1.25)] motion-reduce:transition-none ${GROW}`}
+          >
+            <Image
+              src="/hero/portrait.jpg"
+              alt=""
+              fill
+              sizes="176px"
+              className="object-cover object-[center_18%]"
+            />
+          </span>
+        </button>
       </div>
     </div>
   )

@@ -72,6 +72,58 @@ test('the map moves on screen and pauses off screen', async ({ page }) => {
   expect(await frames(map)).toBe(paused)
 })
 
+/**
+ * His avatar over Los Angeles grows when the card is hovered, and on a tap
+ * (owner, 2026-11-25: "some indication that you can look at the picture").
+ */
+test('his avatar grows on hover and on a tap, and eases back', async ({ page, isMobile }) => {
+  await page.emulateMedia({ reducedMotion: 'no-preference' })
+  await page.goto('/lab/map?from=Austin')
+  const map = page.locator('[data-bold-map]').first()
+  await map.scrollIntoViewIfNeeded()
+  await expect(map).toHaveAttribute('data-ready', 'true')
+  const avatar = map.getByRole('button', { name: 'Nathan Watkins, in Los Angeles' })
+  const size = async () => (await avatar.locator('span').first().boundingBox())!.width
+  await expect.poll(size).toBeLessThan(40)
+  if (!isMobile) {
+    const box = (await map.boundingBox())!
+    await page.mouse.move(box.x + box.width * 0.6, box.y + box.height * 0.45)
+    await expect.poll(size).toBeGreaterThan(60)
+    await page.mouse.move(0, 0)
+    await expect.poll(size).toBeLessThan(40)
+  }
+  await (isMobile ? avatar.tap() : avatar.click())
+  await expect(avatar).toHaveAttribute('aria-pressed', 'true')
+  await expect.poll(size).toBeGreaterThan(60)
+  await (isMobile ? avatar.tap() : avatar.click())
+  await expect(avatar).toHaveAttribute('aria-pressed', 'false')
+  if (!isMobile) await page.mouse.move(0, 0)
+  await expect.poll(size).toBeLessThan(40)
+})
+
+test('under reduced motion the avatar changes size at once', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.goto('/lab/map')
+  const map = page.locator('[data-bold-map]').first()
+  await map.scrollIntoViewIfNeeded()
+  await expect(map).toHaveAttribute('data-ready', 'true')
+  const avatar = map.getByRole('button', { name: 'Nathan Watkins, in Los Angeles' })
+  await avatar.focus()
+  await avatar.press('Enter')
+  await expect(avatar).toHaveAttribute('aria-pressed', 'true')
+  // No transition: the next frame already has the full size.
+  const width = await avatar
+    .locator('span')
+    .first()
+    .evaluate(
+      (el) =>
+        new Promise<number>((done) =>
+          requestAnimationFrame(() => done(el.getBoundingClientRect().width))
+        )
+    )
+  expect(width).toBeGreaterThan(60)
+})
+
 test('without WebGL2 the map is drawn once, still, on a 2D canvas', async ({ page }) => {
   await page.addInitScript(() => {
     const get = HTMLCanvasElement.prototype.getContext
