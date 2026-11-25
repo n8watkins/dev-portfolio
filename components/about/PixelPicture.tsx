@@ -1,8 +1,8 @@
 'use client'
 
 import React, { useEffect, useMemo, useRef } from 'react'
-import type { Art } from './art'
-import styles from './art.module.css'
+import type { Paint, Picture } from './pictures'
+import styles from './pictures.module.css'
 
 // Flip timings (ms): in, about a second for the whole wave; out, about half.
 const IN_FLIP = 320
@@ -12,50 +12,62 @@ const OUT_WAVE = 260
 const STEP_FLIP = 180
 // One idle action every few seconds, while on screen.
 const IDLE = [2600, 5200] as const
+// A plain colour's square is this deep a shade of it (its edge is the colour itself).
+const SHADE = 0.72
 
 const between = ([min, max]: readonly [number, number]) => min + Math.random() * (max - min)
 
 type Slot = { i: number; j: number; el: HTMLElement | null; ch: string }
 
 /** Every cell the picture may ever light, in any pose. */
-function cellsOf(art: Art): string[] {
+function cellsOf(picture: Picture): string[] {
   const keys = new Set<string>()
-  for (const rows of [art.base, ...art.idles.flatMap((frames) => frames.map((f) => f.pose))])
+  for (const rows of [
+    picture.base,
+    ...picture.idles.flatMap((frames) => frames.map((f) => f.pose)),
+  ])
     rows.forEach((line, j) => [...line].forEach((ch, i) => ch !== '.' && keys.add(`${i},${j}`)))
   return [...keys]
 }
 
+/** A cell's fill and edge for a paint, as "r g b" for rgb(var(--x) / alpha). */
+function colours(paint: Paint | undefined): { fill: string; edge: string } {
+  const rgb = (paint?.rgb ?? '56,189,248').split(',').map(Number)
+  const k = paint?.glow ? 1 : SHADE
+  return { fill: rgb.map((v) => Math.round(v * k)).join(' '), edge: rgb.join(' ') }
+}
+
 /**
- * One pixel picture, lit from the background grid's squares (preview ?bg=1).
- * Its cells flip in like a split-flap board when most of it comes on screen
- * and flip out when it leaves, every time. While on screen it plays one small
- * action every few seconds (the sun sets, the phone rings, code types). It
- * never follows the pointer, takes no clicks and is hidden from screen
- * readers. Reduced motion: drawn complete and still.
+ * One pixel picture on the About page's grid (pictures.ts). Its cells flip in
+ * like a split-flap board when most of it is on screen and flip out when it
+ * leaves, every time. While on screen it plays one small action every few
+ * seconds (the sun sets, the phone rings, code types itself). It never
+ * follows the pointer, takes no clicks and is hidden from screen readers.
+ * Reduced motion: drawn complete and still.
  */
-export default function PixelArt({
-  art,
+export default function PixelPicture({
+  picture,
   cell,
   left,
   top,
   reduce,
 }: {
-  art: Art
-  /** The size of a cell in px (the grid's, or half of it on a phone). */
+  picture: Picture
+  /** The size of a cell in px: the grid's, or half of it where room is short. */
   cell: number
   left: number
   top: number
   reduce: boolean
 }) {
   const ref = useRef<HTMLDivElement>(null)
-  const keys = useMemo(() => cellsOf(art), [art])
+  const keys = useMemo(() => cellsOf(picture), [picture])
   const slots = useRef<Slot[]>([])
-  const h = art.base.length
-  const w = art.base[0].length
+  const h = picture.base.length
+  const w = picture.base[0].length
 
   useEffect(() => {
     const el = ref.current
-    if (!el || typeof IntersectionObserver === 'undefined') return
+    if (!el) return
     const cells = slots.current
     const timers = new Set<ReturnType<typeof setTimeout>>()
     const later = (fn: () => void, ms: number) => {
@@ -70,9 +82,11 @@ export default function PixelArt({
       timers.clear()
     }
     const at = (rows: readonly string[], s: Slot) => rows[s.j]?.[s.i] ?? '.'
-    // "r,g,b" to "r g b", for rgb(var(--c) / alpha) in the stylesheet.
-    const paint = (c: HTMLElement, ch: string) =>
-      c.style.setProperty('--c', (art.colors[ch] ?? '56,189,248').replaceAll(',', ' '))
+    const paint = (c: HTMLElement, ch: string) => {
+      const { fill, edge } = colours(picture.paints[ch])
+      c.style.setProperty('--fill', fill)
+      c.style.setProperty('--edge', edge)
+    }
 
     const flip = (s: Slot, ch: string, delay: number, ms: number) => {
       const c = s.el
@@ -105,23 +119,25 @@ export default function PixelArt({
       }
       return end
     }
-    const span = art.order === 'up' ? h : w
-    const along = (s: Slot) => (art.order === 'up' ? h - 1 - s.j : s.i)
+    const span = picture.order === 'up' ? h : w
+    const along = (s: Slot) => (picture.order === 'up' ? h - 1 - s.j : s.i)
     const wave = (total: number) => (s: Slot) =>
       (along(s) / Math.max(1, span - 1)) * total + Math.random() * 60
 
-    if (reduce) {
+    if (reduce || typeof IntersectionObserver === 'undefined') {
       el.setAttribute('data-still', '')
-      pose(art.base, () => 0, 0)
+      el.setAttribute('data-built', '')
+      pose(picture.base, () => 0, 0)
       return () => {
         el.removeAttribute('data-still')
+        el.removeAttribute('data-built')
         pose(Array(h).fill('.'.repeat(w)), () => 0, 0)
       }
     }
 
     let shown = false
     let idle: ReturnType<typeof setTimeout> | undefined
-    const play = (frames: Art['idles'][number], n = 0) => {
+    const play = (frames: Picture['idles'][number], n = 0) => {
       if (!shown) return
       if (n >= frames.length) return schedule()
       const f = frames[n]
@@ -133,19 +149,26 @@ export default function PixelArt({
       idle = setTimeout(() => {
         if (!shown) return
         if (document.hidden) return schedule()
-        play(art.idles[Math.floor(Math.random() * art.idles.length)])
+        play(picture.idles[Math.floor(Math.random() * picture.idles.length)])
       }, between(IDLE))
     }
     const enter = () => {
       shown = true
       clear()
-      const ms = pose(art.base, wave(IN_WAVE), IN_FLIP)
-      later(schedule, ms)
+      el.setAttribute('data-shown', '')
+      const ms = pose(picture.base, wave(IN_WAVE), IN_FLIP)
+      later(() => {
+        // Built: tests and screenshots wait for this.
+        el.setAttribute('data-built', '')
+        schedule()
+      }, ms)
     }
     const leave = () => {
       shown = false
       clear()
       clearTimeout(idle)
+      el.removeAttribute('data-shown')
+      el.removeAttribute('data-built')
       for (const s of cells) flip(s, '.', Math.random() * OUT_WAVE, OUT_FLIP)
     }
     // In once most of it is on screen, out once nearly all of it has gone:
@@ -165,14 +188,15 @@ export default function PixelArt({
       clear()
       clearTimeout(idle)
     }
-  }, [art, reduce, h, w])
+  }, [picture, reduce, h, w])
 
   return (
     <div
       ref={ref}
       aria-hidden="true"
-      data-art={art.id}
-      className={styles.art}
+      data-picture={picture.id}
+      data-cell={cell}
+      className={styles.picture}
       style={{ left, top, width: w * cell, height: h * cell }}
     >
       {keys.map((key, n) => {

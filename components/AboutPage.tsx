@@ -16,11 +16,9 @@ import { TECH_FOR_PROS } from '@/lib/sites'
 import { homeSpot, returnToHomeSpot } from '@/lib/returnTo'
 import { SCROLL_TO_KEY } from '@/components/Projects/BackToHome'
 import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion'
-import { useAboutBg, useStoryLayout } from '@/components/about/backgrounds/shared'
-import { useSceneReveal } from '@/components/about/backgrounds/useSceneReveal'
-import GridBand from '@/components/about/backgrounds/GridBand'
-import ColorFields, { ParallaxStickers } from '@/components/about/backgrounds/ColorFields'
-import StoryLine from '@/components/about/backgrounds/StoryLine'
+import { useStoryLayout } from '@/components/about/storyLayout'
+import { useSceneReveal } from '@/components/about/useSceneReveal'
+import AboutGrid from '@/components/about/AboutGrid'
 
 const ScrollToTop = dynamic(() => import('@/components/ui/ScrollToTop'), { ssr: false })
 
@@ -39,13 +37,13 @@ const BODIES: Record<string, React.ReactNode> = {
   work: (
     <>
       <p>
-        Most of my work now is using AI to help people get things done. I consult on it, and I
-        build <Out href={TECH_FOR_PROS.url}>{TECH_FOR_PROS.name}</Out> for service businesses: the
-        pool, HVAC and landscaping owners who would rather be on the job than at a computer.
+        Most of my work now is using AI to help people get things done. I consult on it, and I build{' '}
+        <Out href={TECH_FOR_PROS.url}>{TECH_FOR_PROS.name}</Out> for service businesses: the pool,
+        HVAC and landscaping owners who would rather be on the job than at a computer.
       </p>
       <p>
-        If AI can pick up the missed call, send the follow-up or keep the website current, that&apos;s
-        time they get back.
+        If AI can pick up the missed call, send the follow-up or keep the website current,
+        that&apos;s time they get back.
       </p>
     </>
   ),
@@ -56,8 +54,8 @@ const BODIES: Record<string, React.ReactNode> = {
       </p>
       <p>
         In the last few years I&apos;ve built client apps at a consulting firm, consulted on AI, and
-        spent about two years teaching JavaScript, Python and app development at The Coder
-        School in Santa Monica: how to debug, and how to use AI coding tools responsibly.
+        spent about two years teaching JavaScript, Python and app development at The Coder School in
+        Santa Monica: how to debug, and how to use AI coding tools responsibly.
       </p>
       <p>And I&apos;m ready to relocate for the right role.</p>
     </>
@@ -114,7 +112,8 @@ function ScenePhoto({ photo, mood }: { photo: AboutPhoto; mood: AboutScene['mood
 
 const WAY =
   'group inline-flex items-center justify-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold transition-colors focus:outline-hidden focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:ring-offset-2 focus-visible:ring-offset-darkBlue'
-const WAY_QUIET = 'border border-white/12 bg-white/4 text-slate-100 hover:border-sky-400/50 hover:bg-white/8 hover:text-sky-200'
+const WAY_QUIET =
+  'border border-white/12 bg-white/4 text-slate-100 hover:border-sky-400/50 hover:bg-white/8 hover:text-sky-200'
 
 /**
  * The ways on, at the end of the story (owner, 2026-11-08): back to where you
@@ -174,24 +173,18 @@ function WaysOn() {
  * opening, then the story in a few photo scenes (at work, in LA, the setup),
  * with stickers drifting around them. The work itself (projects, experience,
  * stack) lives on the home page and its detail pages.
+ *
+ * Since 2026-11-25 (owner) the background is alive: the site's grid with
+ * moving squares that keep clear of the words, and a pixel picture above each
+ * scene (components/about/AboutGrid.tsx); the scenes rise in as they scroll
+ * into view (useSceneReveal). It is drawn after the page has been measured,
+ * absolute behind the content, so it shifts nothing.
  */
 export default function AboutPage() {
-  // Preview (owner picks): ?bg=1, 2 or 3 adds a scroll background and lets
-  // the scenes arrive as you scroll. No switch is the page as it was.
-  const bg = useAboutBg()
   const reduce = usePrefersReducedMotion()
   const mainRef = useRef<HTMLElement>(null)
-  const layout = useStoryLayout(mainRef, bg !== 0)
-  useSceneReveal(mainRef, bg !== 0 && !reduce)
-  const above = bg ? 'relative' : ''
-  const stickers = (mood: React.ComponentProps<typeof Decals>['mood']) =>
-    bg === 2 ? (
-      <ParallaxStickers reduce={reduce}>
-        <Decals mood={mood} />
-      </ParallaxStickers>
-    ) : (
-      <Decals mood={mood} />
-    )
+  const layout = useStoryLayout(mainRef)
+  useSceneReveal(mainRef, !reduce)
   return (
     <>
       <FloatingNav navItems={subpageNavItems} />
@@ -201,10 +194,9 @@ export default function AboutPage() {
         tabIndex={-1}
         className="relative w-full overflow-hidden bg-darkBlue text-slate-200 focus:outline-hidden"
       >
-        {layout && bg === 1 && <GridBand layout={layout} reduce={reduce} />}
-        {layout && bg === 2 && <ColorFields layout={layout} reduce={reduce} />}
-        {layout && bg === 3 && <StoryLine layout={layout} reduce={reduce} />}
-        <div className={`${above} mx-auto max-w-md px-4 pt-14 sm:max-w-xl md:max-w-3xl md:pt-36 lg:max-w-4xl xl:max-w-6xl 2xl:max-w-7xl`.trim()}>
+        {layout && <AboutGrid layout={layout} reduce={reduce} />}
+        {/* Relative, so the content paints over the background. */}
+        <div className="relative mx-auto max-w-md px-4 pt-14 sm:max-w-xl md:max-w-3xl md:pt-36 lg:max-w-4xl xl:max-w-6xl 2xl:max-w-7xl">
           <Breadcrumb current="About me" className="mb-8 md:mb-10" />
           <PauseOffscreen className="relative">
             <section
@@ -241,17 +233,11 @@ export default function AboutPage() {
                 </div>
               </figure>
             </section>
-            {stickers('intro')}
+            <Decals mood="intro" />
           </PauseOffscreen>
 
-          <div
-            className={
-              // ?bg=1 opens the gaps above the scenes to make room for their pixel pictures.
-              bg === 1
-                ? 'mt-48 flex flex-col gap-48 md:mt-80 md:gap-80'
-                : 'mt-24 flex flex-col gap-24 md:mt-32 md:gap-32'
-            }
-          >
+          {/* Wide gaps above the scenes: each holds the scene's pixel picture. */}
+          <div className="mt-56 flex flex-col gap-56 md:mt-80 md:gap-80">
             {aboutScenes.map((scene, i) => (
               <PauseOffscreen key={scene.id} className="relative">
                 <section
@@ -276,14 +262,14 @@ export default function AboutPage() {
                     </div>
                   </div>
                 </section>
-                {stickers(scene.mood)}
+                <Decals mood={scene.mood} />
               </PauseOffscreen>
             ))}
           </div>
 
           <WaysOn />
         </div>
-        <div className={`${above} mx-auto max-w-md sm:max-w-xl md:max-w-3xl lg:max-w-4xl xl:max-w-6xl 2xl:max-w-7xl`.trim()}>
+        <div className="relative mx-auto max-w-md sm:max-w-xl md:max-w-3xl lg:max-w-4xl xl:max-w-6xl 2xl:max-w-7xl">
           <Footer />
         </div>
         <ScrollToTop />

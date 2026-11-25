@@ -79,22 +79,24 @@ Closing backlog item 1 in [docs/HANDOFF.md](docs/HANDOFF.md).
 
 ## 8. Photos for the About page
 
-- [ ] Pick the portrait, and send three photos for the About page's scenes.
+- [ ] Pick the portrait, and make your own three photos for the About page's scenes.
 
 **What.**
-The About page (owner, 2026-11-08) uses one portrait and three photo scenes; until the photos arrive, the scenes show placeholders ("Photo to come").
+The About page (owner, 2026-11-08) uses one portrait and three photo scenes.
+Since 2026-11-25 the scenes show placeholders you asked for: two stock photos (an electrician at work, a man teaching a boy at a laptop) and a screenshot of n8builds.dev, credited in `public/about/CREDITS.md`.
+Your own photos replace them.
 
 **Steps.**
 
 1. Pick the portrait: the photo (`public/hero/portrait.jpg`, used for now) or the watercolor (`public/hero/portrait-watercolor.jpg`), or send a new one (4:5 portrait, at least 800x1000).
-2. Send three landscape photos, 4:3, at least 1200x900:
-   - **At work**: you at your desk, or with a client or team.
-   - **Los Angeles**: you outdoors somewhere in LA you like.
-   - **The setup**: the desk, screens, keyboard and mic you build and stream from.
-3. Tell Claude, who adds them to `public/about/` and sets each scene's `src` in `data/about.tsx`.
+2. Make three landscape photos, 4:3, at least 1200x900:
+   - **At work**: a service business you help, or you working with one.
+   - **Los Angeles**: you teaching, or somewhere in LA you like.
+   - **The setup**: the desk, screens, keyboard and mic you build and stream from (the n8builds.dev screenshot stands in).
+3. Tell Claude, who puts them in `public/about/`, sets each scene's `src` and alt text in `data/about.tsx`, and drops the replaced stock photos from `CREDITS.md`.
 
 **Why.**
-Only you have these photos.
+Only you have these photos; the placeholders are generic.
 
 **Unblocks.**
 A finished About page.

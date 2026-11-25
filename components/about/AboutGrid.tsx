@@ -2,11 +2,11 @@
 
 import { useEffect, useMemo, useRef } from 'react'
 import { useMotionValueEvent, useScroll } from 'motion/react'
-import { smooth, type Box, type StoryLayout } from './shared'
-import { artFor, type Art } from './art'
-import PixelArt from './PixelArt'
+import { smooth, type Box, type StoryLayout } from './storyLayout'
+import { pictureFor, type Picture } from './pictures'
+import PixelPicture from './PixelPicture'
 
-// Two thirds of the hero grid's 52px (owner, round 3: smaller boxes).
+// Two thirds of the hero grid's 52px (owner, 2026-11-25: smaller boxes).
 const CELL = 36
 // Resting cells: roughly one per this many free cells, sparse.
 const DENSITY = 14
@@ -17,7 +17,7 @@ const WANDER = 30
 // right against a line of text.
 const CLEARANCE = 20
 
-// Timings (ms): livelier than the hero grid (owner, round 3: "a bit slow").
+// Timings (ms): livelier than the hero grid (owner, 2026-11-25: "a bit slow").
 const FADE = [450, 850] as const
 const HOLD = [900, 2600] as const
 const GAP = [60, 260] as const
@@ -60,81 +60,101 @@ function partAt(layout: StoryLayout, y: number) {
 const overlaps = (box: Box, l: number, t: number, r: number, b: number, pad: number) =>
   l < box.right + pad && r > box.left - pad && t < box.bottom + pad && b > box.top - pad
 
-type Placed = { art: Art; cell: number; left: number; top: number; box: Box }
+type Placed = { picture: Picture; cell: number; left: number; top: number; box: Box }
 
 /**
  * Where each scene's picture goes: in the gap above the scene, on the grid,
- * clear of every block of words (by CLEARANCE), photo and sticker, as near as
- * it can be to the middle of the gap over the scene's words (the middle of
- * the page on a phone). On a phone the picture is drawn in half cells. A
- * picture that fits nowhere is left out.
+ * clear of every block of words (by CLEARANCE), photo and sticker. It is
+ * decided from the layout alone, so a scene's picture lands in the same place
+ * on every visit at a given width:
+ * - first at full cells over the half of the page where the scene's words
+ *   are, then at full cells anywhere across the gap;
+ * - then the same at half cells (a tighter drawing of the LA scene);
+ * - within each, as near as it can be to the middle of the gap over the words.
+ * Phones (under 768px) use half cells only. A picture that fits nowhere is
+ * left out.
  */
-function placeArt(layout: StoryLayout, originX: number): Placed[] {
+function placePictures(layout: StoryLayout, originX: number): Placed[] {
   const wide = layout.width >= 768
-  const cell = wide ? CELL : CELL / 2
-  // On a phone the gaps are tighter, and so is the room kept around things.
-  const pad = wide ? { words: CLEARANCE, photo: 12, sticker: 10 } : { words: 14, photo: 8, sticker: 8 }
   const out: Placed[] = []
   layout.parts.forEach((part, n) => {
-    const art = artFor(part.id, wide)
     const above = layout.parts[n - 1]
-    if (!art || !above) return
-    const w = art.base[0].length * cell
-    const h = art.base.length * cell
-    const words = layout.words.find((b) => b.id === `scene-${part.id}-words`)
-    const cx = wide && words ? (words.left + words.right) / 2 : layout.width / 2
-    const cy = (above.bottom + part.top) / 2
-    let best: { left: number; top: number; d: number } | null = null
-    for (let ky = Math.floor(above.top / cell); ky * cell <= part.top + h; ky++) {
-      const t = ky * cell
-      for (
-        let kx = Math.ceil(-originX / cell) + 1;
-        originX + kx * cell + w <= layout.width - cell / 2;
-        kx++
-      ) {
-        const l = originX + kx * cell
-        if (l < cell / 2) continue
-        const r = l + w
+    if (!above) return
+    const words = layout.words.find((b) => b.id === `${part.id}-words`)
+    const wordsLeft = words ? (words.left + words.right) / 2 < layout.width / 2 : true
+    const tries: { cell: number; half: boolean }[] = wide
+      ? [
+          { cell: CELL, half: true },
+          { cell: CELL, half: false },
+          { cell: CELL / 2, half: true },
+          { cell: CELL / 2, half: false },
+        ]
+      : [{ cell: CELL / 2, half: false }]
+    for (const { cell, half } of tries) {
+      const picture = pictureFor(part.id, cell < CELL)
+      if (!picture) return
+      // Tighter room around things at half cells, where the gaps are smaller.
+      const pad =
+        cell === CELL
+          ? { words: CLEARANCE, photo: 12, sticker: 10 }
+          : { words: 14, photo: 8, sticker: 8 }
+      const w = picture.base[0].length * cell
+      const h = picture.base.length * cell
+      const [minX, maxX] = !half
+        ? [cell / 2, layout.width - cell / 2]
+        : wordsLeft
+          ? [cell / 2, layout.width / 2]
+          : [layout.width / 2, layout.width - cell / 2]
+      const cx = wide && words ? (words.left + words.right) / 2 : layout.width / 2
+      const cy = (above.bottom + part.top) / 2
+      let best: { left: number; top: number; d: number } | null = null
+      for (let ky = Math.floor(above.top / cell); ky * cell <= part.top; ky++) {
+        const t = ky * cell
         const b = t + h
-        if (layout.words.some((x) => overlaps(x, l, t, r, b, pad.words))) continue
-        if (layout.photos.some((x) => overlaps(x, l, t, r, b, pad.photo))) continue
-        if (layout.stickers.some((x) => overlaps(x, l, t, r, b, pad.sticker))) continue
-        const d = Math.hypot(l + w / 2 - cx, (t + h / 2 - cy) * 2)
-        if (!best || d < best.d) best = { left: l, top: t, d }
+        for (let kx = Math.ceil((minX - originX) / cell); originX + kx * cell + w <= maxX; kx++) {
+          const l = originX + kx * cell
+          const r = l + w
+          if (layout.words.some((x) => overlaps(x, l, t, r, b, pad.words))) continue
+          if (layout.photos.some((x) => overlaps(x, l, t, r, b, pad.photo))) continue
+          if (layout.stickers.some((x) => overlaps(x, l, t, r, b, pad.sticker))) continue
+          const d = Math.hypot(l + w / 2 - cx, (t + h / 2 - cy) * 2)
+          if (!best || d < best.d) best = { left: l, top: t, d }
+        }
       }
-    }
-    if (best)
-      out.push({
-        art,
-        cell,
-        left: best.left,
-        top: best.top,
-        box: {
-          id: art.id,
+      if (best) {
+        const box = {
+          id: picture.id,
           left: best.left,
           top: best.top,
           right: best.left + w,
           bottom: best.top + h,
-        },
-      })
+        }
+        out.push({ picture, cell, left: best.left, top: best.top, box })
+        return
+      }
+    }
   })
   return out
 }
 
 /**
- * Option 1: the site's square grid, faint, behind the whole story, alive the
- * way the home page hero's grid is. A few cells wander: each fades out, jumps
- * to a free cell on screen and fades back in, on its own random clock. A
- * sparse set of resting cells lights up in a band around where you are
- * reading, so the band travels with your scroll. Every cell takes the tint of
- * the part of the story it sits in (sky for the intro, blue at work, cyan in
- * LA, indigo for the setup). The words are kept clear: no cell lights behind
- * or right against a block of text, so the lively cells live in the margins,
- * the gaps between scenes and around the photos. Only opacity and transform
- * change. Wanderers rest while the tab is hidden. Reduced motion: the resting
- * cells hold still, softly lit, and nothing wanders.
+ * The About page's background (owner, 2026-11-25: the site's grid is the most
+ * on theme; its squares must move, but never behind text). The site's square
+ * grid, faint, behind the whole story, in 36px cells:
+ * - Wandering cells: each fades in on a free cell on screen, holds, fades out
+ *   and hops elsewhere, on its own quick random clock.
+ * - Resting cells light up in a band around where you are reading, so the
+ *   band travels with your scroll.
+ * - Every cell takes the tint of its part of the story (sky for the intro,
+ *   blue at work, cyan in LA, indigo for the setup).
+ * - A pixel picture per scene in the gap above it (PixelPicture.tsx).
+ * The words are kept clear: no cell lights behind or right against a block
+ * of text, inside a photo, or in the footer. Nothing follows the pointer.
+ * Only opacity and transform change, once per scroll frame or hop. Wanderers
+ * rest while the tab is hidden. Reduced motion: the resting cells and the
+ * pictures hold still, complete, and nothing wanders.
  */
-export default function GridBand({ layout, reduce }: { layout: StoryLayout; reduce: boolean }) {
+export default function AboutGrid({ layout, reduce }: { layout: StoryLayout; reduce: boolean }) {
   const { scrollY } = useScroll()
   const resting = useRef<(HTMLDivElement | null)[]>([])
   const wanderers = useRef<(HTMLDivElement | null)[]>([])
@@ -145,7 +165,7 @@ export default function GridBand({ layout, reduce }: { layout: StoryLayout; redu
   const originX = (layout.width - cols * CELL) / 2
 
   // The pixel pictures, each in the gap above its scene, where it fits.
-  const art = useMemo(() => placeArt(layout, originX), [layout, originX])
+  const pictures = useMemo(() => placePictures(layout, originX), [layout, originX])
 
   /** Every cell a light may use: not behind or against words, not hidden behind a photo. */
   const free = useMemo(() => {
@@ -165,11 +185,11 @@ export default function GridBand({ layout, reduce }: { layout: StoryLayout; redu
         if (layout.photos.some((p) => l >= p.left && r <= p.right && t >= p.top && b <= p.bottom))
           continue
         // Around a picture, the grid stays quiet so the picture reads.
-        if (art.some((a) => overlaps(a.box, l, t, r, b, CELL / 2))) continue
+        if (pictures.some((p) => overlaps(p.box, l, t, r, b, CELL / 2))) continue
         out.push({ x, y })
       }
     return out
-  }, [cols, rows, originX, layout, art])
+  }, [cols, rows, originX, layout, pictures])
 
   const tintAt = (y: number) => `rgb(${TINT[partAt(layout, y * CELL + CELL / 2)]})`
 
@@ -317,6 +337,7 @@ export default function GridBand({ layout, reduce }: { layout: StoryLayout; redu
               ref={(el) => {
                 resting.current[i] = el
               }}
+              data-rest=""
               className="absolute top-0 left-0"
               style={{
                 ...cellStyle,
@@ -340,13 +361,14 @@ export default function GridBand({ layout, reduce }: { layout: StoryLayout; redu
       </div>
       {/* The pictures, on the same grid but outside its edge fade. */}
       <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
-        {art.map((a) => (
-          <PixelArt
-            key={a.art.id}
-            art={a.art}
-            cell={a.cell}
-            left={a.left}
-            top={a.top}
+        {pictures.map((p) => (
+          // A new drawing (another cell size) is a new picture.
+          <PixelPicture
+            key={`${p.picture.id}-${p.cell}`}
+            picture={p.picture}
+            cell={p.cell}
+            left={p.left}
+            top={p.top}
             reduce={reduce}
           />
         ))}
