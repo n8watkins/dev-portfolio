@@ -1,3 +1,5 @@
+'use client'
+
 import React, { createContext, useEffect, useRef, useState } from 'react'
 import { cn } from '@/lib/utils'
 import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion'
@@ -109,6 +111,9 @@ export default function Marquee({
     <div
       {...props}
       ref={rowRef}
+      // Read by the AI kit's dino (components/features/dino/): a row the visitor holds
+      // still makes it miss a jump. Its own state, so a slow machine can't fake a pause.
+      data-paused={isPaused || undefined}
       className={cn(
         'flex overflow-hidden p-2 [--duration:40s] [--gap:1rem] gap-(--gap)',
         {

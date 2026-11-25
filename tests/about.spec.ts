@@ -16,14 +16,13 @@ test('the home page opens with About and the bento, and links to the full page',
   await expect(page.getByRole('heading', { level: 1, name: 'About me' })).toBeVisible()
 })
 
-test('the home About teaser is one compact block with three quick facts', async ({ page }) => {
+test('the home About teaser is one compact block with two quick facts', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.goto('/')
   const teaser = page.locator('#about')
   const facts = teaser.getByRole('list', { name: 'Quick facts' }).getByRole('listitem')
   await expect(facts).toHaveText([
     '75+ client sites shipped end to end',
-    'Lighthouse 90+ on client sites',
     '30+ open source projects',
   ])
   // No dead gap: the paragraph starts right under the heading.
