@@ -30,7 +30,7 @@ export default function BoldMapLazy() {
         setNear(true)
         io.disconnect()
       },
-      { rootMargin: '600px 0px' }
+      { rootMargin: '300px 0px' }
     )
     io.observe(el)
     return () => io.disconnect()

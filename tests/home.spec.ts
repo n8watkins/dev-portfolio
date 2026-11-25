@@ -136,6 +136,18 @@ test('the build log card moves on through the months by itself, and holds when a
   // to come after clock.install(), which installs its own requestIdleCallback over anything before.
   await page.addInitScript(() => {
     window.requestIdleCallback = () => 0
+    // The bold map above this card draws a WebGL frame on every animation
+    // frame, and each second of fake time runs sixty of them, in software in
+    // CI: seconds per step. Its still 2D picture (no WebGL2) has no loop.
+    const getContext = HTMLCanvasElement.prototype.getContext
+    HTMLCanvasElement.prototype.getContext = function (
+      this: HTMLCanvasElement,
+      type: string,
+      ...rest: unknown[]
+    ) {
+      if (type === 'webgl2') return null
+      return (getContext as (...a: unknown[]) => RenderingContext | null).call(this, type, ...rest)
+    } as typeof getContext
   })
   await page.goto('/')
   const card = page.locator('[data-build-log]')
@@ -256,14 +268,20 @@ test.describe('the bold map', () => {
       asked++
       return route.fulfill({ json: { visitor: null } })
     })
+    // A short window, so the card starts well out of reach on every device.
+    const size = page.viewportSize()!
+    await page.setViewportSize({ width: size.width, height: 360 })
     await page.goto('/')
     await page.waitForLoadState('networkidle')
-    // At the top of a phone or desktop page the card is more than a screen
-    // away: the map's code has not loaded and nothing asked where you are.
-    await expect(page.locator('[data-bold-map-slot]')).toBeAttached()
+    const gap = await page
+      .locator('[data-bold-map-slot]')
+      .evaluate((el) => el.getBoundingClientRect().top - innerHeight)
+    expect(gap, 'the card starts more than 300px below the window').toBeGreaterThan(300)
+    // Out of reach: the map's code has not loaded and nothing asked where you are.
     await expect(page.locator('[data-bold-map]')).toHaveCount(0)
     expect(asked).toBe(0)
     const before = chunks.length
+    await page.setViewportSize(size)
     await page.locator('[data-bold-map-slot]').scrollIntoViewIfNeeded()
     await expect(page.locator('[data-bold-map]')).toHaveAttribute('data-ready', 'true', {
       timeout: 20_000,
@@ -279,10 +297,14 @@ test.describe('the bold map', () => {
     await expect(map).toHaveAttribute('data-mode', 'still')
     // The line to the visitor is drawn at once and labelled.
     await expect(map.locator('[data-on]', { hasText: 'near Austin, TX' })).toBeVisible()
+    // It draws once per change (the start, the visitor's answer, a late resize
+    // as the page settles), never in a loop.
+    await expect(map).toHaveAttribute('data-running', 'false')
+    await page.waitForTimeout(800)
     const before = await frames(map)
     await page.waitForTimeout(1500)
     expect(await frames(map)).toBe(before)
-    await expect(map).toHaveAttribute('data-running', 'false')
+    expect(before).toBeLessThan(6)
   })
 
   test('moves on screen and pauses off screen', async ({ page }) => {
@@ -323,22 +345,25 @@ test.describe('the bold map', () => {
     const map = await openMap(page)
     const avatar = map.getByRole('button', { name: 'Nathan Watkins, in Los Angeles' })
     const size = async () => (await avatar.locator('span').first().boundingBox())!.width
+    // A half-second ease; generous, since a browser drawing WebGL in software
+    // on a busy machine updates styles slowly.
+    const SETTLE = { timeout: 15_000 }
     await page.mouse.move(0, 0)
-    await expect.poll(size).toBeLessThan(40)
+    await expect.poll(size, SETTLE).toBeLessThan(40)
     if (!isMobile) {
       const box = (await map.boundingBox())!
       await page.mouse.move(box.x + box.width * 0.6, box.y + box.height * 0.45)
-      await expect.poll(size).toBeGreaterThan(60)
+      await expect.poll(size, SETTLE).toBeGreaterThan(60)
       await page.mouse.move(0, 0)
-      await expect.poll(size).toBeLessThan(40)
+      await expect.poll(size, SETTLE).toBeLessThan(40)
     }
     await (isMobile ? avatar.tap() : avatar.click())
     await expect(avatar).toHaveAttribute('aria-pressed', 'true')
-    await expect.poll(size).toBeGreaterThan(60)
+    await expect.poll(size, SETTLE).toBeGreaterThan(60)
     await (isMobile ? avatar.tap() : avatar.click())
     await expect(avatar).toHaveAttribute('aria-pressed', 'false')
     if (!isMobile) await page.mouse.move(0, 0)
-    await expect.poll(size).toBeLessThan(40)
+    await expect.poll(size, SETTLE).toBeLessThan(40)
   })
 
   test('under reduced motion the avatar changes size at once, from the keyboard too', async ({
