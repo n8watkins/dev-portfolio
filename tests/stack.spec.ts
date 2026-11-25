@@ -36,7 +36,8 @@ test('/stack links each tool to the project that uses it', async ({ page }) => {
   // One per linked tile: a link whose words are missing from its description would show none.
   await expect(links).toHaveCount(LINKED_TILES)
   // The portfolio's own projects open their page here.
-  await expect(links.filter({ hasText: 'Wren' })).toHaveAttribute('href', '/projects/wren')
+  // (Never Wren: the tiles also show on n8builds.dev, which Wren left on 2026-11-11.)
+  await expect(page.locator('[data-stack-layer]')).not.toContainText(/\bWren\b/)
   await expect(links.filter({ hasText: 'NetTrailers' })).toHaveAttribute('href', '/projects/net-trailers')
   for (const pr of await links.filter({ hasText: 'Portfolio Rank' }).all()) {
     await expect(pr).toHaveAttribute('href', '/projects/portfolio-rank')
@@ -114,7 +115,7 @@ test.describe('the tech stack tiles (reduced motion: they hold still)', () => {
       .locator('figure')
       .filter({ has: page.locator('[data-tile-name]', { hasText: /^Gemini$/ }) })
     await tile.scrollIntoViewIfNeeded()
-    const link = tile.getByRole('link', { name: 'Wren' })
+    const link = tile.getByRole('link', { name: 'Portfolio Rank' })
     // At rest the description is shut (clipped to no height): its link can't be hit.
     expect(
       await link.evaluate((a) => {
@@ -127,7 +128,7 @@ test.describe('the tech stack tiles (reduced motion: they hold still)', () => {
     await expect(tile.locator('.description')).toHaveCSS('opacity', '1')
     if (hasTouch) await link.tap()
     else await link.click()
-    await expect(page).toHaveURL(/\/projects\/wren$/)
+    await expect(page).toHaveURL(/\/projects\/portfolio-rank$/)
   })
 })
 

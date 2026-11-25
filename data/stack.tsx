@@ -97,7 +97,9 @@ export function stackLinkHref(link: StackLink, site: StackSite): { href: string;
   return { href: url, external: true }
 }
 
-// The projects the tiles link to.
+// The projects the tiles link to. Never Wren: it left n8builds.dev at the
+// owner's request (2026-11-11, "Wren should not be in my n8builds"), and this
+// file shows on both sites, so no line names it.
 const SCRIBE = { build: 'scribe' }
 const VOICEDOCK = { build: 'voicedock' }
 const OPENPING = { build: 'openping' }
@@ -105,7 +107,6 @@ const SOLARA = { build: 'solara' }
 const TLDW = { build: 'tldw' }
 const PORTFOLIO_RANK = { build: 'portfolio-rank', project: 'portfolio-rank' }
 const NET_TRAILERS = { project: 'net-trailers' }
-const WREN = { project: 'wren' }
 
 const ICON = 'w-7 h-7'
 
@@ -203,8 +204,8 @@ export const ai_agents: AIStackItem[] = [
   {
     name: 'Gemini',
     icon: <SiGooglegemini className={ICON} style={{ color: '#4285F4' }} />,
-    description: 'The AI in my apps: Wren, NetTrailers, Portfolio Rank and TL;DW.',
-    link: { text: 'Wren', ...WREN },
+    description: 'The AI in my apps: Portfolio Rank, NetTrailers and TL;DW.',
+    link: { text: 'Portfolio Rank', ...PORTFOLIO_RANK },
   },
 ]
 
