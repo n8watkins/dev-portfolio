@@ -1,5 +1,5 @@
 /** The resume on Google Drive: one place for the card, the hero and the navbar. */
-const RESUME_ID = '1YqIv0xOL4vOygI448JKCzKTkLHONxg8L'
+const RESUME_ID = '1dnKkmiV6flg6EyNn83CZIcOwT3IZMixB'
 
 /** Opens the resume to read (a new tab). */
 export const RESUME_VIEW_URL = `https://drive.google.com/file/d/${RESUME_ID}/view?usp=sharing`

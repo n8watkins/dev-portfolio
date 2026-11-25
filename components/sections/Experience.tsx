@@ -209,7 +209,7 @@ const Experience = () => {
     <div className="relative m-auto pt-0 pb-12 select-none md:pt-8 md:pb-20 xl:max-w-6xl 2xl:max-w-7xl">
       <div className="flex items-end justify-between gap-4 px-2 pt-6 pb-6 md:px-4">
         <SectionHeading eyebrow="Experience" title="Where I've built" />
-        <Reveal className="shrink-0">
+        <Reveal still className="shrink-0">
         <button
           type="button"
           onClick={() => setOpen(allOpen ? new Set() : new Set(expandable.map((w) => w.id)))}
@@ -269,13 +269,22 @@ const Experience = () => {
                         className={`pointer-events-none absolute inset-y-0 right-0 hidden w-[26%] overflow-hidden mask-[linear-gradient(to_left,black_45%,transparent)] transition-opacity duration-500 md:block ${isOpen ? 'opacity-50' : 'opacity-0 group-hover/card:opacity-80'}`}
                         data-role-image
                       >
-                        <Image
-                          src={image.src}
-                          alt=""
-                          fill
-                          sizes="22vw"
-                          className="object-cover object-left-top transition-transform duration-700 group-hover/card:scale-105"
-                        />
+                        <div
+                          className="absolute inset-0 transition-transform duration-500"
+                          style={{
+                            transform: `scale(${(isOpen ? (image.openZoom ?? image.zoom) : image.zoom) ?? 1})`,
+                            transformOrigin: image.origin ?? image.position ?? '0% 0%',
+                          }}
+                        >
+                          <Image
+                            src={image.src}
+                            alt=""
+                            fill
+                            sizes="22vw"
+                            style={{ objectPosition: image.position ?? '0% 0%' }}
+                            className="object-cover transition-transform duration-700 group-hover/card:scale-105"
+                          />
+                        </div>
                         <div className="absolute inset-0 bg-darkBlue/40" />
                       </div>
                     )}
