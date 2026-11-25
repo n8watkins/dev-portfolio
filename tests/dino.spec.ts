@@ -253,6 +253,9 @@ test.describe('dino easter egg (motion allowed)', () => {
   })
 
   test('dropping back onto a row that is already paused, it misses there too', async ({ page }) => {
+    // Each miss may take up to 20s where frames come slowly, so together they
+    // outlast the 30s default (mobile-safari, all five projects at once).
+    test.setTimeout(90_000)
     await onTopRow(page)
     // Down to the bottom row (pausing the top one), then hold the top row
     // still by focusing one of its tiles, as a keyboard user would.
@@ -794,13 +797,27 @@ test.describe('dino easter egg (motion allowed)', () => {
     await onTopRow(page)
     const score = page.locator('[data-dino-score]')
     await expect(score).toHaveAttribute('data-shown', 'false')
+    // The countdown's first reading, taken in the page: the round runs on real
+    // time, so a check that waits for Playwright's polling can see 0:23 on a
+    // busy machine (mobile-safari, all five projects at once).
+    await page.locator('[data-dino-timer-text]').evaluate((el) => {
+      const w = window as unknown as { __timerReads: string[] }
+      w.__timerReads = []
+      new MutationObserver(() => w.__timerReads.push(el.textContent ?? '')).observe(el, {
+        childList: true,
+        characterData: true,
+        subtree: true,
+      })
+    })
     await pokeDino(page)
     await expect(dino(page)).toHaveAttribute('data-game', 'on')
     await expect(dino(page)).toHaveAttribute('data-catches', '1')
     await expect(score).toHaveAttribute('data-shown', 'true')
     await expect(score).toHaveText('Catches 1')
     await expect(page.locator('[data-dino-timer]')).toHaveAttribute('data-shown', 'true')
-    await expect(page.locator('[data-dino-timer-text]')).toHaveText(/^0:(30|29)$/)
+    const firstRead = () =>
+      page.evaluate(() => (window as unknown as { __timerReads: string[] }).__timerReads[0] ?? '')
+    await expect.poll(firstRead).toMatch(/^0:(30|29)$/)
     // The best score shows beside it while a round is on, lit as this round passes it.
     const best = page.locator('[data-dino-best]')
     await expect(best).toHaveAttribute('data-shown', 'true')
