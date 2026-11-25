@@ -39,23 +39,26 @@ const BODIES: Record<string, React.ReactNode> = {
   work: (
     <>
       <p>
-        These days I consult on AI and build <Out href={TECH_FOR_PROS.url}>{TECH_FOR_PROS.name}</Out>,
-        a platform for service businesses: pool, HVAC, landscaping and the like. It turns a few
-        details about a business into a launch-ready website, then takes the follow-up off their
-        plate: lead capture, reviews, reminders and missed-call text-back.
+        Most of my work now is using AI to help people get things done. I consult on it, and I
+        build <Out href={TECH_FOR_PROS.url}>{TECH_FOR_PROS.name}</Out> for service businesses: the
+        pool, HVAC and landscaping owners who would rather be on the job than at a computer.
       </p>
-      <p>Before that I spent three years building client apps at a consulting firm.</p>
+      <p>
+        If AI can pick up the missed call, send the follow-up or keep the website current, that&apos;s
+        time they get back.
+      </p>
     </>
   ),
   la: (
     <>
+      <p>I&apos;ve been building in Los Angeles since 2021.</p>
       <p>
-        I live in Los Angeles, and I&apos;m ready to relocate for the right role.
+        For about three years I built client apps at a consulting firm here, and I&apos;ve consulted
+        on AI along the way. For about two years I also taught JavaScript, Python and app development
+        at The Coder School in Santa Monica: how to debug, and how to use AI coding tools
+        responsibly.
       </p>
-      <p>
-        For about two years I taught JavaScript, Python and app development at The Coder School in
-        Santa Monica: how to debug, and how to use AI coding tools responsibly.
-      </p>
+      <p>And I&apos;m ready to relocate for the right role.</p>
     </>
   ),
   setup: (

@@ -56,9 +56,21 @@ test('the About page tells the story in scenes with one portrait, and nothing el
   const main = page.locator('main')
   await expect(main.getByRole('img', { name: 'Photo of Nathan Watkins' })).toHaveCount(1)
   await expect(main.getByRole('img', { name: /watercolor/i })).toHaveCount(0)
-  for (const title of ['Building Tech for Pros', 'In LA, and open to moving', 'Where I build in public']) {
+  for (const title of [
+    'Using AI to help people get things done',
+    'In LA, and open to moving',
+    'Where I build in public',
+  ]) {
     await expect(main.getByRole('heading', { level: 2, name: title })).toBeAttached()
   }
+  // Each scene has its photo (stock photos and an n8builds.dev screenshot for
+  // now, owner 2026-11-25), and none of them claims to be Nathan.
+  const scenePhotos = main.locator('section[aria-labelledby^="scene-"] img')
+  await expect(scenePhotos).toHaveCount(3)
+  for (const alt of await scenePhotos.evaluateAll((imgs) => imgs.map((img) => img.getAttribute('alt') ?? ''))) {
+    expect(alt).not.toMatch(/nathan|\bme\b|\bmy\b/i)
+  }
+  await expect(main.locator('[data-photo-placeholder]')).toHaveCount(0)
   // The work lives on the home page and its detail pages.
   for (const gone of ['What I bring', "Where I've built", 'My workshop', 'What I build with']) {
     await expect(main.getByRole('heading', { name: gone })).toHaveCount(0)
