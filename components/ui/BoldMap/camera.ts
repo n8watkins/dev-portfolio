@@ -74,11 +74,19 @@ export type Camera = {
   dist: number
   /** A world point in card pixels: [x, y, depth, w]. */
   toPx: (p: Vec3) => [number, number, number, number]
+  /** The lowest a label may reach, in card pixels (the title is below it). */
+  labelMax: number
 }
 
 export function fitCamera(s: Scene, W: number, H: number): Camera {
   const { x0, x1, z0, z1 } = s.bounds
-  const elev = 58 * rad
+  // A card taller than it is wide (the bento card from 768 to 1023px is 351 by
+  // 478) would leave a band of empty sea between the country and the title:
+  // there the camera looks more steeply down (the country stands taller), the
+  // side margins shrink and the country sits lower, nearer the title.
+  const tall = Math.max(0, Math.min(1, (H / W - 1.05) / 0.3))
+  const elev = (58 + 12 * tall) * rad
+  const bottom = H * 0.73 + tall * (H - 104 - H * 0.73)
   const tgt = [(x0 + x1) / 2, 0, (z0 + z1) / 2]
   const P = persp(30 * rad, W / H, 1, 600)
   let eye: [number, number, number] = [0, 0, 0]
@@ -108,12 +116,12 @@ export function fitCamera(s: Scene, W: number, H: number): Camera {
   }
   // Fit the width (a little more room on the left, where Los Angeles' pin is),
   // then centre the country between the caption and the title.
-  const padL = W * 0.11
-  const padR = W * 0.035
+  const padL = W * (0.11 - 0.06 * tall)
+  const padR = W * (0.035 - 0.025 * tall)
   const want = ((W - padL - padR) / W) * 2
   // On a wide card the height is the limit instead: the country stays between
   // the caption and the top of the title.
-  const wantV = ((H * 0.73 - 44) / H) * 2
+  const wantV = ((bottom - 44) / H) * 2
   let lo = 20
   let hi = 500
   for (let k = 0; k < 22; k++) {
@@ -125,7 +133,7 @@ export function fitCamera(s: Scene, W: number, H: number): Camera {
   const fit = extent(build(hi))
   const m = build(hi)
   const ox = ((padL + (W - padL - padR) / 2) / W) * 2 - 1 - (fit[0] + fit[1]) / 2
-  const oy = 1 - ((44 + H * 0.73) / 2 / H) * 2 - (fit[2] + fit[3]) / 2
+  const oy = 1 - ((44 + bottom) / 2 / H) * 2 - (fit[2] + fit[3]) / 2
   for (let c = 0; c < 4; c++) {
     m[c * 4] += ox * m[c * 4 + 3]
     m[c * 4 + 1] += oy * m[c * 4 + 3]
@@ -134,5 +142,7 @@ export function fitCamera(s: Scene, W: number, H: number): Camera {
     const q = clip(m, p)
     return [((q[0] / q[3]) * 0.5 + 0.5) * W, (0.5 - (q[1] / q[3]) * 0.5) * H, q[2] / q[3], q[3]]
   }
-  return { vp: m, eye, dist: hi, toPx }
+  // Labels stay above the title: 76% of the card, lower on a tall card.
+  const labelMax = H * 0.76 + tall * (H - 96 - H * 0.76)
+  return { vp: m, eye, dist: hi, toPx, labelMax }
 }

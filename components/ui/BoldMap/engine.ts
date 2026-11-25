@@ -45,6 +45,8 @@ export type MapEngine = {
   resize(): void
   /** Run (on screen, tab visible) or pause. A still map ignores it. */
   setActive(active: boolean): void
+  /** The visitor became known (or not): their line is drawn from now. */
+  setVisitor(visitor: Visitor | null): void
   destroy(): void
   /** 'webgl2' or '2d' (the still fallback). */
   readonly mode: 'webgl2' | '2d'
@@ -107,29 +109,39 @@ export function createMapEngine(el: MapElements, opts: MapOptions): MapEngine {
   const endOf = (c: Cell): Vec3 => [c.X, c.Hh + 0.15, c.Z]
   const laTop = (): Vec3 => [S.la.X, S.la.Hh + 0.2, S.la.Z]
 
-  const visitor = opts.visitor
-  // The visitor's column: the column of the United States nearest their coarse point.
-  const youCell = (() => {
-    if (visitor?.kind !== 'us') return null
-    const [x, y] = cellOf(visitor.at)
-    return S.nearestUs(x - S.cx, y - S.cz)
-  })()
-
-  const youArc = youCell ? { end: endOf(youCell), t0: still ? -99 : 0.8 } : null
-  if (visitor?.kind === 'us') {
-    setText(el.you, [
-      ['b', 'You'],
-      visitor.near ? ` · near ${visitor.near} ` : ' ',
-      ['em', `· ${formatMiles(visitor.mi)} mi`],
-    ])
-  } else if (visitor?.kind === 'here') {
-    setText(el.you, [
-      ['b', 'You'],
-      visitor.near ? ` · near ${visitor.near} ` : ' ',
-      ['em', "· you're here too"],
-    ])
+  // The visitor: known at the start (the lab page's ?from=), or later, when the
+  // home page's location request answers (setVisitor). Their line is then drawn
+  // from that moment.
+  let visitor: Visitor | null = null
+  let youCell: Cell | null = null
+  let youArc: { end: Vec3; t0: number } | null = null
+  function applyVisitor(v: Visitor | null, startAt: number) {
+    visitor = v
+    youCell = null
+    if (v?.kind === 'us') {
+      const [x, y] = cellOf(v.at)
+      youCell = S.nearestUs(x - S.cx, y - S.cz)
+    }
+    youArc = youCell ? { end: endOf(youCell), t0: still ? -99 : startAt } : null
+    if (v?.kind === 'us') {
+      setText(el.you, [
+        ['b', 'You'],
+        v.near ? ` · near ${v.near} ` : ' ',
+        ['em', `· ${formatMiles(v.mi)} mi`],
+      ])
+    } else if (v?.kind === 'here') {
+      setText(el.you, [
+        ['b', 'You'],
+        v.near ? ` · near ${v.near} ` : ' ',
+        ['em', "· you're here too"],
+      ])
+    } else el.you.replaceChildren()
+    el.you.toggleAttribute('data-on', false)
+    youPlaced = false
+    el.card.dataset.visitor = v ? v.kind : 'none'
   }
-  el.you.toggleAttribute('data-on', false)
+  let youPlaced = false
+  applyVisitor(opts.visitor, 0.8)
 
   // Routes go to a shuffled bag of the checked places, never two near each other in a row.
   let bagLeft: ScenePlace[] = []
@@ -167,12 +179,9 @@ export function createMapEngine(el: MapElements, opts: MapOptions): MapEngine {
   let nextAuto = youArc ? 0.8 + YOU_DRAW + 0.6 : 0.6
 
   // Every listed place a real move away can be pointed at; beyond a short reach nothing answers.
+  // (The visitor's own place is skipped when pointing, in nearestPlace.)
   const pickable = S.places.filter(
-    (p) =>
-      p.mi > 150 &&
-      p.cell !== S.la &&
-      p.cell !== youCell &&
-      !(p.name === 'Kansas City' && p.state === 'KS')
+    (p) => p.mi > 150 && p.cell !== S.la && !(p.name === 'Kansas City' && p.state === 'KS')
   )
   // Within reach, a larger place wins over a hamlet a few pixels nearer.
   const pull = new Map(
@@ -187,6 +196,7 @@ export function createMapEngine(el: MapElements, opts: MapOptions): MapEngine {
     let best: ScenePlace | null = null
     let bs = Infinity
     for (const p of pickable) {
+      if (p.cell === youCell) continue
       const q = px.get(p)!
       const d = (q[0] - x) ** 2 + (q[1] - y) ** 2
       if (d > reach * reach) continue
@@ -256,12 +266,11 @@ export function createMapEngine(el: MapElements, opts: MapOptions): MapEngine {
     lx >= 6 &&
     lx + w <= W - 6 &&
     ly >= 30 &&
-    ly + h <= H * bottom &&
+    ly + h <= bottom &&
     !rects.some(
       (r) => lx < r.x + r.w + 4 && lx + w > r.x - 4 && ly < r.y + r.h + 4 && ly + h > r.y - 4
     )
 
-  let youPlaced = false
   function placeYou() {
     if (!visitor) return
     const rects = [pinRect(), rectOf(el.chip)]
@@ -286,9 +295,9 @@ export function createMapEngine(el: MapElements, opts: MapOptions): MapEngine {
         [x - w, y - h - 12],
       ]
     }
-    const s = spots.find(([lx, ly]) => clear(rects, lx, ly, w, h, 0.78)) ?? [
+    const s = spots.find(([lx, ly]) => clear(rects, lx, ly, w, h, cam.labelMax + H * 0.02)) ?? [
       Math.max(6, Math.min(W - w - 6, x - w / 2)),
-      Math.max(30, Math.min(H * 0.76 - h, y + 12)),
+      Math.max(30, Math.min(cam.labelMax - h, y + 12)),
     ]
     el.you.style.transform = `translate(${Math.round(s[0])}px, ${Math.round(s[1])}px)`
   }
@@ -334,7 +343,7 @@ export function createMapEngine(el: MapElements, opts: MapOptions): MapEngine {
       [x + 12, y - h - 10],
       [x - 12 - w, y - h - 10],
     ]
-    const spot = spots.find(([lx, ly]) => clear(rects, lx, ly, w, h, 0.76)) ?? [
+    const spot = spots.find(([lx, ly]) => clear(rects, lx, ly, w, h, cam.labelMax)) ?? [
       Math.max(6, Math.min(W - w - 6, x + 12)),
       Math.max(30, y - h - 12),
     ]
@@ -892,6 +901,12 @@ export function createMapEngine(el: MapElements, opts: MapOptions): MapEngine {
     mode,
     resize,
     setActive,
+    setVisitor(v) {
+      applyVisitor(v, T + 0.2)
+      // Routes already on their way stay; the next one waits for the line to land.
+      if (!still) nextAuto = Math.max(nextAuto, T + 0.2 + YOU_DRAW + 0.4)
+      render()
+    },
     destroy() {
       if (raf) cancelAnimationFrame(raf)
       raf = 0

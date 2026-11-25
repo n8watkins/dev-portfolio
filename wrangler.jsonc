@@ -25,6 +25,9 @@
   "migrations": [{ "tag": "v1", "new_sqlite_classes": ["DOQueueHandler"] }],
   // The revalidation queue renders pages again by calling the worker itself.
   "services": [{ "binding": "WORKER_SELF_REFERENCE", "service": "dev-portfolio" }],
+  // /api/where (the home map's line to the visitor): at most 30 answers a
+  // minute per connection, counted by Cloudflare at the edge; nothing is kept.
+  "ratelimits": [{ "name": "WHERE_RATE_LIMIT", "namespace_id": "4101", "simple": { "limit": 30, "period": 60 } }],
   "observability": { "enabled": true, "head_sampling_rate": 1 },
   // portfolio.n8builds.dev as a Workers custom domain: Cloudflare creates and
   // manages its DNS record and certificate. The workers.dev address is off.

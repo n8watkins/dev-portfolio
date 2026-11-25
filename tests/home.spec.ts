@@ -9,17 +9,20 @@ test("every page's footer has my two sites' cards and the site map", async ({ pa
   for (const path of ['/', '/projects', '/stack', '/about', '/projects/net-trailers']) {
     await page.goto(path)
     const footer = page.locator('footer')
-    await expect(footer.getByRole('link', { name: /I build in public\s*n8builds\.dev/ }), path).toHaveAttribute(
-      'href',
-      /n8builds\.dev/
-    )
-    await expect(footer.getByRole('link', { name: /Where I work\s*techforpros\.com/ }), path).toHaveAttribute(
-      'href',
-      'https://techforpros.com'
-    )
+    await expect(
+      footer.getByRole('link', { name: /I build in public\s*n8builds\.dev/ }),
+      path
+    ).toHaveAttribute('href', /n8builds\.dev/)
+    await expect(
+      footer.getByRole('link', { name: /Where I work\s*techforpros\.com/ }),
+      path
+    ).toHaveAttribute('href', 'https://techforpros.com')
     const map = footer.getByRole('navigation', { name: 'Site map' })
     for (const name of ['Projects', 'Stack', 'About me', 'Resume', 'Contact', 'Build log']) {
-      await expect(map.getByRole('link', { name: new RegExp(`^${name}`) }).first(), `${path} ${name}`).toBeAttached()
+      await expect(
+        map.getByRole('link', { name: new RegExp(`^${name}`) }).first(),
+        `${path} ${name}`
+      ).toBeAttached()
     }
   }
   // No workshop pitches left anywhere.
@@ -45,7 +48,9 @@ test('the n8builds.dev teaser links each build to its n8builds.dev page', async 
     // Firefox on CI), so click until the counter shows the build.
     await expect(async () => {
       await teaser.getByRole('button', { name: `Show ${name}` }).click()
-      await expect(teaser.getByText(new RegExp(`^${name}, \\d+ of \\d+$`))).toBeVisible({ timeout: 1000 })
+      await expect(teaser.getByText(new RegExp(`^${name}, \\d+ of \\d+$`))).toBeVisible({
+        timeout: 1000,
+      })
     }).toPass()
     const link = teaser.getByRole('link', { name: `See the build: ${name} on n8builds.dev` })
     await expect(link).toHaveAttribute('href', `https://n8builds.dev/builds/${slug}`)
@@ -104,8 +109,14 @@ test('the build log card shows a month, cycles the months, and links the site an
   // Two links, and the card itself is not one.
   const links = card.getByRole('link')
   await expect(links).toHaveCount(2)
-  await expect(card.getByRole('link', { name: /^n8builds\.dev/ })).toHaveAttribute('href', 'https://n8builds.dev')
-  await expect(card.getByRole('link', { name: /^Build log/ })).toHaveAttribute('href', 'https://n8builds.dev/builds')
+  await expect(card.getByRole('link', { name: /^n8builds\.dev/ })).toHaveAttribute(
+    'href',
+    'https://n8builds.dev'
+  )
+  await expect(card.getByRole('link', { name: /^Build log/ })).toHaveAttribute(
+    'href',
+    'https://n8builds.dev/builds'
+  )
 })
 
 test('the build log card moves on through the months by itself, and holds when asked', async ({
@@ -172,14 +183,19 @@ test('the build log card never moves on by itself under reduced motion', async (
   await expect(card.locator('[data-month]')).toHaveText('November 2026')
 })
 
-test('the build log card falls back to a plain card when the log cannot be read', async ({ page }) => {
+test('the build log card falls back to a plain card when the log cannot be read', async ({
+  page,
+}) => {
   await page.route('**/api/build-log', (route) => route.fulfill({ json: { months: [] } }))
   await page.goto('/')
   const card = page.locator('[data-build-log]')
   await card.scrollIntoViewIfNeeded()
   await expect(card).toHaveAttribute('data-build-log', 'fallback')
   await expect(card).toContainText("What I'm shipping")
-  await expect(card.getByRole('link', { name: /^Build log/ })).toHaveAttribute('href', 'https://n8builds.dev/builds')
+  await expect(card.getByRole('link', { name: /^Build log/ })).toHaveAttribute(
+    'href',
+    'https://n8builds.dev/builds'
+  )
 })
 
 test('from 1280px, the resume, contact and build log cards are one row of three equal columns', async ({
@@ -210,39 +226,197 @@ test('from 1280px, the resume, contact and build log cards are one row of three 
 })
 
 /**
- * The map card's arcs (components/ui/BentoComponents/MapAnimations.tsx) draw
- * themselves in a GSAP loop. Under reduced motion they show fully drawn and
- * hold still; otherwise they keep drawing.
+ * "Ready to relocate" is the bold 3D map (components/ui/BoldMap; owner,
+ * 2026-11-25). Its code loads only as the card nears the screen; it counts
+ * the frames it draws (`data-frames`), says whether it moves (`data-mode`),
+ * whether its loop runs (`data-running`) and what it knows of the visitor
+ * (`data-visitor`). The visitor's rough location comes from /api/where after
+ * the map is up, so the page itself stays static and cached.
  */
-test.describe('the map arcs', () => {
-  const offsets = (page: import('@playwright/test').Page) =>
-    page
-      .locator('.neon-path')
-      .evaluateAll((paths) => paths.map((p) => getComputedStyle(p).strokeDashoffset))
-
-  test('hold still, fully drawn, under reduced motion', async ({ page }) => {
-    await page.emulateMedia({ reducedMotion: 'reduce' })
+test.describe('the bold map', () => {
+  const AUSTIN = { kind: 'us', at: [-97.5, 30.5], near: 'Austin, TX', mi: 1230 }
+  const frames = (map: import('@playwright/test').Locator) =>
+    map.evaluate((el) => Number((el as HTMLElement).dataset.frames))
+  const openMap = async (page: import('@playwright/test').Page) => {
     await page.goto('/')
-    const arcs = page.locator('.neon-path')
-    await arcs.first().scrollIntoViewIfNeeded()
-    await expect(arcs).toHaveCount(3)
-    const before = await offsets(page)
-    await page.waitForTimeout(1500)
-    expect(await offsets(page)).toEqual(before)
-    expect(
-      before.every((o) => parseFloat(o) === 0),
-      `offsets ${before}`
-    ).toBe(true)
+    const slot = page.locator('[data-bold-map-slot]')
+    await slot.scrollIntoViewIfNeeded()
+    const map = slot.locator('[data-bold-map]')
+    await expect(map).toHaveAttribute('data-ready', 'true', { timeout: 20_000 })
+    return map
+  }
+
+  test('loads only as the card nears the screen', async ({ page }) => {
+    const chunks: string[] = []
+    page.on('response', (r) => {
+      if (r.url().includes('/_next/static/') && r.url().endsWith('.js')) chunks.push(r.url())
+    })
+    let asked = 0
+    await page.route('**/api/where', (route) => {
+      asked++
+      return route.fulfill({ json: { visitor: null } })
+    })
+    await page.goto('/')
+    await page.waitForLoadState('networkidle')
+    // At the top of a phone or desktop page the card is more than a screen
+    // away: the map's code has not loaded and nothing asked where you are.
+    await expect(page.locator('[data-bold-map-slot]')).toBeAttached()
+    await expect(page.locator('[data-bold-map]')).toHaveCount(0)
+    expect(asked).toBe(0)
+    const before = chunks.length
+    await page.locator('[data-bold-map-slot]').scrollIntoViewIfNeeded()
+    await expect(page.locator('[data-bold-map]')).toHaveAttribute('data-ready', 'true', {
+      timeout: 20_000,
+    })
+    expect(chunks.length).toBeGreaterThan(before)
+    await expect.poll(() => asked).toBe(1)
   })
 
-  test('keep drawing when motion is allowed', async ({ page }) => {
+  test('holds still, fully drawn, under reduced motion', async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+    await page.route('**/api/where', (route) => route.fulfill({ json: { visitor: AUSTIN } }))
+    const map = await openMap(page)
+    await expect(map).toHaveAttribute('data-mode', 'still')
+    // The line to the visitor is drawn at once and labelled.
+    await expect(map.locator('[data-on]', { hasText: 'near Austin, TX' })).toBeVisible()
+    const before = await frames(map)
+    await page.waitForTimeout(1500)
+    expect(await frames(map)).toBe(before)
+    await expect(map).toHaveAttribute('data-running', 'false')
+  })
+
+  test('moves on screen and pauses off screen', async ({ page }) => {
     await page.emulateMedia({ reducedMotion: 'no-preference' })
+    const map = await openMap(page)
+    test.skip(
+      (await map.getAttribute('data-renderer')) === '2d',
+      'no WebGL2 in this browser: the map is the still 2D picture (tests/lab.spec.ts)'
+    )
+    await expect(map).toHaveAttribute('data-mode', 'moving')
+    await expect(map).toHaveAttribute('data-running', 'true')
+    const before = await frames(map)
+    await expect.poll(() => frames(map)).toBeGreaterThan(before + 2)
+    await page.locator('footer').scrollIntoViewIfNeeded()
+    await expect(map).toHaveAttribute('data-running', 'false')
+    const paused = await frames(map)
+    await page.waitForTimeout(800)
+    expect(await frames(map)).toBe(paused)
+  })
+
+  test('says what it shows to screen readers, and hides the drawing', async ({ page }) => {
+    await page.route('**/api/where', (route) => route.fulfill({ json: { visitor: AUSTIN } }))
+    // Before the map loads, the card already says it.
     await page.goto('/')
-    const arcs = page.locator('.neon-path')
-    await arcs.first().scrollIntoViewIfNeeded()
-    await expect(arcs).toHaveCount(3)
-    const before = await offsets(page)
-    await expect.poll(() => offsets(page)).not.toEqual(before)
+    const slot = page.locator('[data-bold-map-slot]')
+    await expect(slot.locator('.sr-only')).toHaveText(
+      'A map of the United States: Nathan is in Los Angeles, California, and open to relocating anywhere.'
+    )
+    const map = await openMap(page)
+    await expect(map.locator('.sr-only')).toHaveText(
+      /open to relocating anywhere\. You seem to be near Austin, TX, about 1,230 miles away\./
+    )
+    await expect(map.locator('canvas')).toHaveAttribute('aria-hidden', 'true')
+  })
+
+  test('his avatar grows on hover and on a tap, and eases back', async ({ page, isMobile }) => {
+    await page.emulateMedia({ reducedMotion: 'no-preference' })
+    const map = await openMap(page)
+    const avatar = map.getByRole('button', { name: 'Nathan Watkins, in Los Angeles' })
+    const size = async () => (await avatar.locator('span').first().boundingBox())!.width
+    await page.mouse.move(0, 0)
+    await expect.poll(size).toBeLessThan(40)
+    if (!isMobile) {
+      const box = (await map.boundingBox())!
+      await page.mouse.move(box.x + box.width * 0.6, box.y + box.height * 0.45)
+      await expect.poll(size).toBeGreaterThan(60)
+      await page.mouse.move(0, 0)
+      await expect.poll(size).toBeLessThan(40)
+    }
+    await (isMobile ? avatar.tap() : avatar.click())
+    await expect(avatar).toHaveAttribute('aria-pressed', 'true')
+    await expect.poll(size).toBeGreaterThan(60)
+    await (isMobile ? avatar.tap() : avatar.click())
+    await expect(avatar).toHaveAttribute('aria-pressed', 'false')
+    if (!isMobile) await page.mouse.move(0, 0)
+    await expect.poll(size).toBeLessThan(40)
+  })
+
+  test('under reduced motion the avatar changes size at once, from the keyboard too', async ({
+    page,
+  }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+    const map = await openMap(page)
+    const avatar = map.getByRole('button', { name: 'Nathan Watkins, in Los Angeles' })
+    await avatar.focus()
+    await avatar.press('Enter')
+    await expect(avatar).toHaveAttribute('aria-pressed', 'true')
+    // No transition: the next frame already has the full size.
+    const width = await avatar
+      .locator('span')
+      .first()
+      .evaluate(
+        (el) =>
+          new Promise<number>((done) =>
+            requestAnimationFrame(() => done(el.getBoundingClientRect().width))
+          )
+      )
+    expect(width).toBeGreaterThan(60)
+  })
+
+  test('draws a line to the visitor when /api/where answers with a point', async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+    await page.route('**/api/where', (route) => route.fulfill({ json: { visitor: AUSTIN } }))
+    const map = await openMap(page)
+    await expect(map).toHaveAttribute('data-visitor', 'us')
+    await expect(
+      map.locator('[data-on]', { hasText: /You · near Austin, TX · 1,230 mi/ })
+    ).toBeVisible()
+  })
+
+  for (const [name, answer] of [
+    ['answers empty', { json: { visitor: null } }],
+    ['fails', { status: 500, body: 'no' }],
+    ['answers with something else', { json: { visitor: { kind: 'us', at: 'Austin', mi: 5 } } }],
+    ['is rate limited', { status: 429, json: { visitor: null } }],
+  ] as const) {
+    test(`draws no line when /api/where ${name}`, async ({ page }) => {
+      await page.emulateMedia({ reducedMotion: 'reduce' })
+      let asked = false
+      await page.route('**/api/where', (route) => {
+        asked = true
+        return route.fulfill(answer)
+      })
+      const map = await openMap(page)
+      await expect.poll(() => asked).toBe(true)
+      await page.waitForTimeout(500)
+      await expect(map).toHaveAttribute('data-visitor', 'none')
+      await expect(map.locator('[data-on]')).toHaveCount(0)
+      await expect(map.locator('canvas')).toBeAttached()
+    })
+  }
+
+  test('/api/where answers only a coarse visitor, never cached, with no cookie', async ({
+    request,
+  }) => {
+    const res = await request.get('/api/where')
+    expect(res.status()).toBe(200)
+    const headers = res.headers()
+    expect(headers['cache-control']).toContain('no-store')
+    expect(headers['cache-control']).toContain('private')
+    expect(headers['set-cookie']).toBeUndefined()
+    const body = await res.json()
+    // Off Cloudflare there is no location: no visitor, and nothing else at all.
+    expect(body).toEqual({ visitor: null })
+  })
+
+  test('the home page itself carries no location and asks for none on the server', async ({
+    request,
+  }) => {
+    const res = await request.get('/')
+    const html = await res.text()
+    expect(html).toContain('data-bold-map-slot')
+    expect(html).not.toMatch(/You seem to be|near [A-Z][a-z]+, [A-Z]{2}/)
+    expect(res.headers()['set-cookie']).toBeUndefined()
   })
 })
 
@@ -279,7 +453,9 @@ test('Experience links Tech for Pros and the live client sites only, and Appturn
   const experience = page.locator('#experience')
   const card = experience.locator('div.group\\/exp', { hasText: 'Appturnity' })
   await expect(card).toHaveCount(1)
-  await expect(card.getByRole('heading', { name: 'Full-Stack Developer', exact: true })).toBeAttached()
+  await expect(
+    card.getByRole('heading', { name: 'Full-Stack Developer', exact: true })
+  ).toBeAttached()
   await expect(card.getByText('Appturnity', { exact: true })).toBeAttached()
   // Nowhere outside Experience.
   const outside = await page.evaluate(() => {
@@ -296,9 +472,9 @@ test('Experience links Tech for Pros and the live client sites only, and Appturn
 
   // Exactly these: the company's site, and the client sites still live (round 5 of
   // 2026-11-09: clients whose sites are gone are described, never linked).
-  const hrefs = await experience.locator('a[href]').evaluateAll((links) =>
-    links.map((a) => (a as HTMLAnchorElement).href).sort()
-  )
+  const hrefs = await experience
+    .locator('a[href]')
+    .evaluateAll((links) => links.map((a) => (a as HTMLAnchorElement).href).sort())
   expect(hrefs).toEqual([
     'https://comfort1hvac.com/',
     'https://debellgolf.com/',
@@ -388,7 +564,9 @@ test("a role's site cards are one scrolling row, paged by Previous and Next when
   await expect(first).not.toBeInViewport()
   await expect(shown).toHaveText(isMobile ? '6 of 6' : '4 to 6 of 6')
   // The page itself never scrolls sideways.
-  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(
+    true
+  )
   // Appturnity's two cards fit on a desktop, so it has no buttons there (a phone shows one at a time).
   const appturnity = role('Appturnity')
   await appturnity.locator('[data-role-toggle]').click()
@@ -411,9 +589,15 @@ test('every role shows its basics; only the roles with more to say expand', asyn
   await experience.getByRole('button', { name: 'Expand all' }).scrollIntoViewIfNeeded()
   const role = (name: string) => experience.locator('div.group\\/exp', { hasText: name })
   // The basics show with no click, for every role.
-  await expect(role('Tech for Pros').getByText(/Deployed AI receptionists in a 12-client pilot/)).toBeVisible()
-  await expect(role('Lifeline Clinical Labs').getByText(/Python order-entry pipeline/)).toBeVisible()
-  await expect(role('Realtek Solutions').getByText(/Launched 5\+ small-business websites/)).toBeVisible()
+  await expect(
+    role('Tech for Pros').getByText(/Deployed AI receptionists in a 12-client pilot/)
+  ).toBeVisible()
+  await expect(
+    role('Lifeline Clinical Labs').getByText(/Python order-entry pipeline/)
+  ).toBeVisible()
+  await expect(
+    role('Realtek Solutions').getByText(/Launched 5\+ small-business websites/)
+  ).toBeVisible()
   await expect(role('The Coder School').getByText(/Taught JavaScript, Python/)).toBeVisible()
   // Three roles expand; Realtek and The Coder School don't, and the school's site isn't linked.
   for (const name of ['Tech for Pros', 'Appturnity', 'Donovan Golf']) {
@@ -534,7 +718,10 @@ test('experience cards show on a small phone', async ({ page }) => {
 
 /** The top right corner has the resume only (owner, 2026-11-08: "Message me" removed). */
 test('the top corner offers the resume and no Message me', async ({ page, isMobile }) => {
-  test.skip(isMobile, 'The corner buttons show from 640px up; on a phone the hero carries the resume.')
+  test.skip(
+    isMobile,
+    'The corner buttons show from 640px up; on a phone the hero carries the resume.'
+  )
   await page.goto('/')
   await expect(page.getByRole('link', { name: /^Message me/ })).toHaveCount(0)
   await expect(page.getByRole('link', { name: /^Resume/ }).first()).toBeVisible()
@@ -577,7 +764,9 @@ test("hovering a role shows its own picture, which stays, quieter, while it's op
   await expect.poll(opacity).toBeCloseTo(0.5, 1)
   // Each role keeps its own: Appturnity's is Appturnity's home page.
   await expect(
-    page.locator('#experience div.group\\/exp', { hasText: 'Appturnity' }).locator('[data-role-image] img')
+    page
+      .locator('#experience div.group\\/exp', { hasText: 'Appturnity' })
+      .locator('[data-role-image] img')
   ).toHaveAttribute('src', /appturnity/)
 })
 
@@ -600,7 +789,9 @@ test("a link under the top bar's fade still takes the click", async ({ page }) =
   expect(await fade.evaluate((el) => getComputedStyle(el).pointerEvents)).toBe('none')
 })
 
-test('the buttons beside a section heading arrive with it, in a reveal of their own', async ({ page }) => {
+test('the buttons beside a section heading arrive with it, in a reveal of their own', async ({
+  page,
+}) => {
   await page.goto('/')
   for (const [heading, button] of [
     ['Building for the', 'Detailed view'],

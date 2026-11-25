@@ -1,21 +1,21 @@
-import { expect, test, type Locator } from '@playwright/test'
+import { expect, test, type Locator } from './fixtures/test'
 
 /**
- * /lab/map: the bold 3D map on trial (owner, 2026-11-24), a hidden page: not
- * in the nav or the sitemap, noindex. The map (components/ui/BoldMap) counts
- * the frames it draws on its card (`data-frames`), says whether it moves
- * (`data-mode`) and whether its loop runs (`data-running`).
+ * /lab/map: the test bed for the home page's bold map (tests/home.spec.ts
+ * covers the map itself there): a hidden page, not in the nav or the sitemap,
+ * noindex, that takes the visitor from `?from=` so the line to the visitor can
+ * be seen without Cloudflare. The map (components/ui/BoldMap) counts the frames
+ * it draws (`data-frames`), says whether it moves (`data-mode`) and whether
+ * its loop runs (`data-running`).
  */
 const frames = (map: Locator) => map.evaluate((el) => Number((el as HTMLElement).dataset.frames))
 
-test('the lab page shows the new map beside the current one, then larger', async ({ page }) => {
+test('the lab page shows the map at the home card size, then larger', async ({ page }) => {
   await page.goto('/lab/map?from=Austin')
   await expect(page.getByRole('heading', { level: 1, name: 'The bold map' })).toBeVisible()
   const maps = page.locator('[data-bold-map]')
   await expect(maps).toHaveCount(2)
   await expect(maps.first()).toHaveAttribute('data-ready', 'true')
-  // The current map is there for comparison.
-  await expect(page.locator('.neon-path')).toHaveCount(3)
   // What the map says, for screen readers; the drawing itself is hidden from them.
   await expect(maps.first().locator('.sr-only')).toHaveText(
     /Nathan is in Los Angeles, California, and open to relocating anywhere\. You seem to be near Austin, TX, about 1,230 miles away\./
@@ -48,80 +48,6 @@ test('the map holds still, fully drawn, under reduced motion', async ({ page }) 
   await page.waitForTimeout(1500)
   expect(await frames(map)).toBe(before)
   await expect(map).toHaveAttribute('data-running', 'false')
-})
-
-test('the map moves on screen and pauses off screen', async ({ page }) => {
-  await page.emulateMedia({ reducedMotion: 'no-preference' })
-  await page.goto('/lab/map')
-  const map = page.locator('[data-bold-map]').first()
-  await map.scrollIntoViewIfNeeded()
-  await expect(map).toHaveAttribute('data-ready', 'true')
-  test.skip(
-    (await map.getAttribute('data-renderer')) === '2d',
-    'no WebGL2 in this browser: the map is the still 2D picture (tested below)'
-  )
-  await expect(map).toHaveAttribute('data-mode', 'moving')
-  await expect(map).toHaveAttribute('data-running', 'true')
-  const before = await frames(map)
-  await expect.poll(() => frames(map)).toBeGreaterThan(before + 2)
-  // Scrolled well past it, it stops drawing.
-  await page.locator('footer').scrollIntoViewIfNeeded()
-  await expect(map).toHaveAttribute('data-running', 'false')
-  const paused = await frames(map)
-  await page.waitForTimeout(800)
-  expect(await frames(map)).toBe(paused)
-})
-
-/**
- * His avatar over Los Angeles grows when the card is hovered, and on a tap
- * (owner, 2026-11-25: "some indication that you can look at the picture").
- */
-test('his avatar grows on hover and on a tap, and eases back', async ({ page, isMobile }) => {
-  await page.emulateMedia({ reducedMotion: 'no-preference' })
-  await page.goto('/lab/map?from=Austin')
-  const map = page.locator('[data-bold-map]').first()
-  await map.scrollIntoViewIfNeeded()
-  await expect(map).toHaveAttribute('data-ready', 'true')
-  const avatar = map.getByRole('button', { name: 'Nathan Watkins, in Los Angeles' })
-  const size = async () => (await avatar.locator('span').first().boundingBox())!.width
-  await expect.poll(size).toBeLessThan(40)
-  if (!isMobile) {
-    const box = (await map.boundingBox())!
-    await page.mouse.move(box.x + box.width * 0.6, box.y + box.height * 0.45)
-    await expect.poll(size).toBeGreaterThan(60)
-    await page.mouse.move(0, 0)
-    await expect.poll(size).toBeLessThan(40)
-  }
-  await (isMobile ? avatar.tap() : avatar.click())
-  await expect(avatar).toHaveAttribute('aria-pressed', 'true')
-  await expect.poll(size).toBeGreaterThan(60)
-  await (isMobile ? avatar.tap() : avatar.click())
-  await expect(avatar).toHaveAttribute('aria-pressed', 'false')
-  if (!isMobile) await page.mouse.move(0, 0)
-  await expect.poll(size).toBeLessThan(40)
-})
-
-test('under reduced motion the avatar changes size at once', async ({ page }) => {
-  await page.emulateMedia({ reducedMotion: 'reduce' })
-  await page.goto('/lab/map')
-  const map = page.locator('[data-bold-map]').first()
-  await map.scrollIntoViewIfNeeded()
-  await expect(map).toHaveAttribute('data-ready', 'true')
-  const avatar = map.getByRole('button', { name: 'Nathan Watkins, in Los Angeles' })
-  await avatar.focus()
-  await avatar.press('Enter')
-  await expect(avatar).toHaveAttribute('aria-pressed', 'true')
-  // No transition: the next frame already has the full size.
-  const width = await avatar
-    .locator('span')
-    .first()
-    .evaluate(
-      (el) =>
-        new Promise<number>((done) =>
-          requestAnimationFrame(() => done(el.getBoundingClientRect().width))
-        )
-    )
-  expect(width).toBeGreaterThan(60)
 })
 
 test('without WebGL2 the map is drawn once, still, on a 2D canvas', async ({ page }) => {

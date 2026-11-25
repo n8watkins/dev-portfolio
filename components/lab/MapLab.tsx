@@ -5,19 +5,13 @@ import { FloatingNav } from '@/components/layout/FloatingNav'
 import Footer from '@/components/layout/Footer'
 import { BentoGrid, BentoGridItem } from '@/components/ui/BentoGrid'
 import BoldMap from '@/components/ui/BoldMap/BoldMap'
-import { formatMiles, type Visitor } from '@/components/ui/BoldMap/geo'
-import { gridItem2 } from '@/data/grid/items/gridItem2'
-import { gridItem2Bold } from '@/data/grid/items/gridItem2Bold'
+import type { Visitor } from '@/components/ui/BoldMap/geo'
+import { formatMiles } from '@/components/ui/BoldMap/text'
+import { relocateCard } from '@/data/grid/items/gridItem2'
 import { subpageNavItems } from '@/data/navigation'
 
 /** Places to try the line from, as `?from=`. */
 const TRY = ['Seattle', 'Denver', 'Austin', 'Chicago', 'Miami', 'New York', 'Los Angeles', 'London']
-
-const Badge = ({ children }: { children: string }) => (
-  <span className="pointer-events-none absolute top-3 right-3 z-[600] rounded-full border border-white/25 bg-slate-950/80 px-2.5 py-1 font-mono text-[11px] font-semibold tracking-wider text-slate-200 uppercase">
-    {children}
-  </span>
-)
 
 function describe(visitor: Visitor | null, source: 'query' | 'request') {
   const from = source === 'query' ? 'From ?from=' : 'From your connection (Cloudflare)'
@@ -33,8 +27,10 @@ function describe(visitor: Visitor | null, source: 'query' | 'request') {
 }
 
 /**
- * /lab/map: the bold 3D map on trial (owner, 2026-11-24), at the size of the
- * home page's "Ready to relocate" card beside the current one, then larger.
+ * /lab/map: a test bed for the home page's bold map (owner, 2026-11-24; on the
+ * home page since 2026-11-25). It takes the visitor from `?from=` (or the
+ * request), so the line to the visitor can be seen on a local server, which has
+ * no Cloudflare location. The card at its home size, then larger.
  * Hidden: not in the nav or the sitemap, and noindex.
  */
 export default function MapLab({
@@ -44,8 +40,7 @@ export default function MapLab({
   visitor: Visitor | null
   source: 'query' | 'request'
 }) {
-  const map = () => <BoldMap visitor={visitor} />
-  const bold = gridItem2Bold(map)
+  const card = relocateCard(() => <BoldMap visitor={visitor} />)
   return (
     <>
       <FloatingNav navItems={subpageNavItems} />
@@ -60,8 +55,8 @@ export default function MapLab({
             The bold map
           </h1>
           <p className="mt-4 max-w-2xl text-base leading-relaxed text-slate-400 md:text-lg/7">
-            A trial of the new map for the &ldquo;Ready to relocate&rdquo; card, beside the one on
-            the home page now. Point at the map (or rest a finger on it) to see a place and its
+            The home page&rsquo;s &ldquo;Ready to relocate&rdquo; map, with the line to you from any
+            place you pick. Point at the map (or rest a finger on it) to see a place and its
             distance from Los Angeles.
           </p>
           <p data-visitor-source className="mt-4 max-w-2xl text-sm text-slate-300">
@@ -98,17 +93,12 @@ export default function MapLab({
             id="card-size"
             className="mx-auto mb-4 max-w-md px-4 text-xl font-bold text-slate-50 sm:max-w-lg md:max-w-3xl lg:max-w-4xl xl:max-w-6xl 2xl:max-w-7xl"
           >
-            At the card&rsquo;s size: new, then now
+            At the home card&rsquo;s size
           </h2>
-          {/* The home page's grid and the card's own place in it, so each map is
-              exactly the size it is (or would be) on the home page. */}
+          {/* The home page's grid and the card's own place in it, so the map is
+              exactly the size it is on the home page. */}
           <BentoGrid>
-            <BentoGridItem
-              {...bold}
-              gridItemContainer={`${bold.gridItemContainer} xl:col-start-2`}
-              renderForeground={() => <Badge>New</Badge>}
-            />
-            <BentoGridItem {...gridItem2} renderForeground={() => <Badge>Now</Badge>} />
+            <BentoGridItem {...card} />
           </BentoGrid>
         </section>
 
@@ -120,7 +110,7 @@ export default function MapLab({
             Larger
           </h2>
           <div className="h-[28rem] md:h-[34rem] xl:h-[42rem]">
-            <BentoGridItem {...bold} gridItemContainer="@container" />
+            <BentoGridItem {...card} gridItemContainer="@container" />
           </div>
           <p className="mt-6 max-w-2xl text-sm text-slate-400">
             The line to you uses the approximate city Cloudflare works out from your connection,
