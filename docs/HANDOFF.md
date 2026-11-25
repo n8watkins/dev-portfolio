@@ -47,7 +47,7 @@ It funnels visitors to the two other sites:
 - `npm test` runs Playwright against a production build on port 4829 (it builds first, or reuses a server already running there locally).
   `E2E_PORT=4839 npm test` uses another port, so a running `npm run dev` on 4829 is not mistaken for the test build.
   No retries: a flaky test gets fixed.
-- Specs: `tests/consent.spec.ts` (the analytics consent banner), `tests/dino.spec.ts` (the dino game on /stack: n8builds.dev's dino tests, kept in step with its `tests/e2e/ai-kit.spec.ts`), `tests/dino-music.spec.ts` (the dino game's music toggle and its sound checked offline, never out loud: n8builds.dev's `tests/e2e/dino-music.spec.ts`), `tests/home.spec.ts` (the footer cards, the n8builds.dev card's links, the map arcs, Experience), `tests/about.spec.ts` (the About page and its breadcrumb, the home About teaser's facts, the nav from subpages, the sitemap), `tests/stack.spec.ts` (the stack card's link, /stack and its play area), `tests/projects.spec.ts` (the project cards, /projects and the project pages, the in-progress card, the retired apps' redirects, the status API), `tests/seo.spec.ts` (titles, share cards, no em dashes, no Sentry example routes), `tests/web-vitals.spec.ts` (Web Vitals budgets and axe accessibility), `tests/lab.spec.ts` (the bold map's lab page).
+- Specs: `tests/consent.spec.ts` (the analytics consent banner), `tests/dino.spec.ts` (the dino game on /stack: n8builds.dev's dino tests, kept in step with its `tests/e2e/ai-kit.spec.ts`), `tests/dino-music.spec.ts` (the dino game's music toggle and its sound checked offline, never out loud: n8builds.dev's `tests/e2e/dino-music.spec.ts`), `tests/home.spec.ts` (the footer cards, the n8builds.dev card's links, the build log card, the map arcs, Experience), `tests/about.spec.ts` (the About page and its breadcrumb, the home About teaser's facts, the nav from subpages, the sitemap), `tests/stack.spec.ts` (the stack card's link, /stack and its play area), `tests/projects.spec.ts` (the project cards, /projects and the project pages, the in-progress card, the retired apps' redirects, the status API), `tests/seo.spec.ts` (titles, share cards, no em dashes, no Sentry example routes), `tests/web-vitals.spec.ts` (Web Vitals budgets and axe accessibility), `tests/lab.spec.ts` (the bold map's lab page).
 - The site scrolls smoothly (`scroll-smooth` on every element), so a test that scrolls must wait for the scroll to stop before hovering or clicking.
 - GitHub Actions (`.github/workflows/ci.yml`): lint, types and build, then the Playwright suite on the same five browsers as n8builds.dev (chromium, firefox, webkit, mobile-chrome, mobile-safari) inside Playwright's Docker image (its version read from `package-lock.json`).
   WebKit and mobile Safari each run as two shards with one worker: they have no GPU in CI, so their frames come slowly (about 10 fps on this page), and competing workers make that worse.
@@ -96,8 +96,7 @@ It funnels visitors to the two other sites:
 The owner picked layout B (a work-first home page plus detail pages) over A (one long page) and asked for this rework, bringing in A's visuals.
 
 - **Home** (owner's review, 2026-11-08): the hero, About (the intro, then the bento exactly as before: Ready to relocate, the tech stack card with the dino, the resume card, "Have a project? Let's connect"), Projects, Experience, Contact.
-  Since round 4 of 2026-11-09 the bento has a fifth card, the n8builds.dev build log (`components/ui/BentoComponents/BuildLogCard.tsx`): a month, its changes and a bar per day, live from https://n8builds.dev/builds/months.json through `app/api/build-log` (an hour of cache; a plain card when it cannot be read), with arrows that go round the months, and links to n8builds.dev (top left) and the build log (top right).
-  The months also move on by themselves every 5 s (owner, 2026-11-09), holding while hovered or keyboard-focused, for 15 s after an arrow, off screen, in a hidden tab and under reduced motion.
+  Since round 4 of 2026-11-09 the bento has a fifth card, the n8builds.dev build log; see "The build log card" below.
   From 1280px the grid has 12 columns: Ready to relocate (5) and the stack (7), then the resume, "Have a project?" and the build log as three equal columns (round 5).
   About on the home page is a short intro (two sentences, owner's round 3) ending in two proof chips (75+ client sites shipped end to end, the owner's career count; 30+ open source projects, his public GitHub repos; the hero's n8builds.dev card keeps its own count, `N8BUILDS_BUILD_COUNT` in `lib/sites.ts`) and "More about me" (to `/about`), where the full story lives; the heading, copy, chips and a small portrait are one compact block (`components/sections/Grid.tsx`, owner 2026-11-24); the tech stack card has "See my stack" (to `/stack`).
   `/projects` and the project pages lead "Back to home" (`components/Projects/BackToHome.tsx`, to the top of `/`).
@@ -184,6 +183,27 @@ It is built for real but not on the home page yet: the owner decides after seein
 
 Under the projects, `components/Projects/BuildsTeaser.tsx` shows n8builds.dev's builds one at a time (Scribe, OpenPing, Solara, TubeVault, Piper TTS, TL;DW; Portfolio Rank left it for the project rows on 2026-11-08), each with its real icon (`public/builds/<slug>/`), its accent, a Live site link when it has one and "See the build" on n8builds.dev (owner, 2026-10-26; it replaced the "Building in public" bento card and the More builds strip).
   Since round 4 of 2026-11-09 it also shows two upcoming builds (KeysReady, Pivot, from n8builds-web's `data/upcoming.ts`) with "Join the waitlist" (`https://n8builds.dev/upcoming?interest=<slug>#waitlist`) and their landing pages.
+
+## The build log card
+
+`components/ui/BentoComponents/BuildLogCard.tsx` shows a month of n8builds.dev's build log, live from https://n8builds.dev/builds/months.json through `app/api/build-log` (an hour of cache; the E2E suite reads `tests/fixtures/build-log-months.json` instead).
+It was reworked on 2026-11-25 (owner, after a preview: "I want it to be fun to look around and hover over").
+
+- **The feed has only a count per day** (`day`, `count`, and `future` for days still to come), plus each month's total and title.
+  There are no repos or commit subjects, so the card never shows them.
+  Everything else in the readout (rank, share of the month, streaks, the busiest day, active days) is worked out from those counts by `monthFacts` in `lib/buildLog.ts`, covered by `tests/unit/buildLog.test.mts`.
+- **Layout**: the older and newer month arrows top left with the month beside them, the readout (the month's total and tags, or the picked day's count, date and tags), the chart, and two plain text links along the bottom: "n8builds.dev" (with "I post everything here" above it) and "Build log".
+  Each link's underline draws in from the left on hover or keyboard focus and its arrow nudges.
+- **The chart**: each day is a stack of up to 10 square blocks (a CSS mask cuts the bar into blocks; the busiest day fills it).
+  Hovering, tapping or arrowing onto a day picks it: its blocks fill bottom to top, it lifts and glows, its neighbours lean in, the other days dim a little, and a pixel under the chart marks it, while the readout's number rolls to the day's count.
+  The owner did not want "the full thing being highlighted", so the picked day stands out by its own bar, with no lit column.
+  Keys: Left and Right walk the days, Home and End go to the first day and the last day so far, Escape lets go; the chart is one tab stop.
+  On a phone a tap picks a day, a sideways drag scrubs, and a tap elsewhere lets go.
+  Screen readers get each day as a button named with its date and count, and the month's summary as text.
+- **The months move on by themselves** every 5 s (owner, 2026-11-09), this month first and then back through the months, holding while hovered or keyboard-focused, while a day is picked, for 15 s after an arrow, off screen, in a hidden tab and under reduced motion.
+  Under reduced motion a day still lights up and the readout still changes, but nothing moves.
+- **Temporary**: `?log=3` shows the first preview's stronger highlight (a lit column, the other days dimmed further) for the owner to compare; remove it (the `strong` switch in the card and the `[data-highlight='strong']` rules in `app/globals.css`) once he has.
+- If the months cannot be read, the card is a plain "What I'm shipping" card with the same two links.
 
 ## Conventions
 

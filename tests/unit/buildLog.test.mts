@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { FEED_HEADERS, toLogMonths } from '../../lib/buildLog.ts'
+import { FEED_HEADERS, monthFacts, toLogMonths } from '../../lib/buildLog.ts'
 
 test('a version 1 feed keeps each month, newest first, as sent', () => {
   const months = toLogMonths({
@@ -35,4 +35,41 @@ test('at most a year of months', () => {
 
 test('server fetches name themselves, since n8builds.dev challenges nameless clients', () => {
   assert.match(FEED_HEADERS['User-Agent'], /^n8builds-portfolio /)
+})
+
+test("a day's facts come from the month's counts alone: rank, share and streak", () => {
+  const counts = [6, 3, 0, 13, 18, 0, 6]
+  const facts = monthFacts({
+    id: '2026-11',
+    title: 'November 2026',
+    changes: 46,
+    days: [
+      ...counts.map((count, i) => ({ day: `2026-11-0${i + 1}`, count })),
+      { day: '2026-11-08', count: 0, future: true },
+    ],
+  })
+  assert.equal(facts.activeDays, 5)
+  assert.deepEqual(facts.busiest, { day: '2026-11-05', count: 18 })
+  assert.equal(facts.longestRun, 2)
+  // The busiest day ranks first; equal counts share a rank; a quiet day has none.
+  assert.deepEqual(
+    facts.days.map((d) => d?.rank ?? null),
+    [3, 5, 0, 2, 1, 0, 3, null]
+  )
+  assert.equal(facts.days[4]?.share, 39)
+  assert.deepEqual(facts.days[4]?.run, { length: 2, at: 2 })
+  assert.deepEqual(facts.days[6]?.run, { length: 1, at: 1 })
+  assert.deepEqual(facts.days[2]?.run, { length: 0, at: 0 })
+})
+
+test('a quiet month has no busiest day and no streak', () => {
+  const facts = monthFacts({
+    id: 'recent',
+    title: 'Last 30 days',
+    changes: 0,
+    days: [{ day: '2026-11-01', count: 0 }],
+  })
+  assert.equal(facts.busiest, null)
+  assert.equal(facts.longestRun, 0)
+  assert.equal(facts.days[0]?.share, 0)
 })
