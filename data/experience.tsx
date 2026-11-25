@@ -34,6 +34,8 @@ export type WorkExperienceItem = {
      */
     position?: string
     zoom?: number
+    /** The zoom while the role is open (the strip is taller then); defaults to `zoom`. */
+    openZoom?: number
     origin?: string
   }
   /**
@@ -127,8 +129,9 @@ export const workExperience: WorkExperienceItem[] = [
     image: {
       src: '/experience/donovangolf.webp',
       alt: "Donovan Golf's home page",
-      position: '70% 0%',
-      zoom: 1.4,
+      position: '100% 0%',
+      zoom: 2.2,
+      openZoom: 1,
       origin: '100% 0%',
     },
     sites: [

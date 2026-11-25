@@ -270,9 +270,9 @@ const Experience = () => {
                         data-role-image
                       >
                         <div
-                          className="absolute inset-0"
+                          className="absolute inset-0 transition-transform duration-500"
                           style={{
-                            transform: image.zoom ? `scale(${image.zoom})` : undefined,
+                            transform: `scale(${(isOpen ? (image.openZoom ?? image.zoom) : image.zoom) ?? 1})`,
                             transformOrigin: image.origin ?? image.position ?? '0% 0%',
                           }}
                         >
