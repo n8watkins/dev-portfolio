@@ -1,6 +1,15 @@
 import { test, expect } from './fixtures/test'
 
 /**
+ * Going home from /about loads the home page, the heaviest on the site (the
+ * hero grid, the map, the stack card): with other test workers busy it can
+ * take more than the default 5 s to land (seen in repeated full runs of this
+ * file, never in 30 runs of the navigation tests alone), so a move home gets
+ * more time.
+ */
+const TO_HOME = { timeout: 15_000 }
+
+/**
  * The About page, only about me (owner, 2026-11-08): one portrait, then the
  * story in photo scenes (at work, in LA, the setup), with stickers drifting
  * around them. The work (projects, experience, stack) is on the home page.
@@ -47,7 +56,7 @@ test('/about has a Home / About me breadcrumb above the intro, and Home leads to
     (await crumbs.boundingBox())!.y < (await page.getByText('Get to know me').boundingBox())!.y
   expect(above).toBe(true)
   await crumbs.getByRole('link', { name: 'Home' }).click()
-  await expect(page).toHaveURL(/\/$/)
+  await expect(page).toHaveURL(/\/$/, TO_HOME)
 })
 
 test('the About page tells the story in scenes with one portrait, and nothing else', async ({
@@ -179,6 +188,8 @@ test('the grid squares move, are decorative, and never light behind text', async
   page,
   isMobile,
 }) => {
+  // Three widths, three scenes, a few looks at each: longer than one page check.
+  test.setTimeout(90_000)
   const widths = isMobile ? [page.viewportSize()!.width] : [390, 1024, 1440]
   for (const width of widths) {
     if (!isMobile) await page.setViewportSize({ width, height: 900 })
@@ -224,6 +235,8 @@ test('under reduced motion no square moves and the scenes are simply there', asy
     page
       .locator('[data-rest]')
       .evaluateAll((els) => els.map((el) => getComputedStyle(el).opacity).join())
+  // Once drawn, they rest softly lit.
+  await expect.poll(async () => (await resting()).split(',').some((o) => Number(o) > 0)).toBe(true)
   const before = await resting()
   await page.mouse.wheel(0, 1200)
   await page.waitForTimeout(2000)
@@ -254,7 +267,7 @@ test("a subpage's nav jumps to the home page's sections", async ({ page, isMobil
     .getByRole('navigation', { name: 'Main navigation' })
     .getByRole('link', { name: 'Experience' })
     .click()
-  await expect(page).toHaveURL(/\/$/)
+  await expect(page).toHaveURL(/\/$/, TO_HOME)
   await expect(page.locator('#experience')).toBeInViewport()
 })
 
@@ -292,7 +305,7 @@ test('/about ends with ways on: where you were, the experience, and the top of t
     .getByRole('link', { name: 'Continue where you were' })
   await back.scrollIntoViewIfNeeded()
   await back.click()
-  await expect(page).toHaveURL(/\/$/)
+  await expect(page).toHaveURL(/\/$/, TO_HOME)
   const offsetNow = () =>
     page.evaluate(
       (section) =>
@@ -308,6 +321,6 @@ test('/about ends with ways on: where you were, the experience, and the top of t
     .getByRole('link', { name: 'See my experience' })
   await exp.scrollIntoViewIfNeeded()
   await exp.click()
-  await expect(page).toHaveURL(/\/$/)
+  await expect(page).toHaveURL(/\/$/, TO_HOME)
   await expect(page.locator('#experience')).toBeInViewport()
 })
