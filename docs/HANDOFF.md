@@ -1,6 +1,6 @@
 # HANDOFF - dev-portfolio
 
-Last updated: 2026-11-08.
+Last updated: 2026-11-25.
 
 ## Current state and open work (2026-10-27): start here
 
@@ -47,7 +47,7 @@ It funnels visitors to the two other sites:
 - `npm test` runs Playwright against a production build on port 4829 (it builds first, or reuses a server already running there locally).
   `E2E_PORT=4839 npm test` uses another port, so a running `npm run dev` on 4829 is not mistaken for the test build.
   No retries: a flaky test gets fixed.
-- Specs: `tests/consent.spec.ts` (the analytics consent banner), `tests/dino.spec.ts` (the dino game on /stack: n8builds.dev's dino tests, kept in step with its `tests/e2e/ai-kit.spec.ts`), `tests/dino-music.spec.ts` (the dino game's music toggle and its sound checked offline, never out loud: n8builds.dev's `tests/e2e/dino-music.spec.ts`), `tests/home.spec.ts` (the footer cards, the n8builds.dev card's links, the build log card, the map arcs, Experience), `tests/about.spec.ts` (the About page and its breadcrumb, the home About teaser's facts, the nav from subpages, the sitemap), `tests/stack.spec.ts` (the stack card's link, /stack and its play area), `tests/projects.spec.ts` (the project cards, /projects and the project pages, the in-progress card, the retired apps' redirects, the status API), `tests/seo.spec.ts` (titles, share cards, no em dashes, no Sentry example routes), `tests/web-vitals.spec.ts` (Web Vitals budgets and axe accessibility).
+- Specs: `tests/consent.spec.ts` (the analytics consent banner), `tests/dino.spec.ts` (the dino game on /stack: n8builds.dev's dino tests, kept in step with its `tests/e2e/ai-kit.spec.ts`), `tests/dino-music.spec.ts` (the dino game's music toggle and its sound checked offline, never out loud: n8builds.dev's `tests/e2e/dino-music.spec.ts`), `tests/home.spec.ts` (the footer cards, the n8builds.dev card's links, the build log card, the map arcs, Experience), `tests/about.spec.ts` (the About page and its breadcrumb, the home About teaser's facts, the nav from subpages, the sitemap), `tests/stack.spec.ts` (the stack card's link, /stack and its play area), `tests/projects.spec.ts` (the project cards, /projects and the project pages, the in-progress card, the retired apps' redirects, the status API), `tests/seo.spec.ts` (titles, share cards, no em dashes, no Sentry example routes), `tests/web-vitals.spec.ts` (Web Vitals budgets and axe accessibility), `tests/lab.spec.ts` (the bold map's lab page).
 - The site scrolls smoothly (`scroll-smooth` on every element), so a test that scrolls must wait for the scroll to stop before hovering or clicking.
 - GitHub Actions (`.github/workflows/ci.yml`): lint, types and build, then the Playwright suite on the same five browsers as n8builds.dev (chromium, firefox, webkit, mobile-chrome, mobile-safari) inside Playwright's Docker image (its version read from `package-lock.json`).
   WebKit and mobile Safari each run as two shards with one worker: they have no GPU in CI, so their frames come slowly (about 10 fps on this page), and competing workers make that worse.
@@ -128,6 +128,26 @@ The owner picked layout B (a work-first home page plus detail pages) over A (one
 - **Footer** on every page (`components/layout/Footer.tsx`): the contact card, whose border carries a slow light around it (`.contact-glow`, still under reduced motion, paused off screen), the hero's two cards (n8builds.dev, Tech for Pros), and a site map (home sections, the pages, Resume, my sites).
 - The workshop section (the big Tech for Pros and n8builds.dev pitches) is gone, and so is the compact project-page footer.
 - The dino tests run on `/stack` (`STACK_PAGE` in `tests/dino.spec.ts` and `tests/dino-music.spec.ts`); n8builds-web's copies run on its home page.
+
+## The bold map, on trial at /lab/map (owner, 2026-11-24)
+
+The owner picked the "bold" 3D map from the stage 1 lab boards (local branch `preview/toys`, `preview/feel/map-bold.html`) to replace the globe picture in "Ready to relocate".
+It is built for real but not on the home page yet: the owner decides after seeing `/lab/map`.
+
+- `/lab/map` (`app/lab/map/page.tsx`, `components/lab/MapLab.tsx`) is hidden: not in the nav or the sitemap, `noindex`.
+  It shows the new card and the current one at their bento sizes (the home page's own grid classes), then the new map larger.
+  `?from=` places the visitor: `lat,lng`, a listed place (`Denver`, `Austin, TX`), `LA`, `NYC`, or `London` for abroad.
+- The map is `components/ui/BoldMap/`: `BoldMap.tsx` (the card, its labels and the screen-reader text), `engine.ts` (hand-written WebGL2, with a still 2D-canvas fallback), `scene.ts` (one column per grid cell, height from real elevation), `camera.ts`, `shaders.ts`, `geo.ts` (the projection, places and the visitor).
+  `mapData.generated.ts` comes from `scripts/map-data/` (Natural Earth, public domain) through `node scripts/gen-map-data.mjs`; never edit it by hand.
+  The card's config is `gridItem2Bold` in `data/grid/items/`; it is not in `gridItems`.
+- It runs only on screen in a visible tab, and is drawn once and held still under reduced motion.
+  The element carries `data-mode` (moving or still), `data-renderer` (webgl2 or 2d), `data-running` and `data-frames` for the tests.
+- The visitor's line: `lib/visitor.ts` reads Cloudflare's `request.cf` (latitude, longitude, country) through OpenNext's `getCloudflareContext()`, in its sync form so `next dev` falls back to no visitor instead of starting a local Workers runtime.
+  Only a point rounded to half a degree and the name of a listed place near it reach the page; nothing is stored or logged.
+  Only visitors in the lower 48 get a line; within 120 miles of Los Angeles it says "you're here too"; abroad, or with no data, there is no line.
+  The privacy page is n8builds.dev's (`/privacy`, in n8builds-web), which says this.
+- To ship it: render `gridItem2Bold(() => <BoldMap visitor={...} />)` in place of `gridItem2`, give it the visitor without making the home page dynamic (it is prerendered and cached; a small `no-store` route that returns `visitorFromRequest()`, fetched after load, keeps it that way, and the line is drawn first anyway), retire `MapDetails`, `MapAnimations`, `public/bento/globe.jpeg` and gsap if nothing else uses them, and move the "map arcs" tests in `tests/home.spec.ts` to the new map.
+- Tests: `tests/lab.spec.ts` (the page, noindex, the sitemap, reduced motion, pausing off screen, the 2D fallback, `?from=`) and `tests/unit/boldMapGeo.test.mts` (the visitor's rounding and limits).
 
 ## Tech for Pros (owner, 2026-11-01)
 
