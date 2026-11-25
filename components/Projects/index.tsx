@@ -92,7 +92,7 @@ function ProjectsBody({ mode }: { mode: MarksMode }) {
             </>
           }
         />
-        <Reveal className="shrink-0 self-start sm:self-auto">
+        <Reveal still className="shrink-0 self-start sm:self-auto">
         <Link
           href="/projects"
           className="group inline-flex items-center gap-1.5 rounded-xl border border-white/12 bg-white/4 px-3.5 py-2 text-sm font-semibold whitespace-nowrap text-slate-100 transition-colors hover:border-sky-400/50 hover:bg-white/8 hover:text-sky-200 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-sky-400"

@@ -7,13 +7,15 @@ import Footer from '@/components/layout/Footer'
 import TechStack from '@/components/features/TechStack'
 import { subpageNavItems } from '@/data/navigation'
 import { stackLayers } from '@/data/stackLayers'
+import { stackLinkHref } from '@/data/stack'
+import { StackDescription } from '@/components/ui/StackTile'
 
 const ScrollToTop = dynamic(() => import('@/components/ui/ScrollToTop'), { ssr: false })
 
 /**
  * /stack (owner, 2026-11-08): the dino game as a proper play area ("I
  * constantly try to improve my tech stack"), then the whole stack by layer,
- * each tool with a line on why I use it.
+ * each tool with a line on how I use it, linked to the project that uses it.
  */
 export default function StackPage() {
   return (
@@ -31,7 +33,7 @@ export default function StackPage() {
           </h1>
           <p className="mt-4 max-w-2xl text-base leading-relaxed text-slate-400 md:text-lg/7">
             The AI I build with and the stack I ship on, layer by layer. Hover or tap a tile in the
-            game to see what it is for, and catch the dino if you can.
+            game to see how I use it, and catch the dino if you can.
           </p>
 
           {/* The play area: full width and tall enough on a phone for the dino
@@ -69,7 +71,11 @@ export default function StackPage() {
                       <div className="min-w-0">
                         <p className="font-semibold text-slate-100">{tech.name}</p>
                         <p className="mt-0.5 text-sm leading-snug text-slate-400">
-                          {tech.description}
+                          <StackDescription
+                            description={tech.description}
+                            link={tech.link && { text: tech.link.text, ...stackLinkHref(tech.link, 'portfolio') }}
+                            className="font-medium text-sky-300 decoration-sky-300/40 hover:decoration-sky-300 focus-visible:bg-sky-400/20"
+                          />
                         </p>
                       </div>
                     </li>

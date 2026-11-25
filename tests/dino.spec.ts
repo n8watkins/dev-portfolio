@@ -39,12 +39,15 @@ const showKit = (page: Page, selector: string) =>
         // taller than the window, its top just in view: a reload's restored
         // scroll can leave its top row under the header, where the dino counts
         // as out of sight. (The page's scroll padding keeps "centre" a little
-        // off true centre, hence the slack.)
+        // off true centre, hence the slack.) Too tall to centre with its top
+        // below the header, it goes to the top, as in n8builds-web's copy: a
+        // card centred in a short window sat with its top just under 72px,
+        // which this never took, and it scrolled there again and again.
         const centred = Math.abs((box.top + box.bottom) / 2 - innerHeight / 2) <= 100 && box.top >= 72
-        const tall = box.height > innerHeight - 80
+        const tall = box.height > innerHeight - 2 * 72
         if (tall ? box.top >= 72 && box.top <= innerHeight / 3 : centred) return true
-        el.scrollIntoView({ block: box.height > innerHeight - 80 ? 'start' : 'center', behavior: 'instant' })
-        if (box.height > innerHeight - 80) scrollBy(0, -88)
+        el.scrollIntoView({ block: tall ? 'start' : 'center', behavior: 'instant' })
+        if (tall) scrollBy(0, -88)
         return false
       })
     )
@@ -98,6 +101,7 @@ interface DinoTiming {
   roam?: boolean
   reactions?: ('flip' | 'fall' | 'leap' | 'dash')[]
   round?: number
+  rainbow?: number
   choices?: ('change' | 'turn' | 'exit')[]
   entries?: ('drop' | 'left' | 'right')[]
 }
@@ -273,6 +277,10 @@ test.describe('dino easter egg (motion allowed)', () => {
     page,
     hasTouch,
   }) => {
+    // No lines: it stands still while it talks, on its own capped clock. Where
+    // frames come slowly a line that starts just before the last pause can
+    // outlast the miss's wait below. This test is about which row pauses.
+    await dinoTiming(page, { firstLineAfter: 999 })
     await onTopRow(page)
     // Focus (a keyboard user) or a tap (a touch screen) on a tile of the
     // bottom row pauses that row, not the one the dino is on. Wait for a tile
@@ -415,7 +423,6 @@ test.describe('dino easter egg (motion allowed)', () => {
     for (let i = 1; i < moves.length; i++) {
       const [a, b] = [moves[i - 1], moves[i]]
       if (!seen(a) || !seen(b)) continue
-      // Its fastest move (a dash on a slow frame) is under 50px a frame.
       // On its row (not falling or leaping between rows), it moves with the row.
       const onRow = (m: Move) => ['walk', 'flip', 'hop', 'drop', 'miss'].includes(m.mode)
       // Measured from the row it ends the frame on (it can land on a row
@@ -446,7 +453,11 @@ test.describe('dino easter egg (motion allowed)', () => {
         if (travel > a.period / 2) travel -= a.period
         else if (travel < -a.period / 2) travel += a.period
       }
-      if (Math.abs(b.x - a.x - travel) > 60 || Math.abs(dy) > 60)
+      // Its fastest step: 140 px/s walking x 2.2 (a round's top pace) x 2.4
+      // (a dash) x 1.8 (rainbow) over a capped 50ms frame is 66.5px. A
+      // teleport is a jump of hundreds. (Measured 2026-11-25 in WebKit: steps
+      // of 63 and 66px, which the old 60px limit counted as teleports.)
+      if (Math.abs(b.x - a.x - travel) > 80 || Math.abs(dy) > 80)
         jumps.push(`${a.mode}@${a.level} (${a.x.toFixed(0)}, ${a.y.toFixed(0)}) -> ${b.mode}@${b.level} (${b.x.toFixed(0)}, ${b.y.toFixed(0)})`)
     }
     return jumps
@@ -508,7 +519,9 @@ test.describe('dino easter egg (motion allowed)', () => {
   })
 
   test('shouts a different word each click, and turns rainbow on the 5th', async ({ page }) => {
-    await dinoTiming(page, { reactions: ['dash'] })
+    // Rainbow lasts the whole test: it is on the clock (6s on the site), and a busy machine can
+    // take longer than that over the clicks and the sparkle polls below.
+    await dinoTiming(page, { reactions: ['dash'], rainbow: 300 })
     await onTopRow(page)
     const words: string[] = []
     for (let i = 0; i < 5; i++) {
@@ -521,6 +534,41 @@ test.describe('dino easter egg (motion allowed)', () => {
     for (let i = 1; i < words.length; i++) expect(words[i], words.join(', ')).not.toBe(words[i - 1])
     expect(new Set(words).size).toBeGreaterThan(1)
     await expect(dino(page)).toHaveAttribute('data-rainbow', 'true')
+    // Rainbow mode moves (round 10 of 2026-11-09): its bands flow across the body, and
+    // sparkles twinkle around it.
+    const sparkles = dino(page).locator('[data-dino-sparkles]')
+    await expect(sparkles).toBeVisible()
+    await expect(sparkles.locator('.dino-sparkle')).toHaveCount(5)
+    const twinkle = () => sparkles.locator('.dino-sparkle').first().evaluate((el) => getComputedStyle(el).opacity)
+    const seen = new Set<string>()
+    await expect.poll(async () => seen.add(await twinkle()).size, { message: 'a sparkle twinkles' }).toBeGreaterThan(2)
+    const flow = dino(page).locator('linearGradient animateTransform')
+    await expect(flow).toHaveAttribute('type', 'translate')
+  })
+
+  // Round 11 of 2026-11-09 (owner): rainbow mode doesn't last forever. While it lasts the dino
+  // runs faster and, in a round, a catch counts three; then it takes a colour again.
+  test('rainbow mode wears off, and in a round a rainbow catch counts three', async ({ page }) => {
+    // Rainbow for 10s here (6s on the site), the 5th click turning it rainbow as always. It runs
+    // on the wall clock, so it has to outlast the clicks and checks that need it on, however slow
+    // the machine; only the wearing off at the end waits for it.
+    test.setTimeout(60_000)
+    await dinoTiming(page, { reactions: ['dash'], rainbow: 10 })
+    await onTopRow(page)
+    for (let i = 0; i < 5; i++) {
+      await pokeWalking(page)
+      await expect(dino(page)).toHaveAttribute('data-roars', String(i + 1))
+    }
+    await expect(dino(page)).toHaveAttribute('data-rainbow', 'true')
+    // The 5th click started a round with 1 catch at its first; a click while rainbow adds three.
+    const before = Number(await dino(page).getAttribute('data-catches'))
+    await pokeDino(page)
+    await expect(dino(page)).toHaveAttribute('data-catches', String(before + 3))
+    await expect(dino(page)).toHaveAttribute('data-bonus', '3')
+    // It wears off and takes a colour again, its sparkles gone.
+    await expect(dino(page)).not.toHaveAttribute('data-rainbow', 'true', { timeout: 20_000 })
+    await expect(dino(page).locator('[data-dino-sparkles]')).toBeHidden()
+    expect(await dino(page).evaluate((el) => getComputedStyle(el).getPropertyValue('--dino-body').trim())).toMatch(/^hsl\(/)
   })
 
   test('once back in from a side, it walks well into the panel before turning or leaving', async ({
@@ -658,11 +706,27 @@ test.describe('dino easter egg (motion allowed)', () => {
     await dinoTiming(page, { reactions: ['dash'], round: 7 })
     await onTopRow(page)
     const timer = page.locator('[data-dino-timer]')
+    // Time the round in the page, from the moment the timer shows to the
+    // moment it hides. Timing it from the test instead starts the clock when
+    // Playwright's polling notices the timer, which with slow frames can be
+    // most of a second late, and made a full 7 s round measure 5.997 s
+    // (Firefox, n8builds-web #134).
+    await timer.evaluate((el) => {
+      const w = window as unknown as { __dinoShown: [string | null, number][] }
+      w.__dinoShown = []
+      new MutationObserver(() => w.__dinoShown.push([el.getAttribute('data-shown'), performance.now()])).observe(el, {
+        attributes: true,
+        attributeFilter: ['data-shown'],
+      })
+    })
     await pokeDino(page)
     await expect(timer).toHaveAttribute('data-shown', 'true')
-    const started = Date.now()
     await expect(timer).toHaveAttribute('data-shown', 'false', { timeout: 20_000 })
-    const took = (Date.now() - started) / 1000
+    const changes = await page.evaluate(() => (window as unknown as { __dinoShown: [string | null, number][] }).__dinoShown)
+    const shown = changes.find(([value]) => value === 'true')
+    const hidden = changes.find(([value, at]) => value === 'false' && !!shown && at > shown[1])
+    expect(shown && hidden, `data-shown changes: ${JSON.stringify(changes)}`).toBeTruthy()
+    const took = (hidden![1] - shown![1]) / 1000
     expect(took, 'seconds the 7 s round took').toBeGreaterThan(6)
     expect(took, 'seconds the 7 s round took').toBeLessThan(9)
   })
@@ -720,9 +784,12 @@ test.describe('dino easter egg (motion allowed)', () => {
     await expect(best).toHaveAttribute('data-shown', 'true')
     await expect(best).toHaveText(/^Best \d+$/)
     await expect(dino(page)).toHaveAttribute('data-mode', 'walk')
+    // The first click turns it rainbow one time in twelve, and a rainbow catch counts 3.
+    const rainbow = (await dino(page).getAttribute('data-rainbow')) === 'true'
+    const expected = String(1 + (rainbow ? 3 : 1))
     await pokeDino(page)
-    await expect(dino(page)).toHaveAttribute('data-catches', '2')
-    await expect(score).toHaveText('Catches 2')
+    await expect(dino(page)).toHaveAttribute('data-catches', expected)
+    await expect(score).toHaveText(`Catches ${expected}`)
   })
 
   test('says its lines now and then, each once per visit', async ({ page }) => {
@@ -822,6 +889,34 @@ test.describe('dino easter egg (motion allowed)', () => {
   const roamLog = (page: Page) =>
     page.evaluate(() => (window as unknown as { roamLog: string[] }).roamLog)
 
+  // 2026-11-09 (n8builds-web): on a busy CI runner it fell off a running row with nothing paused.
+  // It had landed 2px from a tile's edge, and on the next frame, a long one, the rows were
+  // measured again, so it didn't ride the row's travel and its feet were off the tile. A walking
+  // dino now stays on its tile (snap-to-tile). Here the rows are measured again and again (the
+  // window keeps changing width) while frames come slowly.
+  test('with nothing paused it keeps to its row, even when frames come slowly and the rows are measured again', async ({
+    page,
+    browserName,
+  }) => {
+    test.skip(browserName !== 'chromium', 'game logic, checked in Chromium (slow CI frames elsewhere)')
+    test.setTimeout(60_000)
+    await slowFrames(page, 90)
+    await dinoTiming(page, { firstLineAfter: 999 })
+    // 1440 and 1432, not n8builds-web's 1280 and 1272: here those straddle the xl breakpoint
+    // (1280), where the card's layout changes and its rows move, which is a real move and
+    // not what this test is about.
+    await page.setViewportSize({ width: 1440, height: 900 })
+    await onTopRow(page)
+    await recordDino(page)
+    for (let i = 0; i < 16; i++) {
+      await page.setViewportSize({ width: i % 2 ? 1440 : 1432, height: 900 })
+      await page.waitForTimeout(400)
+    }
+    const log = await dinoLog(page)
+    expect(log.filter((entry) => !entry.endsWith('@0')), 'stayed on the top row').toEqual([])
+    expect(log.filter((entry) => entry.startsWith('hop')).length, 'kept hopping').toBeGreaterThan(0)
+  })
+
   // About 20 frames a second, where each of its capped steps is most of the
   // way it looks ahead for a tile's edge: a step often takes its feet just
   // past the edge it then turns round or chooses at.
@@ -917,8 +1012,10 @@ test.describe('dino easter egg (motion allowed)', () => {
     await expect(tile).toBeFocused()
   })
 
-  // The middle of the tile nearest the middle of a row (paused by hovering it
+  // The name of the tile nearest the middle of a row (paused by hovering it
   // first), measured in the panel: the row runs far past its edges, clipped.
+  // Its name, not its middle: an open description can put a project link
+  // there, and clicking that one goes to the project.
   const middleTile = async (page: Page, index: number) => {
     await hoverRow(page, index)
     await page.waitForTimeout(300)
@@ -926,7 +1023,7 @@ test.describe('dino easter egg (motion allowed)', () => {
       const panel = document.querySelector('[data-dino-panel]')!.getBoundingClientRect()
       const row = document.querySelectorAll('[data-dino-panel] [data-marquee-row]')[index]
       const mid = panel.left + panel.width / 2
-      const box = [...row.querySelectorAll('figure')]
+      const box = [...row.querySelectorAll('figure [data-tile-name]')]
         .map((el) => el.getBoundingClientRect())
         .sort((a, b) => Math.abs(a.x + a.width / 2 - mid) - Math.abs(b.x + b.width / 2 - mid))[0]
       return { x: box.x + box.width / 2, y: box.y + box.height / 2 }
