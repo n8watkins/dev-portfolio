@@ -291,7 +291,12 @@ export const dev_stack: AIStackItem[] = [
     link: { text: "N8's Notions", href: 'https://n8builds.dev/blog' },
   },
   { name: 'Upstash', icon: <SiUpstash className={ICON} style={{ color: '#00E9A3' }} />, description: 'Ran my rate limits until I moved them to Cloudflare.' },
-  { name: 'Clerk', icon: <SiClerk className={ICON} style={{ color: LIGHT }} />, description: 'Sign-in on one of my side apps.' },
+  {
+    name: 'Clerk',
+    icon: <SiClerk className={ICON} style={{ color: LIGHT }} />,
+    description: 'Sign-in on Cutely Ask Me, my date-planner app.',
+    link: { text: 'Cutely Ask Me', href: 'https://n8builds.dev/upcoming#cutelyaskme' },
+  },
   {
     name: 'NextAuth',
     icon: <SiNextdotjs className={ICON} style={{ color: LIGHT }} />,

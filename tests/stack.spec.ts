@@ -28,7 +28,7 @@ test('/stack lists every tool once, by layer, each with its reason', async ({ pa
 })
 
 // data/stack.tsx: the tiles whose description names a project (owner, 2026-11-25).
-const LINKED_TILES = 16
+const LINKED_TILES = 17
 
 test('/stack links each tool to the project that uses it', async ({ page }) => {
   await page.goto('/stack')
@@ -115,8 +115,13 @@ test.describe('the tech stack tiles (reduced motion: they hold still)', () => {
       .filter({ has: page.locator('[data-tile-name]', { hasText: /^Gemini$/ }) })
     await tile.scrollIntoViewIfNeeded()
     const link = tile.getByRole('link', { name: 'Wren' })
-    // At rest the description is shut: its link has no size to hit.
-    expect((await link.boundingBox())?.height ?? 0).toBe(0)
+    // At rest the description is shut (clipped to no height): its link can't be hit.
+    expect(
+      await link.evaluate((a) => {
+        const box = a.getBoundingClientRect()
+        return a.contains(document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2))
+      })
+    ).toBe(false)
     if (hasTouch) await tile.tap()
     else await tile.hover()
     await expect(tile.locator('.description')).toHaveCSS('opacity', '1')
