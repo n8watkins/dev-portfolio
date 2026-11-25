@@ -24,7 +24,18 @@ export type WorkExperienceItem = {
    * Appturnity, though the firm became Tech for Pros on 2026-11-01), Donovan
    * Golf its own site (owner, 2026-11-24).
    */
-  image?: { src: string; alt: string }
+  image?: {
+    src: string
+    alt: string
+    /**
+     * Where the picture sits in the faded strip: a CSS object-position (default
+     * top left), plus an optional zoom (1 = the full cover fit) around `origin`
+     * (a CSS transform-origin, default the same as `position`).
+     */
+    position?: string
+    zoom?: number
+    origin?: string
+  }
   /**
    * Sites I built there, still live: small preview cards that link to them,
    * with `more` when the role is open (owner, round 4 of 2026-11-09).
@@ -113,7 +124,13 @@ export const workExperience: WorkExperienceItem[] = [
     more: [
       'Coordinated pre-launch booking integration testing with the web team, verifying tee-time and event reservations on the rebuilt frontends against the existing backend.',
     ],
-    image: { src: '/experience/donovangolf.webp', alt: "Donovan Golf's home page" },
+    image: {
+      src: '/experience/donovangolf.webp',
+      alt: "Donovan Golf's home page",
+      position: '70% 0%',
+      zoom: 1.4,
+      origin: '100% 0%',
+    },
     sites: [
       {
         label: 'arroyosecogc.com',
@@ -168,6 +185,12 @@ export const workExperience: WorkExperienceItem[] = [
     basics: [
       'Taught JavaScript, Python and application development, including the responsible use of AI coding tools.',
     ],
-    image: { src: '/experience/coderschool.webp', alt: "The Coder School Santa Monica's site" },
+    image: {
+      src: '/experience/coderschool.webp',
+      alt: "The Coder School Santa Monica's site",
+      position: '50% 0%',
+      zoom: 1.9,
+      origin: '37% 12%',
+    },
   },
 ]

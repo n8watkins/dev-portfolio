@@ -269,13 +269,22 @@ const Experience = () => {
                         className={`pointer-events-none absolute inset-y-0 right-0 hidden w-[26%] overflow-hidden mask-[linear-gradient(to_left,black_45%,transparent)] transition-opacity duration-500 md:block ${isOpen ? 'opacity-50' : 'opacity-0 group-hover/card:opacity-80'}`}
                         data-role-image
                       >
-                        <Image
-                          src={image.src}
-                          alt=""
-                          fill
-                          sizes="22vw"
-                          className="object-cover object-left-top transition-transform duration-700 group-hover/card:scale-105"
-                        />
+                        <div
+                          className="absolute inset-0"
+                          style={{
+                            transform: image.zoom ? `scale(${image.zoom})` : undefined,
+                            transformOrigin: image.origin ?? image.position ?? '0% 0%',
+                          }}
+                        >
+                          <Image
+                            src={image.src}
+                            alt=""
+                            fill
+                            sizes="22vw"
+                            style={{ objectPosition: image.position ?? '0% 0%' }}
+                            className="object-cover transition-transform duration-700 group-hover/card:scale-105"
+                          />
+                        </div>
                         <div className="absolute inset-0 bg-darkBlue/40" />
                       </div>
                     )}
