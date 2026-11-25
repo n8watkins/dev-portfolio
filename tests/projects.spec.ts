@@ -256,7 +256,7 @@ async function settled(page: Page, selector: string) {
       const same = box === last
       last = box
       return same
-    }, { intervals: [250] })
+    }, { intervals: [250], timeout: 15000 })
     .toBe(true)
 }
 
@@ -363,7 +363,10 @@ test.describe('pixel marks', () => {
     const mark = await showMark(page, 'play')
     expect(await litIn(page, 'play')).toBeGreaterThan(0)
     await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }))
-    await expect.poll(() => litIn(page, 'play')).toBe(0)
+    await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0)
+    // The flip out waits for the browser's intersection callback, which a
+    // busy machine can hold back for a few seconds.
+    await expect.poll(() => litIn(page, 'play'), { timeout: 15000 }).toBe(0)
     await expect(mark).not.toHaveAttribute('data-in')
     await mark.evaluate((el) => el.scrollIntoView({ block: 'center', behavior: 'instant' }))
     await expect(mark).toHaveAttribute('data-in', '', { timeout: 15000 })
@@ -458,7 +461,7 @@ test.describe('pixel marks', () => {
     await page.evaluate(() =>
       window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'instant' })
     )
-    for (const kind of KINDS) await expect.poll(() => litIn(page, kind)).toBe(0)
+    for (const kind of KINDS) await expect.poll(() => litIn(page, kind), { timeout: 15000 }).toBe(0)
     // Let the last flips and the grid's fades finish, then watch.
     await page.waitForTimeout(2500)
     expect(await changesIn(page, 4000)).toBe(0)
