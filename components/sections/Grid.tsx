@@ -3,7 +3,7 @@ import React from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { FiArrowRight } from 'react-icons/fi'
-import { Globe, Gauge, GitBranch } from 'lucide-react'
+import { Globe, GitBranch } from 'lucide-react'
 import { motion } from 'motion/react'
 import { BentoGrid, BentoGridItem } from '@/components/ui/BentoGrid'
 import { gridItems } from '@/data/grid'
@@ -24,7 +24,6 @@ const Out = ({ href, children }: { href: string; children: React.ReactNode }) =>
 /** Proof numbers under the intro, as chips; they say what the paragraph beside them does not. */
 const FACTS = [
   { icon: Globe, text: '75+ client sites shipped end to end' },
-  { icon: Gauge, text: 'Lighthouse 90+ on client sites' },
   { icon: GitBranch, text: '30+ open source projects' },
 ]
 
