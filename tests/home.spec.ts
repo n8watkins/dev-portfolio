@@ -341,29 +341,35 @@ test.describe('the bold map', () => {
   })
 
   test('his avatar grows on hover and on a tap, and eases back', async ({ page, isMobile }) => {
-    await page.emulateMedia({ reducedMotion: 'no-preference' })
+    // The sizes are checked on the still map: a moving map in a browser that
+    // draws WebGL in software (CI, a busy machine) makes every layout read
+    // slow. The ease itself is checked at the end, with motion allowed.
+    await page.emulateMedia({ reducedMotion: 'reduce' })
     const map = await openMap(page)
     const avatar = map.getByRole('button', { name: 'Nathan Watkins, in Los Angeles' })
-    const size = async () => (await avatar.locator('span').first().boundingBox())!.width
-    // A half-second ease; generous, since a browser drawing WebGL in software
-    // on a busy machine updates styles slowly.
-    const SETTLE = { timeout: 15_000 }
+    const picture = avatar.locator('span').first()
+    const size = async () => (await picture.boundingBox())!.width
     await page.mouse.move(0, 0)
-    await expect.poll(size, SETTLE).toBeLessThan(40)
+    await expect.poll(size).toBeLessThan(40)
     if (!isMobile) {
       const box = (await map.boundingBox())!
       await page.mouse.move(box.x + box.width * 0.6, box.y + box.height * 0.45)
-      await expect.poll(size, SETTLE).toBeGreaterThan(60)
+      await expect.poll(size).toBeGreaterThan(60)
       await page.mouse.move(0, 0)
-      await expect.poll(size, SETTLE).toBeLessThan(40)
+      await expect.poll(size).toBeLessThan(40)
     }
     await (isMobile ? avatar.tap() : avatar.click())
     await expect(avatar).toHaveAttribute('aria-pressed', 'true')
-    await expect.poll(size, SETTLE).toBeGreaterThan(60)
+    await expect.poll(size).toBeGreaterThan(60)
     await (isMobile ? avatar.tap() : avatar.click())
     await expect(avatar).toHaveAttribute('aria-pressed', 'false')
     if (!isMobile) await page.mouse.move(0, 0)
-    await expect.poll(size, SETTLE).toBeLessThan(40)
+    await expect.poll(size).toBeLessThan(40)
+    // With motion allowed, the size and the glow ease over half a second.
+    await page.emulateMedia({ reducedMotion: 'no-preference' })
+    await expect
+      .poll(() => picture.evaluate((el) => getComputedStyle(el).transitionDuration))
+      .toMatch(/^0\.5s/)
   })
 
   test('under reduced motion the avatar changes size at once, from the keyboard too', async ({
