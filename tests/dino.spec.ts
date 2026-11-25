@@ -1012,8 +1012,10 @@ test.describe('dino easter egg (motion allowed)', () => {
     await expect(tile).toBeFocused()
   })
 
-  // The middle of the tile nearest the middle of a row (paused by hovering it
+  // The name of the tile nearest the middle of a row (paused by hovering it
   // first), measured in the panel: the row runs far past its edges, clipped.
+  // Its name, not its middle: an open description can put a project link
+  // there, and clicking that one goes to the project.
   const middleTile = async (page: Page, index: number) => {
     await hoverRow(page, index)
     await page.waitForTimeout(300)
@@ -1021,7 +1023,7 @@ test.describe('dino easter egg (motion allowed)', () => {
       const panel = document.querySelector('[data-dino-panel]')!.getBoundingClientRect()
       const row = document.querySelectorAll('[data-dino-panel] [data-marquee-row]')[index]
       const mid = panel.left + panel.width / 2
-      const box = [...row.querySelectorAll('figure')]
+      const box = [...row.querySelectorAll('figure [data-tile-name]')]
         .map((el) => el.getBoundingClientRect())
         .sort((a, b) => Math.abs(a.x + a.width / 2 - mid) - Math.abs(b.x + b.width / 2 - mid))[0]
       return { x: box.x + box.width / 2, y: box.y + box.height / 2 }
