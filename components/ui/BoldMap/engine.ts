@@ -774,9 +774,10 @@ export function createMapEngine(el: MapElements, opts: MapOptions): MapEngine {
     }
     ctx.globalCompositeOperation = 'lighter'
     for (const r of ribbons) {
-      ctx.lineWidth = r.width
+      // A ribbon in WebGL fades to its edges; a stroke does not, so it is thinner and fainter.
+      ctx.lineWidth = r.width * 0.8
       ctx.lineCap = 'round'
-      ctx.strokeStyle = `rgba(107,235,255,${Math.min(1, r.alpha(0.5))})`
+      ctx.strokeStyle = `rgba(107,235,255,${Math.min(1, r.alpha(0.5) * 0.6)})`
       ctx.beginPath()
       r.pts.forEach((p, i) => {
         const [x, y] = cam.toPx(p)

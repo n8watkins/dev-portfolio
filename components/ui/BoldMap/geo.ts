@@ -3,7 +3,8 @@
  * places, and where a visitor is. Pure functions, used on the server (to turn
  * Cloudflare's request data into a coarse visitor) and in the browser.
  */
-import { GRID, KINDS, PLACES } from './mapData.generated'
+// With its extension, so `node --test` (tests/unit/boldMapGeo.test.mts) can load it too.
+import { GRID, KINDS, PLACES } from './mapData.generated.ts'
 
 const rad = Math.PI / 180
 const p1 = 29.5 * rad
@@ -105,7 +106,7 @@ function nearName(at: LngLat): Place | null {
     const d = miles(at, p.at)
     if (p.pop >= 100_000 ? d > 60 : d > 40) continue
     // A larger place wins over a hamlet a little nearer.
-    const score = d / (p.pop >= 100_000 ? 2 : 1)
+    const score = p.pop >= 100_000 ? d / (2 + Math.log10(p.pop / 100_000)) : d
     if (score < bd) {
       bd = score
       best = p
