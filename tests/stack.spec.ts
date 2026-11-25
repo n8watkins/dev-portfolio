@@ -91,6 +91,36 @@ test.describe('the tech stack tiles (motion allowed)', () => {
     })
   }
 
+  // The tiles are 188 x 84 (app/globals.css), tighter than the shared 208 x 112
+  // tile (owner, 2026-11-25), and they are that size from the first paint:
+  // checked in the server's HTML (scripts off, so nothing can resize them
+  // later) and again once the page has hydrated and the loop has started.
+  const firstTile = (path: string) =>
+    `${path === '/' ? '#about ' : ''}[data-dino-panel] [data-marquee-row] > :first-child > figure`
+  const tileSize = (f: Element) => {
+    const r = f.getBoundingClientRect()
+    return [Math.round(r.width), Math.round(r.height)]
+  }
+  for (const path of ['/', '/stack']) {
+    test(`${path}: the tiles are 188 x 84 once the page is live`, async ({ page }) => {
+      await page.goto(path)
+      // The loop's copies appear after hydration.
+      await expect(page.locator('[data-dino-panel] [data-marquee-row] > :nth-child(2)').first()).toBeAttached()
+      await page.waitForTimeout(1000)
+      expect(await page.locator(firstTile(path)).first().evaluate(tileSize)).toEqual([188, 84])
+    })
+  }
+
+  test.describe('no script', () => {
+    test.use({ javaScriptEnabled: false })
+    for (const path of ['/', '/stack']) {
+      test(`${path}: the server's HTML already has the tiles at 188 x 84`, async ({ page }) => {
+        await page.goto(path)
+        expect(await page.locator(firstTile(path)).first().evaluate(tileSize)).toEqual([188, 84])
+      })
+    }
+  })
+
   test('a tile with a project link: Tab reaches the link, its description stays open', async ({ page }) => {
     await page.goto('/stack')
     const tile = page
