@@ -324,12 +324,13 @@ export default function BuildLogCard() {
           </div>
 
           {/* The readout: the month, or the day being looked at. Screen readers get the same from the bars. */}
-          <div key={month.id} className="log-month-in mt-2.5" aria-hidden="true">
+          <div key={month.id} className="log-month-in mt-2.5" aria-hidden="true" data-readout>
             <p className="flex items-baseline gap-2">
               <span
                 className={`text-4xl leading-none font-bold tracking-tight tabular-nums transition-colors duration-200 lg:text-[2.6rem] ${
                   day ? 'text-cyan-200' : 'text-slate-50'
                 }`}
+                data-number
                 data-changes={day ? undefined : ''}
               >
                 {number}
