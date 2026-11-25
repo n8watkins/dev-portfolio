@@ -37,6 +37,8 @@ export interface StoryLayout {
   words: Box[]
   /** The portrait and each scene's photo (anything behind them is hidden). */
   photos: Box[]
+  /** The stickers on show (at rest; they drift a few px around it). */
+  stickers: Box[]
 }
 
 export interface Box {
@@ -66,10 +68,14 @@ export function useStoryLayout(main: RefObject<HTMLElement | null>, enabled: boo
         const at = (node: Element | null | undefined, id: string): Box | null => {
           if (!node) return null
           const r = node.getBoundingClientRect()
+          // Where it rests: a scene still waiting to rise in is drawn lower
+          // for now (useSceneReveal), so take its transform back out.
+          const t = getComputedStyle(node).transform
+          const dy = t && t !== 'none' ? new DOMMatrixReadOnly(t).m42 : 0
           return {
             id,
-            top: r.top - box.top,
-            bottom: r.bottom - box.top,
+            top: r.top - dy - box.top,
+            bottom: r.bottom - dy - box.top,
             left: r.left - box.left,
             right: r.right - box.left,
           }
@@ -93,7 +99,31 @@ export function useStoryLayout(main: RefObject<HTMLElement | null>, enabled: boo
           at(intro?.children[1], 'portrait'),
           ...scenes.map((s) => at(s.children[0], `${s.getAttribute('aria-labelledby')}-photo`)),
         ])
-        setLayout({ height: box.height, width: box.width, vh: window.innerHeight, top, parts, words, photos })
+        // A sticker at rest (its drift is a transform that changes all the
+        // time): its layout offsets up to main, not its painted box.
+        const rest = (node: HTMLElement, id: string): Box | null => {
+          if (!node.offsetWidth) return null
+          let left = 0
+          let top = 0
+          for (let n: HTMLElement | null = node; n && n !== el; n = n.offsetParent as HTMLElement | null) {
+            left += n.offsetLeft
+            top += n.offsetTop
+          }
+          return { id, left, top, right: left + node.offsetWidth, bottom: top + node.offsetHeight }
+        }
+        const stickers = present(
+          Array.from(el.querySelectorAll<HTMLElement>('.decal')).map((d, n) => rest(d, `sticker-${n}`))
+        )
+        setLayout({
+          height: box.height,
+          width: box.width,
+          vh: window.innerHeight,
+          top,
+          parts,
+          words,
+          photos,
+          stickers,
+        })
       })
     }
     measure()

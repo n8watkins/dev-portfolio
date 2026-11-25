@@ -51,12 +51,13 @@ const BODIES: Record<string, React.ReactNode> = {
   ),
   la: (
     <>
-      <p>I&apos;ve been building in Los Angeles since 2021.</p>
       <p>
-        For about three years I built client apps at a consulting firm here, and I&apos;ve consulted
-        on AI along the way. For about two years I also taught JavaScript, Python and app development
-        at The Coder School in Santa Monica: how to debug, and how to use AI coding tools
-        responsibly.
+        I&apos;m born and raised in LA, and I&apos;ve traveled all over the country over the years.
+      </p>
+      <p>
+        In the last few years I&apos;ve built client apps at a consulting firm, consulted on AI, and
+        spent about two years teaching JavaScript, Python and app development at The Coder
+        School in Santa Monica: how to debug, and how to use AI coding tools responsibly.
       </p>
       <p>And I&apos;m ready to relocate for the right role.</p>
     </>
@@ -243,7 +244,14 @@ export default function AboutPage() {
             {stickers('intro')}
           </PauseOffscreen>
 
-          <div className="mt-24 flex flex-col gap-24 md:mt-32 md:gap-32">
+          <div
+            className={
+              // ?bg=1 opens the gaps above the scenes to make room for their pixel pictures.
+              bg === 1
+                ? 'mt-48 flex flex-col gap-48 md:mt-80 md:gap-80'
+                : 'mt-24 flex flex-col gap-24 md:mt-32 md:gap-32'
+            }
+          >
             {aboutScenes.map((scene, i) => (
               <PauseOffscreen key={scene.id} className="relative">
                 <section

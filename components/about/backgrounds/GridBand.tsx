@@ -3,21 +3,24 @@
 import { useEffect, useMemo, useRef } from 'react'
 import { useMotionValueEvent, useScroll } from 'motion/react'
 import { smooth, type Box, type StoryLayout } from './shared'
+import { artFor, type Art } from './art'
+import PixelArt from './PixelArt'
 
-const CELL = 52
+// Two thirds of the hero grid's 52px (owner, round 3: smaller boxes).
+const CELL = 36
 // Resting cells: roughly one per this many free cells, sparse.
-const DENSITY = 16
-// Cells that wander (fade out, jump to a free cell on screen, fade back in),
-// like the home page hero's grid: at most this many, fewer on a phone.
-const WANDER = 14
+const DENSITY = 14
+// Cells that wander (fade out, jump to a free cell on screen, fade back in):
+// at most this many at once, fewer on a phone.
+const WANDER = 30
 // Words keep this much clear grid around them (px), so no cell sits behind or
 // right against a line of text.
 const CLEARANCE = 20
 
-// Timings (ms), the hero grid's pace.
-const FADE = [1400, 2200] as const
-const HOLD = [2500, 6000] as const
-const GAP = [150, 700] as const
+// Timings (ms): livelier than the hero grid (owner, round 3: "a bit slow").
+const FADE = [450, 850] as const
+const HOLD = [900, 2600] as const
+const GAP = [60, 260] as const
 const EASE = 'cubic-bezier(0.37, 0, 0.63, 1)'
 
 /** The tint of each part of the story, in the site's sky, blue and cyan. */
@@ -57,6 +60,67 @@ function partAt(layout: StoryLayout, y: number) {
 const overlaps = (box: Box, l: number, t: number, r: number, b: number, pad: number) =>
   l < box.right + pad && r > box.left - pad && t < box.bottom + pad && b > box.top - pad
 
+type Placed = { art: Art; cell: number; left: number; top: number; box: Box }
+
+/**
+ * Where each scene's picture goes: in the gap above the scene, on the grid,
+ * clear of every block of words (by CLEARANCE), photo and sticker, as near as
+ * it can be to the middle of the gap over the scene's words (the middle of
+ * the page on a phone). On a phone the picture is drawn in half cells. A
+ * picture that fits nowhere is left out.
+ */
+function placeArt(layout: StoryLayout, originX: number): Placed[] {
+  const wide = layout.width >= 768
+  const cell = wide ? CELL : CELL / 2
+  // On a phone the gaps are tighter, and so is the room kept around things.
+  const pad = wide ? { words: CLEARANCE, photo: 12, sticker: 10 } : { words: 14, photo: 8, sticker: 8 }
+  const out: Placed[] = []
+  layout.parts.forEach((part, n) => {
+    const art = artFor(part.id, wide)
+    const above = layout.parts[n - 1]
+    if (!art || !above) return
+    const w = art.base[0].length * cell
+    const h = art.base.length * cell
+    const words = layout.words.find((b) => b.id === `scene-${part.id}-words`)
+    const cx = wide && words ? (words.left + words.right) / 2 : layout.width / 2
+    const cy = (above.bottom + part.top) / 2
+    let best: { left: number; top: number; d: number } | null = null
+    for (let ky = Math.floor(above.top / cell); ky * cell <= part.top + h; ky++) {
+      const t = ky * cell
+      for (
+        let kx = Math.ceil(-originX / cell) + 1;
+        originX + kx * cell + w <= layout.width - cell / 2;
+        kx++
+      ) {
+        const l = originX + kx * cell
+        if (l < cell / 2) continue
+        const r = l + w
+        const b = t + h
+        if (layout.words.some((x) => overlaps(x, l, t, r, b, pad.words))) continue
+        if (layout.photos.some((x) => overlaps(x, l, t, r, b, pad.photo))) continue
+        if (layout.stickers.some((x) => overlaps(x, l, t, r, b, pad.sticker))) continue
+        const d = Math.hypot(l + w / 2 - cx, (t + h / 2 - cy) * 2)
+        if (!best || d < best.d) best = { left: l, top: t, d }
+      }
+    }
+    if (best)
+      out.push({
+        art,
+        cell,
+        left: best.left,
+        top: best.top,
+        box: {
+          id: art.id,
+          left: best.left,
+          top: best.top,
+          right: best.left + w,
+          bottom: best.top + h,
+        },
+      })
+  })
+  return out
+}
+
 /**
  * Option 1: the site's square grid, faint, behind the whole story, alive the
  * way the home page hero's grid is. A few cells wander: each fades out, jumps
@@ -80,6 +144,9 @@ export default function GridBand({ layout, reduce }: { layout: StoryLayout; redu
   // The grid is centred, so its first column starts left of the page.
   const originX = (layout.width - cols * CELL) / 2
 
+  // The pixel pictures, each in the gap above its scene, where it fits.
+  const art = useMemo(() => placeArt(layout, originX), [layout, originX])
+
   /** Every cell a light may use: not behind or against words, not hidden behind a photo. */
   const free = useMemo(() => {
     const out: Spot[] = []
@@ -95,11 +162,14 @@ export default function GridBand({ layout, reduce }: { layout: StoryLayout; redu
         // Off the page's sides (only a sliver shows past the edge fade).
         if (r < 8 || l > layout.width - 8) continue
         if (layout.words.some((w) => overlaps(w, l, t, r, b, CLEARANCE))) continue
-        if (layout.photos.some((p) => l >= p.left && r <= p.right && t >= p.top && b <= p.bottom)) continue
+        if (layout.photos.some((p) => l >= p.left && r <= p.right && t >= p.top && b <= p.bottom))
+          continue
+        // Around a picture, the grid stays quiet so the picture reads.
+        if (art.some((a) => overlaps(a.box, l, t, r, b, CELL / 2))) continue
         out.push({ x, y })
       }
     return out
-  }, [cols, rows, originX, layout])
+  }, [cols, rows, originX, layout, art])
 
   const tintAt = (y: number) => `rgb(${TINT[partAt(layout, y * CELL + CELL / 2)]})`
 
@@ -112,7 +182,8 @@ export default function GridBand({ layout, reduce }: { layout: StoryLayout; redu
       const spot = free[Math.floor(rand() * free.length)]
       let clear = true
       for (let dx = -1; dx <= 1 && clear; dx++)
-        for (let dy = -1; dy <= 1; dy++) if (taken.has(key({ x: spot.x + dx, y: spot.y + dy }))) clear = false
+        for (let dy = -1; dy <= 1; dy++)
+          if (taken.has(key({ x: spot.x + dx, y: spot.y + dy }))) clear = false
       if (!clear) continue
       taken.add(key(spot))
       out.push({ ...spot, peak: 0.1 + rand() * 0.1 })
@@ -128,7 +199,9 @@ export default function GridBand({ layout, reduce }: { layout: StoryLayout; redu
       const node = resting.current[i]
       if (!node) return
       const cy = cell.y * CELL + CELL / 2
-      const v = reduce ? cell.peak * 0.7 : cell.peak * smooth(band, band * 0.15, Math.abs(cy - focus))
+      const v = reduce
+        ? cell.peak * 0.7
+        : cell.peak * smooth(band, band * 0.15, Math.abs(cy - focus))
       const next = v.toFixed(3)
       if (node.style.opacity !== next) node.style.opacity = next
     })
@@ -138,7 +211,7 @@ export default function GridBand({ layout, reduce }: { layout: StoryLayout; redu
 
   // The wanderers: fade out, jump to a free cell on screen (clear of the
   // resting cells and of each other), fade back in, hold, again.
-  const count = Math.min(WANDER, Math.max(5, Math.round(free.length / 40)))
+  const count = Math.min(WANDER, Math.max(8, Math.round(free.length / 24)))
   useEffect(() => {
     if (reduce) return
     const nodes = wanderers.current
@@ -160,7 +233,8 @@ export default function GridBand({ layout, reduce }: { layout: StoryLayout; redu
         const s = choices[Math.floor(Math.random() * choices.length)]
         let clear = true
         for (let dx = -1; dx <= 1 && clear; dx++)
-          for (let dy = -1; dy <= 1; dy++) if (taken.has(key({ x: s.x + dx, y: s.y + dy }))) clear = false
+          for (let dy = -1; dy <= 1; dy++)
+            if (taken.has(key({ x: s.x + dx, y: s.y + dy }))) clear = false
         if (clear) return s
       }
       return null
@@ -183,7 +257,7 @@ export default function GridBand({ layout, reduce }: { layout: StoryLayout; redu
       // The jump lands while it is invisible; the fade starts on the next frame.
       requestAnimationFrame(() => {
         const fadeIn = between(FADE)
-        fade(node, 0.14 + Math.random() * 0.12, fadeIn)
+        fade(node, 0.16 + Math.random() * 0.16, fadeIn)
         later(() => vanish(i), fadeIn + between(HOLD))
       })
     }
@@ -193,14 +267,17 @@ export default function GridBand({ layout, reduce }: { layout: StoryLayout; redu
       if (document.hidden) return later(() => vanish(i), 1000)
       const fadeOut = between(FADE)
       fade(node, 0, fadeOut)
-      later(() => {
-        const spot = spots[i]
-        if (spot) taken.delete(key(spot))
-        spots[i] = null
-        appear(i)
-      }, fadeOut + between(GAP))
+      later(
+        () => {
+          const spot = spots[i]
+          if (spot) taken.delete(key(spot))
+          spots[i] = null
+          appear(i)
+        },
+        fadeOut + between(GAP)
+      )
     }
-    for (let i = 0; i < count; i++) later(() => appear(i), between([200, 4000]))
+    for (let i = 0; i < count; i++) later(() => appear(i), between([100, 1800]))
     return () => {
       timers.forEach(clearTimeout)
       nodes.forEach((node) => {
@@ -213,47 +290,67 @@ export default function GridBand({ layout, reduce }: { layout: StoryLayout; redu
 
   const cellStyle = { width: CELL - 1, height: CELL - 1, opacity: 0 } as const
   return (
-    <div
-      aria-hidden="true"
-      className="pointer-events-none absolute inset-0 overflow-hidden"
-      style={{ maskImage: EDGES, WebkitMaskImage: EDGES, maskComposite: 'intersect', WebkitMaskComposite: 'source-in' }}
-    >
+    <>
       <div
-        className="absolute top-0 h-full"
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 overflow-hidden"
         style={{
-          left: originX,
-          width: cols * CELL,
-          backgroundImage:
-            'linear-gradient(to right, rgba(255,255,255,0.045) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.045) 1px, transparent 1px)',
-          backgroundSize: `${CELL}px ${CELL}px`,
+          maskImage: EDGES,
+          WebkitMaskImage: EDGES,
+          maskComposite: 'intersect',
+          WebkitMaskComposite: 'source-in',
         }}
       >
-        {rest.map((cell, i) => (
-          <div
-            key={key(cell)}
-            ref={(el) => {
-              resting.current[i] = el
-            }}
-            className="absolute top-0 left-0"
-            style={{
-              ...cellStyle,
-              transform: `translate3d(${cell.x * CELL + 1}px, ${cell.y * CELL + 1}px, 0)`,
-              background: tintAt(cell.y),
-            }}
-          />
-        ))}
-        {Array.from({ length: count }, (_, i) => (
-          <div
-            key={`w${i}`}
-            ref={(el) => {
-              wanderers.current[i] = el
-            }}
-            data-wander=""
-            className="absolute top-0 left-0"
-            style={cellStyle}
+        <div
+          className="absolute top-0 h-full"
+          style={{
+            left: originX,
+            width: cols * CELL,
+            backgroundImage:
+              'linear-gradient(to right, rgba(255,255,255,0.045) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.045) 1px, transparent 1px)',
+            backgroundSize: `${CELL}px ${CELL}px`,
+          }}
+        >
+          {rest.map((cell, i) => (
+            <div
+              key={key(cell)}
+              ref={(el) => {
+                resting.current[i] = el
+              }}
+              className="absolute top-0 left-0"
+              style={{
+                ...cellStyle,
+                transform: `translate3d(${cell.x * CELL + 1}px, ${cell.y * CELL + 1}px, 0)`,
+                background: tintAt(cell.y),
+              }}
+            />
+          ))}
+          {Array.from({ length: count }, (_, i) => (
+            <div
+              key={`w${i}`}
+              ref={(el) => {
+                wanderers.current[i] = el
+              }}
+              data-wander=""
+              className="absolute top-0 left-0"
+              style={cellStyle}
+            />
+          ))}
+        </div>
+      </div>
+      {/* The pictures, on the same grid but outside its edge fade. */}
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
+        {art.map((a) => (
+          <PixelArt
+            key={a.art.id}
+            art={a.art}
+            cell={a.cell}
+            left={a.left}
+            top={a.top}
+            reduce={reduce}
           />
         ))}
       </div>
-    </div>
+    </>
   )
 }
