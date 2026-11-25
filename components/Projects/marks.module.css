@@ -152,8 +152,27 @@
 .cell[data-k='H'] {
   background: oklch(from rgb(var(--a)) l c h / var(--hi));
 }
+/* A seed and a note the bird sings: only a small square in their cell, so
+   they read apart from the bird. The seed is warm grain, low in its cell like
+   something on the ground; the note is the eye's cream, in the middle. */
+.cell[data-k='S'],
+.cell[data-k='N'] {
+  background: none;
+  box-shadow: none;
+}
+.cell[data-k='S']::after {
+  content: '';
+  position: absolute;
+  left: 16px;
+  top: 24px;
+  width: 19px;
+  height: 19px;
+  background: rgb(232 190 110 / min(1, calc(var(--hi) * 1.15)));
+  box-shadow: 0 0 0 1px rgb(255 214 140 / 0.5);
+}
 /* The bird's eye: a small bright square in the middle of its cell. It closes
    (flips shut on the same axis) to blink. */
+.cell[data-k='N']::after,
 .cell[data-k='o']::after {
   content: '';
   position: absolute;
@@ -168,14 +187,36 @@
   transform: scaleY(0.12);
 }
 
-/* Reduced motion: complete and still. */
+/* The easter eggs' pointer areas (PixelMark): the mark's own box answers a
+   hover; the open grid around the bird (its yard) takes a click to drop a
+   seed. Invisible; the mark itself lets the pointer through everywhere else. */
+.zone {
+  position: absolute;
+}
+.core {
+  inset: 0;
+  pointer-events: auto;
+}
+.yard {
+  pointer-events: auto;
+  cursor: cell;
+  user-select: none;
+}
+
+/* Reduced motion: complete and still, and no easter eggs. */
 .mark[data-still] .cell {
   transition: none;
+}
+.mark[data-still] .zone {
+  display: none;
 }
 @media (prefers-reduced-motion: reduce) {
   .mark .cell,
   .mark .cell::after,
   .life {
     transition: none !important;
+  }
+  .mark .zone {
+    display: none;
   }
 }
