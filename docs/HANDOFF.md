@@ -127,6 +127,7 @@ The owner picked layout B (a work-first home page plus detail pages) over A (one
   `/about`, `/projects` and `/stack` have the scroll-to-top button too.
 - **Footer** on every page (`components/layout/Footer.tsx`): the contact card, whose border carries a slow light around it (`.contact-glow`, still under reduced motion, paused off screen), the hero's two cards (n8builds.dev, Tech for Pros), and a site map (home sections, the pages, Resume, my sites).
 - The workshop section (the big Tech for Pros and n8builds.dev pitches) is gone, and so is the compact project-page footer.
+- **Tighter stack tiles** (owner, 2026-11-25): the tech stack panel's tiles (home card, `/stack`, with and without motion) are 188 x 84 with 18px names, 24px marks, 6px side padding and 12px hover text, set in portfolio-only CSS in `app/globals.css` (the shared `StackTile` is h-28 w-52 and stays byte-identical). Gaps stay 40px across and 36px between rows (the dino's hops need them); `components/features/TechStack.tsx` scales the row durations to the 228px pitch so both rows keep ~22px/s. `tests/stack.spec.ts` pins the size, in the server's HTML and once live.
 - The dino tests run on `/stack` (`STACK_PAGE` in `tests/dino.spec.ts` and `tests/dino-music.spec.ts`); n8builds-web's copies run on its home page.
 
 ## The pixel marks (owner, 2026-11-24 and 25)

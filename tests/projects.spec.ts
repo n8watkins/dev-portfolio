@@ -120,22 +120,66 @@ test('a project card opens its page and its live demo', async ({ page }) => {
   ).not.toHaveCount(0)
 })
 
+type FadeSample = { opacity: number; transforms: string[]; inRow: number }
+type FadeLog = { samples: FadeSample[]; done: boolean }
+
 /**
- * The button beside a heading must hold still while it fades in: a pointer that
+ * The control beside a heading must hold still while it fades in: a pointer that
  * goes down on a link that then moves comes up on something else, and the click
  * is lost (Firefox on CI, 3 of 40 runs under load, 2026-11-25).
+ *
+ * What is measured is the control against its own row, and its transform, every
+ * frame from before the reveal starts until it is fully shown. Its place in the
+ * viewport is not: a scroll still settling or a card above it loading moves that
+ * by a pixel or three (WebKit on CI) with the control itself standing still.
  */
-test('the buttons beside a heading fade in without moving', async ({ page }) => {
-  await page.goto('/')
-  const link = page.locator('#projects').getByRole('link', { name: 'Detailed view' })
-  await link.scrollIntoViewIfNeeded()
-  const tops: number[] = []
-  for (let i = 0; i < 30; i++) {
-    tops.push(await link.evaluate((el) => el.getBoundingClientRect().top))
-    await page.waitForTimeout(30)
-  }
-  expect(new Set(tops.map((t) => Math.round(t))).size).toBe(1)
-})
+for (const [section, name, role] of [
+  ['#projects', 'Detailed view', 'link'],
+  ['#experience', 'Expand all', 'button'],
+] as const) {
+  test(`"${name}" fades in without moving`, async ({ page }) => {
+    test.setTimeout(90000)
+    await page.goto('/')
+    await page.evaluate(() => document.fonts.ready)
+    const control = page.locator(section).getByRole(role, { name })
+    await control.waitFor({ state: 'attached' })
+    // Sample every frame from here, while the control is still hidden below the fold.
+    await control.evaluate((el) => {
+      const reveal = el.closest('[data-reveal]') as HTMLElement
+      const row = reveal.parentElement as HTMLElement
+      const log: FadeLog = { samples: [], done: false }
+      ;(window as unknown as { __fade: FadeLog }).__fade = log
+      const frame = () => {
+        const opacity = Number(getComputedStyle(reveal).opacity)
+        log.samples.push({
+          opacity,
+          transforms: [getComputedStyle(reveal).transform, getComputedStyle(el).transform],
+          inRow: el.getBoundingClientRect().top - row.getBoundingClientRect().top,
+        })
+        if (opacity === 1 && log.samples.some((s) => s.opacity < 1)) log.done = true
+        else requestAnimationFrame(frame)
+      }
+      requestAnimationFrame(frame)
+    })
+    await control.scrollIntoViewIfNeeded()
+    await expect
+      .poll(() => page.evaluate(() => (window as unknown as { __fade: FadeLog }).__fade.done), {
+        timeout: 30000,
+      })
+      .toBe(true)
+    const { samples } = await page.evaluate(() => (window as unknown as { __fade: FadeLog }).__fade)
+    // The fade was seen from its start: hidden first, then fully shown.
+    expect(samples[0].opacity, 'hidden before the reveal').toBeLessThan(1)
+    // Never lifted, scaled or shifted by a transform.
+    expect(samples.flatMap((s) => s.transforms).filter((t) => t !== 'none')).toEqual([])
+    // And it stays where it is in its own row.
+    const offsets = samples.map((s) => s.inRow)
+    expect(
+      Math.max(...offsets) - Math.min(...offsets),
+      `offsets in its row: ${offsets.join(', ')}`
+    ).toBeLessThan(0.5)
+  })
+}
 
 test('"Detailed view" opens /projects, with every project at full size', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })

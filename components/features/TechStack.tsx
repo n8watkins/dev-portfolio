@@ -28,8 +28,8 @@ const tile = (tech: AIStackItem) => (
  * wrapper differs: two rows instead of three (the AI kit, then the dev stack),
  * the bento card's colours, and the rows sitting low in the card (above its
  * title) with headroom for the dino. The tiles are
- * a little shorter here (h-24, not the shared h-28), so
- * the card leaves about twice the room above them: the catch game's
+ * smaller here (188 x 84, not the shared 208 x 112; the sizes are in
+ * app/globals.css), so the card leaves about twice the room above them: the catch game's
  * scoreboards sit in a band there that the dino never enters. Nothing in the
  * panel can be selected or tap-highlighted.
  *
@@ -40,6 +40,12 @@ const tile = (tech: AIStackItem) => (
 // n8builds.dev's first two rows as one: the agents and models, then the AI tools.
 const ai_kit = [...ai_agents, ...ai_tools]
 
+// rowDuration is sized for the shared tile's 248px pitch (13rem + 2.5rem). The
+// tiles here are 188px wide (see app/globals.css), a pitch of 228px, so the
+// duration scales with it and both rows keep the same ~22px/s.
+const TILE_PITCH = 188 + 40
+const duration = (tiles: number) => rowDuration((tiles * TILE_PITCH) / 248)
+
 export function TechStack() {
   return (
     <div
@@ -47,14 +53,14 @@ export function TechStack() {
       // The dino game sends its rounds to n8builds.dev (app/api/game there):
       // counts only, no cookies; n8builds.dev's privacy page covers both sites.
       data-dino-stats="https://n8builds.dev/api/game"
-      className="absolute inset-0 flex w-full flex-col items-center justify-end overflow-hidden rounded-3xl bg-linear-to-br from-[#0d304c] to-[#0d304c] pb-18 select-none [-webkit-tap-highlight-color:transparent] sm:pb-24 motion-safe:gap-5 motion-reduce:justify-start motion-reduce:overflow-y-auto motion-reduce:pt-12 motion-safe:[&_figure]:h-24"
+      className="absolute inset-0 flex w-full flex-col items-center justify-end overflow-hidden rounded-3xl bg-linear-to-br from-[#0d304c] to-[#0d304c] pb-18 select-none [-webkit-tap-highlight-color:transparent] sm:pb-24 motion-safe:gap-5 motion-reduce:justify-start motion-reduce:overflow-y-auto motion-reduce:pt-12"
     >
       <Marquee
         label="AI kit"
         reverse
         pauseOnHover
         data-marquee-row
-        style={{ '--duration': rowDuration(ai_kit.length) } as CSSProperties}
+        style={{ '--duration': duration(ai_kit.length) } as CSSProperties}
         className="motion-safe:[--gap:2.5rem]"
       >
         {ai_kit.map(tile)}
@@ -63,7 +69,7 @@ export function TechStack() {
         label="Dev stack"
         pauseOnHover
         data-marquee-row
-        style={{ '--duration': rowDuration(dev_stack.length) } as CSSProperties}
+        style={{ '--duration': duration(dev_stack.length) } as CSSProperties}
         className="motion-safe:[--gap:2.5rem]"
       >
         {dev_stack.map(tile)}
