@@ -43,7 +43,7 @@ export const stackLayers: StackLayer[] = [
     id: 'data',
     title: 'Data',
     blurb: 'Where the data lives, and how it is queried.',
-    items: pick(['PostgreSQL', 'Turso', 'Drizzle', 'Firebase', 'Sanity', 'Upstash']),
+    items: pick(['PostgreSQL', 'Turso', 'Drizzle', 'Firebase', 'Sanity']),
   },
   {
     id: 'cloud',

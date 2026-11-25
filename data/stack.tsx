@@ -12,7 +12,6 @@ import {
   SiClaude,
   SiClerk,
   SiCloudflare,
-  SiCursor,
   SiDrizzle,
   SiEslint,
   SiFigma,
@@ -33,7 +32,6 @@ import {
   SiTailwindcss,
   SiTurso,
   SiTypescript,
-  SiUpstash,
   SiVercel,
   SiVite,
   SiZod,
@@ -181,7 +179,7 @@ function PiMark({ className, style }: MarkProps) {
 }
 
 // Colours: the brands' own, lifted where a dark mark would vanish on the dark
-// tiles (Cursor, OpenAI and ggml are black-and-white marks: light here).
+// tiles (OpenAI and ggml are black-and-white marks: light here).
 const LIGHT = '#e6edf6'
 
 /**
@@ -196,11 +194,11 @@ export const rowDuration = (tiles: number) => `${Math.round(tiles * 11.3)}s`
 export const ai_agents: AIStackItem[] = [
   { name: 'Claude Code', icon: <SiClaude className={ICON} style={{ color: '#D97757' }} />, description: 'Where I build everything now, one pull request at a time.' },
   { name: 'Claude Opus 5.5', icon: <SiAnthropic className={ICON} style={{ color: '#F0EEE6' }} />, description: 'The model behind Claude Code when I build.' },
+  // The owner's orchestrator (2026-11-25): Anthropic's mark, as on Opus beside it.
+  { name: 'Claude Fable 5.2', icon: <SiAnthropic className={ICON} style={{ color: '#F0EEE6' }} />, description: 'My orchestrator. It plans the work and directs the other agents.' },
   { name: 'ChatGPT', icon: <BsOpenai className={ICON} style={{ color: LIGHT }} />, description: 'Where I plan a build first, often out loud in voice mode.' },
   { name: 'Codex', icon: <BsOpenai className={ICON} style={{ color: LIGHT }} />, description: 'My second opinion when a bug fights back.' },
   { name: 'Pi', icon: <PiMark className={ICON} style={{ color: LIGHT }} />, description: 'A minimal agent harness that runs any model.' },
-  { name: 'Cursor', icon: <SiCursor className={ICON} style={{ color: LIGHT }} />, description: 'Inline, context-aware edits when my hands are on the keys.' },
-  { name: 'OpenAI', icon: <BsOpenai className={ICON} style={{ color: LIGHT }} />, description: "Draws the icons in an icon tool I'm still building." },
   {
     name: 'Gemini',
     icon: <SiGooglegemini className={ICON} style={{ color: '#4285F4' }} />,
@@ -252,7 +250,7 @@ export const dev_stack: AIStackItem[] = [
     description: "Builds TL;DW and Scribe's dashboard, where Next.js doesn't fit.",
     link: { text: 'TL;DW', ...TLDW },
   },
-  { name: 'PostgreSQL', icon: <SiPostgresql className={ICON} style={{ color: '#6B9BD8' }} />, description: 'Not in my apps right now: they run on SQLite, in Turso and D1.' },
+  { name: 'PostgreSQL', icon: <SiPostgresql className={ICON} style={{ color: '#6B9BD8' }} />, description: 'Object-relational, for when an app outgrows SQLite.' },
   {
     name: 'Turso',
     icon: <SiTurso className={ICON} style={{ color: '#4FF8D2' }} />,
@@ -291,7 +289,6 @@ export const dev_stack: AIStackItem[] = [
     description: "Where I write my N8's Notions posts.",
     link: { text: "N8's Notions", href: 'https://n8builds.dev/blog' },
   },
-  { name: 'Upstash', icon: <SiUpstash className={ICON} style={{ color: '#00E9A3' }} />, description: 'Ran my rate limits until I moved them to Cloudflare.' },
   {
     name: 'Clerk',
     icon: <SiClerk className={ICON} style={{ color: LIGHT }} />,

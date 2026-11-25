@@ -19,9 +19,12 @@ test('/stack lists every tool once, by layer, each with its reason', async ({ pa
   await page.goto('/stack')
   const items = page.locator('[data-stack-layer] > li')
   const names = await items.locator('p.font-semibold').allTextContents()
-  // data/stack.tsx: 8 agents and models, 3 local AI tools, 27 in the dev stack.
-  expect(names).toHaveLength(38)
-  expect(new Set(names).size).toBe(38)
+  // data/stack.tsx: 7 agents and models, 3 local AI tools, 26 in the dev stack
+  // (owner, 2026-11-25: Claude Fable 5.2 in; Cursor, OpenAI and Upstash out).
+  expect(names).toHaveLength(36)
+  expect(new Set(names).size).toBe(36)
+  for (const dropped of ['Cursor', 'OpenAI', 'Upstash']) expect(names).not.toContain(dropped)
+  expect(names).toContain('Claude Fable 5.2')
   for (const reason of await items.locator('p.text-sm').allTextContents()) {
     expect(reason.trim().length).toBeGreaterThan(5)
   }
@@ -68,7 +71,7 @@ test.describe('the tech stack tiles (motion allowed)', () => {
       })
       await page.goto('/stack')
       const tiles = page.locator('[data-dino-panel] [data-marquee-row] > :first-child > figure')
-      await expect(tiles).toHaveCount(38)
+      await expect(tiles).toHaveCount(36)
       const misfits = await tiles.evaluateAll((figures) =>
         figures.flatMap((figure) => {
           ;(figure as HTMLElement).focus({ preventScroll: true })
