@@ -1,5 +1,4 @@
-import { test, expect, type Locator } from './fixtures/test'
-import { pictureFor } from '../components/about/pictures'
+import { test, expect } from './fixtures/test'
 
 /**
  * The About page, only about me (owner, 2026-11-08): one portrait, then the
@@ -115,21 +114,11 @@ test('the stickers drift, hold still under reduced motion, and never block a cli
 
 /**
  * The background (owner, 2026-11-25): the site's grid, whose squares move but
- * never light behind text, a pixel picture above each scene, and scenes that
- * rise in as they scroll into view. Geometry is measured in settled states
- * only: under reduced motion (nothing animates) or once a scene has finished
- * rising in.
+ * never light behind text, and scenes that rise in as they scroll into view.
+ * Geometry is measured in settled states only: once a scene has finished
+ * rising in, or under reduced motion (nothing animates).
  */
 const SCENES = ['work', 'la', 'setup'] as const
-
-/** How many cells a picture's resting pose lights, for the drawing it is shown in. */
-async function restingCells(picture: Locator) {
-  const [id, cell] = await picture.evaluate(
-    (el) => [el.dataset.picture!, Number(el.dataset.cell)] as const
-  )
-  const art = pictureFor(id, cell < 36)!
-  return art.base.join('').replaceAll('.', '').length
-}
 
 /** Every line box of text in the page's content, and every photo, as plain rects. */
 const blockersScript = () => {
@@ -138,6 +127,8 @@ const blockersScript = () => {
   const walker = document.createTreeWalker(main, NodeFilter.SHOW_TEXT)
   for (let n = walker.nextNode(); n; n = walker.nextNode()) {
     if (!n.textContent?.trim() || n.parentElement?.closest('[aria-hidden="true"], footer')) continue
+    // Words still waiting to rise in are not shown yet (and drawn lower for now).
+    if (n.parentElement?.checkVisibility?.({ opacityProperty: true }) === false) continue
     const range = document.createRange()
     range.selectNodeContents(n)
     for (const r of range.getClientRects())
@@ -157,107 +148,95 @@ const blockersScript = () => {
   return rects
 }
 
-test('each scene has a pixel picture: decorative, unclickable and clear of words and photos', async ({
+/** The grid's cells lit now, as plain rects. */
+const litCellsScript = () =>
+  [...document.querySelectorAll<HTMLElement>('[data-wander], [data-rest]')]
+    .filter((c) => Number(getComputedStyle(c).opacity) > 0.01)
+    .map((c) => {
+      const r = c.getBoundingClientRect()
+      return { l: r.left, t: r.top, r: r.right, b: r.bottom }
+    })
+
+test('the scenes rise in as they scroll into view', async ({ page }) => {
+  await page.goto('/about')
+  // Below the fold, the last scene waits hidden and lowered (once the page runs).
+  const photo = page.locator('section[aria-labelledby="scene-setup"] > div').first()
+  await expect.poll(() => photo.evaluate((el) => getComputedStyle(el).opacity)).toBe('0')
+  expect(await photo.evaluate((el) => getComputedStyle(el).transform)).not.toBe('none')
+  await photo.evaluate((el) => el.scrollIntoView({ block: 'center', behavior: 'instant' }))
+  // Then rises all the way and is fully there.
+  await expect
+    .poll(() =>
+      photo.evaluate((el) => {
+        const s = getComputedStyle(el)
+        return `${s.opacity} ${s.transform}`
+      })
+    )
+    .toBe('1 none')
+})
+
+test('the grid squares move, are decorative, and never light behind text', async ({
   page,
   isMobile,
 }) => {
-  await page.emulateMedia({ reducedMotion: 'reduce' })
   const widths = isMobile ? [page.viewportSize()!.width] : [390, 1024, 1440]
   for (const width of widths) {
     if (!isMobile) await page.setViewportSize({ width, height: 900 })
     await page.goto('/about')
+    const grid = page.locator('main > [aria-hidden="true"]').first()
+    await expect(grid.locator('[data-wander]').first()).toBeAttached()
+    expect(await grid.evaluate((el) => getComputedStyle(el).pointerEvents)).toBe('none')
+    let seen = 0
     for (const id of SCENES) {
-      const picture = page.locator(`[data-picture="${id}"]`)
-      await expect(picture, `${id} at ${width}`).toHaveAttribute('data-built', '')
-      await expect(picture).toHaveAttribute('aria-hidden', 'true')
-      expect(await picture.evaluate((el) => getComputedStyle(el).pointerEvents)).toBe('none')
-      await picture.evaluate((el) => el.scrollIntoView({ block: 'center', behavior: 'instant' }))
-      const blockers = await page.evaluate(blockersScript)
-      const result = await picture.evaluate((el, rects) => {
-        const lit = [...el.querySelectorAll('i[data-lit]')].map((c) => c.getBoundingClientRect())
-        // A click on the picture lands on whatever is under it, never the picture.
-        const mid = lit[Math.floor(lit.length / 2)]
-        const hit = document.elementFromPoint(mid.left + mid.width / 2, mid.top + mid.height / 2)
-        const clashes = rects
-          .filter((b) =>
-            lit.some((c) => c.left < b.r && c.right > b.l && c.top < b.b && c.bottom > b.t)
-          )
+      const words = page.locator(`section[aria-labelledby="scene-${id}"] > div`).nth(1)
+      await words.evaluate((el) => el.scrollIntoView({ block: 'center', behavior: 'instant' }))
+      // Settled: the scene has risen all the way, so its words are where they rest.
+      await expect
+        .poll(() =>
+          words.evaluate((el) => {
+            const s = getComputedStyle(el)
+            return `${s.opacity} ${s.transform}`
+          })
+        )
+        .toBe('1 none')
+      // The squares hop every second or so: look a few times.
+      for (let n = 0; n < 4; n++) {
+        const text = (await page.evaluate(blockersScript)).filter((b) => !b.what.startsWith('img'))
+        const cells = await page.evaluate(litCellsScript)
+        seen += cells.length
+        const behind = text
+          .filter((b) => cells.some((c) => c.l < b.r && c.r > b.l && c.t < b.b && c.b > b.t))
           .map((b) => b.what)
-        return { cells: lit.length, clickable: !!hit?.closest('[data-picture]'), clashes }
-      }, blockers)
-      // Drawn complete: every cell of its resting pose.
-      expect(result.cells, `${id} at ${width}`).toBe(await restingCells(picture))
-      expect(result.clickable, `${id} at ${width}`).toBe(false)
-      expect(result.clashes, `${id} at ${width}`).toEqual([])
+        expect(behind, `${id} at ${width}, look ${n + 1}`).toEqual([])
+        await page.waitForTimeout(600)
+      }
     }
+    // And they really are lit and moving around the scenes.
+    expect(seen, `lit squares at ${width}`).toBeGreaterThan(0)
   }
 })
 
-test('under reduced motion the pictures are complete and still, and no square moves', async ({
-  page,
-}) => {
+test('under reduced motion no square moves and the scenes are simply there', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.goto('/about')
-  const pictures = page.locator('[data-picture]')
-  await expect(pictures).toHaveCount(3)
-  const count = () =>
-    pictures.evaluateAll((els) => els.map((el) => el.querySelectorAll('i[data-lit]').length))
-  await expect(page.locator('[data-picture][data-still][data-built]')).toHaveCount(3)
-  const before = await count()
-  for (let n = 0; n < 3; n++) expect(before[n]).toBe(await restingCells(pictures.nth(n)))
-  // Nothing wanders, and a picture never changes, however long you wait.
-  await page.waitForTimeout(3000)
-  expect(await count()).toEqual(before)
+  await expect(page.locator('[data-rest]').first()).toBeAttached()
+  const resting = () =>
+    page
+      .locator('[data-rest]')
+      .evaluateAll((els) => els.map((el) => getComputedStyle(el).opacity).join())
+  const before = await resting()
+  await page.mouse.wheel(0, 1200)
+  await page.waitForTimeout(2000)
+  // The resting squares hold still however you scroll, and nothing wanders.
+  expect(await resting()).toBe(before)
   const wandering = await page
     .locator('[data-wander]')
     .evaluateAll((els) => els.filter((el) => Number(getComputedStyle(el).opacity) > 0).length)
   expect(wandering).toBe(0)
-  // The scenes are simply there: none waits hidden to rise in.
   for (const id of SCENES) {
     const photo = page.locator(`section[aria-labelledby="scene-${id}"] > div`).first()
     expect(await photo.evaluate((el) => getComputedStyle(el).opacity)).toBe('1')
   }
-})
-
-test('the scenes rise in as they scroll into view, and the grid never lights behind text', async ({
-  page,
-}) => {
-  await page.goto('/about')
-  // Below the fold, the last scene waits hidden and lowered (once the page runs).
-  const setupPhoto = page.locator('section[aria-labelledby="scene-setup"] > div').first()
-  await expect.poll(() => setupPhoto.evaluate((el) => getComputedStyle(el).opacity)).toBe('0')
-  expect(await setupPhoto.evaluate((el) => getComputedStyle(el).transform)).not.toBe('none')
-
-  for (const id of SCENES) {
-    const words = page.locator(`section[aria-labelledby="scene-${id}"] > div`).nth(1)
-    await words.evaluate((el) => el.scrollIntoView({ block: 'center', behavior: 'instant' }))
-    // Settled: risen all the way and fully there.
-    await expect
-      .poll(() =>
-        words.evaluate((el) => {
-          const s = getComputedStyle(el)
-          return `${s.opacity} ${s.transform}`
-        })
-      )
-      .toBe('1 none')
-    // The squares hop every second or so: look a few times.
-    for (let n = 0; n < 4; n++) {
-      const text = (await page.evaluate(blockersScript)).filter((b) => !b.what.startsWith('img'))
-      const behind = await page.evaluate((rects) => {
-        return [...document.querySelectorAll<HTMLElement>('[data-wander], [data-rest]')]
-          .filter((c) => Number(getComputedStyle(c).opacity) > 0.01)
-          .map((c) => c.getBoundingClientRect())
-          .flatMap((c) =>
-            rects
-              .filter((b) => c.left < b.r && c.right > b.l && c.top < b.b && c.bottom > b.t)
-              .map((b) => b.what)
-          )
-      }, text)
-      expect(behind, `${id}, look ${n + 1}`).toEqual([])
-      await page.waitForTimeout(700)
-    }
-  }
-  await expect(setupPhoto).toHaveCSS('opacity', '1')
 })
 
 test('the pages are in the sitemap and not redirected', async ({ request }) => {

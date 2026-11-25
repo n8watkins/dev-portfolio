@@ -175,8 +175,8 @@ function WaysOn() {
  * stack) lives on the home page and its detail pages.
  *
  * Since 2026-11-25 (owner) the background is alive: the site's grid with
- * moving squares that keep clear of the words, and a pixel picture above each
- * scene (components/about/AboutGrid.tsx); the scenes rise in as they scroll
+ * moving squares that keep clear of the words (components/about/AboutGrid.tsx),
+ * and the scenes rise in as they scroll
  * into view (useSceneReveal). It is drawn after the page has been measured,
  * absolute behind the content, so it shifts nothing.
  */
@@ -236,8 +236,7 @@ export default function AboutPage() {
             <Decals mood="intro" />
           </PauseOffscreen>
 
-          {/* Wide gaps above the scenes: each holds the scene's pixel picture. */}
-          <div className="mt-56 flex flex-col gap-56 md:mt-80 md:gap-80">
+          <div className="mt-24 flex flex-col gap-24 md:mt-32 md:gap-32">
             {aboutScenes.map((scene, i) => (
               <PauseOffscreen key={scene.id} className="relative">
                 <section

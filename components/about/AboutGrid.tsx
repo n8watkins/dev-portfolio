@@ -3,8 +3,6 @@
 import { useEffect, useMemo, useRef } from 'react'
 import { useMotionValueEvent, useScroll } from 'motion/react'
 import { smooth, type Box, type StoryLayout } from './storyLayout'
-import { pictureFor, type Picture } from './pictures'
-import PixelPicture from './PixelPicture'
 
 // Two thirds of the hero grid's 52px (owner, 2026-11-25: smaller boxes).
 const CELL = 36
@@ -60,83 +58,6 @@ function partAt(layout: StoryLayout, y: number) {
 const overlaps = (box: Box, l: number, t: number, r: number, b: number, pad: number) =>
   l < box.right + pad && r > box.left - pad && t < box.bottom + pad && b > box.top - pad
 
-type Placed = { picture: Picture; cell: number; left: number; top: number; box: Box }
-
-/**
- * Where each scene's picture goes: in the gap above the scene, on the grid,
- * clear of every block of words (by CLEARANCE), photo and sticker. It is
- * decided from the layout alone, so a scene's picture lands in the same place
- * on every visit at a given width:
- * - first at full cells over the half of the page where the scene's words
- *   are, then at full cells anywhere across the gap;
- * - then the same at half cells (a tighter drawing of the LA scene);
- * - within each, as near as it can be to the middle of the gap over the words.
- * Phones (under 768px) use half cells only. A picture that fits nowhere is
- * left out.
- */
-function placePictures(layout: StoryLayout, originX: number): Placed[] {
-  const wide = layout.width >= 768
-  const out: Placed[] = []
-  layout.parts.forEach((part, n) => {
-    const above = layout.parts[n - 1]
-    if (!above) return
-    const words = layout.words.find((b) => b.id === `${part.id}-words`)
-    const wordsLeft = words ? (words.left + words.right) / 2 < layout.width / 2 : true
-    const tries: { cell: number; half: boolean }[] = wide
-      ? [
-          { cell: CELL, half: true },
-          { cell: CELL, half: false },
-          { cell: CELL / 2, half: true },
-          { cell: CELL / 2, half: false },
-        ]
-      : [{ cell: CELL / 2, half: false }]
-    for (const { cell, half } of tries) {
-      const picture = pictureFor(part.id, cell < CELL)
-      if (!picture) return
-      // Tighter room around things at half cells, where the gaps are smaller.
-      const pad =
-        cell === CELL
-          ? { words: CLEARANCE, photo: 12, sticker: 10 }
-          : { words: 14, photo: 8, sticker: 8 }
-      const w = picture.base[0].length * cell
-      const h = picture.base.length * cell
-      const [minX, maxX] = !half
-        ? [cell / 2, layout.width - cell / 2]
-        : wordsLeft
-          ? [cell / 2, layout.width / 2]
-          : [layout.width / 2, layout.width - cell / 2]
-      const cx = wide && words ? (words.left + words.right) / 2 : layout.width / 2
-      const cy = (above.bottom + part.top) / 2
-      let best: { left: number; top: number; d: number } | null = null
-      for (let ky = Math.floor(above.top / cell); ky * cell <= part.top; ky++) {
-        const t = ky * cell
-        const b = t + h
-        for (let kx = Math.ceil((minX - originX) / cell); originX + kx * cell + w <= maxX; kx++) {
-          const l = originX + kx * cell
-          const r = l + w
-          if (layout.words.some((x) => overlaps(x, l, t, r, b, pad.words))) continue
-          if (layout.photos.some((x) => overlaps(x, l, t, r, b, pad.photo))) continue
-          if (layout.stickers.some((x) => overlaps(x, l, t, r, b, pad.sticker))) continue
-          const d = Math.hypot(l + w / 2 - cx, (t + h / 2 - cy) * 2)
-          if (!best || d < best.d) best = { left: l, top: t, d }
-        }
-      }
-      if (best) {
-        const box = {
-          id: picture.id,
-          left: best.left,
-          top: best.top,
-          right: best.left + w,
-          bottom: best.top + h,
-        }
-        out.push({ picture, cell, left: best.left, top: best.top, box })
-        return
-      }
-    }
-  })
-  return out
-}
-
 /**
  * The About page's background (owner, 2026-11-25: the site's grid is the most
  * on theme; its squares must move, but never behind text). The site's square
@@ -147,12 +68,12 @@ function placePictures(layout: StoryLayout, originX: number): Placed[] {
  *   band travels with your scroll.
  * - Every cell takes the tint of its part of the story (sky for the intro,
  *   blue at work, cyan in LA, indigo for the setup).
- * - A pixel picture per scene in the gap above it (PixelPicture.tsx).
  * The words are kept clear: no cell lights behind or right against a block
- * of text, inside a photo, or in the footer. Nothing follows the pointer.
- * Only opacity and transform change, once per scroll frame or hop. Wanderers
- * rest while the tab is hidden. Reduced motion: the resting cells and the
- * pictures hold still, complete, and nothing wanders.
+ * of text, inside a photo, or in the footer, so the moving cells live in the
+ * margins, the gaps between scenes and around the photos. Nothing follows
+ * the pointer. Only opacity and transform change, once per scroll frame or
+ * hop. Wanderers rest while the tab is hidden. Reduced motion: the resting
+ * cells hold still, softly lit, and nothing wanders.
  */
 export default function AboutGrid({ layout, reduce }: { layout: StoryLayout; reduce: boolean }) {
   const { scrollY } = useScroll()
@@ -163,9 +84,6 @@ export default function AboutGrid({ layout, reduce }: { layout: StoryLayout; red
   const rows = Math.floor(layout.height / CELL)
   // The grid is centred, so its first column starts left of the page.
   const originX = (layout.width - cols * CELL) / 2
-
-  // The pixel pictures, each in the gap above its scene, where it fits.
-  const pictures = useMemo(() => placePictures(layout, originX), [layout, originX])
 
   /** Every cell a light may use: not behind or against words, not hidden behind a photo. */
   const free = useMemo(() => {
@@ -184,12 +102,10 @@ export default function AboutGrid({ layout, reduce }: { layout: StoryLayout; red
         if (layout.words.some((w) => overlaps(w, l, t, r, b, CLEARANCE))) continue
         if (layout.photos.some((p) => l >= p.left && r <= p.right && t >= p.top && b <= p.bottom))
           continue
-        // Around a picture, the grid stays quiet so the picture reads.
-        if (pictures.some((p) => overlaps(p.box, l, t, r, b, CELL / 2))) continue
         out.push({ x, y })
       }
     return out
-  }, [cols, rows, originX, layout, pictures])
+  }, [cols, rows, originX, layout])
 
   const tintAt = (y: number) => `rgb(${TINT[partAt(layout, y * CELL + CELL / 2)]})`
 
@@ -310,69 +226,53 @@ export default function AboutGrid({ layout, reduce }: { layout: StoryLayout; red
 
   const cellStyle = { width: CELL - 1, height: CELL - 1, opacity: 0 } as const
   return (
-    <>
+    <div
+      aria-hidden="true"
+      className="pointer-events-none absolute inset-0 overflow-hidden"
+      style={{
+        maskImage: EDGES,
+        WebkitMaskImage: EDGES,
+        maskComposite: 'intersect',
+        WebkitMaskComposite: 'source-in',
+      }}
+    >
       <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 overflow-hidden"
+        className="absolute top-0 h-full"
         style={{
-          maskImage: EDGES,
-          WebkitMaskImage: EDGES,
-          maskComposite: 'intersect',
-          WebkitMaskComposite: 'source-in',
+          left: originX,
+          width: cols * CELL,
+          backgroundImage:
+            'linear-gradient(to right, rgba(255,255,255,0.045) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.045) 1px, transparent 1px)',
+          backgroundSize: `${CELL}px ${CELL}px`,
         }}
       >
-        <div
-          className="absolute top-0 h-full"
-          style={{
-            left: originX,
-            width: cols * CELL,
-            backgroundImage:
-              'linear-gradient(to right, rgba(255,255,255,0.045) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.045) 1px, transparent 1px)',
-            backgroundSize: `${CELL}px ${CELL}px`,
-          }}
-        >
-          {rest.map((cell, i) => (
-            <div
-              key={key(cell)}
-              ref={(el) => {
-                resting.current[i] = el
-              }}
-              data-rest=""
-              className="absolute top-0 left-0"
-              style={{
-                ...cellStyle,
-                transform: `translate3d(${cell.x * CELL + 1}px, ${cell.y * CELL + 1}px, 0)`,
-                background: tintAt(cell.y),
-              }}
-            />
-          ))}
-          {Array.from({ length: count }, (_, i) => (
-            <div
-              key={`w${i}`}
-              ref={(el) => {
-                wanderers.current[i] = el
-              }}
-              data-wander=""
-              className="absolute top-0 left-0"
-              style={cellStyle}
-            />
-          ))}
-        </div>
-      </div>
-      {/* The pictures, on the same grid but outside its edge fade. */}
-      <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
-        {pictures.map((p) => (
-          // A new drawing (another cell size) is a new picture.
-          <PixelPicture
-            key={`${p.picture.id}-${p.cell}`}
-            picture={p.picture}
-            cell={p.cell}
-            left={p.left}
-            top={p.top}
-            reduce={reduce}
+        {rest.map((cell, i) => (
+          <div
+            key={key(cell)}
+            ref={(el) => {
+              resting.current[i] = el
+            }}
+            data-rest=""
+            className="absolute top-0 left-0"
+            style={{
+              ...cellStyle,
+              transform: `translate3d(${cell.x * CELL + 1}px, ${cell.y * CELL + 1}px, 0)`,
+              background: tintAt(cell.y),
+            }}
+          />
+        ))}
+        {Array.from({ length: count }, (_, i) => (
+          <div
+            key={`w${i}`}
+            ref={(el) => {
+              wanderers.current[i] = el
+            }}
+            data-wander=""
+            className="absolute top-0 left-0"
+            style={cellStyle}
           />
         ))}
       </div>
-    </>
+    </div>
   )
 }

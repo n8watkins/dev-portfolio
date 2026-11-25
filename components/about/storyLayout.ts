@@ -26,15 +26,13 @@ export interface StoryLayout {
   words: Box[]
   /** The portrait and each scene's photo. */
   photos: Box[]
-  /** The stickers on show. */
-  stickers: Box[]
 }
 
 /**
  * Measures the story inside `main`, and again whenever it resizes. Every box
  * is its layout box (offsets up to main), never its painted one: the scenes
- * rise in with a transform (useSceneReveal) and the stickers drift with one,
- * and the background must land in the same place whatever moment it measures.
+ * rise in with a transform (useSceneReveal), and the background must keep
+ * clear of where they rest, whatever moment it measures.
  * Layout is read only here, never per scroll frame.
  */
 export function useStoryLayout(main: RefObject<HTMLElement | null>): StoryLayout | null {
@@ -85,9 +83,6 @@ export function useStoryLayout(main: RefObject<HTMLElement | null>): StoryLayout
             at(intro?.children[1], 'portrait'),
             ...scenes.map((s) => at(s.children[0], `${sceneId(s)}-photo`)),
           ]),
-          stickers: present(
-            Array.from(el.querySelectorAll('.decal')).map((d, n) => at(d, `sticker-${n}`))
-          ),
         })
       })
     }
