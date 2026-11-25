@@ -33,6 +33,13 @@
  */
 export const GA_GRACE_MS = 5000
 
+/**
+ * The longest gtag.js waits for an idle moment. A page that never goes idle
+ * (an animation, a carousel) would otherwise never run requestIdleCallback, and
+ * GA would never load, even after an Accept.
+ */
+export const GA_IDLE_TIMEOUT_MS = 2000
+
 /** The first interactions that load gtag.js early (see GA_GRACE_MS). */
 const GA_WAKE_EVENTS = ['pointerdown', 'keydown', 'scroll', 'touchstart', 'wheel']
 
@@ -127,7 +134,7 @@ gtag('consent','default',${j(regionDefault)});
 gtag('consent','default',${j(globalDefault)});
 function valid(v){return v==='granted'||v==='denied'?v:null}
 function onDomain(){var h=l.hostname;return h===D||h.slice(-D.length-1)==='.'+D}
-function readCookie(){var m=d.cookie.match(/(?:^|;\s*)${CONSENT_COOKIE}=([^;]*)/);return m?valid(m[1]):null}
+function readCookie(){var m=d.cookie.match(/(?:^|;\\s*)${CONSENT_COOKIE}=([^;]*)/);return m?valid(m[1]):null}
 function writeCookie(v){d.cookie=C+'='+v+'; Max-Age=${CONSENT_MAX_AGE_SECONDS}; Path=/; SameSite=Lax'+(onDomain()?'; Domain=.'+D:'')+(l.protocol==='https:'?'; Secure':'')}
 var c=readCookie();
 if(!c){try{c=valid(w.localStorage.getItem(K))}catch(e){}if(c)writeCookie(c)}
@@ -140,7 +147,7 @@ gtag('js',new Date());
 gtag('config',id);
 var loaded=false,waiting=false,E=${j(GA_WAKE_EVENTS)};
 function load(){if(loaded)return;loaded=true;var s=d.createElement('script');s.async=true;s.src='https://www.googletagmanager.com/gtag/js?id='+encodeURIComponent(id);d.head.appendChild(s)}
-function later(){var idle=w.requestIdleCallback||function(f){return w.setTimeout(f,1)};idle(load)}
+function later(){if(w.requestIdleCallback)w.requestIdleCallback(load,{timeout:${GA_IDLE_TIMEOUT_MS}});else w.setTimeout(load,1)}
 function wake(){if(!waiting)return;waiting=false;E.forEach(function(e){w.removeEventListener(e,wake,true)});later()}
 function arm(){w.setTimeout(wake,${GA_GRACE_MS})}
 function start(){if(loaded||waiting)return;waiting=true;E.forEach(function(e){w.addEventListener(e,wake,{capture:true,passive:true})});if(d.readyState==='complete')arm();else w.addEventListener('load',arm,{once:true})}
