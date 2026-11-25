@@ -4,7 +4,8 @@ import type { GridItemConfig } from '@/lib/types/gridItem'
 /**
  * Grid Item 6: the n8builds.dev build log, a month at a glance (owner, round 4
  * of 2026-11-09), beside "Have a project?". Live from n8builds.dev; the arrows
- * cycle the months and the rest of the card opens the full build log.
+ * cycle the months, the days light up to show their numbers, and two links
+ * lead to the site and the full build log.
  */
 export const gridItem6: GridItemConfig = {
   id: 6,
