@@ -41,8 +41,16 @@ const H = DINO_ROWS * PX
 const SPEED = 140
 const GRAVITY = 1800 // px/s²
 const STEP_EVERY = 12 // px walked per leg swap
-const STILL = 2 // px/s: a row moving slower than this is paused
+// Whether the visitor has paused a row comes from the row itself (Marquee sets
+// data-paused while it is hovered, focused or tapped), not from watching it
+// stand still: on a starved machine the marquee (a compositor animation) can
+// report the same place for many frames while it runs on, and the dino fell off
+// a running row (2026-11-09, again at 0.4s and 8 frames).
 const LANDING = 20 // px past the far edge of a gap that a hop lands
+// How far off a tile a walking dino is put back on it: a few pixels in practice (a
+// row's travel over a frame it couldn't ride), and under half a gap (2.5rem), so it
+// never lands on the tile across the gap.
+const SNAP = 16
 // Faster than any marquee row ever scrolls, px/s. A row "moving" faster than
 // this in a frame has been laid out again (the window was resized, a font
 // loaded): its tiles jumped, they didn't travel, so the dino doesn't ride the
@@ -82,6 +90,7 @@ interface Row {
   /** How far the row moved this frame, px (measured, so exact at any frame rate). */
   delta: number
   velocity: number
+  /** The visitor holds it still (its data-paused, from Marquee). */
   paused: boolean
 }
 
@@ -99,7 +108,21 @@ const COLORS = { body: '#cfdbe9', eye: '#081427', shine: '#ffffff' } as const
 const RAINBOW_ODDS = 1 / 12
 // And always on the visit's 5th click, so it gets found.
 const RAINBOW_CLICK = 5
+// Rainbow mode lasts a while, then it takes a colour again (owner, round 11 of
+// 2026-11-09: not forever). While it lasts it runs much faster, and in a round
+// each catch of a rainbow dino counts for more.
+const RAINBOW_FOR = 6 // s
+const RAINBOW_PACE = 1.8 // times its speed
+const RAINBOW_BONUS = 3 // catches a rainbow catch counts for
 const RAINBOW = ['#f87171', '#fb923c', '#facc15', '#4ade80', '#22d3ee', '#818cf8', '#e879f9']
+// Where rainbow mode's sparkles twinkle, in the dino's box (px), and when (s into a 1.2s loop).
+const SPARKLES = [
+  { x: -10, y: -8, size: 9, delay: 0 },
+  { x: W + 2, y: 2, size: 7, delay: 0.35 },
+  { x: W - 4, y: -14, size: 10, delay: 0.7 },
+  { x: -12, y: H - 16, size: 7, delay: 0.95 },
+  { x: W / 2 - 4, y: -18, size: 6, delay: 0.5 },
+]
 function randomHue(last: number) {
   const hue = (last + 60 + Math.random() * 240) % 360
   return { hue, color: `hsl(${hue.toFixed(0)} 85% 70%)` }
@@ -118,13 +141,15 @@ const ROUND = 30
 type Reaction = 'flip' | 'fall' | 'leap' | 'dash'
 const REACTIONS: Reaction[] = ['flip', 'fall', 'leap', 'dash']
 const DASH_T = 0.7 // s of dashing
-const DASH_SPEED = 3 // times its walking speed
+// Its escape from a click: quick, but catchable (owner, round 11 of 2026-11-09: 3x was a little fast).
+const DASH_SPEED = 2.4 // times its walking speed
 const PACE_PER_CATCH = 0.06
 const MAX_PACE = 2.2
 const RESULT_FOR = 5 // s the final score shows
 const URGENT = 5 // s left when the countdown turns red
-// The most a round can score in the stats (the server checks it too).
-const MAX_STATS_SCORE = 60
+// The most a round can score in the stats (lib/game/stats.ts's MAX_SCORE checks it too):
+// two catches a second, and rainbow catches count RAINBOW_BONUS.
+const MAX_STATS_SCORE = 100
 const BEST_KEY = 'n8-dino-best'
 const ROAR_FOR = 1.1 // s the bubble stays up
 const FLIP_T = 0.7 // s per backflip
@@ -239,6 +264,8 @@ interface DinoTiming {
   reactions?: readonly Reaction[]
   /** A catch round's length, s (the tests shorten it). */
   round?: number
+  /** How long rainbow mode lasts, s (the tests shorten it). */
+  rainbow?: number
   /** Roaming choices and ways back in, the same way. */
   choices?: readonly Choice[]
   entries?: readonly Entry[]
@@ -331,7 +358,7 @@ export default function DinoGame() {
         })
         const top = figures[0].getBoundingClientRect().top - box.top
         const trackTop = first.getBoundingClientRect().top - box.top
-        return [{ el, tracks, tiles, top, trackTop, lastLeft: null, lastPeriod: null, delta: 0, velocity: 0, paused: false }]
+        return [{ el, tracks, tiles, top, trackTop, lastLeft: null, lastPeriod: null, delta: 0, velocity: 0, paused: rows.find((row) => row.el === el)?.paused ?? el.hasAttribute('data-paused') }]
       })
       levels = rows.map((row) => ({ y: row.top, row }))
       // One row: a ground line under it is the second level.
@@ -381,7 +408,6 @@ export default function DinoGame() {
     let walked = 0
     let missPending = false
     let frame: DinoFrame = 'fall'
-    let settled = 0 // frames measured so far (pauses count once rows are known)
     // Just came back in at the other end of a level: walk on (in the edge
     // fade) until there is a tile underfoot, rather than dropping straight in.
     let reentering = false
@@ -406,6 +432,14 @@ export default function DinoGame() {
     let commit: { to: number; dir: 1 | -1; left: number } | null = null
     const COMMIT_FOR = 6 // s at most
     let hue = 210 // the body's last random hue
+    let rainbowLeft = 0 // s of rainbow mode left
+    // A new random colour for its body, out of rainbow mode.
+    const recolour = () => {
+      const next = randomHue(hue)
+      hue = next.hue
+      dino.style.setProperty('--dino-body', next.color)
+      delete dino.dataset.rainbow
+    }
     // The game (see ROUND): a round's time left and catches, the best so far,
     // and how long the final score has left on screen.
     let roundLeft = 0
@@ -467,6 +501,7 @@ export default function DinoGame() {
     }
     const timing = (window as { __n8DinoTiming?: DinoTiming }).__n8DinoTiming
     const roundFor = timing?.round ?? ROUND
+    const rainbowFor = timing?.rainbow ?? RAINBOW_FOR
     // Game stats (lib/game/stats.ts in n8builds-web): a round's start and its
     // score go to the endpoint the panel names in data-dino-stats, without
     // cookies; the answer brings the all-time record. No endpoint, no stats.
@@ -590,6 +625,18 @@ export default function DinoGame() {
     const support = (foot: number, spans: [number, number][]) =>
       spans.find(([a, b]) => foot >= a && foot <= b)
 
+    // The tile nearest its feet, if one is within `reach`: the shift that puts its
+    // feet 2px inside that tile's near edge, as a landing does.
+    const nearestTile = (foot: number, spans: [number, number][], reach: number) => {
+      let best: { shift: number; span: [number, number] } | null = null
+      for (const span of spans) {
+        const [a, b] = span
+        const shift = foot < a ? a + 2 - foot : foot > b ? b - 2 - foot : 0
+        if (Math.abs(shift) <= reach && (!best || Math.abs(shift) < Math.abs(best.shift))) best = { shift, span }
+      }
+      return best
+    }
+
     // Turning round, it stays on the tile it stood on. It looks for a tile's
     // edge from where it stood before this frame's step, and on a slow frame
     // that step can carry its feet just past the edge: turned round there, it
@@ -653,6 +700,14 @@ export default function DinoGame() {
       if (!dt) return
       // The round's clock, and the final score's time on screen, run on real
       // time: on a device that can't keep up, a 30 s round still lasts 30 s.
+      // Rainbow mode wears off on real time, and it takes a colour again.
+      if (rainbowLeft > 0) {
+        rainbowLeft -= realDt
+        if (rainbowLeft <= 0) {
+          rainbowLeft = 0
+          recolour()
+        }
+      }
       if (roundLeft > 0) {
         roundLeft -= realDt
         if (roundLeft <= 0) {
@@ -720,19 +775,17 @@ export default function DinoGame() {
           } else {
             row.delta = delta
             row.velocity = delta / realDt
-            // Pauses count once the rows have been measured a while: one
-            // seen sooner (the row held from the start) counts then.
-            if (settled > 10) {
-              const paused = Math.abs(row.velocity) < STILL
-              if (paused && !row.paused && row === onRow) missPending = true
-              row.paused = paused
-            }
           }
         }
+        // Paused just now (by the visitor, as the row reports it) under the dino's feet:
+        // it misses its next jump. A row already paused when it lands or drops in
+        // trips it too (missPending where it lands).
+        const paused = row.el.hasAttribute('data-paused')
+        if (paused && !row.paused && row === onRow) missPending = true
+        row.paused = paused
         row.lastLeft = left
         row.lastPeriod = period
       }
-      settled++
       if (relaidOut) remeasure()
       const current = levels[level]
 
@@ -749,7 +802,7 @@ export default function DinoGame() {
         // the line stays put long enough to read (on a phone too).
         frame = 'stepA'
       } else if (mode === 'walk' && current) {
-        const speed = SPEED * pace * (dashLeft > 0 ? DASH_SPEED : 1)
+        const speed = SPEED * pace * (dashLeft > 0 ? DASH_SPEED : 1) * (rainbowLeft > 0 ? RAINBOW_PACE : 1)
         dashLeft = Math.max(0, dashLeft - dt)
         x += dir * speed * dt
         walked += speed * dt
@@ -781,7 +834,23 @@ export default function DinoGame() {
           turned = true
         }
         if (spans) {
-          const under = support(foot, spans)
+          // Where its feet are on the row this frame (before this frame's step).
+          let at = foot
+          let under = support(at, spans)
+          // Just off a tile while walking along a row: never a real step into a gap
+          // (it hops at every edge), but the row moving on a frame it could not
+          // ride (the rows measured again, or one long frame right after it
+          // landed a couple of pixels from an edge). It stays on that tile
+          // rather than fall (2026-11-09: it fell off a running row on a busy
+          // machine, in a different test each CI run).
+          if (!under && !reentering) {
+            const snap = nearestTile(at, spans, SNAP)
+            if (snap) {
+              x += snap.shift
+              at += snap.shift
+              under = snap.span
+            }
+          }
           if (under) reentering = false
           if (under && turned) stayOn(under)
           if (!under && reentering) {
@@ -791,7 +860,7 @@ export default function DinoGame() {
             carry = rowSpeed(current.row)
           } else {
             const edge = dir > 0 ? under[1] : under[0]
-            const ahead = (edge - foot) * dir
+            const ahead = (edge - at) * dir
             // Within one frame's step of the edge (relative to the tile).
             if (ahead >= 0 && ahead < Math.max(5, (SPEED + 40) * dt + 1)) {
               // The next tile's near edge, to size the jump.
@@ -816,7 +885,7 @@ export default function DinoGame() {
                 // (relative to the row, which carries it along meanwhile).
                 const T = 0.24
                 const target = edge + dir * gap * 0.5
-                hop = { t: 0, T, h: 6, floor: current.y, vx: (target - foot) / T }
+                hop = { t: 0, T, h: 6, floor: current.y, vx: (target - at) / T }
                 mode = 'miss'
                 carry = rowSpeed(current.row)
                 missPending = false
@@ -832,7 +901,7 @@ export default function DinoGame() {
                   // On purpose: a little hop that comes down in the gap.
                   const T = 0.24
                   const target = edge + dir * gap * 0.5
-                  hop = { t: 0, T, h: 10, floor: current.y, vx: (target - foot) / T }
+                  hop = { t: 0, T, h: 10, floor: current.y, vx: (target - at) / T }
                   mode = 'drop'
                   carry = rowSpeed(current.row)
                 } else if (choice === 'turn') {
@@ -1019,7 +1088,9 @@ export default function DinoGame() {
       // A catch: the first click starts a round (or a new one once the last
       // score has had a moment on screen), then every click counts.
       if (roundLeft > 0) {
-        catches += 1
+        // A rainbow dino is worth more.
+        catches += rainbowLeft > 0 ? RAINBOW_BONUS : 1
+        dino.dataset.bonus = rainbowLeft > 0 ? String(RAINBOW_BONUS) : ''
       } else if (resultLeft < RESULT_FOR - 1.5) {
         roundLeft = roundFor
         statsRound = null
@@ -1037,18 +1108,17 @@ export default function DinoGame() {
       pace = roundLeft > 0 ? Math.min(1 + catches * PACE_PER_CATCH, MAX_PACE) : 1
       dino.dataset.catches = String(catches)
       scoreboard()
-      // A new colour every time; sometimes a rainbow.
+      // A new colour every time; sometimes a rainbow, which lasts RAINBOW_FOR
+      // (a click while it is rainbow keeps it so).
       const rainbow =
         Math.random() < RAINBOW_ODDS || roars === RAINBOW_CLICK || (roundLeft > 0 && catches % 10 === 0)
-      if (rainbow) {
+      if (rainbowLeft > 0) {
+        // Still rainbow.
+      } else if (rainbow) {
         dino.style.setProperty('--dino-body', `url(#${rainbowId})`)
         dino.dataset.rainbow = 'true'
-      } else {
-        const next = randomHue(hue)
-        hue = next.hue
-        dino.style.setProperty('--dino-body', next.color)
-        delete dino.dataset.rainbow
-      }
+        rainbowLeft = rainbowFor
+      } else recolour()
       dino.dataset.roars = String(roars)
       // A reaction, if it is walking (mid-jump or falling, it only roars).
       const current = levels[level]
@@ -1125,18 +1195,20 @@ export default function DinoGame() {
             shapeRendering="crispEdges"
             className="block overflow-visible"
           >
-            {/* The rainbow body, its bands turning slowly. */}
+            {/* The rainbow body (round 10 of 2026-11-09: it moves, not a still rainbow):
+                diagonal bands that repeat every half body and flow across it, one
+                period a second, so the loop is seamless. SMIL on a 30x30 sprite: cheap. */}
             <defs>
-              <linearGradient id={rainbowId} x1="0" y1="0" x2="1" y2="1">
-                {RAINBOW.map((c, i) => (
-                  <stop key={c} offset={i / (RAINBOW.length - 1)} stopColor={c} />
+              <linearGradient id={rainbowId} x1="0" y1="0" x2="0.5" y2="0.5" spreadMethod="repeat">
+                {[...RAINBOW, RAINBOW[0]].map((c, i) => (
+                  <stop key={`${c}-${i}`} offset={i / RAINBOW.length} stopColor={c} />
                 ))}
                 <animateTransform
                   attributeName="gradientTransform"
-                  type="rotate"
-                  from="0 0.5 0.5"
-                  to="360 0.5 0.5"
-                  dur="3s"
+                  type="translate"
+                  from="0 0"
+                  to="0.5 0.5"
+                  dur="1s"
                   repeatCount="indefinite"
                 />
               </linearGradient>
@@ -1149,6 +1221,18 @@ export default function DinoGame() {
               </g>
             ))}
           </svg>
+          {/* Rainbow mode's sparkles: a few twinkling stars around it, shown (and so
+              animated) only while it is rainbow; CSS transforms and opacity only
+              (.dino-sparkle in app/globals.css), none under reduced motion. */}
+          <span aria-hidden="true" className="pointer-events-none absolute inset-0 hidden group-data-[rainbow=true]/dino:block" data-dino-sparkles>
+            {SPARKLES.map((sp, i) => (
+              <span
+                key={i}
+                className="dino-sparkle"
+                style={{ left: sp.x, top: sp.y, width: sp.size, height: sp.size, color: RAINBOW[(i * 2) % RAINBOW.length], animationDelay: `${sp.delay}s` }}
+              />
+            ))}
+          </span>
         </div>
         <div ref={roarsRef} className="contents">
           {ROARS.map((b, i) => (
