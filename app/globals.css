@@ -190,7 +190,8 @@
    where --duration doesn't exist, which makes the animation value invalid (as
    n8builds-web's globals.css explains). */
 @theme inline {
-  --animate-scroll: scroll var(--animation-duration, 40s) var(--animation-direction, forwards) linear infinite;
+  --animate-scroll: scroll var(--animation-duration, 40s) var(--animation-direction, forwards)
+    linear infinite;
   --animate-marquee: marquee var(--duration) linear infinite;
   --animate-marquee-vertical: marquee-vertical var(--duration) linear infinite;
   --animate-border-beam: border-beam calc(var(--duration) * 1s) infinite linear;
@@ -503,6 +504,131 @@
   }
 }
 
+/* The build log card preview, ?log=2 (components/ui/BentoComponents/BuildLogCardV2.tsx).
+   A day is a stack of square blocks: the mask cuts the bar into 4px blocks
+   with a 1px gap, counted from the bottom. Its own blocks rise in a step at a
+   time when a month shows. */
+.log2-fill {
+  -webkit-mask-image: linear-gradient(to top, #000 0 4px, transparent 4px 5px);
+  mask-image: linear-gradient(to top, #000 0 4px, transparent 4px 5px);
+  -webkit-mask-size: 100% 5px;
+  mask-size: 100% 5px;
+  -webkit-mask-repeat: repeat-y;
+  mask-repeat: repeat-y;
+  -webkit-mask-position: left bottom;
+  mask-position: left bottom;
+  border-radius: 1px;
+}
+.log2-fill-on {
+  background-image: linear-gradient(to top, var(--color-sky-700), var(--color-sky-400));
+}
+/* A quiet day: one dark block, so the month still reads as a row of days. */
+.log2-fill-off {
+  background: rgb(255 255 255 / 0.12);
+}
+/* A lit day's blocks: they fill bottom to top, one block at a time. */
+.log2-lit {
+  background-image: linear-gradient(to top, var(--color-cyan-400), var(--color-sky-100));
+  transform: scaleY(0);
+  transform-origin: bottom;
+  transition: transform 0.22s steps(var(--levels), end);
+}
+/* The column behind a day, faintly lit while it is the day being looked at. */
+.log2-col {
+  position: absolute;
+  inset: -2px -1px;
+  border-radius: 3px;
+  background: rgb(125 211 252 / 0);
+  transition: background-color 0.2s;
+}
+.log2-stack {
+  transition:
+    transform 0.28s cubic-bezier(0.3, 1.5, 0.5, 1),
+    filter 0.2s,
+    opacity 0.2s;
+}
+/* While a day is looked at, the others step back, its neighbours lean in and it lights up. */
+[data-exploring] .log2-bar .log2-stack {
+  opacity: 0.42;
+}
+[data-exploring] .log2-bar[data-d='2'] .log2-stack {
+  opacity: 0.7;
+  transform: translateY(-1px);
+  filter: brightness(1.15);
+}
+[data-exploring] .log2-bar[data-d='1'] .log2-stack {
+  opacity: 0.9;
+  transform: translateY(-2px);
+  filter: brightness(1.35);
+}
+[data-exploring] .log2-bar[data-d='0'] .log2-stack {
+  opacity: 1;
+  transform: translateY(-4px);
+  filter: drop-shadow(0 0 5px rgb(34 211 238 / 0.8)) drop-shadow(0 0 1px rgb(186 230 253 / 0.9));
+}
+.log2-bar[data-d='0'] .log2-lit {
+  transform: scaleY(1);
+}
+.log2-bar[data-d='0'] .log2-col {
+  background: rgb(125 211 252 / 0.09);
+}
+.log2-bar[data-d='0'] .log2-fill-off {
+  background: var(--color-cyan-300);
+}
+.log2-bar:focus-visible .log2-col {
+  box-shadow: 0 0 0 2px var(--color-sky-400);
+}
+.log2-cursor {
+  transition: left 0.18s cubic-bezier(0.3, 1.3, 0.5, 1);
+  box-shadow: 0 0 6px var(--color-cyan-300);
+}
+/* The readout's words fade in as it switches between the month and a day. */
+@keyframes log2-fade {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes log2-rise {
+  from {
+    clip-path: inset(100% 0 0 0);
+  }
+}
+.log2-swap {
+  animation: log2-fade 0.2s ease-out both;
+}
+/* The links' underline draws in from the left and runs out to the right. */
+.log2-underline {
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform 0.3s cubic-bezier(0.65, 0, 0.35, 1);
+}
+.group\/link:hover .log2-underline,
+.group\/link:focus-visible .log2-underline {
+  transform: scaleX(1);
+  transform-origin: left;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .log2-fill {
+    animation: log2-rise 0.5s steps(8, end) both;
+  }
+}
+/* Under reduced motion a day still lights up, all at once and in place. */
+@media (prefers-reduced-motion: reduce) {
+  .log2-lit,
+  .log2-cursor,
+  .log2-underline {
+    transition: none;
+  }
+  .log2-stack {
+    transition:
+      filter 0.2s,
+      opacity 0.2s;
+  }
+  [data-exploring] .log2-bar .log2-stack {
+    transform: none !important;
+  }
+}
+
 /* The Wren mark's idle life (components/Projects/WrenMark.tsx, from Wren's own
    globals.css): an occasional tail flick and head tilt. Held still under
    reduced motion. */
@@ -564,11 +690,23 @@ svg.wren .head {
 .hero-grid-mask {
   -webkit-mask-image:
     linear-gradient(to bottom, transparent, black 120px, black 80%, transparent),
-    linear-gradient(to right, transparent, black clamp(48px, 16%, 320px), black calc(100% - clamp(48px, 16%, 320px)), transparent);
+    linear-gradient(
+      to right,
+      transparent,
+      black clamp(48px, 16%, 320px),
+      black calc(100% - clamp(48px, 16%, 320px)),
+      transparent
+    );
   -webkit-mask-composite: source-in;
   mask-image:
     linear-gradient(to bottom, transparent, black 120px, black 80%, transparent),
-    linear-gradient(to right, transparent, black clamp(48px, 16%, 320px), black calc(100% - clamp(48px, 16%, 320px)), transparent);
+    linear-gradient(
+      to right,
+      transparent,
+      black clamp(48px, 16%, 320px),
+      black calc(100% - clamp(48px, 16%, 320px)),
+      transparent
+    );
   mask-composite: intersect;
 }
 
