@@ -17,6 +17,8 @@ Last updated: 2026-11-08.
 
 1. Wren's clip is recorded with demo-kit (`~/projects/dev-tools/demo-kit/storyboards/wren.ts`): re-record it there when Wren's first screen or answers change, then encode it to 960x600 as `public/projects/clips/wren.mp4`.
 2. Keep the shared files in sync with n8builds-web after any change there (`npm run check:sync`): the dino, the marquee and its tiles, and the tile list `data/stack.tsx` (edit it in n8builds-web, then copy it here).
+   The check fetches the sibling checkout and compares against its `origin/main` (never its local `main`); it prints the commit, exits 2 if the checkout is missing, and takes a path for a worktree: `npm run check:sync -- ~/n8builds/n8builds-web`.
+   It is not in CI (it would need a second checkout, and a merge in n8builds-web would turn this repo's CI red); `components/Projects/TechStackCycle.tsx` is portfolio-only (n8builds-web removed it in #167), so it is not on the list.
 
 ### Blocked on the owner
 
@@ -114,6 +116,11 @@ The owner picked layout B (a work-first home page plus detail pages) over A (one
   Each role's own picture (`image`) fades in on the right on hover (desktop) and stays, quieter, while it is open (round 4). Tech for Pros has a site it drafted, Appturnity its own home page. A role's `image` can set `position`, `zoom`, `openZoom` and `origin` for its crop (The Coder School zooms to its logo; Donovan Golf's `donovangolf.webp` is a fresh 1280x720 shot of donovangolf.com with the text, buttons and popups hidden and the logo moved right, so the strip shows the logo over the landscape; owner 2026-11-24).
   An open role shows the client sites still live as small preview cards that link to them (`sites`). Clients whose sites are gone are described ("a clinical lab", "a streaming service") and never linked or named by domain (owner, round 5).
 - **Stack**: the home page's tech stack card (in the bento, with the dino as before) has "See my stack" to `/stack` (`components/StackPage.tsx`): the dino game as a full-width play area (30rem tall on phones), then every tool by layer with its one-line reason (`data/stackLayers.ts` sorts `data/stack.tsx`'s tiles by name; that file stays byte-identical with n8builds-web).
+  Each tool's line says how I use it, in first person, never what the tool is (owner, 2026-11-25), and names the project that uses it as a link (`link` in `data/stack.tsx`, resolved per site by `stackLinkHref`: Portfolio Rank and NetTrailers open `/projects/<slug>` here; other builds open on n8builds.dev in a new tab).
+  No line names Wren: the same tiles show on n8builds.dev, which Wren left at the owner's request (2026-11-11).
+  Every line is backed by a repo on the PC (the evidence is in the PR for branch `feat/stack-how-i-use-it`).
+  The owner's picks (2026-11-25): Cursor, OpenAI and Upstash dropped; PostgreSQL kept with no project named ("Object-relational, for when an app outgrows SQLite."); AWS, Figma and Pi left as they are; Claude Fable 5.2 added beside Claude Opus 5.5 as his orchestrator. 36 tiles: 7 agents and models, 3 local AI, 26 in the dev stack.
+  A line must fit the tile in three lines: `tests/stack.spec.ts` measures every tile at 1440 and 390.
   The resume stays the header button too.
 - **About** (`/about`, `components/AboutPage.tsx`) is only about the owner: a "Home / About me" breadcrumb (`components/ui/Breadcrumb.tsx`; /projects and the project pages keep their "Back to home" button), then one smaller portrait beside the opening (the photo, until the owner picks), then the story in three photo scenes (at work, Los Angeles, the setup) from `data/about.tsx`, with stickers drifting around them (`components/about/Decals.tsx`, `.decal` in `app/globals.css`: still under reduced motion, paused off screen, absolute so nothing shifts).
   The scene photos are placeholders until the owner sends them (OWNER-TODO item 8): set `src` in `data/about.tsx`.

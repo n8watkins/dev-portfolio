@@ -956,3 +956,23 @@ select:focus-visible {
     animation: none;
   }
 }
+/* The AI kit dino's rainbow mode (components/features/dino/DinoGame.tsx): a few
+   four-point stars twinkle around it, each in a rainbow colour, on a 1.2s loop
+   with its own delay. Transform and opacity only, and only while shown (the
+   wrapper is display: none otherwise). */
+.dino-sparkle {
+  position: absolute;
+  background: currentColor;
+  clip-path: polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%);
+  opacity: 0;
+  transform: scale(0);
+  animation: dino-sparkle 1.2s ease-in-out infinite;
+}
+@keyframes dino-sparkle {
+  0%, 100% { opacity: 0; transform: scale(0) rotate(0deg); }
+  45% { opacity: 1; transform: scale(1) rotate(45deg); }
+  70% { opacity: 0.6; transform: scale(0.7) rotate(70deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dino-sparkle { animation: none; opacity: 0; }
+}
