@@ -983,3 +983,31 @@ select:focus-visible {
 @media (prefers-reduced-motion: reduce) {
   .dino-sparkle { animation: none; opacity: 0; }
 }
+
+/* The tech stack panel's tiles (home card and /stack), tighter than n8builds-web's
+   shared StackTile (h-28 w-52): 188 x 84, names 18px, marks 24px, 6px of side padding
+   (owner, 2026-11-25). Portfolio-only and unlayered, so it beats the tile's
+   utilities without touching the shared file. The tiles are the same size with
+   and without motion; the gaps between them are not (motion: 2.5rem, set on
+   the rows, so the dino's hops stay clearly wider than it is; reduced motion:
+   the wrapped grid's 1rem). */
+[data-dino-panel] figure {
+  width: 11.75rem;
+  height: 5.25rem;
+  padding-inline: 0.375rem;
+}
+[data-dino-panel] figcaption {
+  width: 11rem;
+}
+[data-dino-panel] figure:not(:hover):not(:focus-within) figcaption > div:first-child {
+  font-size: 1.125rem;
+  line-height: 1.4;
+}
+[data-dino-panel] figure:not(:hover):not(:focus-within) figcaption > div:first-child > span:first-child {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+[data-dino-panel] figure .description {
+  font-size: 0.75rem;
+  line-height: 1rem;
+}
