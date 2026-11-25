@@ -37,7 +37,7 @@ test('/stack links each tool to the project that uses it', async ({ page }) => {
   await expect(links).toHaveCount(LINKED_TILES)
   // The portfolio's own projects open their page here.
   // (Never Wren: the tiles also show on n8builds.dev, which Wren left on 2026-11-11.)
-  await expect(page.locator('[data-stack-layer]')).not.toContainText(/\bWren\b/)
+  await expect(page.locator('main')).not.toContainText(/\bWren\b/)
   await expect(links.filter({ hasText: 'NetTrailers' })).toHaveAttribute('href', '/projects/net-trailers')
   for (const pr of await links.filter({ hasText: 'Portfolio Rank' }).all()) {
     await expect(pr).toHaveAttribute('href', '/projects/portfolio-rank')
