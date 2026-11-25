@@ -1,8 +1,7 @@
 'use client'
 
-import React, { Suspense, useRef } from 'react'
+import React, { useRef, useSyncExternalStore } from 'react'
 import Link from 'next/link'
-import { useSearchParams } from 'next/navigation'
 import { motion } from 'motion/react'
 import { FiArrowRight } from 'react-icons/fi'
 import { fadeInUpVariants, defaultAnimationConfig } from '@/lib/animations'
@@ -152,14 +151,16 @@ function ProjectsBody({ mode }: { mode: MarksMode }) {
   )
 }
 
-function ProjectsFromQuery() {
-  return <ProjectsBody mode={marksMode(useSearchParams().get('marks'))} />
-}
+// The `?marks=` switch, read without a Suspense boundary: a boundary swaps its
+// fallback tree for a new one after hydration, so the cards were mounted
+// twice (and a test scrolling to one could find it detached). The server and
+// hydration render the default; the client then re-renders only if the switch
+// says otherwise.
+const noChange = () => () => {}
+const marksParam = () => new URLSearchParams(window.location.search).get('marks')
 
 const Projects: React.FC = () => (
-  <Suspense fallback={<ProjectsBody mode="default" />}>
-    <ProjectsFromQuery />
-  </Suspense>
+  <ProjectsBody mode={marksMode(useSyncExternalStore(noChange, marksParam, () => null))} />
 )
 
 export default Projects
