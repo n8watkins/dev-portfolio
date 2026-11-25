@@ -32,7 +32,7 @@ const key = ({ x, y }: Spot) => `${x},${y}`
 const between = ([min, max]: readonly [number, number]) => min + Math.random() * (max - min)
 
 /**
- * LAB (exp/project-marks): the Projects grid's own life, as busy as the
+ * The Projects grid's own life (owner, 2026-11-24), as busy as the
  * hero's (components/sections/HeroGrid.tsx), with its numbers: deep-blue
  * cells fade in, hold, fade out and come back somewhere else, each on its own
  * random clock, never touching each other, and only a quarter of them dark or
@@ -161,6 +161,12 @@ export default function GridLife() {
     }
 
     const resting = () => document.hidden || !onScreen
+    // While resting, each cell's next step waits here instead of on a timer,
+    // so nothing runs at all until the section is back on screen.
+    const parked: (() => void)[] = []
+    const wake = () => {
+      if (!resting()) parked.splice(0).forEach((step) => step())
+    }
     let out = 0
     const maxOut = () => Math.max(1, Math.floor(countFor(free()) * MAX_OUT))
 
@@ -176,7 +182,7 @@ export default function GridLife() {
         if (counted) out--
         later(() => light(i), ms)
       }
-      if (resting()) return wait(1000)
+      if (resting()) return void parked.push(() => light(i, counted))
       const spots = free()
       if (i >= countFor(spots)) return wait(between(HOLD))
       const spot = pick(spots)
@@ -192,7 +198,7 @@ export default function GridLife() {
     const cycle = (i: number, spot: Spot) => {
       const el = cells.current[i]
       if (!el) return
-      if (resting()) return later(() => cycle(i, spot), 1000)
+      if (resting()) return void parked.push(() => cycle(i, spot))
       if (out >= maxOut()) return later(() => cycle(i, spot), 300 + Math.random() * 400)
       out++
       const fadeOut = between(FADE)
@@ -205,12 +211,15 @@ export default function GridLife() {
     }
     const io = new IntersectionObserver((entries) => {
       onScreen = entries[entries.length - 1].isIntersecting
+      wake()
     })
     io.observe(root)
+    document.addEventListener('visibilitychange', wake)
     // Warm-up, as in the hero: each cell first lights at a random moment.
     cells.current.forEach((_, i) => later(() => light(i), between([300, 5000])))
     return () => {
       io.disconnect()
+      document.removeEventListener('visibilitychange', wake)
       timers.forEach(clearTimeout)
     }
   }, [])

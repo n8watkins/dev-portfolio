@@ -1,17 +1,20 @@
 /**
- * LAB (exp/project-marks): the pixel marks drawn from the Projects section's
- * grid squares, one per project, beside its card on wide screens.
+ * The pixel marks drawn from the Projects section's grid squares, one per
+ * project, beside its card on wide screens (owner, 2026-11-24): Portfolio
+ * Rank's podium, NetTrailers' play button and Wren's bird.
  *
  * Every pose is a bitmap, one character per 52px grid cell:
  *   X  the project's colour
- *   d  the same, dimmer (the bird's legs)
+ *   d  the same, dimmer (the bird's legs, the pressed play button)
  *   B  Wren's ember beak
  *   o  a body cell carrying the bird's eye
- *   H  a brighter cell (the play button's playhead, the podium's crown)
+ *   H  a brighter cell (the play button's playhead, the podium's winner)
+ *   P  an equaliser bar's peak, near white
  *   .  open grid
  * and, drawn on their own outside a pose (PixelMark's sprites):
  *   S  a seed for the bird
  *   N  a note the bird sings, a small square inside its cell
+ *   K  the podium winner's crown, three cells wide
  * All poses of a mark share one box, so the mark never moves on the grid;
  * going from one pose to the next flips only the cells that change.
  */
@@ -59,12 +62,12 @@ export const POSES = {
 
 /**
  * The play button's equaliser (its hover easter egg): six bars of these
- * heights, in cells, standing in its 6x7 box, each topped with a bright cell.
+ * heights, in cells, standing in its 6x7 box, each topped with a peak cell.
  */
 export function eqPose(heights: readonly number[]): string[] {
   const rows: string[] = []
   for (let j = 0; j < 7; j++)
-    rows.push(heights.map((h) => (7 - j < h ? 'X' : 7 - j === h ? 'H' : '.')).join(''))
+    rows.push(heights.map((h) => (7 - j < h ? 'X' : 7 - j === h ? 'P' : '.')).join(''))
   return rows
 }
 
@@ -75,16 +78,4 @@ export const markFor: Record<Project['accent'], MarkKind> = {
   'portfolio-rank': 'rank',
   'net-trailer': 'play',
   wren: 'wren',
-}
-
-export type MarksMode = 'off' | 'still' | 'quiet' | 'default' | 'bold'
-
-/**
- * `?marks=0` is today's layout; `quiet` and `bold` set the loudness around
- * the default; `still` keeps the flips in and out but no idle actions.
- */
-export function marksMode(value: string | null): MarksMode {
-  if (value === '0' || value === 'off') return 'off'
-  if (value === 'quiet' || value === 'bold' || value === 'still') return value
-  return 'default'
 }

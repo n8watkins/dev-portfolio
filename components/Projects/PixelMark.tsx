@@ -61,8 +61,8 @@ function cellsOf(kind: MarkKind): string[] {
 }
 
 /**
- * LAB (exp/project-marks): a project's pixel mark, lit from the section's grid
- * squares in the open space beside its card (wide screens only).
+ * A project's pixel mark, lit from the Projects section's grid squares in the
+ * open space beside its card (wide screens only; the bitmaps are in marks.ts).
  *
  * It is snapped onto the grid: centred in the space beside the card and on the
  * card's middle, then moved to the nearest cell. Its cells flip in like a
@@ -71,21 +71,24 @@ function cellsOf(kind: MarkKind): string[] {
  * blinks, pecks, flicks its tail or finds a seed; the play button pauses or
  * runs a playhead; the podium reshuffles), each made of the same flips.
  *
- * Easter eggs, all in the same flips and never following the pointer around:
- * hovering a mark plays its own surprise (the podium races and the winner is
- * crowned; the play button presses in and plays an equaliser; the bird turns
- * to the pointer, hops and sings). Clicking the open grid around the bird
- * drops a seed that falls to the ground; the bird walks over and eats it, and
- * every few seeds it puffs up and sings. The marks stay decorative: hidden
- * from screen readers, nothing focusable. Reduced motion shows them still and
- * complete with no eggs; `still` keeps the flips in and out only.
+ * Easter eggs (owner, 2026-11-25), in the same flips and never following the
+ * pointer around the page: hovering a mark (or tapping it) plays its own
+ * surprise: the podium races and the winner is crowned; the play button
+ * presses in and plays an equaliser; the bird turns to the pointer, hops and
+ * sings. Clicking or tapping the open grid around the bird drops a seed that
+ * falls to the ground; the bird walks over and eats it (at most four wait at
+ * once), and every third seed it puffs up and sings.
+ *
+ * The marks stay decorative: hidden from screen readers, nothing focusable,
+ * and their pointer areas never cover a card. Reduced motion shows them still
+ * and complete, with no idle actions and no easter eggs. Nothing runs while a
+ * mark is off screen.
  */
 export default function PixelMark({
   kind,
   rgb,
   side,
   mirror = false,
-  still = false,
   cardRef,
 }: {
   kind: MarkKind
@@ -93,8 +96,6 @@ export default function PixelMark({
   side: 'left' | 'right'
   /** Draw it facing the other way (the bird looks toward its card). */
   mirror?: boolean
-  /** No idle actions and no easter eggs. */
-  still?: boolean
   cardRef: React.RefObject<HTMLElement | null>
 }) {
   const ref = useRef<HTMLDivElement>(null)
@@ -190,19 +191,25 @@ export default function PixelMark({
     const sleep = (ms: number) => new Promise<void>((done) => later(done, ms))
     const at = (b: Bitmap, s: Slot) => b.rows[s.j - b.y]?.[s.i - b.x] ?? '.'
 
-    const flip = (s: Slot, ch: string, delay: number, ms: number) => {
+    /**
+     * Flips one cell to `ch`. A lit cell changing colour turns over and back
+     * like a flap, unless `swap` (the equaliser's quick frames), when it just
+     * changes colour.
+     */
+    const flip = (s: Slot, ch: string, delay: number, ms: number, swap = false) => {
       const c = s.el
       if (!c || s.ch === ch) return
       c.style.setProperty('--d', `${Math.round(delay)}ms`)
       c.style.setProperty('--f', `${ms}ms`)
       if (ch === '.') c.removeAttribute('data-lit')
-      else if (s.ch === '.') {
+      else if (s.ch === '.' || swap) {
         c.dataset.k = ch
         c.setAttribute('data-lit', '')
       } else {
-        // Lit to lit in another colour: over and back, like a flap turning.
         c.removeAttribute('data-lit')
         later(() => {
+          // Unless a later flip has already sent it somewhere else.
+          if (s.ch !== ch) return
           c.style.setProperty('--d', '0ms')
           c.dataset.k = ch
           c.setAttribute('data-lit', '')
@@ -215,14 +222,20 @@ export default function PixelMark({
      * going dark so a moving part (the bird's head) is never missing for a
      * moment. Returns when it is done.
      */
-    const pose = (target: Bitmap, delay: (s: Slot) => number, ms: number, lag = 0) => {
+    const pose = (
+      target: Bitmap,
+      delay: (s: Slot) => number,
+      ms: number,
+      lag = 0,
+      swap = false
+    ) => {
       let end = 0
       for (const s of cells) {
         const ch = at(target, s)
         if (ch === s.ch) continue
         const d = delay(s) + (ch === '.' ? lag : 0)
-        const twice = ch !== '.' && s.ch !== '.'
-        flip(s, ch, d, ms)
+        const twice = ch !== '.' && s.ch !== '.' && !swap
+        flip(s, ch, d, ms, swap)
         end = Math.max(end, d + ms * (twice ? 2 : 1))
       }
       return end
@@ -410,7 +423,7 @@ export default function PixelMark({
 
     /** Drops a seed at this point of the screen; it falls to the ground. */
     const drop = (x: number, y: number) => {
-      if (!ready || still || seeds.length >= MAX_SEEDS) return
+      if (!ready || seeds.length >= MAX_SEEDS) return
       const box = el.getBoundingClientRect()
       const i = Math.floor((x - box.left) / CELL)
       const j = clamp(Math.floor((y - box.top) / CELL), -SKY, ground)
@@ -461,17 +474,14 @@ export default function PixelMark({
         bar.forEach((s) => flip(s, 'X', (RANK_H - 1 - s.j) * 25, 80))
         await sleep(330)
       }
-      // The crown, floating a row above the bar: two points over a band.
-      const c = winner * 2
-      const crown = [
-        [c - 1, -2],
-        [c, -2],
-        [c + 1, -2],
-        [c - 1, -3],
-        [c + 1, -3],
-      ].map(([i, j], n) => sprite('H', i, j, 160, n * 60))
-      await sleep(1700)
-      crown.forEach((s, n) => unsprite(s, 160, (crown.length - 1 - n) * 50))
+      // The crown (three cells wide, a cell and a quarter tall) flips in
+      // above the winner and drops, half a cell at a time, to float half a
+      // cell over its bar.
+      const crown = sprite('K', winner * 2 - 1, -2.75, 180)
+      later(() => move(crown, winner * 2 - 1, -2.25), 260)
+      later(() => move(crown, winner * 2 - 1, -1.75), 380)
+      await sleep(2000)
+      unsprite(crown, 180)
       await sleep(400)
     }
     /** The play button presses in, then plays: an equaliser for a moment. */
@@ -481,7 +491,7 @@ export default function PixelMark({
       let hs = [7, 5, 5, 3, 3, 1]
       for (let f = 0; f < 12; f++) {
         hs = hs.map((v) => clamp(v + Math.round((Math.random() - 0.45) * 6), 1, 7))
-        pose(bm(eqPose(hs)), () => 0, 70)
+        pose(bm(eqPose(hs)), () => 0, 70, 0, true)
         await sleep(150)
       }
       ms = pose(bm(eqPose([0, 0, 0, 0, 0, 0])), (s) => s.j * 30, 110)
@@ -624,7 +634,6 @@ export default function PixelMark({
     let idle: ReturnType<typeof setTimeout> | undefined
     const schedule = (ms: number) => {
       clearTimeout(idle)
-      if (still) return
       idle = setTimeout(tick, ms)
     }
     const tick = () => {
@@ -649,12 +658,15 @@ export default function PixelMark({
       const ms = pose(kind === 'rank' ? bm(rankPose(rank)) : shape(base), wave(IN_WAVE), IN_FLIP)
       later(() => {
         ready = true
+        // Flipped in and ready to play (tests wait for it).
+        el.setAttribute('data-in', '')
         schedule(between([1500, 4000]))
       }, ms)
     }
     const leave = () => {
       shown = false
       ready = false
+      el.removeAttribute('data-in')
       epoch++
       busy = false
       release(0)
@@ -669,19 +681,17 @@ export default function PixelMark({
       for (const s of cells) flip(s, '.', Math.random() * OUT_WAVE, OUT_FLIP)
     }
 
-    on.current = still
-      ? null
-      : {
-          hover: (x) => {
-            if (!ready) return
-            hovered = x
-            next()
-          },
-          unhover: () => {
-            hovered = null
-          },
-          drop,
-        }
+    on.current = {
+      hover: (x) => {
+        if (!ready) return
+        hovered = x
+        next()
+      },
+      unhover: () => {
+        hovered = null
+      },
+      drop,
+    }
 
     // In once most of it is on screen, out once nearly all of it has gone:
     // the gap between the two keeps it from flickering at the edge.
@@ -704,7 +714,7 @@ export default function PixelMark({
       on.current = null
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [kind, still])
+  }, [kind])
 
   return (
     <div
@@ -732,31 +742,34 @@ export default function PixelMark({
           />
         )
       })}
-      {!still && kind === 'wren' && (
-        // The open grid around the bird: a click drops a seed.
+      {kind === 'wren' && (
+        // The open grid around the bird: a click or a tap drops a seed.
         <div
           ref={yardRef}
           className={`${styles.zone} ${styles.yard}`}
           data-grid-avoid=""
+          data-yard=""
           onClick={(e) => on.current?.drop(e.clientX, e.clientY)}
         />
       )}
-      {!still && kind === 'rank' && (
+      {kind === 'rank' && (
         // Room for the crown: the grid's own lit cells keep off it.
         <span
           className={styles.zone}
           data-grid-avoid=""
-          style={{ left: -CELL, top: -3 * CELL, width: (w + 2) * CELL, height: 3 * CELL, pointerEvents: 'none' }}
+          style={{ left: -CELL, top: -3 * CELL, width: (w + 2) * CELL, height: 3 * CELL }}
         />
       )}
-      {!still && (
-        // The mark's own box: hovering it plays its easter egg.
-        <div
-          className={`${styles.zone} ${styles.core}`}
-          onPointerEnter={(e) => on.current?.hover(e.clientX)}
-          onPointerLeave={() => on.current?.unhover()}
-        />
-      )}
+      {/* The mark's own box: hovering it (or tapping it) plays its easter
+          egg. A tap's pointer leaves at once, so only a mouse or pen leaving
+          drops a hover that is still waiting its turn. */}
+      <div
+        className={`${styles.zone} ${styles.core}`}
+        data-core=""
+        onPointerEnter={(e) => on.current?.hover(e.clientX)}
+        onPointerLeave={(e) => e.pointerType !== 'touch' && on.current?.unhover()}
+      />
+
     </div>
   )
 }

@@ -1,4 +1,4 @@
-/* LAB (exp/project-marks): the Projects section's grid and its pixel marks. */
+/* The Projects section's grid and its pixel marks (GridLife, PixelMark). */
 
 /* The hero's grid (components/sections/HeroGrid.tsx): 52px cells, a 1px line
    at the top and left of each, a line down the middle of the screen. Its
@@ -51,25 +51,14 @@
   opacity: 0;
 }
 
-/* Loudness, set on the section: the default sits between the first round's
-   medium and bold; ?marks=quiet and ?marks=bold around it. */
+/* How loud the marks are, set on the section (owner, 2026-11-24: louder than
+   the quiet trial, not as loud as the bold one): the fill's lightness and
+   alpha, each square's edge, and the bright cells. */
 .root {
   --fill-l: 0.37;
   --fill-a: 0.88;
   --edge: 0.7;
   --hi: 0.85;
-}
-.root[data-level='quiet'] {
-  --fill-l: 0.3;
-  --fill-a: 0.78;
-  --edge: 0.5;
-  --hi: 0.65;
-}
-.root[data-level='bold'] {
-  --fill-l: 0.46;
-  --fill-a: 0.95;
-  --edge: 0.9;
-  --hi: 1;
 }
 /* Per mark: how much of the accent's chroma the fill keeps (--chroma) and a
    lift on its lightness (--lift). NetTrailers' red keeps all its chroma and
@@ -151,6 +140,54 @@
 /* The playhead is the accent at full light (NetTrailers' own #e50914). */
 .cell[data-k='H'] {
   background: oklch(from rgb(var(--a)) l c h / var(--hi));
+}
+/* An equaliser bar's peak: near white with a touch of the accent, so the
+   bouncing tops stand clear of the red bars. */
+.cell[data-k='P'] {
+  background: oklch(from rgb(var(--a)) 0.86 calc(c * 0.4) h / var(--hi));
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / min(1, calc(var(--hi) * 1.1)));
+}
+/* The podium winner's crown: three cells wide, drawn in quarter-cell pixels
+   (13px), 12 by 5 of them: three stepped points over a band set with three
+   jewels, in bright gold.
+     X....XX....X
+     XX..XXXX..XX
+     XXXXXXXXXXXX
+     XX#XX##XX#XX   (# a jewel)
+     XXXXXXXXXXXX */
+.cell[data-k='K'] {
+  width: 156px;
+  height: 65px;
+  --gold: oklch(from rgb(var(--a)) 0.9 c h);
+  --jewel: oklch(from rgb(var(--a)) 0.45 c h);
+  background:
+    linear-gradient(var(--jewel), var(--jewel)) 26px 39px / 13px 13px no-repeat,
+    linear-gradient(var(--jewel), var(--jewel)) 65px 39px / 26px 13px no-repeat,
+    linear-gradient(var(--jewel), var(--jewel)) 117px 39px / 13px 13px no-repeat,
+    var(--gold);
+  box-shadow: none;
+  clip-path: polygon(
+    0 0,
+    8.333% 0,
+    8.333% 20%,
+    16.667% 20%,
+    16.667% 40%,
+    33.333% 40%,
+    33.333% 20%,
+    41.667% 20%,
+    41.667% 0,
+    58.333% 0,
+    58.333% 20%,
+    66.667% 20%,
+    66.667% 40%,
+    83.333% 40%,
+    83.333% 20%,
+    91.667% 20%,
+    91.667% 0,
+    100% 0,
+    100% 100%,
+    0 100%
+  );
 }
 /* A seed and a note the bird sings: only a small square in their cell, so
    they read apart from the bird. The seed is warm grain, low in its cell like
