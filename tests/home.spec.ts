@@ -204,26 +204,27 @@ test('the build log days can be walked with the arrow keys, Home and End, and le
 test.describe('on a touch screen', () => {
   test.use({ hasTouch: true })
 
+  // Real time, not the fake clock: under the fake clock WebKit with touch sometimes never got as far
+  // as loading the months (2026-11-25), and holding is best shown by simply waiting past the 5 s.
   test('a tap picks a build log day and holds the month; a tap elsewhere lets go', async ({ page }) => {
-    test.setTimeout(150_000)
-    await page.clock.install()
-    // See "moves on through the months by itself" below: Sentry must not load in the middle.
-    await page.addInitScript(() => {
-      window.requestIdleCallback = () => 0
-    })
     await page.goto('/')
     const card = page.locator('[data-build-log]')
     await card.evaluate((el) => el.scrollIntoView({ block: 'center', behavior: 'instant' }))
     await expect(card).toHaveAttribute('data-build-log', 'ready')
     await expect(card).toHaveAttribute('data-cycling', '')
-    const day = card.getByRole('button', { name: /^Thursday, November 5:/ })
+    // The month may already have moved on by itself, so pick the fifth day of whichever is showing.
+    const day = card.locator('[data-chart] button').nth(4)
     await day.tap()
     await expect(day).toHaveAttribute('aria-pressed', 'true')
-    await expect(card.locator('[data-readout]')).toContainText(/changes on\s*Thu, Nov 5/)
+    const month = await card.locator('[data-month]').textContent()
+    const [, weekday, monthName] = (await day.getAttribute('aria-label'))!.match(/^(\w{3})\w*, (\w{3})\w* 5:/)!
+    await expect(card.locator('[data-readout]')).toContainText(
+      new RegExp(`changes? on\\s*${weekday}, ${monthName} 5`)
+    )
     // Picked, the month holds well past its 5 s.
     await expect(card).not.toHaveAttribute('data-cycling', '')
-    await page.clock.runFor(8_000)
-    await expect(card.locator('[data-month]')).toHaveText('November 2026')
+    await page.waitForTimeout(6_500)
+    await expect(card.locator('[data-month]')).toHaveText(month!)
     await expect(day).toHaveAttribute('aria-pressed', 'true')
     // A tap elsewhere (the page's side margin, level with the card) lets go, and the months move on again.
     const box = (await card.boundingBox())!
