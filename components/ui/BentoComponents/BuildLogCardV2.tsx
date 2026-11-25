@@ -370,8 +370,12 @@ export default function BuildLogCardV2() {
               >
                 {day ? (
                   <>
-                    {plural(number, 'change', 'changes')} on{' '}
-                    <span ref={dateRef} className="inline-block font-semibold text-slate-100">
+                    {plural(number, 'change', 'changes')} on
+                    {/* A margin, not a space: the date's nudge can't close it up. */}
+                    <span
+                      ref={dateRef}
+                      className="ml-1.5 inline-block font-semibold text-slate-100"
+                    >
                       {weekdayDay(day.day)}
                     </span>
                   </>
@@ -552,9 +556,7 @@ export default function BuildLogCardV2() {
           <h3 className="text-2xl font-bold tracking-tight text-slate-50">
             What I&apos;m shipping
           </h3>
-          <p className="mt-1 text-base text-slate-300">
-            Every change, day by day, on n8builds.dev.
-          </p>
+          <p className="mt-1 text-base text-slate-300">Every change I ship, day by day.</p>
         </div>
       )}
 
