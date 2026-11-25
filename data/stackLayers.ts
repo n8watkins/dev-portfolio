@@ -1,7 +1,7 @@
 import { ai_agents, ai_tools, dev_stack, type AIStackItem } from './stack'
 
 /**
- * The stack grouped by layer, for /stack. The tiles and their one-line reasons
+ * The stack grouped by layer, for /stack. The tiles and their one-line "how I use it"
  * come from data/stack.tsx (shared byte for byte with n8builds-web, so it is
  * not edited here); this file only sorts them into layers by name.
  */
@@ -30,7 +30,7 @@ export const stackLayers: StackLayer[] = [
   {
     id: 'local-ai',
     title: 'Local AI',
-    blurb: 'Models that run on your own machine.',
+    blurb: 'Models that run on my own PC, inside the things I build.',
     items: ai_tools,
   },
   {

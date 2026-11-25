@@ -3,7 +3,19 @@ import React, { type CSSProperties } from 'react'
 import Marquee from '@/components/magicui/marquee'
 import StackTile from '@/components/ui/StackTile'
 import DinoEasterEgg from '@/components/features/dino/DinoEasterEgg'
-import { ai_agents, ai_tools, dev_stack, rowDuration } from '@/data/stack'
+import { ai_agents, ai_tools, dev_stack, rowDuration, stackLinkHref, type AIStackItem } from '@/data/stack'
+
+// A tile, its project link resolved for this site: the portfolio's own
+// projects open their page here, the other builds theirs on n8builds.dev.
+const tile = (tech: AIStackItem) => (
+  <StackTile
+    key={tech.name}
+    name={tech.name}
+    icon={tech.icon}
+    description={tech.description}
+    link={tech.link && { text: tech.link.text, ...stackLinkHref(tech.link, 'portfolio') }}
+  />
+)
 
 /**
  * The "My tech stack" bento card's marquee, with the dino easter egg.
@@ -45,9 +57,7 @@ export function TechStack() {
         style={{ '--duration': rowDuration(ai_kit.length) } as CSSProperties}
         className="motion-safe:[--gap:2.5rem]"
       >
-        {ai_kit.map((tech) => (
-          <StackTile key={tech.name} name={tech.name} icon={tech.icon} description={tech.description} />
-        ))}
+        {ai_kit.map(tile)}
       </Marquee>
       <Marquee
         label="Dev stack"
@@ -56,9 +66,7 @@ export function TechStack() {
         style={{ '--duration': rowDuration(dev_stack.length) } as CSSProperties}
         className="motion-safe:[--gap:2.5rem]"
       >
-        {dev_stack.map((tech) => (
-          <StackTile key={tech.name} name={tech.name} icon={tech.icon} description={tech.description} />
-        ))}
+        {dev_stack.map(tile)}
       </Marquee>
       <DinoEasterEgg />
       <div className="pointer-events-none absolute left-0 h-full w-1/4 bg-linear-to-r from-[#0d304c] to-transparent motion-reduce:hidden" />
