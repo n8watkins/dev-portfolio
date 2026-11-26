@@ -1,13 +1,13 @@
 import { test, expect } from './fixtures/test'
 
 /**
- * Going home from /about loads the home page, the heaviest on the site (the
- * hero grid, the map, the stack card): with other test workers busy it can
- * take more than the default 5 s to land (seen in repeated full runs of this
- * file, never in 30 runs of the navigation tests alone), so a move home gets
- * more time.
+ * A move between the home page and /about loads a whole page (the home page
+ * is the heaviest on the site: the hero grid, the map, the stack card). With
+ * other test workers busy it can take more than the default 5 s to land (seen
+ * in repeated full runs of this file, never in 30 runs of the navigation
+ * tests alone), so each move gets more time.
  */
-const TO_HOME = { timeout: 15_000 }
+const BETWEEN_PAGES = { timeout: 15_000 }
 
 /**
  * The About page, only about me (owner, 2026-11-08): one portrait, then the
@@ -23,7 +23,7 @@ test('the home page opens with About and the bento, and links to the full page',
   await expect(teaser.getByRole('heading', { name: 'About me' })).toBeAttached()
   await expect(teaser).toContainText(/ready to relocate/i)
   await teaser.getByRole('link', { name: 'More about me' }).click()
-  await expect(page).toHaveURL(/\/about$/)
+  await expect(page).toHaveURL(/\/about$/, BETWEEN_PAGES)
   await expect(page.getByRole('heading', { level: 1, name: 'About me' })).toBeVisible()
 })
 
@@ -56,7 +56,7 @@ test('/about has a Home / About me breadcrumb above the intro, and Home leads to
     (await crumbs.boundingBox())!.y < (await page.getByText('Get to know me').boundingBox())!.y
   expect(above).toBe(true)
   await crumbs.getByRole('link', { name: 'Home' }).click()
-  await expect(page).toHaveURL(/\/$/, TO_HOME)
+  await expect(page).toHaveURL(/\/$/, BETWEEN_PAGES)
 })
 
 test('the About page tells the story in scenes with one portrait, and nothing else', async ({
@@ -238,7 +238,8 @@ test('under reduced motion no square moves and the scenes are simply there', asy
   // Once drawn, they rest softly lit.
   await expect.poll(async () => (await resting()).split(',').some((o) => Number(o) > 0)).toBe(true)
   const before = await resting()
-  await page.mouse.wheel(0, 1200)
+  // (Not the mouse wheel: mobile WebKit has none.)
+  await page.evaluate(() => window.scrollBy({ top: 1200, behavior: 'instant' }))
   await page.waitForTimeout(2000)
   // The resting squares hold still however you scroll, and nothing wanders.
   expect(await resting()).toBe(before)
@@ -267,7 +268,7 @@ test("a subpage's nav jumps to the home page's sections", async ({ page, isMobil
     .getByRole('navigation', { name: 'Main navigation' })
     .getByRole('link', { name: 'Experience' })
     .click()
-  await expect(page).toHaveURL(/\/$/, TO_HOME)
+  await expect(page).toHaveURL(/\/$/, BETWEEN_PAGES)
   await expect(page.locator('#experience')).toBeInViewport()
 })
 
@@ -293,7 +294,7 @@ test('/about ends with ways on: where you were, the experience, and the top of t
   const more = page.locator('#about').getByRole('link', { name: 'More about me' })
   await more.scrollIntoViewIfNeeded()
   await more.click()
-  await expect(page).toHaveURL(/\/about$/)
+  await expect(page).toHaveURL(/\/about$/, BETWEEN_PAGES)
   await expect
     .poll(() => page.evaluate(() => sessionStorage.getItem('portfolio-left-home-at')))
     .not.toBeNull()
@@ -305,7 +306,7 @@ test('/about ends with ways on: where you were, the experience, and the top of t
     .getByRole('link', { name: 'Continue where you were' })
   await back.scrollIntoViewIfNeeded()
   await back.click()
-  await expect(page).toHaveURL(/\/$/, TO_HOME)
+  await expect(page).toHaveURL(/\/$/, BETWEEN_PAGES)
   const offsetNow = () =>
     page.evaluate(
       (section) =>
@@ -321,6 +322,6 @@ test('/about ends with ways on: where you were, the experience, and the top of t
     .getByRole('link', { name: 'See my experience' })
   await exp.scrollIntoViewIfNeeded()
   await exp.click()
-  await expect(page).toHaveURL(/\/$/, TO_HOME)
+  await expect(page).toHaveURL(/\/$/, BETWEEN_PAGES)
   await expect(page.locator('#experience')).toBeInViewport()
 })
