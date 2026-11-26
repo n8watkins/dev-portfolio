@@ -1,6 +1,6 @@
 import { getCloudflareContext } from '@opennextjs/cloudflare'
 import { visitorFromRequest } from '@/lib/visitor'
-import { asLimiter, checkLimit, LIMIT_HEADER, type Limiter } from '@/lib/whereLimit'
+import { asCounters, checkLimit, LIMIT_HEADER, type CounterNamespace } from '@/lib/whereLimit'
 
 /**
  * Where the visitor roughly is, for the home map's line to them
@@ -12,9 +12,10 @@ import { asLimiter, checkLimit, LIMIT_HEADER, type Limiter } from '@/lib/whereLi
  * data. Nothing is stored or logged, no cookie is set, and it is never cached
  * anywhere, so one visitor's answer can't reach another.
  *
- * Cloudflare's rate limiter allows 30 answers a minute per connection; past
- * that it answers 429 with no visitor. `X-RateLimit-State` says whether the
- * limit was checked: ok, limited, absent (no binding) or error.
+ * At most 30 answers a minute per connection, counted in a Durable Object
+ * (lib/whereLimit.ts); past that it answers 429 with no visitor.
+ * `X-RateLimit-State` says whether the limit was checked: ok, limited, absent
+ * (no counters) or error (they failed; the route answers anyway).
  */
 export const dynamic = 'force-dynamic'
 
@@ -23,10 +24,10 @@ const HEADERS = {
   'X-Robots-Tag': 'noindex',
 }
 
-function limiter(): Limiter | undefined {
+function counters(): CounterNamespace | undefined {
   try {
-    return asLimiter(
-      (getCloudflareContext().env as { WHERE_RATE_LIMIT?: unknown }).WHERE_RATE_LIMIT
+    return asCounters(
+      (getCloudflareContext().env as { RATE_LIMIT_COUNTERS?: unknown }).RATE_LIMIT_COUNTERS
     )
   } catch {
     return undefined // Not on Workers (next dev, next start): nothing to protect.
@@ -34,7 +35,8 @@ function limiter(): Limiter | undefined {
 }
 
 export async function GET(request: Request) {
-  const state = await checkLimit(limiter(), request.headers.get('cf-connecting-ip'))
+  // CF-Connecting-IP is set by Cloudflare's edge and can't be spoofed there.
+  const state = await checkLimit(counters(), request.headers.get('cf-connecting-ip'))
   // Says whether the limit was checked (lib/whereLimit.ts); nothing about the visitor.
   const headers = { ...HEADERS, [LIMIT_HEADER]: state }
   if (state === 'limited') {

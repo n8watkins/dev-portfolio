@@ -13,6 +13,7 @@ The hostname is a Workers custom domain (`routes` in `wrangler.jsonc`), so Cloud
   Pages and API routes get the full set (CSP included) from `lib/security/headers.mjs`.
 - `next/image` resizes through the Cloudflare Images binding (`IMAGES`).
 - `/api/status` revalidates every minute (ISR), kept in the R2 bucket `dev-portfolio-opennext-cache` with a regional Cache API layer and a Durable Object queue (`DOQueueHandler`) for background revalidation (`open-next.config.ts`).
+- `/api/where`'s rate limit is a sliding window in a second Durable Object class, `RateLimitCounter` (`RATE_LIMIT_COUNTERS`, migration `v2`, exported from `worker/index.js`; see `lib/whereLimit.ts`).
 - The share card (`app/opengraph-image.tsx`) reads its fonts and photo from `public/` through the ASSETS binding (`lib/publicFile.ts`), so it renders on Workers too.
 - Cloudflare Web Analytics replaces Vercel Speed Insights (`components/WebAnalytics.tsx`), once `NEXT_PUBLIC_CF_WEB_ANALYTICS_TOKEN` is set at build time.
 
