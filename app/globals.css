@@ -190,7 +190,8 @@
    where --duration doesn't exist, which makes the animation value invalid (as
    n8builds-web's globals.css explains). */
 @theme inline {
-  --animate-scroll: scroll var(--animation-duration, 40s) var(--animation-direction, forwards) linear infinite;
+  --animate-scroll: scroll var(--animation-duration, 40s) var(--animation-direction, forwards)
+    linear infinite;
   --animate-marquee: marquee var(--duration) linear infinite;
   --animate-marquee-vertical: marquee-vertical var(--duration) linear infinite;
   --animate-border-beam: border-beam calc(var(--duration) * 1s) infinite linear;
@@ -480,14 +481,8 @@
   }
 }
 
-/* The build log card's day bars rise in, one after another, when a month shows
-   (components/ui/BentoComponents/BuildLogCard.tsx). Not under reduced motion. */
-@keyframes log-bar-rise {
-  from {
-    transform: scaleY(0);
-  }
-}
-/* The month's name and number fade up as the month changes. */
+/* The build log card (components/ui/BentoComponents/BuildLogCard.tsx).
+   The month's name and number fade up as the month changes. */
 @keyframes log-month-in {
   from {
     opacity: 0;
@@ -495,11 +490,149 @@
   }
 }
 @media (prefers-reduced-motion: no-preference) {
-  .log-bar {
-    animation: log-bar-rise 0.5s cubic-bezier(0.25, 0.1, 0.25, 1) both;
-  }
   .log-month-in {
     animation: log-month-in 0.4s cubic-bezier(0.25, 0.1, 0.25, 1) both;
+  }
+}
+/* A day is a stack of square blocks: the mask cuts the bar into 4px blocks
+   with a 1px gap, counted from the bottom. Its blocks rise in a step at a
+   time when a month shows. */
+.log-fill {
+  -webkit-mask-image: linear-gradient(to top, #000 0 4px, transparent 4px 5px);
+  mask-image: linear-gradient(to top, #000 0 4px, transparent 4px 5px);
+  -webkit-mask-size: 100% 5px;
+  mask-size: 100% 5px;
+  -webkit-mask-repeat: repeat-y;
+  mask-repeat: repeat-y;
+  -webkit-mask-position: left bottom;
+  mask-position: left bottom;
+  border-radius: 1px;
+}
+.log-fill-on {
+  background-image: linear-gradient(to top, var(--color-sky-700), var(--color-sky-400));
+}
+/* A quiet day: one dark block, so the month still reads as a row of days. */
+.log-fill-off {
+  background: rgb(255 255 255 / 0.12);
+}
+/* A lit day's blocks: they fill bottom to top, one block at a time. */
+.log-lit {
+  background-image: linear-gradient(to top, var(--color-cyan-400), var(--color-sky-100));
+  transform: scaleY(0);
+  transform-origin: bottom;
+  transition: transform 0.22s steps(var(--levels), end);
+}
+/* The column behind a day: it carries the keyboard focus ring (and, with
+   ?log=3, a faint wash on the day being looked at). */
+.log-col {
+  position: absolute;
+  inset: -2px -1px;
+  border-radius: 3px;
+  transition: background-color 0.2s;
+}
+.log-stack {
+  transition:
+    transform 0.28s cubic-bezier(0.3, 1.5, 0.5, 1),
+    filter 0.2s,
+    opacity 0.2s;
+}
+/* While a day is looked at, it lifts and lights up, its neighbours lean in and
+   the rest step back a little (owner, 2026-11-25: the day itself stands out,
+   not the whole chart). */
+[data-exploring] .log-day .log-stack {
+  opacity: 0.75;
+}
+[data-exploring] .log-day[data-d='2'] .log-stack {
+  opacity: 0.9;
+  transform: translateY(-1px);
+  filter: brightness(1.12);
+}
+[data-exploring] .log-day[data-d='1'] .log-stack {
+  opacity: 1;
+  transform: translateY(-2px);
+  filter: brightness(1.3);
+}
+[data-exploring] .log-day[data-d='0'] .log-stack {
+  opacity: 1;
+  transform: translateY(-4px);
+  filter: drop-shadow(0 0 5px rgb(34 211 238 / 0.8)) drop-shadow(0 0 1px rgb(186 230 253 / 0.9));
+}
+.log-day[data-d='0'] .log-lit {
+  transform: scaleY(1);
+}
+.log-day[data-d='0'] .log-fill-off {
+  background: var(--color-cyan-300);
+}
+.log-day:focus-visible .log-col {
+  box-shadow: 0 0 0 2px var(--color-sky-400);
+}
+/* TEMPORARY (remove once the owner has compared, 2026-11-25): ?log=3 shows the
+   first preview's stronger highlight, a lit column and the other days dimmed
+   further. BuildLogCard.tsx sets data-highlight="strong". */
+[data-highlight='strong'] .log-day[data-d='0'] .log-col {
+  background: rgb(125 211 252 / 0.09);
+}
+[data-highlight='strong'] [data-exploring] .log-day .log-stack {
+  opacity: 0.42;
+}
+[data-highlight='strong'] [data-exploring] .log-day[data-d='2'] .log-stack {
+  opacity: 0.7;
+}
+[data-highlight='strong'] [data-exploring] .log-day[data-d='1'] .log-stack {
+  opacity: 0.9;
+}
+[data-highlight='strong'] [data-exploring] .log-day[data-d='0'] .log-stack {
+  opacity: 1;
+}
+/* The pixel under the chart that marks the day being looked at. */
+.log-cursor {
+  transition: left 0.18s cubic-bezier(0.3, 1.3, 0.5, 1);
+  box-shadow: 0 0 6px var(--color-cyan-300);
+}
+/* The readout's words fade in as it switches between the month and a day. */
+@keyframes log-fade {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes log-rise {
+  from {
+    clip-path: inset(100% 0 0 0);
+  }
+}
+.log-swap {
+  animation: log-fade 0.2s ease-out both;
+}
+/* The links' underline draws in from the left and runs out to the right. */
+.log-underline {
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform 0.3s cubic-bezier(0.65, 0, 0.35, 1);
+}
+.group\/link:hover .log-underline,
+.group\/link:focus-visible .log-underline {
+  transform: scaleX(1);
+  transform-origin: left;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .log-fill {
+    animation: log-rise 0.5s steps(8, end) both;
+  }
+}
+/* Under reduced motion a day still lights up, all at once and in place. */
+@media (prefers-reduced-motion: reduce) {
+  .log-lit,
+  .log-cursor,
+  .log-underline {
+    transition: none;
+  }
+  .log-stack {
+    transition:
+      filter 0.2s,
+      opacity 0.2s;
+  }
+  [data-exploring] .log-day .log-stack {
+    transform: none !important;
   }
 }
 
@@ -564,11 +697,23 @@ svg.wren .head {
 .hero-grid-mask {
   -webkit-mask-image:
     linear-gradient(to bottom, transparent, black 120px, black 80%, transparent),
-    linear-gradient(to right, transparent, black clamp(48px, 16%, 320px), black calc(100% - clamp(48px, 16%, 320px)), transparent);
+    linear-gradient(
+      to right,
+      transparent,
+      black clamp(48px, 16%, 320px),
+      black calc(100% - clamp(48px, 16%, 320px)),
+      transparent
+    );
   -webkit-mask-composite: source-in;
   mask-image:
     linear-gradient(to bottom, transparent, black 120px, black 80%, transparent),
-    linear-gradient(to right, transparent, black clamp(48px, 16%, 320px), black calc(100% - clamp(48px, 16%, 320px)), transparent);
+    linear-gradient(
+      to right,
+      transparent,
+      black clamp(48px, 16%, 320px),
+      black calc(100% - clamp(48px, 16%, 320px)),
+      transparent
+    );
   mask-composite: intersect;
 }
 
@@ -837,4 +982,32 @@ select:focus-visible {
 }
 @media (prefers-reduced-motion: reduce) {
   .dino-sparkle { animation: none; opacity: 0; }
+}
+
+/* The tech stack panel's tiles (home card and /stack), tighter than n8builds-web's
+   shared StackTile (h-28 w-52): 188 x 84, names 18px, marks 24px, 6px of side padding
+   (owner, 2026-11-25). Portfolio-only and unlayered, so it beats the tile's
+   utilities without touching the shared file. The tiles are the same size with
+   and without motion; the gaps between them are not (motion: 2.5rem, set on
+   the rows, so the dino's hops stay clearly wider than it is; reduced motion:
+   the wrapped grid's 1rem). */
+[data-dino-panel] figure {
+  width: 11.75rem;
+  height: 5.25rem;
+  padding-inline: 0.375rem;
+}
+[data-dino-panel] figcaption {
+  width: 11rem;
+}
+[data-dino-panel] figure:not(:hover):not(:focus-within) figcaption > div:first-child {
+  font-size: 1.125rem;
+  line-height: 1.4;
+}
+[data-dino-panel] figure:not(:hover):not(:focus-within) figcaption > div:first-child > span:first-child {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+[data-dino-panel] figure .description {
+  font-size: 0.75rem;
+  line-height: 1rem;
 }
