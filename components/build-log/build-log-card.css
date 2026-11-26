@@ -1,0 +1,176 @@
+/* The build log card (components/build-log/BuildLogCard.tsx), imported by
+   each site's app/globals.css. Shared byte for byte by n8builds.dev and the
+   portfolio (`npm run check:sync` in the portfolio). Every class starts with
+   `logcard-`, so nothing here meets either site's own rules. */
+
+/* The chart's measures: a block, its pitch (a block and the seam above it) and
+   the gap between days. `--logcard-levels` (the most blocks a day can have) is
+   set by the card; a stack's `--logcard-n` is its own blocks. */
+.logcard {
+  --logcard-block: 4px;
+  --logcard-pitch: 5px;
+  --logcard-gap: 3px;
+}
+.logcard[data-size='wide'] {
+  --logcard-block: 6px;
+  --logcard-pitch: 7px;
+  --logcard-gap: 3px;
+}
+@media (width >= 64rem) {
+  .logcard[data-size='wide'] {
+    --logcard-block: 8px;
+    --logcard-pitch: 10px;
+    --logcard-gap: 5px;
+  }
+}
+.logcard-chart {
+  height: calc(var(--logcard-levels) * var(--logcard-pitch) + 6px);
+  gap: var(--logcard-gap);
+}
+.logcard-stack {
+  height: calc(
+    var(--logcard-n) * var(--logcard-pitch) - (var(--logcard-pitch) - var(--logcard-block))
+  );
+}
+
+/* The month's name and number fade up as the month changes. */
+@keyframes logcard-month-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .logcard-month-in {
+    animation: logcard-month-in 0.4s cubic-bezier(0.25, 0.1, 0.25, 1) both;
+  }
+}
+/* A day is a stack of square blocks: the mask cuts the bar into blocks with a
+   seam between, counted from the bottom. Its blocks rise in a step at a time
+   when a month shows. */
+.logcard-fill {
+  -webkit-mask-image: linear-gradient(
+    to top,
+    #000 0 var(--logcard-block),
+    transparent var(--logcard-block) var(--logcard-pitch)
+  );
+  mask-image: linear-gradient(
+    to top,
+    #000 0 var(--logcard-block),
+    transparent var(--logcard-block) var(--logcard-pitch)
+  );
+  -webkit-mask-size: 100% var(--logcard-pitch);
+  mask-size: 100% var(--logcard-pitch);
+  -webkit-mask-repeat: repeat-y;
+  mask-repeat: repeat-y;
+  -webkit-mask-position: left bottom;
+  mask-position: left bottom;
+  border-radius: 1px;
+}
+.logcard-fill-on {
+  background-image: linear-gradient(to top, var(--color-sky-700), var(--color-sky-400));
+}
+/* A quiet day: one dark block, so the month still reads as a row of days. */
+.logcard-fill-off {
+  background: rgb(255 255 255 / 0.12);
+}
+/* A lit day's blocks: they fill bottom to top, one block at a time. */
+.logcard-lit {
+  background-image: linear-gradient(to top, var(--color-cyan-400), var(--color-sky-100));
+  transform: scaleY(0);
+  transform-origin: bottom;
+  transition: transform 0.22s steps(var(--levels), end);
+}
+/* The column behind a day: it carries the keyboard focus ring. */
+.logcard-col {
+  position: absolute;
+  inset: -2px -1px;
+  border-radius: 3px;
+}
+.logcard-stack {
+  transition:
+    transform 0.28s cubic-bezier(0.3, 1.5, 0.5, 1),
+    filter 0.2s,
+    opacity 0.2s;
+}
+/* While a day is looked at, it lifts and lights up, its neighbours lean in and
+   the rest step back a little (owner, 2026-11-25: the day itself stands out,
+   not the whole chart). */
+[data-exploring] .logcard-day .logcard-stack {
+  opacity: 0.75;
+}
+[data-exploring] .logcard-day[data-d='2'] .logcard-stack {
+  opacity: 0.9;
+  transform: translateY(-1px);
+  filter: brightness(1.12);
+}
+[data-exploring] .logcard-day[data-d='1'] .logcard-stack {
+  opacity: 1;
+  transform: translateY(-2px);
+  filter: brightness(1.3);
+}
+[data-exploring] .logcard-day[data-d='0'] .logcard-stack {
+  opacity: 1;
+  transform: translateY(-4px);
+  filter: drop-shadow(0 0 5px rgb(34 211 238 / 0.8)) drop-shadow(0 0 1px rgb(186 230 253 / 0.9));
+}
+.logcard-day[data-d='0'] .logcard-lit {
+  transform: scaleY(1);
+}
+.logcard-day[data-d='0'] .logcard-fill-off {
+  background: var(--color-cyan-300);
+}
+.logcard-day:focus-visible .logcard-col {
+  box-shadow: 0 0 0 2px var(--color-sky-400);
+}
+/* The pixel under the chart that marks the day being looked at. */
+.logcard-cursor {
+  transition: left 0.18s cubic-bezier(0.3, 1.3, 0.5, 1);
+  box-shadow: 0 0 6px var(--color-cyan-300);
+}
+/* The readout's words fade in as it switches between the month and a day. */
+@keyframes logcard-fade {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes logcard-rise {
+  from {
+    clip-path: inset(100% 0 0 0);
+  }
+}
+.logcard-swap {
+  animation: logcard-fade 0.2s ease-out both;
+}
+/* The links' underline draws in from the left and runs out to the right. */
+.logcard-underline {
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform 0.3s cubic-bezier(0.65, 0, 0.35, 1);
+}
+.group\/link:hover .logcard-underline,
+.group\/link:focus-visible .logcard-underline {
+  transform: scaleX(1);
+  transform-origin: left;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .logcard-fill {
+    animation: logcard-rise 0.5s steps(8, end) both;
+  }
+}
+/* Under reduced motion a day still lights up, all at once and in place. */
+@media (prefers-reduced-motion: reduce) {
+  .logcard-lit,
+  .logcard-cursor,
+  .logcard-underline {
+    transition: none;
+  }
+  .logcard-stack {
+    transition:
+      filter 0.2s,
+      opacity 0.2s;
+  }
+  [data-exploring] .logcard-day .logcard-stack {
+    transform: none !important;
+  }
+}

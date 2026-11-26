@@ -5,34 +5,57 @@ import {
   useMemo,
   useRef,
   useState,
-  useSyncExternalStore,
   type CSSProperties,
+  type MouseEvent,
   type ReactNode,
 } from 'react'
-import { FiArrowUpRight, FiChevronLeft, FiChevronRight } from 'react-icons/fi'
-import { BUILD_LOG_PAGE, monthFacts, type LogMonth } from '@/lib/buildLog'
-import { N8BUILDS } from '@/lib/sites'
+import {
+  FiArrowDown,
+  FiArrowRight,
+  FiArrowUpRight,
+  FiChevronLeft,
+  FiChevronRight,
+} from 'react-icons/fi'
+import { monthFacts, type LogMonth } from '@/lib/monthFacts'
 import { latestEntry } from '@/lib/intersection'
 import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion'
+
+/*
+ * Shared byte for byte by n8builds.dev (n8watkins/n8builds-web) and the
+ * portfolio (n8watkins/dev-portfolio), with lib/monthFacts.ts and
+ * components/build-log/build-log-card.css; `npm run check:sync` in the
+ * portfolio fails when the copies differ. What differs per site comes in as
+ * props: where the months come from, the links along the foot, the size, and
+ * what a picked day does on the page around the card.
+ */
 
 /** The months move on by themselves this often (owner, 2026-11-09: "give it movement"). */
 const AUTO_MS = 5000
 /** After an arrow is used, the months hold still this long before moving on again. */
 const MANUAL_HOLD_MS = 15000
-/** A bar is a stack of up to this many square blocks; the month's busiest day fills it. */
-const LEVELS = 10
-/** One block and the gap above it, in px (CSS: .log-fill). LEVELS * PITCH is the tallest bar. */
-const PITCH = 5
-/** The gap between bars, in px. */
-const GAP = 3
+/** How long the readout's number takes to roll to a new value, in ms. */
+const ROLL_MS = 240
 
-// One request per page view; null while it loads, [] when the log can't be read.
-let request: Promise<LogMonth[]> | null = null
-function loadMonths(): Promise<LogMonth[]> {
-  request ??= fetch('/api/build-log')
-    .then((response) => (response.ok ? response.json() : { months: [] }))
-    .then((body: { months?: LogMonth[] }) => (Array.isArray(body.months) ? body.months : []))
-    .catch(() => [])
+/**
+ * Each size's chart: a bar is a stack of up to `levels` square blocks (the
+ * month's busiest day fills it). The block, its pitch (a block and the seam
+ * above it) and the gap between bars are CSS variables
+ * (`--logcard-block`, `--logcard-pitch`, `--logcard-gap` in
+ * build-log-card.css), so a breakpoint can change them.
+ */
+const LEVELS = { compact: 10, wide: 14 } as const
+
+// One request per page view and source; [] when the log can't be read.
+const requests = new Map<string, Promise<LogMonth[]>>()
+function loadMonths(src: string): Promise<LogMonth[]> {
+  let request = requests.get(src)
+  if (!request) {
+    request = fetch(src)
+      .then((response) => (response.ok ? response.json() : { months: [] }))
+      .then((body: { months?: LogMonth[] }) => (Array.isArray(body.months) ? body.months : []))
+      .catch(() => [])
+    requests.set(src, request)
+  }
   return request
 }
 
@@ -42,13 +65,6 @@ const shortDay = (day: string) => date(day, { month: 'short', day: 'numeric' })
 const weekdayDay = (day: string) => date(day, { weekday: 'short', month: 'short', day: 'numeric' })
 const longDay = (day: string) => date(day, { weekday: 'long', month: 'long', day: 'numeric' })
 const plural = (n: number, one: string, many: string) => (n === 1 ? one : many)
-
-/** ?log=3: the first preview's stronger highlight, for the owner to compare (2026-11-25). */
-const subscribeNever = () => () => {}
-const strongHighlight = () => new URLSearchParams(window.location.search).get('log') === '3'
-
-/** How long the readout's number takes to roll to a new value, in ms. */
-const ROLL_MS = 240
 
 /**
  * Counts up or down to `target` over a short ease, so the readout's number
@@ -108,35 +124,69 @@ function Chip({ children, hot }: { children: ReactNode; hot?: boolean }) {
   )
 }
 
-/** The card's two links: plain text, an underline that draws in from the left, and an arrow that nudges. */
-function FooterLink({
-  href,
-  children,
-  extra,
-}: {
-  href: string
-  children: ReactNode
-  extra: string
-}) {
-  return (
-    <a
-      href={href}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="group/link -mx-1 -my-0.5 inline-flex items-center gap-1 rounded-sm px-1 py-0.5 text-sm font-semibold text-slate-200 transition-colors hover:text-sky-200 focus:outline-hidden focus-visible:text-sky-200 focus-visible:ring-2 focus-visible:ring-sky-400"
-    >
-      <span className="relative">
-        {children}
+/** A link (or a button, with `onClick`) along the card's foot. */
+export interface CardLink {
+  label: string
+  /** Where it goes. An outside address opens in a new tab with `external`. */
+  href?: string
+  /** In place of `href`: what it does on this page. */
+  onClick?: () => void
+  external?: boolean
+  /** A small line above the link ("I post everything here"). */
+  note?: string
+  /** Said after the label to screen readers only (" on n8builds.dev"). */
+  srExtra?: string
+  /** Its arrow: out (a new tab, the default for `external`), on (this site) or down (this page). */
+  arrow?: 'out' | 'on' | 'down'
+}
+
+const ARROWS = { out: FiArrowUpRight, on: FiArrowRight, down: FiArrowDown }
+const ARROW_MOVE = {
+  out: 'motion-safe:group-hover/link:translate-x-0.5 motion-safe:group-hover/link:-translate-y-0.5 motion-safe:group-focus-visible/link:translate-x-0.5 motion-safe:group-focus-visible/link:-translate-y-0.5',
+  on: 'motion-safe:group-hover/link:translate-x-0.5 motion-safe:group-focus-visible/link:translate-x-0.5',
+  down: 'motion-safe:group-hover/link:translate-y-0.5 motion-safe:group-focus-visible/link:translate-y-0.5',
+}
+
+/** The card's links: plain text, an underline that draws in from the left, and an arrow that nudges. */
+function FooterLink({ link }: { link: CardLink }) {
+  const arrow = link.arrow ?? (link.external ? 'out' : 'on')
+  const Arrow = ARROWS[arrow]
+  const className =
+    'group/link -mx-1 -my-0.5 inline-flex cursor-pointer items-center gap-1 rounded-sm px-1 py-0.5 text-sm font-semibold text-slate-200 transition-colors hover:text-sky-200 focus:outline-hidden focus-visible:text-sky-200 focus-visible:ring-2 focus-visible:ring-sky-400'
+  const inner = (
+    <>
+      <span className="relative whitespace-nowrap">
+        {link.label}
         <span
           aria-hidden="true"
-          className="log-underlineabsolute inset-x-0 bottom-0 h-px bg-linear-to-r from-sky-300 to-cyan-300"
+          className="logcard-underline absolute inset-x-0 bottom-0 h-px bg-linear-to-r from-sky-300 to-cyan-300"
         />
       </span>
-      <FiArrowUpRight
+      <Arrow
         aria-hidden="true"
-        className="h-3.5 w-3.5 text-slate-400 transition-[transform,color] duration-200 group-hover/link:text-sky-200 group-focus-visible/link:text-sky-200 motion-safe:group-hover/link:translate-x-0.5 motion-safe:group-hover/link:-translate-y-0.5 motion-safe:group-focus-visible/link:translate-x-0.5 motion-safe:group-focus-visible/link:-translate-y-0.5"
+        className={`h-3.5 w-3.5 shrink-0 text-slate-400 transition-[transform,color] duration-200 group-hover/link:text-sky-200 group-focus-visible/link:text-sky-200 ${ARROW_MOVE[arrow]}`}
       />
-      <span className="sr-only">{extra} (opens in a new tab)</span>
+      {link.srExtra || link.external ? (
+        <span className="sr-only">
+          {link.srExtra}
+          {link.external ? ' (opens in a new tab)' : ''}
+        </span>
+      ) : null}
+    </>
+  )
+  if (!link.href)
+    return (
+      <button type="button" onClick={link.onClick} className={className} data-logcard-keep>
+        {inner}
+      </button>
+    )
+  return link.external ? (
+    <a href={link.href} target="_blank" rel="noopener noreferrer" className={className}>
+      {inner}
+    </a>
+  ) : (
+    <a href={link.href} className={className} onClick={link.onClick}>
+      {inner}
     </a>
   )
 }
@@ -144,11 +194,36 @@ function FooterLink({
 const MONTH_ARROW =
   'flex h-8 w-8 items-center justify-center text-slate-300 transition-colors hover:bg-white/8 hover:text-sky-200 focus:outline-hidden focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-sky-400'
 
+export interface BuildLogCardProps {
+  /**
+   * The months, newest first, when the page already has them (n8builds.dev,
+   * from its own log). Left out, the card fetches `src` once it mounts.
+   */
+  months?: LogMonth[]
+  /** Where to fetch `{ months }` from when `months` is left out. */
+  src?: string
+  /** The links along the foot, left and right. Either can be left out. */
+  links?: { left?: CardLink; right?: CardLink }
+  /** `compact` for a card in a grid; `wide` leads a page, chart beside the readout from 1024px. */
+  size?: 'compact' | 'wide'
+  /** The month's heading level: h3 in a section, h2 where the card leads a page. */
+  heading?: 'h2' | 'h3'
+  /** Whether the months move on by themselves (still never under reduced motion). */
+  cycle?: boolean
+  /** The month shown, when the page holds it (it shows that month's changes beside the card). */
+  index?: number
+  onIndexChange?: (index: number) => void
+  /** The day being looked at (`YYYY-MM-DD`), or null; on every hover, tap and key. */
+  onDayChange?: (day: string | null) => void
+  /** A day clicked with a mouse or pen, or pressed with Enter or Space (never a tap: a tap only looks). */
+  onDayClick?: (day: string) => void
+}
+
 /**
- * The bento's build log card (owner, round 4 of 2026-11-09; reworked
- * 2026-11-25): a month of n8builds.dev's build log, live from its public JSON
- * (lib/buildLog.ts). The month arrows sit top left with the month beside
- * them; "n8builds.dev" and "Build log" are plain text links along the bottom.
+ * The build log card (portfolio, round 4 of 2026-11-09; reworked 2026-11-25;
+ * on n8builds.dev too since 2026-11-25): a month of n8builds.dev's build log.
+ * The month arrows sit top left with the month beside them; plain text links
+ * along the bottom.
  *
  * The readout shows the month's changes, its busiest day, its active days and
  * its longest streak. Each day is a stack of square blocks; hovering, tapping
@@ -158,40 +233,59 @@ const MONTH_ARROW =
  * date, rank, share of the month and streak. A tap elsewhere lets go on a
  * phone. Each day is a button named with its date and count for screen readers.
  *
- * The months move on by themselves, this month first and then back through
- * the months, one every 5 seconds. They hold while the card is hovered or has
- * keyboard focus, while a day is picked, for 15 seconds after an arrow, off
- * screen, in a hidden tab, and always under reduced motion (WCAG 2.2.2), where
- * a day still lights up and the readout still changes but nothing moves. Only
- * a month picked with the arrows is announced.
+ * With `cycle`, the months move on by themselves, this month first and then
+ * back through the months, one every 5 seconds. They hold while the card is
+ * hovered or has keyboard focus, while a day is picked, for 15 seconds after
+ * an arrow, off screen, in a hidden tab, and always under reduced motion (WCAG
+ * 2.2.2), where a day still lights up and the readout still changes but
+ * nothing moves. Only a month picked with the arrows is announced.
  *
  * While the months load, the card holds its final layout; if they can't be
- * read, it is a plain card with the two links.
+ * read, it is a plain card with its links.
  */
-export default function BuildLogCard() {
-  const [months, setMonths] = useState<LogMonth[] | null>(null)
-  const [index, setIndex] = useState(0)
+export default function BuildLogCard({
+  months: given,
+  src = '/api/build-log',
+  links,
+  size = 'compact',
+  heading = 'h3',
+  cycle = true,
+  index: heldIndex,
+  onIndexChange,
+  onDayChange,
+  onDayClick,
+}: BuildLogCardProps) {
+  const [loaded, setLoaded] = useState<LogMonth[] | null>(null)
+  const months = given ?? loaded
+  const [ownIndex, setOwnIndex] = useState(0)
+  const index = Math.min(heldIndex ?? ownIndex, Math.max(0, (months?.length ?? 1) - 1))
   const [announce, setAnnounce] = useState('')
   const [hovered, setHovered] = useState(false)
   const [focused, setFocused] = useState(false)
   const [inView, setInView] = useState(false)
-  const [tabVisible, setTabVisible] = useState(true)
+  const [tabVisible, setTabVisible] = useState(
+    () => typeof document === 'undefined' || document.visibilityState === 'visible'
+  )
   const [manualAt, setManualAt] = useState(0)
   /** The picked day, for the month it was picked in (a new month starts with none). */
   const [picked, setPicked] = useState<{ month: string; day: number; dir: number } | null>(null)
   const reduceMotion = usePrefersReducedMotion()
-  // TEMPORARY: remove with the ?log=3 rules in app/globals.css once the owner has compared.
-  const strong = useSyncExternalStore(subscribeNever, strongHighlight, () => false)
   const root = useRef<HTMLDivElement>(null)
   const chart = useRef<HTMLDivElement>(null)
+  /** How the last press on the chart came: a tap only looks at a day, it never clicks it. */
+  const lastPointer = useRef('')
+  const Heading = heading
+  const wide = size === 'wide'
+  const levels = LEVELS[size]
 
   useEffect(() => {
+    if (given) return
     let live = true
-    loadMonths().then((m) => live && setMonths(m))
+    loadMonths(src).then((m) => live && setLoaded(m))
     return () => {
       live = false
     }
-  }, [])
+  }, [given, src])
 
   useEffect(() => {
     const el = root.current
@@ -201,7 +295,6 @@ export default function BuildLogCard() {
     )
     observer.observe(el)
     const onVisibility = () => setTabVisible(document.visibilityState === 'visible')
-    onVisibility()
     document.addEventListener('visibilitychange', onVisibility)
     return () => {
       observer.disconnect()
@@ -214,13 +307,34 @@ export default function BuildLogCard() {
   const active = month && picked?.month === month.id ? picked.day : null
   const exploring = active !== null
   const cycling =
-    count > 1 && !reduceMotion && !hovered && !focused && !exploring && inView && tabVisible
+    cycle &&
+    count > 1 &&
+    !reduceMotion &&
+    !hovered &&
+    !focused &&
+    !exploring &&
+    inView &&
+    tabVisible
 
-  // A tap elsewhere on the page lets go of a day picked by touch.
+  const indexRef = useRef(index)
+  const onIndexRef = useRef(onIndexChange)
+  useEffect(() => {
+    indexRef.current = index
+    onIndexRef.current = onIndexChange
+  })
+  const show = (next: number) => {
+    if (heldIndex === undefined) setOwnIndex(next)
+    onIndexRef.current?.(next)
+  }
+
+  // A tap elsewhere on the page lets go of a day picked by touch (but not a
+  // tap on the card's own day link, which acts on that day).
   useEffect(() => {
     if (!exploring) return
     const onDown = (e: PointerEvent) => {
-      if (!chart.current?.contains(e.target as Node)) setPicked(null)
+      const target = e.target as Element
+      if (!chart.current?.contains(target) && !target.closest?.('[data-logcard-keep]'))
+        setPicked(null)
     }
     document.addEventListener('pointerdown', onDown)
     return () => document.removeEventListener('pointerdown', onDown)
@@ -245,15 +359,17 @@ export default function BuildLogCard() {
       const due = Math.max(lastMove.current + AUTO_MS, manualAt + MANUAL_HOLD_MS)
       if (Date.now() >= due) {
         lastMove.current = Date.now()
-        setIndex((i) => (i + 1) % count)
+        const next = (indexRef.current + 1) % count
+        if (heldIndex === undefined) setOwnIndex(next)
+        onIndexRef.current?.(next)
       }
     }, 250)
     return () => clearInterval(id)
-  }, [cycling, count, manualAt])
+  }, [cycling, count, manualAt, heldIndex])
   const step = (by: number) => {
     if (!months) return
     const next = (index + by + count) % count
-    setIndex(next)
+    show(next)
     setManualAt(Date.now())
     setAnnounce(`${months[next].title}: ${months[next].changes} changes shipped`)
   }
@@ -283,6 +399,21 @@ export default function BuildLogCard() {
   const day = active !== null && month ? month.days[active] : null
   const dayFacts = active !== null && facts ? facts.days[active] : null
   const number = useRollingNumber(day ? day.count : (month?.changes ?? 0), reduceMotion)
+  // The page hears of the day being looked at.
+  const lookedAt = day?.day ?? null
+  const onDayRef = useRef(onDayChange)
+  useEffect(() => {
+    onDayRef.current = onDayChange
+  })
+  useEffect(() => {
+    onDayRef.current?.(lookedAt)
+  }, [lookedAt])
+  const clickDay = (e: MouseEvent, i: number) => {
+    pick(i)
+    // A keyboard press has no pointer behind it (detail 0); a tap only looks.
+    if (onDayClick && month && (e.detail === 0 || lastPointer.current !== 'touch'))
+      onDayClick(month.days[i].day)
+  }
   // The date nudges in from the side the eye is moving to.
   const dateRef = useRef<HTMLSpanElement>(null)
   const dir = picked?.dir ?? 1
@@ -299,13 +430,42 @@ export default function BuildLogCard() {
   const inMonth = month?.id === 'recent' ? 'of 30 days' : 'of month'
   // Roving focus: the picked day, or the last day so far.
   const tabStop = active ?? lastDay
+  const ready = count > 0 && month && facts
+  // Wide and loaded: from 1024px the chart takes the right, beside the readout.
+  const grid = wide && ready
+
+  const footer =
+    links?.left || links?.right ? (
+      <div
+        className={`mt-2.5 flex items-end justify-between gap-3 ${
+          grid ? 'lg:col-start-1 lg:row-start-3 lg:justify-start lg:self-end lg:gap-8' : ''
+        }`}
+      >
+        {links.left ? (
+          <div className="flex min-w-0 flex-col items-start">
+            {links.left.note && (
+              <p className="text-[0.7rem] leading-4 text-slate-400">{links.left.note}</p>
+            )}
+            <FooterLink link={links.left} />
+          </div>
+        ) : (
+          <span />
+        )}
+        {links.right && <FooterLink link={links.right} />}
+      </div>
+    ) : null
 
   return (
     <div
       ref={root}
-      className="relative flex h-full w-full flex-col p-5 sm:p-6 xl:p-6"
+      className={`logcard relative h-full w-full p-5 sm:p-6 ${
+        grid
+          ? 'flex flex-col lg:grid lg:grid-cols-[minmax(17rem,22rem)_minmax(0,1fr)] lg:grid-rows-[auto_auto_1fr] lg:gap-x-10 lg:p-7'
+          : 'flex flex-col'
+      }`}
+      style={{ '--logcard-levels': levels } as CSSProperties}
       data-build-log={months === null ? 'loading' : count ? 'ready' : 'fallback'}
-      data-highlight={strong ? 'strong' : undefined}
+      data-size={size}
       data-cycling={cycling ? '' : undefined}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
@@ -314,10 +474,10 @@ export default function BuildLogCard() {
         if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setFocused(false)
       }}
     >
-      {count > 0 && month && facts ? (
+      {ready ? (
         <>
           {/* The month arrows, top left, with the month beside them. */}
-          <div className="flex items-center gap-3">
+          <div className={`flex items-center gap-3 ${grid ? 'lg:col-start-1 lg:row-start-1' : ''}`}>
             <div className="flex shrink-0 overflow-hidden rounded-lg border border-white/12 bg-white/4">
               <button
                 type="button"
@@ -337,22 +497,29 @@ export default function BuildLogCard() {
                 <FiChevronRight className="h-4 w-4" aria-hidden="true" />
               </button>
             </div>
-            <h3
+            <Heading
               key={month.id}
-              className="log-month-in truncate text-lg font-bold tracking-tight text-slate-50 lg:text-xl"
+              className={`logcard-month-in truncate font-bold tracking-tight text-slate-50 ${
+                wide ? 'text-xl lg:text-2xl' : 'text-lg lg:text-xl'
+              }`}
               data-month
             >
               {month.title}
-            </h3>
+            </Heading>
           </div>
 
           {/* The readout: the month, or the day being looked at. Screen readers get the same from the bars. */}
-          <div key={month.id} className="log-month-in mt-2.5" aria-hidden="true" data-readout>
+          <div
+            key={month.id}
+            className={`logcard-month-in mt-2.5 ${grid ? 'lg:col-start-1 lg:row-start-2 lg:mt-4' : ''}`}
+            aria-hidden="true"
+            data-readout
+          >
             <p className="flex items-baseline gap-2">
               <span
-                className={`text-4xl leading-none font-bold tracking-tight tabular-nums transition-colors duration-200 lg:text-[2.6rem] ${
-                  day ? 'text-cyan-200' : 'text-slate-50'
-                }`}
+                className={`leading-none font-bold tracking-tight tabular-nums transition-colors duration-200 ${
+                  wide ? 'text-4xl sm:text-5xl' : 'text-4xl lg:text-[2.6rem]'
+                } ${day ? 'text-cyan-200' : 'text-slate-50'}`}
                 data-number
                 data-changes={day ? undefined : ''}
               >
@@ -362,7 +529,7 @@ export default function BuildLogCard() {
                   day the date only nudges, so it stays readable however fast the sweep. */}
               <span
                 key={day ? 'day' : 'month'}
-                className="log-swap text-sm font-medium whitespace-nowrap text-slate-300 lg:text-base"
+                className="logcard-swap text-sm font-medium whitespace-nowrap text-slate-300 lg:text-base"
               >
                 {day ? (
                   <>
@@ -383,7 +550,7 @@ export default function BuildLogCard() {
             <div
               key={day ? 'day' : 'month'}
               // A chip that doesn't fit wraps out of sight, whole, rather than being cut.
-              className="log-swap -mx-px mt-[5px] flex h-[22px] flex-wrap gap-x-1.5 gap-y-2 overflow-hidden p-px"
+              className="logcard-swap -mx-px mt-[5px] flex h-[22px] flex-wrap gap-x-1.5 gap-y-2 overflow-hidden p-px"
             >
               {day && dayFacts ? (
                 day.count === 0 ? (
@@ -424,19 +591,25 @@ export default function BuildLogCard() {
           </p>
 
           {/* The chart: a stack of blocks per day. Sweep, tap or arrow across it. */}
-          <div className="mt-auto pt-2">
+          <div
+            className={`mt-auto pt-2 ${
+              grid ? 'lg:col-start-2 lg:row-span-3 lg:row-start-1 lg:self-end lg:pt-0' : ''
+            }`}
+          >
             <div
               key={month.id}
               ref={chart}
               role="group"
               aria-label={`Changes per day in ${month.title}. Left and right arrow keys move between days.`}
-              className="flex touch-pan-y items-end select-none"
-              style={{ height: LEVELS * PITCH + 6, gap: GAP }}
+              className="logcard-chart flex touch-pan-y items-end select-none"
               data-chart
               data-bars
               data-exploring={exploring ? '' : undefined}
               onPointerMove={(e) => pick(dayAt(e.clientX))}
-              onPointerDown={(e) => pick(dayAt(e.clientX))}
+              onPointerDown={(e) => {
+                lastPointer.current = e.pointerType
+                pick(dayAt(e.clientX))
+              }}
               onPointerLeave={(e) => {
                 // A mouse lets go on leaving, unless the keyboard is walking the days.
                 const focus = document.activeElement
@@ -469,7 +642,7 @@ export default function BuildLogCard() {
               }}
             >
               {month.days.map((d, i) => {
-                const levels = d.count > 0 ? Math.max(1, Math.round((d.count / peak) * LEVELS)) : 0
+                const blocks = d.count > 0 ? Math.max(1, Math.round((d.count / peak) * levels)) : 0
                 const distance = active === null ? undefined : Math.min(3, Math.abs(i - active))
                 if (d.future)
                   return (
@@ -491,27 +664,28 @@ export default function BuildLogCard() {
                     }`}
                     aria-pressed={i === active}
                     data-index={i}
+                    data-day={d.day}
                     data-d={distance}
-                    className="log-day relative flex h-full min-w-0 flex-1 cursor-pointer items-end rounded-[2px] focus:outline-hidden"
+                    className="logcard-day relative flex h-full min-w-0 flex-1 cursor-pointer items-end rounded-[2px] focus:outline-hidden"
                     onFocus={() => pick(i)}
-                    onClick={() => pick(i)}
+                    onClick={(e) => clickDay(e, i)}
                   >
-                    <span aria-hidden="true" className="log-col" />
+                    <span aria-hidden="true" className="logcard-col" />
                     <span
                       aria-hidden="true"
-                      className="log-stack relative block w-full"
-                      style={{ height: Math.max(1, levels) * PITCH - 1 }}
+                      className="logcard-stack relative block w-full"
+                      style={{ '--logcard-n': Math.max(1, blocks) } as CSSProperties}
                     >
                       <span
-                        className={`log-fill absolute inset-0 origin-bottom ${
-                          levels ? 'log-fill-on' : 'log-fill-off'
+                        className={`logcard-fill absolute inset-0 origin-bottom ${
+                          blocks ? 'logcard-fill-on' : 'logcard-fill-off'
                         }`}
                         style={{ animationDelay: `${i * 12}ms` }}
                       >
-                        {levels > 0 && (
+                        {blocks > 0 && (
                           <span
-                            className="log-lit absolute inset-0"
-                            style={{ '--levels': levels } as CSSProperties}
+                            className="logcard-lit absolute inset-0"
+                            style={{ '--levels': blocks } as CSSProperties}
                           />
                         )}
                       </span>
@@ -527,9 +701,9 @@ export default function BuildLogCard() {
               {/* A pixel under the day being looked at, sliding along as the day changes. */}
               {active !== null && (
                 <span
-                  className="log-cursor absolute top-0 h-[3px] w-[3px] -translate-x-1/2 bg-cyan-300"
+                  className="logcard-cursor absolute top-0 h-[3px] w-[3px] -translate-x-1/2 bg-cyan-300"
                   style={{
-                    left: `calc((100% - ${(month.days.length - 1) * GAP}px) / ${month.days.length} * ${active + 0.5} + ${active * GAP}px)`,
+                    left: `calc((100% - ${month.days.length - 1} * var(--logcard-gap)) / ${month.days.length} * ${active + 0.5} + ${active} * var(--logcard-gap))`,
                   }}
                 />
               )}
@@ -549,25 +723,15 @@ export default function BuildLogCard() {
         </div>
       ) : (
         <div className="flex flex-1 flex-col justify-end">
-          <h3 className="text-2xl font-bold tracking-tight text-slate-50">
+          <Heading className="text-2xl font-bold tracking-tight text-slate-50">
             What I&apos;m shipping
-          </h3>
+          </Heading>
           <p className="mt-1 text-base text-slate-300">Every change I ship, day by day.</p>
         </div>
       )}
 
-      {/* The two links along the bottom, on one baseline (owner, 2026-11-25). */}
-      <div className="mt-2.5 flex items-end justify-between gap-3">
-        <div className="flex min-w-0 flex-col items-start">
-          <p className="text-[0.7rem] leading-4 text-slate-400">I post everything here</p>
-          <FooterLink href={N8BUILDS.url} extra="">
-            {N8BUILDS.name}
-          </FooterLink>
-        </div>
-        <FooterLink href={BUILD_LOG_PAGE} extra=" on n8builds.dev">
-          Build log
-        </FooterLink>
-      </div>
+      {/* The links along the bottom, on one baseline (owner, 2026-11-25). */}
+      {footer}
     </div>
   )
 }

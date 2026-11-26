@@ -381,10 +381,10 @@ test('under reduced motion a build log day still lights up and shows its numbers
   const styles = await card.evaluate((el) => {
     const pick = (s: string) => getComputedStyle(el.querySelector(s)!)
     return {
-      lift: pick('[aria-pressed="true"] .log-stack').transform,
-      neighbour: pick('[data-d="1"] .log-stack').transform,
-      fill: pick('[aria-pressed="true"] .log-lit').transitionDuration,
-      lit: pick('[aria-pressed="true"] .log-lit').transform,
+      lift: pick('[aria-pressed="true"] .logcard-stack').transform,
+      neighbour: pick('[data-d="1"] .logcard-stack').transform,
+      fill: pick('[aria-pressed="true"] .logcard-lit').transitionDuration,
+      lit: pick('[aria-pressed="true"] .logcard-lit').transform,
     }
   })
   expect(styles.lift).toBe('none')
