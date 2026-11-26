@@ -1216,8 +1216,7 @@ test('after "Expand all" every role, The Coder School included, lights up on hov
     // Park the pointer away, then onto the header of this role.
     await page.mouse.move(0, 0)
     const resting = await card.evaluate((el) => getComputedStyle(el).borderTopColor)
-    const box = (await header.boundingBox())!
-    await page.mouse.move(box.x + 8, box.y + box.height - 8)
+    await header.hover()
     await expect
       .poll(() => card.evaluate((el) => getComputedStyle(el).borderTopColor), name)
       .not.toBe(resting)
