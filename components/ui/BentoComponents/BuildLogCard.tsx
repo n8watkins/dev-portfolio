@@ -5,7 +5,6 @@ import {
   useMemo,
   useRef,
   useState,
-  useSyncExternalStore,
   type CSSProperties,
   type ReactNode,
 } from 'react'
@@ -42,10 +41,6 @@ const shortDay = (day: string) => date(day, { month: 'short', day: 'numeric' })
 const weekdayDay = (day: string) => date(day, { weekday: 'short', month: 'short', day: 'numeric' })
 const longDay = (day: string) => date(day, { weekday: 'long', month: 'long', day: 'numeric' })
 const plural = (n: number, one: string, many: string) => (n === 1 ? one : many)
-
-/** ?log=3: the first preview's stronger highlight, for the owner to compare (2026-11-25). */
-const subscribeNever = () => () => {}
-const strongHighlight = () => new URLSearchParams(window.location.search).get('log') === '3'
 
 /** How long the readout's number takes to roll to a new value, in ms. */
 const ROLL_MS = 240
@@ -180,8 +175,6 @@ export default function BuildLogCard() {
   /** The picked day, for the month it was picked in (a new month starts with none). */
   const [picked, setPicked] = useState<{ month: string; day: number; dir: number } | null>(null)
   const reduceMotion = usePrefersReducedMotion()
-  // TEMPORARY: remove with the ?log=3 rules in app/globals.css once the owner has compared.
-  const strong = useSyncExternalStore(subscribeNever, strongHighlight, () => false)
   const root = useRef<HTMLDivElement>(null)
   const chart = useRef<HTMLDivElement>(null)
 
@@ -305,7 +298,6 @@ export default function BuildLogCard() {
       ref={root}
       className="relative flex h-full w-full flex-col p-5 sm:p-6 xl:p-6"
       data-build-log={months === null ? 'loading' : count ? 'ready' : 'fallback'}
-      data-highlight={strong ? 'strong' : undefined}
       data-cycling={cycling ? '' : undefined}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}

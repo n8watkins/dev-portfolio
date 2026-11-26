@@ -257,7 +257,7 @@ It was reworked on 2026-11-25 (owner, after a preview: "I want it to be fun to l
   Screen readers get each day as a button named with its date and count, and the month's summary as text.
 - **The months move on by themselves** every 5 s (owner, 2026-11-09), this month first and then back through the months, holding while hovered or keyboard-focused, while a day is picked, for 15 s after an arrow, off screen, in a hidden tab and under reduced motion.
   Under reduced motion a day still lights up and the readout still changes, but nothing moves.
-- **Temporary**: `?log=3` shows the first preview's stronger highlight (a lit column, the other days dimmed further) for the owner to compare; remove it (the `strong` switch in the card and the `[data-highlight='strong']` rules in `app/globals.css`) once he has.
+- The day highlight is the soft one (owner, 2026-11-25: he did not like "the full thing being highlighted"): the day itself lifts and lights up and the others step back a little; the stronger lit-column variant (`?log=3`) was removed.
 - If the months cannot be read, the card is a plain "What I'm shipping" card with the same two links.
 
 ## Conventions

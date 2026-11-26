@@ -522,13 +522,11 @@
   transform-origin: bottom;
   transition: transform 0.22s steps(var(--levels), end);
 }
-/* The column behind a day: it carries the keyboard focus ring (and, with
-   ?log=3, a faint wash on the day being looked at). */
+/* The column behind a day: it carries the keyboard focus ring. */
 .log-col {
   position: absolute;
   inset: -2px -1px;
   border-radius: 3px;
-  transition: background-color 0.2s;
 }
 .log-stack {
   transition:
@@ -565,24 +563,6 @@
 }
 .log-day:focus-visible .log-col {
   box-shadow: 0 0 0 2px var(--color-sky-400);
-}
-/* TEMPORARY (remove once the owner has compared, 2026-11-25): ?log=3 shows the
-   first preview's stronger highlight, a lit column and the other days dimmed
-   further. BuildLogCard.tsx sets data-highlight="strong". */
-[data-highlight='strong'] .log-day[data-d='0'] .log-col {
-  background: rgb(125 211 252 / 0.09);
-}
-[data-highlight='strong'] [data-exploring] .log-day .log-stack {
-  opacity: 0.42;
-}
-[data-highlight='strong'] [data-exploring] .log-day[data-d='2'] .log-stack {
-  opacity: 0.7;
-}
-[data-highlight='strong'] [data-exploring] .log-day[data-d='1'] .log-stack {
-  opacity: 0.9;
-}
-[data-highlight='strong'] [data-exploring] .log-day[data-d='0'] .log-stack {
-  opacity: 1;
 }
 /* The pixel under the chart that marks the day being looked at. */
 .log-cursor {
