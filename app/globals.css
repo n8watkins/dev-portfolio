@@ -483,6 +483,30 @@
   }
 }
 
+/* TEMPORARY (remove once the owner has compared, 2026-11-25): ?log=3 shows the
+   build log card's first preview's stronger highlight, a lit column and the
+   other days dimmed further. This site only: the wrapper
+   components/ui/BentoComponents/BuildLogHighlightSwitch.tsx sets
+   data-highlight="strong" around the shared card, which n8builds.dev never does. */
+[data-highlight='strong'] .logcard-col {
+  transition: background-color 0.2s;
+}
+[data-highlight='strong'] .logcard-day[data-d='0'] .logcard-col {
+  background: rgb(125 211 252 / 0.09);
+}
+[data-highlight='strong'] [data-exploring] .logcard-day .logcard-stack {
+  opacity: 0.42;
+}
+[data-highlight='strong'] [data-exploring] .logcard-day[data-d='2'] .logcard-stack {
+  opacity: 0.7;
+}
+[data-highlight='strong'] [data-exploring] .logcard-day[data-d='1'] .logcard-stack {
+  opacity: 0.9;
+}
+[data-highlight='strong'] [data-exploring] .logcard-day[data-d='0'] .logcard-stack {
+  opacity: 1;
+}
+
 /* The Wren mark's idle life (components/Projects/WrenMark.tsx, from Wren's own
    globals.css): an occasional tail flick and head tilt. Held still under
    reduced motion. */

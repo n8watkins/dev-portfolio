@@ -263,6 +263,8 @@ It was reworked on 2026-11-25 (owner, after a preview: "I want it to be fun to l
   Screen readers get each day as a button named with its date and count, and the month's summary as text.
 - **The months move on by themselves** every 5 s (owner, 2026-11-09), this month first and then back through the months, holding while hovered or keyboard-focused, while a day is picked, for 15 s after an arrow, off screen, in a hidden tab and under reduced motion.
   Under reduced motion a day still lights up and the readout still changes, but nothing moves.
+- **Temporary**: `?log=3` shows the first preview's stronger highlight (a lit column, the other days dimmed further) for the owner to compare.
+  It is this site's alone, outside the shared card: `components/ui/BentoComponents/BuildLogHighlightSwitch.tsx` wraps the card and sets `data-highlight="strong"`, and the `[data-highlight='strong']` rules are in `app/globals.css`; remove both once he has compared.
 - If the months cannot be read, the card is a plain "What I'm shipping" card with the same two links.
 
 ## Conventions

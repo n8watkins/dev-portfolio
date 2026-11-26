@@ -148,12 +148,18 @@ async function showBuildLog(page: import('@playwright/test').Page) {
   await expect(card).toHaveAttribute('data-build-log', 'ready', LOADED)
   await expect
     .poll(() =>
+      // Every box around the card (the ?log=3 wrapper, the bento cell...) at rest.
       card.evaluate((el) => {
-        const cell = getComputedStyle(el.parentElement!)
-        return `${cell.transform} ${cell.opacity}`
+        const moving: string[] = []
+        for (let at = el.parentElement; at && at !== document.body; at = at.parentElement) {
+          const s = getComputedStyle(at)
+          const still = s.transform === 'none' || s.transform === 'matrix(1, 0, 0, 1, 0, 0)'
+          if (!still || s.opacity !== '1') moving.push(at.className)
+        }
+        return moving
       })
     )
-    .toBe('none 1')
+    .toEqual([])
   return card
 }
 
