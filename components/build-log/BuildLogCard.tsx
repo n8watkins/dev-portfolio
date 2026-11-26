@@ -1,0 +1,931 @@
+'use client'
+
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+  type MouseEvent,
+  type ReactNode,
+} from 'react'
+import Image from 'next/image'
+import {
+  FiArrowDown,
+  FiArrowRight,
+  FiArrowUpRight,
+  FiChevronLeft,
+  FiChevronRight,
+} from 'react-icons/fi'
+import { LuCalendarCheck, LuChartPie, LuFlame, LuMedal, LuMoon, LuTrophy } from 'react-icons/lu'
+import type { IconType } from 'react-icons'
+import { monthFacts, type LogMonth } from '@/lib/monthFacts'
+import { latestEntry } from '@/lib/intersection'
+import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion'
+
+/*
+ * Shared byte for byte by n8builds.dev (n8watkins/n8builds-web) and the
+ * portfolio (n8watkins/dev-portfolio), with lib/monthFacts.ts and
+ * components/build-log/build-log-card.css; `npm run check:sync` in the
+ * portfolio fails when the copies differ. What differs per site comes in as
+ * props: where the months come from, the links along the foot, the size, and
+ * what a picked day does on the page around the card.
+ */
+
+/** The months move on by themselves this often (owner, 2026-11-09: "give it movement"). */
+const AUTO_MS = 5000
+/** After an arrow is used, the months hold still this long before moving on again. */
+const MANUAL_HOLD_MS = 15000
+/** How long the readout's number takes to roll to a picked day's count, in ms. */
+const ROLL_MS = 240
+/**
+ * One month changing to the next (owner, 2026-11-25: "a little more flowy"):
+ * every bar eases to its new height, a wave across the month, while the name
+ * and readout cross over and the number rolls, all on this one timeline. Each
+ * bar takes BAR_MS, and the wave reaches the last bar WAVE_MS after the first
+ * (build-log-card.css reads both from the card's style).
+ */
+const BAR_MS = 340
+const WAVE_MS = 200
+const MONTH_MS = BAR_MS + WAVE_MS
+
+/**
+ * Each size's chart: a bar is a stack of up to `levels` square blocks (the
+ * month's busiest day fills it). The block, its pitch (a block and the seam
+ * above it) and the gap between bars are CSS variables
+ * (`--logcard-block`, `--logcard-pitch`, `--logcard-gap` in
+ * build-log-card.css), so a breakpoint can change them.
+ */
+const LEVELS = { compact: 10, wide: 14 } as const
+
+// One request per page view and source; [] when the log can't be read.
+const requests = new Map<string, Promise<LogMonth[]>>()
+function loadMonths(src: string): Promise<LogMonth[]> {
+  let request = requests.get(src)
+  if (!request) {
+    request = fetch(src)
+      .then((response) => (response.ok ? response.json() : { months: [] }))
+      .then((body: { months?: LogMonth[] }) => (Array.isArray(body.months) ? body.months : []))
+      .catch(() => [])
+    requests.set(src, request)
+  }
+  return request
+}
+
+const date = (day: string, options: Intl.DateTimeFormatOptions) =>
+  new Date(`${day}T12:00:00Z`).toLocaleDateString('en-US', { ...options, timeZone: 'UTC' })
+const shortDay = (day: string) => date(day, { month: 'short', day: 'numeric' })
+const weekday = (day: string) => date(day, { weekday: 'short' })
+const longDay = (day: string) => date(day, { weekday: 'long', month: 'long', day: 'numeric' })
+const plural = (n: number, one: string, many: string) => (n === 1 ? one : many)
+const motionAllowed = () => !window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+/**
+ * Counts up or down to `target` over `ms` on an ease out, so the readout's
+ * number rolls rather than pops.
+ *
+ * The roll's progress is read from the clock, not from the frame's own
+ * timestamp: WebKit stamps a frame with the moment it began, which can come
+ * before the key press that started the roll, and the number then ran the
+ * wrong way first (9 to 49 by way of 5). And the final value lands on a timer
+ * too, so the number always settles even when no frame comes: a hidden tab,
+ * or a page too busy to paint (WebKit on CI went seconds without one,
+ * 2026-11-25, and the number stayed mid-roll).
+ */
+function useRollingNumber(target: number, still: boolean, ms: number) {
+  const [shown, setShown] = useState(target)
+  const from = useRef(target)
+  const duration = useRef(ms)
+  useEffect(() => {
+    duration.current = ms
+  })
+  useEffect(() => {
+    if (still) return
+    const start = from.current
+    const began = performance.now()
+    const length = duration.current
+    const show = (value: number) => {
+      from.current = value
+      setShown(value)
+    }
+    let frame = requestAnimationFrame(function tick() {
+      const t = Math.min(1, Math.max(0, (performance.now() - began) / length))
+      show(Math.round(start + (target - start) * (1 - (1 - t) ** 3)))
+      if (t < 1) frame = requestAnimationFrame(tick)
+    })
+    const settle = setTimeout(() => {
+      cancelAnimationFrame(frame)
+      show(target)
+    }, length + 60)
+    return () => {
+      cancelAnimationFrame(frame)
+      clearTimeout(settle)
+    }
+  }, [target, still])
+  useEffect(() => {
+    if (still) from.current = target
+  }, [target, still])
+  return still ? target : shown
+}
+
+/** A streak this long or longer warms its tag up. */
+const WARM_STREAK = 5
+
+/**
+ * A small tag in the readout, with an icon that says what it counts (owner,
+ * 2026-11-25: "maybe we can make that a little bit more exciting. With some
+ * icons that are relevant?"): decorative, the words carry the meaning. `hot`
+ * lights it (the busiest day itself), `warm` gives a long streak its glow.
+ * Each settles in a beat after the one before it (`at`).
+ */
+function Chip({
+  children,
+  icon: Icon,
+  tone = 'plain',
+  at = 0,
+}: {
+  children: ReactNode
+  icon: IconType
+  tone?: 'plain' | 'hot' | 'warm'
+  at?: number
+}) {
+  return (
+    <span
+      className={`logcard-chip inline-flex h-5 shrink-0 items-center gap-1 rounded-[4px] pr-1.5 pl-1 font-mono text-[0.62rem] tracking-wide whitespace-nowrap uppercase ring-1 ${
+        tone === 'hot'
+          ? 'bg-cyan-300/15 text-cyan-100 ring-cyan-300/45'
+          : tone === 'warm'
+            ? 'bg-amber-300/10 text-amber-100 ring-amber-300/30'
+            : 'bg-white/6 text-slate-300 ring-white/10'
+      }`}
+      style={{ '--logcard-chip-at': at } as CSSProperties}
+      data-tone={tone}
+    >
+      <Icon
+        aria-hidden="true"
+        className={`h-3 w-3 shrink-0 ${
+          tone === 'hot' ? 'text-cyan-200' : tone === 'warm' ? 'text-amber-300' : 'text-sky-300/80'
+        }`}
+      />
+      {children}
+    </span>
+  )
+}
+
+/** A link (or a button, with `onClick`) along the card's foot. */
+export interface CardLink {
+  label: string
+  /** Where it goes. An outside address opens in a new tab with `external`. */
+  href?: string
+  /** In place of `href`: what it does on this page. */
+  onClick?: () => void
+  external?: boolean
+  /** A small line above the link ("I post everything here"). */
+  note?: string
+  /** Said after the label to screen readers only (" on n8builds.dev"). */
+  srExtra?: string
+  /** Its arrow: out (a new tab, the default for `external`), on (this site) or down (this page). */
+  arrow?: 'out' | 'on' | 'down'
+  /**
+   * A small square mark before the label (n8builds.dev's monogram beside its
+   * name, owner, 2026-11-25), decorative: the label already says the name.
+   */
+  icon?: string
+}
+
+const ARROWS = { out: FiArrowUpRight, on: FiArrowRight, down: FiArrowDown }
+const ARROW_MOVE = {
+  out: 'motion-safe:group-hover/link:translate-x-0.5 motion-safe:group-hover/link:-translate-y-0.5 motion-safe:group-focus-visible/link:translate-x-0.5 motion-safe:group-focus-visible/link:-translate-y-0.5',
+  on: 'motion-safe:group-hover/link:translate-x-0.5 motion-safe:group-focus-visible/link:translate-x-0.5',
+  down: 'motion-safe:group-hover/link:translate-y-0.5 motion-safe:group-focus-visible/link:translate-y-0.5',
+}
+
+/** The card's links: plain text, an underline that draws in from the left, and an arrow that nudges. */
+function FooterLink({ link }: { link: CardLink }) {
+  const arrow = link.arrow ?? (link.external ? 'out' : 'on')
+  const Arrow = ARROWS[arrow]
+  const className =
+    'group/link -mx-1 -my-0.5 inline-flex cursor-pointer items-center gap-1 rounded-sm px-1 py-0.5 text-sm font-semibold text-slate-200 transition-colors hover:text-sky-200 focus:outline-hidden focus-visible:text-sky-200 focus-visible:ring-2 focus-visible:ring-sky-400'
+  const inner = (
+    <>
+      {link.icon && (
+        // A little over the text's cap height, a pixel lower so it sits on the baseline with the name.
+        <Image
+          src={link.icon}
+          alt=""
+          width={15}
+          height={15}
+          unoptimized
+          className="mr-0.5 h-[15px] w-[15px] shrink-0 translate-y-px rounded-[4px]"
+          data-logcard-icon
+        />
+      )}
+      <span className="relative whitespace-nowrap">
+        {link.label}
+        <span
+          aria-hidden="true"
+          className="logcard-underline absolute inset-x-0 bottom-0 h-px bg-linear-to-r from-sky-300 to-cyan-300"
+        />
+      </span>
+      <Arrow
+        aria-hidden="true"
+        className={`h-3.5 w-3.5 shrink-0 text-slate-400 transition-[transform,color] duration-200 group-hover/link:text-sky-200 group-focus-visible/link:text-sky-200 ${ARROW_MOVE[arrow]}`}
+      />
+      {link.srExtra || link.external ? (
+        <span className="sr-only">
+          {link.srExtra}
+          {link.external ? ' (opens in a new tab)' : ''}
+        </span>
+      ) : null}
+    </>
+  )
+  if (!link.href)
+    return (
+      <button type="button" onClick={link.onClick} className={className} data-logcard-keep>
+        {inner}
+      </button>
+    )
+  return link.external ? (
+    <a href={link.href} target="_blank" rel="noopener noreferrer" className={className}>
+      {/* new-tab-hint: from children (`inner` says it for an external link) */}
+      {inner}
+    </a>
+  ) : (
+    <a href={link.href} className={className} onClick={link.onClick}>
+      {inner}
+    </a>
+  )
+}
+
+const MONTH_ARROW =
+  'flex h-8 w-8 items-center justify-center text-slate-300 transition-colors hover:bg-white/8 hover:text-sky-200 focus:outline-hidden focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-sky-400'
+
+export interface BuildLogCardProps {
+  /**
+   * The months, newest first, when the page already has them (n8builds.dev,
+   * from its own log). Left out, the card fetches `src` once it mounts.
+   */
+  months?: LogMonth[]
+  /** Where to fetch `{ months }` from when `months` is left out. */
+  src?: string
+  /** The links along the foot, left and right. Either can be left out. */
+  links?: { left?: CardLink; right?: CardLink }
+  /** `compact` for a card in a grid; `wide` leads a page, chart beside the readout from 1024px. */
+  size?: 'compact' | 'wide'
+  /** The month's heading level: one under the heading around the card (h2 where it leads a page). */
+  heading?: 'h2' | 'h3' | 'h4'
+  /** Whether the months move on by themselves (still never under reduced motion). */
+  cycle?: boolean
+  /** The month shown, when the page holds it (it shows that month's changes beside the card). */
+  index?: number
+  onIndexChange?: (index: number) => void
+  /** The day being looked at (`YYYY-MM-DD`), or null; on every hover, tap and key. */
+  onDayChange?: (day: string | null) => void
+  /** A day clicked with a mouse or pen, or pressed with Enter or Space (never a tap: a tap only looks). */
+  onDayClick?: (day: string) => void
+}
+
+/**
+ * The build log card (portfolio, round 4 of 2026-11-09; reworked 2026-11-25;
+ * on n8builds.dev too since 2026-11-25): a month of n8builds.dev's build log.
+ * The month arrows sit top left with the month beside them; plain text links
+ * along the bottom.
+ *
+ * The readout shows the month's changes, its busiest day, its active days and
+ * its longest streak. Each day is a stack of square blocks; hovering, tapping
+ * or arrowing onto a day (Left, Right, Home, End; Escape lets go) lights it:
+ * its blocks fill bottom to top, it lifts and glows, its neighbours lean in, a
+ * pixel marks it under the chart, and the readout rolls to that day's count,
+ * date, rank, share of the month and streak. A tap elsewhere lets go on a
+ * phone. Each day is a button named with its date and count for screen readers.
+ *
+ * A new month flows in on one timeline (MONTH_MS): each day's bar eases from
+ * its old height to its new one, a wave across the month (from the right
+ * going back to an older month, from the left going on to a newer one), while
+ * the month's name and readout slide in from the same side and the number
+ * rolls. The bars rise the same way the first time the card is seen. Under
+ * reduced motion everything changes at once.
+ *
+ * With `cycle`, the months move on by themselves, this month first and then
+ * back through the months, one every 5 seconds. They hold while the card is
+ * hovered or has keyboard focus, while a day is picked, for 15 seconds after
+ * an arrow, off screen, in a hidden tab, and always under reduced motion (WCAG
+ * 2.2.2), where a day still lights up and the readout still changes but
+ * nothing moves. Only a month picked with the arrows is announced.
+ *
+ * `data-settled` is on the card when it shows its months and nothing is on
+ * its way in, so tests (and anything else) can wait for it.
+ *
+ * While the months load, the card holds its final layout; if they can't be
+ * read, it is a plain card with its links.
+ */
+export default function BuildLogCard({
+  months: given,
+  src = '/api/build-log',
+  links,
+  size = 'compact',
+  heading = 'h3',
+  cycle = true,
+  index: heldIndex,
+  onIndexChange,
+  onDayChange,
+  onDayClick,
+}: BuildLogCardProps) {
+  const [loaded, setLoaded] = useState<LogMonth[] | null>(null)
+  const months = given ?? loaded
+  const [ownIndex, setOwnIndex] = useState(0)
+  const index = Math.min(heldIndex ?? ownIndex, Math.max(0, (months?.length ?? 1) - 1))
+  const [announce, setAnnounce] = useState('')
+  const [hovered, setHovered] = useState(false)
+  const [focused, setFocused] = useState(false)
+  const [inView, setInView] = useState(false)
+  /** The first look from the on-screen watcher has come in: the card is hydrated. */
+  const [live, setLive] = useState(false)
+  const [tabVisible, setTabVisible] = useState(
+    () => typeof document === 'undefined' || document.visibilityState === 'visible'
+  )
+  const [manualAt, setManualAt] = useState(0)
+  /** The picked day, for the month it was picked in (a new month starts with none). */
+  const [picked, setPicked] = useState<{ month: string; day: number; dir: number } | null>(null)
+  /**
+   * The bars' entrance: `idle` as rendered, `armed` (flat, waiting to be seen)
+   * or `rising` (on their way up).
+   */
+  const [entrance, setEntrance] = useState<'idle' | 'armed' | 'rising'>('idle')
+  /** A month on its way in: which way the wave runs (1 back to an older month, -1 on to a newer one). */
+  const [moving, setMoving] = useState<{ dir: number; at: number } | null>(null)
+  const settleTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  const reduceMotion = usePrefersReducedMotion()
+  const root = useRef<HTMLDivElement>(null)
+  const chart = useRef<HTMLDivElement>(null)
+  /** How the last press on the chart came: a tap only looks at a day, it never clicks it. */
+  const lastPointer = useRef('')
+  /** The mouse is over the card, as of the event itself (the `hovered` state follows a render later). */
+  const pointerOn = useRef(false)
+  const Heading = heading
+  const wide = size === 'wide'
+  const levels = LEVELS[size]
+
+  useEffect(() => {
+    if (given) return
+    let on = true
+    loadMonths(src).then((m) => {
+      if (!on) return
+      // Fetched after the page drew: the bars rise into place once the card is seen.
+      if (m.length && motionAllowed()) setEntrance('armed')
+      setLoaded(m)
+    })
+    return () => {
+      on = false
+    }
+  }, [given, src])
+
+  useEffect(() => {
+    const el = root.current
+    if (!el) return
+    let first = true
+    const observer = new IntersectionObserver((entries) => {
+      const entry = latestEntry(entries)
+      setInView(entry.isIntersecting)
+      if (!first) return
+      first = false
+      setLive(true)
+      // Rendered with its months (on the server) but off screen: the bars wait flat to rise when seen.
+      if (given?.length && !entry.isIntersecting && motionAllowed()) setEntrance('armed')
+    })
+    observer.observe(el)
+    const onVisibility = () => setTabVisible(document.visibilityState === 'visible')
+    document.addEventListener('visibilitychange', onVisibility)
+    return () => {
+      observer.disconnect()
+      document.removeEventListener('visibilitychange', onVisibility)
+    }
+    // `given` is read once, on the first look; a later change of months is a month change, not an entrance.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  /** Runs a month change or the entrance to its end on a timer, never waiting on a frame. */
+  const beginMove = (dir: number) => {
+    clearTimeout(settleTimer.current)
+    if (!motionAllowed()) return setMoving(null)
+    setMoving((m) => ({ dir, at: (m?.at ?? 0) + 1 }))
+    settleTimer.current = setTimeout(() => {
+      setMoving(null)
+      setEntrance((e) => (e === 'rising' ? 'idle' : e))
+    }, MONTH_MS + 40)
+  }
+  useEffect(() => () => clearTimeout(settleTimer.current), [])
+
+  // Armed and now on screen: the bars rise. A moment's wait first, so the flat bars are
+  // drawn and the rise has somewhere to start from.
+  useEffect(() => {
+    if (entrance !== 'armed' || !inView) return
+    const id = setTimeout(() => {
+      setEntrance('rising')
+      beginMove(-1)
+    }, 30)
+    return () => clearTimeout(id)
+  }, [entrance, inView])
+
+  const month = months?.[index]
+  const count = months?.length ?? 0
+  const active = month && picked?.month === month.id ? picked.day : null
+  const exploring = active !== null
+  const cycling =
+    cycle &&
+    count > 1 &&
+    !reduceMotion &&
+    !hovered &&
+    !focused &&
+    !exploring &&
+    inView &&
+    tabVisible
+
+  const indexRef = useRef(index)
+  const onIndexRef = useRef(onIndexChange)
+  useEffect(() => {
+    indexRef.current = index
+    onIndexRef.current = onIndexChange
+  })
+  const show = (next: number, dir: number) => {
+    if (next === indexRef.current) return
+    beginMove(dir)
+    if (heldIndex === undefined) setOwnIndex(next)
+    onIndexRef.current?.(next)
+  }
+
+  // A tap elsewhere on the page lets go of a day picked by touch (but not a
+  // tap on the card's own day link, which acts on that day).
+  useEffect(() => {
+    if (!exploring) return
+    const onDown = (e: PointerEvent) => {
+      const target = e.target as Element
+      if (!chart.current?.contains(target) && !target.closest?.('[data-logcard-keep]'))
+        setPicked(null)
+    }
+    document.addEventListener('pointerdown', onDown)
+    return () => document.removeEventListener('pointerdown', onDown)
+  }, [exploring])
+
+  const lastMove = useRef(0)
+  const pausedAt = useRef<number | null>(null)
+  useEffect(() => {
+    lastMove.current = Date.now()
+  }, [index])
+  useEffect(() => {
+    const now = Date.now()
+    if (!cycling) pausedAt.current ??= now
+    else {
+      if (pausedAt.current !== null && now - pausedAt.current >= 1000) lastMove.current = now
+      pausedAt.current = null
+    }
+  }, [cycling])
+  useEffect(() => {
+    if (!cycling) return
+    const id = setInterval(() => {
+      // A pointer that has just come onto the card holds it already, before React has
+      // drawn the hover: on a slow page a tick in between moved the month away from
+      // under it (the portfolio's flaky hover test, 2026-11-25).
+      if (pointerOn.current) return
+      const due = Math.max(lastMove.current + AUTO_MS, manualAt + MANUAL_HOLD_MS)
+      if (Date.now() >= due) {
+        lastMove.current = Date.now()
+        show((indexRef.current + 1) % count, 1)
+      }
+    }, 250)
+    return () => clearInterval(id)
+    // `show` reads only refs and setters.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cycling, count, manualAt, heldIndex])
+  const step = (by: number) => {
+    if (!months) return
+    const next = (index + by + count) % count
+    show(next, by)
+    setManualAt(Date.now())
+    setAnnounce(`${months[next].title}: ${months[next].changes} changes shipped`)
+  }
+
+  const facts = useMemo(() => (month ? monthFacts(month) : null), [month])
+  const peak = Math.max(1, ...(month?.days.map((d) => d.count) ?? [1]))
+  /** The days that can be picked: every day so far (the days still to come are only slots). */
+  const lastDay = month ? month.days.findLastIndex((d) => !d.future) : -1
+
+  const pick = (day: number | null) => {
+    if (!month) return
+    if (day === null) return setPicked(null)
+    const i = Math.max(0, Math.min(lastDay, day))
+    if (i === active) return
+    setPicked({ month: month.id, day: i, dir: active === null || i > active ? 1 : -1 })
+  }
+  /** The day under a pointer, from its x across the chart (so sweeping anywhere in it works). */
+  const dayAt = (clientX: number) => {
+    const box = chart.current!.getBoundingClientRect()
+    return Math.floor(((clientX - box.left) / box.width) * month!.days.length)
+  }
+  const focusDay = (i: number) => {
+    const target = Math.max(0, Math.min(lastDay, i))
+    chart.current?.querySelector<HTMLButtonElement>(`[data-index="${target}"]`)?.focus()
+  }
+
+  const armed = entrance === 'armed'
+  const day = active !== null && month ? month.days[active] : null
+  const dayFacts = active !== null && facts ? facts.days[active] : null
+  const number = useRollingNumber(
+    armed ? 0 : day ? day.count : (month?.changes ?? 0),
+    reduceMotion,
+    moving ? MONTH_MS : ROLL_MS
+  )
+  // The page hears of the day being looked at.
+  const lookedAt = day?.day ?? null
+  const onDayRef = useRef(onDayChange)
+  useEffect(() => {
+    onDayRef.current = onDayChange
+  })
+  useEffect(() => {
+    onDayRef.current?.(lookedAt)
+  }, [lookedAt])
+  const clickDay = (e: MouseEvent, i: number) => {
+    pick(i)
+    // A keyboard press has no pointer behind it (detail 0); a tap only looks.
+    if (onDayClick && month && (e.detail === 0 || lastPointer.current !== 'touch'))
+      onDayClick(month.days[i].day)
+  }
+  // The date nudges in from the side the eye is moving to.
+  const dateRef = useRef<HTMLSpanElement>(null)
+  const dir = picked?.dir ?? 1
+  useEffect(() => {
+    if (active === null || reduceMotion) return
+    dateRef.current?.animate(
+      [
+        { transform: `translateX(${dir * 3}px)`, opacity: 0.6 },
+        { transform: 'none', opacity: 1 },
+      ],
+      { duration: 180, easing: 'cubic-bezier(0.25, 0.1, 0.25, 1)' }
+    )
+  }, [active, dir, reduceMotion])
+  const inMonth = month?.id === 'recent' ? 'of 30 days' : 'of month'
+  // Roving focus: the picked day, or the last day so far.
+  const tabStop = active ?? lastDay
+  const ready = count > 0 && month && facts
+  // Wide and loaded: from 1024px the chart takes the right, beside the readout.
+  const grid = wide && ready
+  const settled = ready && !moving && entrance === 'idle'
+  // The month's name and readout slide in from the side the wave starts on (not on the first view).
+  const swap = moving && entrance === 'idle' ? 'logcard-month-in' : ''
+
+  const footer =
+    links?.left || links?.right ? (
+      <div
+        className={`mt-2.5 flex items-end justify-between gap-3 ${
+          grid ? 'lg:col-start-1 lg:row-start-3 lg:justify-start lg:gap-8 lg:self-end' : ''
+        }`}
+      >
+        {links.left ? (
+          <div className="flex min-w-0 flex-col items-start">
+            {links.left.note && (
+              <p className="text-[0.7rem] leading-4 text-slate-400">{links.left.note}</p>
+            )}
+            <FooterLink link={links.left} />
+          </div>
+        ) : (
+          // Holds the right link to the right; beside the chart it starts the row instead.
+          <span className={grid ? 'lg:hidden' : ''} />
+        )}
+        {links.right && <FooterLink link={links.right} />}
+      </div>
+    ) : null
+
+  return (
+    <div
+      ref={root}
+      className={`logcard relative h-full w-full p-5 sm:p-6 ${
+        grid
+          ? 'flex flex-col lg:grid lg:grid-cols-[minmax(17rem,22rem)_minmax(0,1fr)] lg:grid-rows-[auto_auto_1fr] lg:gap-x-10 lg:p-7'
+          : 'flex flex-col'
+      }`}
+      style={
+        {
+          '--logcard-levels': levels,
+          '--logcard-bar-ms': `${BAR_MS}ms`,
+          '--logcard-dir': moving?.dir ?? 1,
+        } as CSSProperties
+      }
+      data-build-log={months === null ? 'loading' : count ? 'ready' : 'fallback'}
+      data-size={size}
+      data-cycling={cycling ? '' : undefined}
+      // Hydrated and on screen: tests wait for it before they aim at a day.
+      data-in-view={inView ? '' : undefined}
+      data-live={live ? '' : undefined}
+      // Showing its months with nothing on its way in (a month change or the entrance).
+      data-settled={settled ? '' : undefined}
+      data-entrance={entrance}
+      data-month-id={month?.id}
+      onMouseEnter={() => {
+        pointerOn.current = true
+        setHovered(true)
+      }}
+      onMouseLeave={() => {
+        pointerOn.current = false
+        setHovered(false)
+      }}
+      onFocus={(e) => setFocused(e.target.matches(':focus-visible'))}
+      onBlur={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setFocused(false)
+      }}
+    >
+      {ready ? (
+        <>
+          {/* The month arrows, top left, with the month beside them. */}
+          <div className={`flex items-center gap-3 ${grid ? 'lg:col-start-1 lg:row-start-1' : ''}`}>
+            <div className="flex shrink-0 overflow-hidden rounded-lg border border-white/12 bg-white/4">
+              <button
+                type="button"
+                className={MONTH_ARROW}
+                onClick={() => step(1)}
+                aria-label="Older month"
+              >
+                <FiChevronLeft className="h-4 w-4" aria-hidden="true" />
+              </button>
+              <span aria-hidden="true" className="w-px bg-white/12" />
+              <button
+                type="button"
+                className={MONTH_ARROW}
+                onClick={() => step(-1)}
+                aria-label="Newer month"
+              >
+                <FiChevronRight className="h-4 w-4" aria-hidden="true" />
+              </button>
+            </div>
+            <Heading
+              key={month.id}
+              className={`${swap} truncate font-bold tracking-tight text-slate-50 ${
+                wide ? 'text-xl lg:text-2xl' : 'text-lg lg:text-xl'
+              }`}
+              data-month
+            >
+              {month.title}
+            </Heading>
+          </div>
+
+          {/* The readout: the month, or the day being looked at. Screen readers get the same from the bars. */}
+          <div
+            key={month.id}
+            className={`${swap} mt-2.5 ${grid ? 'lg:col-start-1 lg:row-start-2 lg:mt-4' : ''}`}
+            aria-hidden="true"
+            data-readout
+          >
+            <p className="flex items-baseline gap-2">
+              <span
+                className={`leading-none font-bold tracking-tight tabular-nums transition-colors duration-200 ${
+                  wide ? 'text-4xl sm:text-5xl' : 'text-4xl lg:text-[2.6rem]'
+                } ${day ? 'text-cyan-200' : 'text-slate-50'}`}
+                data-number
+                data-changes={day ? undefined : ''}
+              >
+                {number}
+              </span>
+              {/* Fades in when the readout switches between the month and a day; from day to
+                  day the date only nudges, so it stays readable however fast the sweep. */}
+              <span
+                key={day ? 'day' : 'month'}
+                className="logcard-swap text-sm font-medium whitespace-nowrap text-slate-300 lg:text-base"
+              >
+                {day ? (
+                  <>
+                    {plural(number, 'change', 'changes')} on
+                    {/* A margin, not a space: the date's nudge can't close it up. */}
+                    <span
+                      ref={dateRef}
+                      className="ml-1.5 inline-block font-semibold text-slate-100"
+                    >
+                      {/* The weekday steps aside where the card is too narrow for it (the homepage's
+                          17rem column with a two-digit day), so the date never runs off the card. */}
+                      <span className="logcard-weekday">{weekday(day.day)}, </span>
+                      {shortDay(day.day)}
+                    </span>
+                  </>
+                ) : (
+                  plural(month.changes, 'change shipped', 'changes shipped')
+                )}
+              </span>
+            </p>
+            <div
+              key={day ? 'day' : 'month'}
+              // A chip that doesn't fit wraps out of sight, whole, rather than being cut.
+              className="logcard-swap logcard-chips -mx-px mt-[5px] flex h-[22px] flex-wrap gap-x-1.5 gap-y-2 overflow-hidden p-px"
+            >
+              {day && dayFacts ? (
+                day.count === 0 ? (
+                  <Chip icon={LuMoon}>Nothing shipped</Chip>
+                ) : (
+                  <>
+                    {dayFacts.rank === 1 ? (
+                      <Chip icon={LuTrophy} tone="hot">
+                        Busiest day
+                      </Chip>
+                    ) : (
+                      <Chip icon={LuMedal}>
+                        #{dayFacts.rank} of {facts.activeDays} days
+                      </Chip>
+                    )}
+                    <Chip icon={LuChartPie} at={1}>
+                      {dayFacts.share < 1 ? '<1' : dayFacts.share}% {inMonth}
+                    </Chip>
+                    {dayFacts.run.length > 1 && (
+                      <Chip
+                        icon={LuFlame}
+                        tone={dayFacts.run.length >= WARM_STREAK ? 'warm' : 'plain'}
+                        at={2}
+                      >
+                        {dayFacts.run.length}-day streak
+                      </Chip>
+                    )}
+                  </>
+                )
+              ) : (
+                <>
+                  {facts.busiest && (
+                    <Chip icon={LuTrophy}>
+                      Peak {shortDay(facts.busiest.day)} · {facts.busiest.count}
+                    </Chip>
+                  )}
+                  <Chip icon={LuCalendarCheck} at={1}>
+                    {facts.activeDays} {plural(facts.activeDays, 'day', 'days')} active
+                  </Chip>
+                  {facts.longestRun > 1 && (
+                    <Chip
+                      icon={LuFlame}
+                      tone={facts.longestRun >= WARM_STREAK ? 'warm' : 'plain'}
+                      at={2}
+                    >
+                      {facts.longestRun}-day streak
+                    </Chip>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
+          <p className="sr-only">
+            {month.changes} {plural(month.changes, 'change', 'changes')} shipped in {month.title}
+            {facts.busiest
+              ? `, the busiest day ${longDay(facts.busiest.day)} with ${facts.busiest.count}.`
+              : '.'}
+          </p>
+
+          {/* The chart: a stack of blocks per day. Sweep, tap or arrow across it. */}
+          <div
+            className={`mt-auto pt-2 ${
+              grid ? 'lg:col-start-2 lg:row-span-3 lg:row-start-1 lg:self-end lg:pt-0' : ''
+            }`}
+          >
+            <div
+              ref={chart}
+              role="group"
+              aria-label={`Changes per day in ${month.title}. Left and right arrow keys move between days.`}
+              className="logcard-chart flex touch-pan-y items-end select-none"
+              data-chart
+              data-bars
+              data-exploring={exploring ? '' : undefined}
+              onPointerMove={(e) => pick(dayAt(e.clientX))}
+              onPointerDown={(e) => {
+                lastPointer.current = e.pointerType
+                pick(dayAt(e.clientX))
+              }}
+              onPointerLeave={(e) => {
+                // A mouse lets go on leaving, unless the keyboard is walking the days.
+                const focus = document.activeElement
+                const walking = chart.current?.contains(focus) && focus?.matches(':focus-visible')
+                if (e.pointerType === 'mouse' && !walking) pick(null)
+              }}
+              onBlur={(e) => {
+                const to = e.relatedTarget as Element | null
+                // Focus going to the card's own day link keeps the day: that link acts on it.
+                if (to?.closest('[data-logcard-keep]')) return
+                if (!e.currentTarget.contains(to) && !hovered) pick(null)
+              }}
+              onKeyDown={(e) => {
+                // From the day that has focus now, not the last one drawn: keys pressed faster
+                // than the page draws (WebKit with no frames, 2026-11-25) walked from a stale day.
+                const own = (e.target as HTMLElement).dataset?.index
+                const at = own !== undefined ? Number(own) : (active ?? lastDay)
+                const to =
+                  e.key === 'ArrowRight'
+                    ? at + 1
+                    : e.key === 'ArrowLeft'
+                      ? at - 1
+                      : e.key === 'Home'
+                        ? 0
+                        : e.key === 'End'
+                          ? lastDay
+                          : null
+                if (e.key === 'Escape') {
+                  pick(null)
+                  return
+                }
+                if (to === null) return
+                e.preventDefault()
+                focusDay(to)
+              }}
+            >
+              {/* A column per day, kept by its place in the month (the 1st, the 2nd...), so a new
+                  month eases each bar from its old height rather than drawing a new chart. */}
+              {month.days.map((d, i) => {
+                const blocks = d.future
+                  ? 0
+                  : d.count > 0
+                    ? Math.max(1, Math.round((d.count / peak) * levels))
+                    : 1
+                const distance = active === null ? undefined : Math.min(3, Math.abs(i - active))
+                // The wave: from the right going back a month, from the left going on.
+                const place = month.days.length > 1 ? i / (month.days.length - 1) : 0
+                const wave = (moving?.dir ?? -1) > 0 ? 1 - place : place
+                return (
+                  <span
+                    key={i}
+                    className="logcard-day relative flex h-full min-w-0 flex-1 items-end"
+                    data-d={distance}
+                    data-future={d.future ? '' : undefined}
+                    style={
+                      {
+                        '--logcard-n': armed ? 0 : blocks,
+                        '--logcard-delay': `${Math.round(wave * WAVE_MS)}ms`,
+                      } as CSSProperties
+                    }
+                  >
+                    <span aria-hidden="true" className="logcard-slot" />
+                    <span aria-hidden="true" className="logcard-stack relative block w-full">
+                      <span
+                        className={`logcard-fill absolute inset-0 ${
+                          d.count > 0 ? 'logcard-fill-on' : 'logcard-fill-off'
+                        }`}
+                      >
+                        {d.count > 0 && <span className="logcard-lit absolute inset-0" />}
+                      </span>
+                    </span>
+                    {!d.future && (
+                      <button
+                        type="button"
+                        tabIndex={i === tabStop ? 0 : -1}
+                        aria-label={`${longDay(d.day)}: ${d.count} ${plural(d.count, 'change', 'changes')}${
+                          facts.days[i]?.rank === 1 ? ', the busiest day' : ''
+                        }`}
+                        aria-pressed={i === active}
+                        data-index={i}
+                        data-day={d.day}
+                        data-d={distance}
+                        className="logcard-hit absolute inset-0 cursor-pointer rounded-[2px] focus:outline-hidden"
+                        onFocus={() => pick(i)}
+                        onClick={(e) => clickDay(e, i)}
+                      >
+                        <span aria-hidden="true" className="logcard-col" />
+                      </button>
+                    )}
+                  </span>
+                )
+              })}
+            </div>
+            <div
+              aria-hidden="true"
+              className="relative mt-1 flex justify-between pt-1 font-mono text-[0.68rem] leading-4 tracking-wider text-slate-400 uppercase"
+            >
+              {/* A pixel under the day being looked at, sliding along as the day changes. */}
+              {active !== null && (
+                <span
+                  className="logcard-cursor absolute top-0 h-[3px] w-[3px] -translate-x-1/2 bg-cyan-300"
+                  style={{
+                    left: `calc((100% - ${month.days.length - 1} * var(--logcard-gap)) / ${month.days.length} * ${active + 0.5} + ${active} * var(--logcard-gap))`,
+                  }}
+                />
+              )}
+              <span key={`${month.id}-first`} className={swap}>
+                {shortDay(month.days[0].day)}
+              </span>
+              <span key={`${month.id}-last`} className={swap}>
+                {shortDay(month.days[month.days.length - 1].day)}
+              </span>
+            </div>
+          </div>
+          <p className="sr-only" aria-live="polite">
+            {announce}
+          </p>
+        </>
+      ) : months === null ? (
+        <div aria-hidden="true" className="flex flex-1 flex-col">
+          <div className="h-8 w-1/2 rounded-lg bg-white/4" />
+          <div className="mt-3 h-14 w-2/3 rounded-xl bg-white/4" />
+          <div className="mt-auto h-16 rounded-xl bg-white/4" />
+        </div>
+      ) : (
+        <div className="flex flex-1 flex-col justify-end">
+          <Heading className="text-2xl font-bold tracking-tight text-slate-50">
+            What I&apos;m shipping
+          </Heading>
+          <p className="mt-1 text-base text-slate-300">Every change I ship, day by day.</p>
+        </div>
+      )}
+
+      {/* The links along the bottom, on one baseline (owner, 2026-11-25). */}
+      {footer}
+    </div>
+  )
+}

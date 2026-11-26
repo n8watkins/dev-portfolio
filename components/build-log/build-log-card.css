@@ -1,0 +1,245 @@
+/* The build log card (components/build-log/BuildLogCard.tsx), imported by
+   each site's app/globals.css. Shared byte for byte by n8builds.dev and the
+   portfolio (`npm run check:sync` in the portfolio). Every class starts with
+   `logcard-`, so nothing here meets either site's own rules. */
+
+/* The chart's measures: a block, its pitch (a block and the seam above it) and
+   the gap between days. The card sets `--logcard-levels` (the most blocks a
+   day can have) and `--logcard-bar-ms`; each day sets `--logcard-n`, its
+   blocks, and `--logcard-delay`, its place in a month change's wave. */
+.logcard {
+  --logcard-block: 4px;
+  --logcard-pitch: 5px;
+  --logcard-gap: 3px;
+}
+/* The card measures itself, so its readout can fit a narrow column (`.logcard-weekday`). */
+.logcard {
+  container: logcard / inline-size;
+}
+@container logcard (width < 20rem) {
+  .logcard-weekday {
+    display: none;
+  }
+}
+.logcard[data-size='wide'] {
+  --logcard-block: 6px;
+  --logcard-pitch: 7px;
+  --logcard-gap: 3px;
+}
+@media (width >= 64rem) {
+  .logcard[data-size='wide'] {
+    --logcard-block: 8px;
+    --logcard-pitch: 10px;
+    --logcard-gap: 5px;
+  }
+}
+.logcard-chart {
+  height: calc(var(--logcard-levels) * var(--logcard-pitch) + 6px);
+  gap: var(--logcard-gap);
+}
+/* Every day's stack is the chart's full height; what shows of it is its own
+   blocks, `--logcard-h` from the bottom. */
+.logcard-day {
+  --logcard-h: max(
+    0px,
+    calc(var(--logcard-n) * var(--logcard-pitch) - (var(--logcard-pitch) - var(--logcard-block)))
+  );
+}
+.logcard-stack {
+  height: calc(
+    var(--logcard-levels) * var(--logcard-pitch) - (var(--logcard-pitch) - var(--logcard-block))
+  );
+}
+
+/* A day is a stack of square blocks: the mask cuts the column into blocks with
+   a seam between, counted from the bottom, and the clip shows the day's own.
+   A new month eases each day from its old height to its new one, a wave across
+   the month (owner, 2026-11-25: "a little more flowy"): the clip and the
+   colour's height move together, paint only, never the layout. */
+.logcard-fill {
+  -webkit-mask-image: linear-gradient(
+    to top,
+    #000 0 var(--logcard-block),
+    transparent var(--logcard-block) var(--logcard-pitch)
+  );
+  mask-image: linear-gradient(
+    to top,
+    #000 0 var(--logcard-block),
+    transparent var(--logcard-block) var(--logcard-pitch)
+  );
+  -webkit-mask-size: 100% var(--logcard-pitch);
+  mask-size: 100% var(--logcard-pitch);
+  -webkit-mask-repeat: repeat-y;
+  mask-repeat: repeat-y;
+  -webkit-mask-position: left bottom;
+  mask-position: left bottom;
+  border-radius: 1px;
+  clip-path: inset(calc(100% - var(--logcard-h)) 0 0 0);
+  background-repeat: no-repeat;
+  background-position: left bottom;
+  background-size: 100% var(--logcard-h);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .logcard-fill {
+    transition:
+      clip-path var(--logcard-bar-ms) cubic-bezier(0.22, 0.8, 0.3, 1) var(--logcard-delay),
+      background-size var(--logcard-bar-ms) cubic-bezier(0.22, 0.8, 0.3, 1) var(--logcard-delay);
+  }
+  /* A day that comes into the chart (a longer month) rises from nothing, once the card is live. */
+  @starting-style {
+    .logcard[data-live] .logcard-fill {
+      clip-path: inset(100% 0 0 0);
+    }
+  }
+}
+.logcard-fill-on {
+  background-image: linear-gradient(to top, var(--color-sky-700), var(--color-sky-400));
+}
+/* A quiet day: one dark block, so the month still reads as a row of days. */
+.logcard-fill-off {
+  background-image: linear-gradient(rgb(255 255 255 / 0.12), rgb(255 255 255 / 0.12));
+}
+/* A day still to come: a faint slot along the foot instead of a block. */
+.logcard-slot {
+  position: absolute;
+  inset: auto 0 0;
+  height: 4px;
+  border-radius: 1px;
+  background: rgb(255 255 255 / 0.05);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.logcard-day[data-future] .logcard-slot {
+  opacity: 1;
+}
+/* A lit day's blocks: they fill bottom to top, one block at a time. */
+.logcard-lit {
+  background-image: linear-gradient(to top, var(--color-cyan-400), var(--color-sky-100));
+  background-repeat: no-repeat;
+  background-position: left bottom;
+  background-size: 100% var(--logcard-h);
+  transform: scaleY(0);
+  transform-origin: bottom;
+  transition: transform 0.22s steps(var(--logcard-levels), end);
+}
+/* The column behind a day: it carries the keyboard focus ring. */
+.logcard-col {
+  position: absolute;
+  inset: -2px -1px;
+  border-radius: 3px;
+}
+.logcard-stack {
+  transition:
+    transform 0.28s cubic-bezier(0.3, 1.5, 0.5, 1),
+    filter 0.2s,
+    opacity 0.2s;
+}
+/* While a day is looked at, it lifts and lights up, its neighbours lean in and
+   the rest step back a little (owner, 2026-11-25: the day itself stands out,
+   not the whole chart; the softer of the two highlights he compared). */
+[data-exploring] .logcard-day .logcard-stack {
+  opacity: 0.75;
+}
+[data-exploring] .logcard-day[data-d='2'] .logcard-stack {
+  opacity: 0.9;
+  transform: translateY(-1px);
+  filter: brightness(1.12);
+}
+[data-exploring] .logcard-day[data-d='1'] .logcard-stack {
+  opacity: 1;
+  transform: translateY(-2px);
+  filter: brightness(1.3);
+}
+[data-exploring] .logcard-day[data-d='0'] .logcard-stack {
+  opacity: 1;
+  transform: translateY(-4px);
+  filter: drop-shadow(0 0 5px rgb(34 211 238 / 0.8)) drop-shadow(0 0 1px rgb(186 230 253 / 0.9));
+}
+.logcard-day[data-d='0'] .logcard-lit {
+  transform: scaleY(1);
+}
+.logcard-day[data-d='0'] .logcard-fill-off {
+  background-image: linear-gradient(var(--color-cyan-300), var(--color-cyan-300));
+}
+.logcard-hit:focus-visible .logcard-col {
+  box-shadow: 0 0 0 2px var(--color-sky-400);
+}
+/* The pixel under the chart that marks the day being looked at. */
+.logcard-cursor {
+  transition: left 0.18s cubic-bezier(0.3, 1.3, 0.5, 1);
+  box-shadow: 0 0 6px var(--color-cyan-300);
+}
+/* A new month's name and readout slide in from the side the wave starts on
+   (`--logcard-dir`: 1 back to an older month, from the left; -1 on to a newer
+   one, from the right), on the bars' timeline; the tags settle a beat after. */
+@keyframes logcard-month-in {
+  from {
+    opacity: 0;
+    transform: translateX(calc(var(--logcard-dir, 1) * -10px));
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .logcard-month-in {
+    animation: logcard-month-in 0.42s cubic-bezier(0.22, 0.8, 0.3, 1) both;
+  }
+  .logcard-month-in .logcard-chips {
+    animation: logcard-month-in 0.42s cubic-bezier(0.22, 0.8, 0.3, 1) 0.08s both;
+  }
+}
+/* The tags settle in one after another when they change (a day picked, a new
+   month): a short rise and fade, a beat apart, inside the month's timeline. */
+@keyframes logcard-chip-in {
+  from {
+    opacity: 0;
+    transform: translateY(3px);
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .logcard-chip {
+    animation: logcard-chip-in 0.3s cubic-bezier(0.22, 0.8, 0.3, 1)
+      calc(var(--logcard-chip-at, 0) * 50ms) both;
+  }
+}
+/* The readout's words fade in as it switches between the month and a day. */
+@keyframes logcard-fade {
+  from {
+    opacity: 0;
+  }
+}
+.logcard-swap {
+  animation: logcard-fade 0.2s ease-out both;
+}
+/* The links' underline draws in from the left and runs out to the right. */
+.logcard-underline {
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform 0.3s cubic-bezier(0.65, 0, 0.35, 1);
+}
+.group\/link:hover .logcard-underline,
+.group\/link:focus-visible .logcard-underline {
+  transform: scaleX(1);
+  transform-origin: left;
+}
+/* Under reduced motion a day still lights up, all at once and in place, and a
+   new month is simply there. */
+@media (prefers-reduced-motion: reduce) {
+  /* None at all, not even the near-zero transition both sites' reduced-motion rule
+     gives every element: WebKit left a bar at its old month's height under it. */
+  .logcard-fill {
+    transition: none !important;
+  }
+  .logcard-lit,
+  .logcard-cursor,
+  .logcard-underline,
+  .logcard-slot {
+    transition: none;
+  }
+  .logcard-stack {
+    transition:
+      filter 0.2s,
+      opacity 0.2s;
+  }
+  [data-exploring] .logcard-day .logcard-stack {
+    transform: none !important;
+  }
+}

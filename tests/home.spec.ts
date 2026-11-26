@@ -124,10 +124,21 @@ test('the build log card shows a month, cycles the months, and links the site an
   const log = card.getByRole('link', { name: /^Build log/ })
   await expect(site).toHaveAttribute('href', 'https://n8builds.dev')
   await expect(log).toHaveAttribute('href', 'https://n8builds.dev/builds')
-  for (const link of [site, log]) {
-    await expect(link).toHaveAttribute('target', '_blank')
-    await expect(link.locator('img')).toHaveCount(0)
-  }
+  for (const link of [site, log]) await expect(link).toHaveAttribute('target', '_blank')
+  // n8builds.dev's square monogram beside its name, inside the link and decorative (owner,
+  // 2026-11-25): its name says it already. The build log link has none.
+  const icon = site.locator('img')
+  await expect(icon).toHaveCount(1)
+  await expect(icon).toHaveAttribute('alt', '')
+  await expect(icon).toHaveAttribute('src', /\/brand\/n8-monogram\.webp/)
+  await expect(icon).toBeVisible()
+  await expect(site).toHaveAccessibleName(/^n8builds\.dev/)
+  await expect(log.locator('img')).toHaveCount(0)
+  // About the text's height, on its line.
+  const [iconBox, label] = [await icon.boundingBox(), await site.getByText('n8builds.dev').boundingBox()]
+  expect(iconBox!.height).toBeGreaterThan(12)
+  expect(iconBox!.height).toBeLessThan(18)
+  expect(Math.abs(iconBox!.y + iconBox!.height / 2 - (label!.y + label!.height / 2))).toBeLessThan(3)
   await expect(card.getByText('I post everything here')).toBeVisible()
   // Side by side on one line, along the bottom of the card.
   const [a, b, box] = [await site.boundingBox(), await log.boundingBox(), await card.boundingBox()]
@@ -141,19 +152,55 @@ test('the build log card shows a month, cycles the months, and links the site an
  * and its bento cell has finished arriving (it rises 25px and scales up from
  * 95%). A pointer aimed at a day before then lands beside it: on CI a tap at
  * the fifth day's centre, measured mid-entrance, picked the sixth (2026-11-25).
+ * And until the card itself is settled: its bars risen, no month on its way in.
+ *
+ * Then, unless `hold` is false, it holds the card on `hold`'s month: the
+ * pointer rests on the month's name (a hovered card never moves on), and the
+ * arrows bring the month back if the card had already moved on by itself. The
+ * hover test failed on CI (2026-11-25, #107) with the day it had just hovered
+ * "not found": the only thing that takes a day's button away is a new month,
+ * and on a slow page the 5 s before the card moves on can pass before a test
+ * aims, or a tick can land between the hover and React drawing it (the card
+ * now checks the pointer itself before moving on).
  */
-async function showBuildLog(page: import('@playwright/test').Page) {
+async function showBuildLog(
+  page: import('@playwright/test').Page,
+  { hold = 'November 2026' as string | false } = {}
+) {
   const card = page.locator('[data-build-log]')
   await card.evaluate((el) => el.scrollIntoView({ block: 'center', behavior: 'instant' }))
   await expect(card).toHaveAttribute('data-build-log', 'ready', LOADED)
+  await expect(card).toHaveAttribute('data-settled', '', LOADED)
+  if (hold) {
+    // From off the card: on a reloaded page a pointer already resting where the name now is
+    // gets no mouseenter in Firefox, and the card would not know it is hovered. Moved there
+    // by its place on screen, not `hover()`, whose own scrolling into view can move the page,
+    // and onto the card's own padding, which is there whatever month it is moving to.
+    await page.mouse.move(0, 0)
+    const box = (await card.boundingBox())!
+    await page.mouse.move(box.x + 8, box.y + 8)
+    await expect(card).not.toHaveAttribute('data-cycling', '')
+    for (let i = 0; i < 12 && (await card.locator('[data-month]').textContent()) !== hold; i++) {
+      await expect(card).toHaveAttribute('data-settled', '', LOADED)
+      await card.getByRole('button', { name: 'Newer month' }).click()
+    }
+    await expect(card.locator('[data-month]')).toHaveText(hold)
+    await expect(card).toHaveAttribute('data-settled', '', LOADED)
+  }
   await expect
     .poll(() =>
+      // Every box around the card (the bento cell...) at rest.
       card.evaluate((el) => {
-        const cell = getComputedStyle(el.parentElement!)
-        return `${cell.transform} ${cell.opacity}`
+        const moving: string[] = []
+        for (let at = el.parentElement; at && at !== document.body; at = at.parentElement) {
+          const s = getComputedStyle(at)
+          const still = s.transform === 'none' || s.transform === 'matrix(1, 0, 0, 1, 0, 0)'
+          if (!still || s.opacity !== '1') moving.push(at.className)
+        }
+        return moving
       })
     )
-    .toBe('none 1')
+    .toEqual([])
   return card
 }
 
@@ -239,9 +286,7 @@ test('the build log readout settles on the right number even when the page draws
     window.cancelAnimationFrame = (id) => window.clearTimeout(id)
   })
   await page.goto('/')
-  const card = page.locator('[data-build-log]')
-  await card.evaluate((el) => el.scrollIntoView({ block: 'center', behavior: 'instant' }))
-  await expect(card).toHaveAttribute('data-build-log', 'ready', LOADED)
+  const card = await showBuildLog(page)
   const number = card.locator('[data-readout] [data-number]')
   await expect(number).toHaveText('49')
   await card.locator('[data-chart] button[tabindex="0"]').focus()
@@ -261,7 +306,7 @@ test.describe('on a touch screen', () => {
   // as loading the months (2026-11-25), and holding is best shown by simply waiting past the 5 s.
   test('a tap picks a build log day and holds the month; a tap elsewhere lets go', async ({ page }) => {
     await page.goto('/')
-    const card = await showBuildLog(page)
+    const card = await showBuildLog(page, { hold: false })
     await expect(card).toHaveAttribute('data-cycling', '')
     // The month may already have moved on by itself, so pick the fifth day of whichever is showing.
     const day = card.locator('[data-chart] button').nth(4)
@@ -383,10 +428,10 @@ test('under reduced motion a build log day still lights up and shows its numbers
   const styles = await card.evaluate((el) => {
     const pick = (s: string) => getComputedStyle(el.querySelector(s)!)
     return {
-      lift: pick('[aria-pressed="true"] .log-stack').transform,
-      neighbour: pick('[data-d="1"] .log-stack').transform,
-      fill: pick('[aria-pressed="true"] .log-lit').transitionDuration,
-      lit: pick('[aria-pressed="true"] .log-lit').transform,
+      lift: pick('.logcard-day:has([aria-pressed="true"]) .logcard-stack').transform,
+      neighbour: pick('.logcard-day[data-d="1"] .logcard-stack').transform,
+      fill: pick('.logcard-day:has([aria-pressed="true"]) .logcard-lit').transitionDuration,
+      lit: pick('.logcard-day:has([aria-pressed="true"]) .logcard-lit').transform,
     }
   })
   expect(styles.lift).toBe('none')
@@ -395,6 +440,169 @@ test('under reduced motion a build log day still lights up and shows its numbers
   expect(parseFloat(styles.fill)).toBeLessThan(0.001)
   expect(styles.lit).toBe('matrix(1, 0, 0, 1, 0, 0)')
 })
+
+/**
+ * Each day's bar against the month it shows: its blocks (`--logcard-n`, the
+ * day's share of the busiest day's, one dark block on a quiet day, none on a
+ * day to come) and the height its colour has come to rest at. Returns what
+ * does not match, so a failure says which day.
+ */
+function barMismatches(card: import('@playwright/test').Locator) {
+  return card.evaluate((el) => {
+    const css = getComputedStyle(el)
+    const levels = Number(css.getPropertyValue('--logcard-levels'))
+    const pitch = parseFloat(css.getPropertyValue('--logcard-pitch'))
+    const block = parseFloat(css.getPropertyValue('--logcard-block'))
+    const days = [...el.querySelectorAll<HTMLElement>('[data-chart] .logcard-day')]
+    const counts = days.map((d) => {
+      const label = d.querySelector('button')?.getAttribute('aria-label')
+      return label ? Number(label.match(/: (\d+) change/)![1]) : null
+    })
+    const peak = Math.max(1, ...counts.map((c) => c ?? 0))
+    const out: string[] = []
+    days.forEach((d, i) => {
+      const c = counts[i]
+      const want = c === null ? 0 : c > 0 ? Math.max(1, Math.round((c / peak) * levels)) : 1
+      const n = Number(d.style.getPropertyValue('--logcard-n'))
+      if (n !== want) out.push(`day ${i + 1}: ${n} blocks, want ${want}`)
+      const fill = d.querySelector<HTMLElement>('.logcard-fill')!
+      const height = parseFloat(getComputedStyle(fill).backgroundSize.split(' ')[1] ?? '0')
+      const wantHeight = Math.max(0, want * pitch - (pitch - block))
+      if (Math.abs(height - wantHeight) > 0.5)
+        out.push(`day ${i + 1}: ${height}px high, want ${wantHeight}`)
+    })
+    return out
+  })
+}
+
+/**
+ * A new month flows in (owner, 2026-11-25: "a little more flowy"): every bar
+ * eases to its new height in a wave while the name and readout cross over, on
+ * one timeline, and the card itself never moves or resizes.
+ */
+test('a build log month change flows in, holds the card still, and lands on the right month, bars and number', async ({
+  page,
+}) => {
+  // Loading the months and watching the change take a while on a busy machine.
+  test.setTimeout(60_000)
+  await page.goto('/')
+  const card = await showBuildLog(page)
+  // The card's box on the page (not the window, which a click may scroll).
+  const box = () =>
+    card.evaluate((el) => {
+      const r = el.getBoundingClientRect()
+      return `${r.x},${r.y + window.scrollY},${r.width},${r.height}`
+    })
+  const before = await box()
+  await card.getByRole('button', { name: 'Older month' }).click()
+  const boxes = new Set<string>()
+  for (let i = 0; i < 16; i++) {
+    boxes.add(await box())
+    await page.waitForTimeout(40)
+  }
+  expect([...boxes]).toEqual([before])
+  await expect(card).toHaveAttribute('data-settled', '', LOADED)
+  await expect(card.locator('[data-month]')).toHaveText('October 2026')
+  await expect(card.locator('[data-changes]')).toHaveText('275')
+  expect(await barMismatches(card)).toEqual([])
+})
+
+test('a build log month change interrupted by another, and by a day, lands where it was sent', async ({
+  page,
+  isMobile,
+}) => {
+  test.skip(isMobile, 'Hover is a desktop pointer.')
+  await page.goto('/')
+  const card = await showBuildLog(page)
+  const older = card.getByRole('button', { name: 'Older month' })
+  await older.click()
+  await older.click()
+  // A day of September, picked while its bars are still on their way.
+  const day = card.locator('[data-chart] button').nth(4)
+  await day.hover()
+  await expect(card.locator('[data-month]')).toHaveText('September 2026')
+  await expect(day).toHaveAttribute('aria-pressed', 'true')
+  const count = (await day.getAttribute('aria-label'))!.match(/: (\d+) change/)![1]
+  await expect(card.locator('[data-readout] [data-number]')).toHaveText(count)
+  await page.mouse.move(2, 2)
+  await expect(card).toHaveAttribute('data-settled', '', LOADED)
+  await expect(card.locator('[data-month]')).toHaveText('September 2026')
+  expect(await barMismatches(card)).toEqual([])
+})
+
+test('under reduced motion a new build log month is simply there', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.goto('/')
+  const card = await showBuildLog(page)
+  await card.getByRole('button', { name: 'Older month' }).click()
+  await expect(card.locator('[data-changes]')).toHaveText('275', { timeout: 200 })
+  await expect(card).toHaveAttribute('data-settled', '', { timeout: 200 })
+  const moving = await card.evaluate(
+    // Any that takes time: the site's reduced-motion rule leaves near-zero transitions,
+    // which WebKit still lists.
+    (el) =>
+      [...el.querySelectorAll('.logcard-fill')]
+        .flatMap((f) => f.getAnimations())
+        .filter((a) => Number(a.effect?.getTiming().duration) > 1).length
+  )
+  expect(moving).toBe(0)
+  expect(await barMismatches(card)).toEqual([])
+})
+
+/** The bars rise the first time the card is seen, and a month change lands, with no frames at all. */
+test('the build log card rises in and changes month in the right state even when the page draws no frames', async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    window.requestAnimationFrame = (cb) =>
+      window.setTimeout(() => cb(performance.now() - 40), 6000) as unknown as number
+    window.cancelAnimationFrame = (id) => window.clearTimeout(id)
+  })
+  await page.goto('/')
+  const card = await showBuildLog(page)
+  await expect(card).toHaveAttribute('data-entrance', 'idle')
+  await expect(card.locator('[data-changes]')).toHaveText('49')
+  await expect.poll(() => barMismatches(card)).toEqual([])
+  await card.getByRole('button', { name: 'Older month' }).click()
+  await expect(card).toHaveAttribute('data-settled', '', LOADED)
+  await expect(card.locator('[data-changes]')).toHaveText('275')
+  await expect.poll(() => barMismatches(card)).toEqual([])
+})
+
+/**
+ * The tags carry icons (owner, 2026-11-25: "maybe we can make that a little
+ * bit more exciting. With some icons that are relevant?"), decorative, and
+ * still fit: a tag that does not fit drops out whole, and nothing is wider
+ * than the card, at 390 too.
+ */
+for (const width of [1440, 390]) {
+  test(`every build log tag has its icon and fits the card (${width}px)`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 })
+    await page.goto('/')
+    const card = await showBuildLog(page)
+    for (const state of ['month', 'day'] as const) {
+      if (state === 'day') await card.getByRole('button', { name: /^Thursday, November 5:/ }).focus()
+      const tags = card.locator('[data-readout] .logcard-chip')
+      expect(await tags.count(), state).toBeGreaterThan(1)
+      for (const tag of await tags.all()) await expect(tag.locator('svg[aria-hidden="true"]')).toHaveCount(1)
+      const fit = await card.evaluate((el) => {
+        // Measured at rest: each tag settles in with a small rise.
+        for (const a of el.getAnimations({ subtree: true })) a.finish()
+        const row = el.querySelector('[data-readout] .logcard-chips')!.getBoundingClientRect()
+        const out: string[] = []
+        for (const tag of el.querySelectorAll('[data-readout] .logcard-chip')) {
+          const r = tag.getBoundingClientRect()
+          // Shown whole on the row, or wrapped out of sight below it; never cut.
+          if (r.top < row.bottom && (r.right > row.right + 0.5 || r.bottom > row.bottom + 0.5))
+            out.push(`cut: ${tag.textContent}`)
+        }
+        if (el.scrollWidth > el.clientWidth) out.push('card wider than itself')
+        return out
+      })
+      expect(fit, state).toEqual([])
+    }
+  })
+}
 
 test('the build log card falls back to a plain card when the log cannot be read', async ({ page }) => {
   await page.route('**/api/build-log', (route) => route.fulfill({ json: { months: [] } }))

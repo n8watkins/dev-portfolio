@@ -1,6 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { FEED_HEADERS, monthFacts, toLogMonths } from '../../lib/buildLog.ts'
+import { FEED_HEADERS, toLogMonths } from '../../lib/buildLog.ts'
+import { monthFacts } from '../../lib/monthFacts.ts'
 
 test('a version 1 feed keeps each month, newest first, as sent', () => {
   const months = toLogMonths({

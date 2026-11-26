@@ -4,8 +4,12 @@
  * (n8builds-web's app/builds/months.json/route.ts): each month's total changes
  * and its changes per day, the same figures as its homepage card, newest month
  * first. This site reads them on its server (app/api/build-log) and caches
- * them for an hour.
+ * them for an hour. The card and its maths (`monthFacts`) are shared with
+ * n8builds.dev: components/build-log/BuildLogCard.tsx and lib/monthFacts.ts.
  */
+import type { LogDay, LogMonth } from '@/lib/monthFacts'
+
+export type { LogDay, LogMonth }
 
 export const BUILD_LOG_FEED = 'https://n8builds.dev/builds/months.json'
 
@@ -17,78 +21,6 @@ export const BUILD_LOG_FEED = 'https://n8builds.dev/builds/months.json'
 export const FEED_HEADERS = { 'User-Agent': 'n8builds-portfolio (+https://portfolio.n8builds.dev)' }
 /** Where the card links: the full build log. */
 export const BUILD_LOG_PAGE = 'https://n8builds.dev/builds'
-
-/** One day's bar: what shipped that day. `future`: a day still to come this month. */
-export interface LogDay {
-  day: string
-  count: number
-  future?: boolean
-}
-
-export interface LogMonth {
-  /** `YYYY-MM`, or `recent` for a quiet month's last 30 days. */
-  id: string
-  /** "November 2026", or "Last 30 days". */
-  title: string
-  changes: number
-  days: LogDay[]
-}
-
-/**
- * What a day's count says next to the rest of its month, for the card's
- * readout. The feed has only a count per day, so everything here is worked
- * out from those counts.
- */
-export interface DayFacts {
-  /** 1 for the busiest day; days with the same count share a rank. 0 on a quiet day. */
-  rank: number
-  /** This day's share of the month's changes, in whole percent. */
-  share: number
-  /** The run of back-to-back days with changes this day is part of: its length, and which day of it this is. */
-  run: { length: number; at: number }
-}
-
-export interface MonthFacts {
-  /** One per day, in order; null for a day still to come. */
-  days: (DayFacts | null)[]
-  /** Days with at least one change. */
-  activeDays: number
-  /** The day with the most changes (the first, on a tie), or null in a quiet month. */
-  busiest: LogDay | null
-  /** The longest run of back-to-back days with changes. */
-  longestRun: number
-}
-
-export function monthFacts(month: LogMonth): MonthFacts {
-  const counts = month.days.filter((d) => !d.future && d.count > 0).map((d) => d.count)
-  const total = counts.reduce((a, b) => a + b, 0)
-  const runs: { start: number; length: number }[] = []
-  month.days.forEach((d, i) => {
-    if (d.future || d.count === 0) return
-    const last = runs[runs.length - 1]
-    if (last && last.start + last.length === i) last.length++
-    else runs.push({ start: i, length: 1 })
-  })
-  const days = month.days.map((d, i) => {
-    if (d.future) return null
-    const run = runs.find((r) => i >= r.start && i < r.start + r.length)
-    return {
-      rank: d.count > 0 ? 1 + counts.filter((c) => c > d.count).length : 0,
-      share: total ? Math.round((d.count / total) * 100) : 0,
-      run: run ? { length: run.length, at: i - run.start + 1 } : { length: 0, at: 0 },
-    }
-  })
-  const busiest = month.days.reduce<LogDay | null>(
-    (best, d) => (!d.future && d.count > 0 && (!best || d.count > best.count) ? d : best),
-    null
-  )
-  return {
-    days,
-    activeDays: counts.length,
-    busiest,
-    longestRun: Math.max(0, ...runs.map((r) => r.length)),
-  }
-}
 
 const DAY = /^\d{4}-\d{2}-\d{2}$/
 const isCount = (n: unknown): n is number => typeof n === 'number' && Number.isInteger(n) && n >= 0

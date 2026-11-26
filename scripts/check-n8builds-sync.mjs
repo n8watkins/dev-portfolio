@@ -24,6 +24,10 @@ export const SHARED = [
   'hooks/useHydrated.ts',
   'lib/utils.ts',
   'lib/intersection.ts',
+  // The build log card (owner, 2026-11-25: on n8builds.dev too); each site passes its own links.
+  'components/build-log/BuildLogCard.tsx',
+  'components/build-log/build-log-card.css',
+  'lib/monthFacts.ts',
 ]
 
 const REF = 'origin/main'
