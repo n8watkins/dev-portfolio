@@ -477,15 +477,20 @@ test('a build log month change flows in, holds the card still, and lands on the 
 }) => {
   await page.goto('/')
   const card = await showBuildLog(page)
-  const before = (await card.boundingBox())!
+  // The card's box on the page (not the window, which a click may scroll).
+  const box = () =>
+    card.evaluate((el) => {
+      const r = el.getBoundingClientRect()
+      return `${r.x},${r.y + window.scrollY},${r.width},${r.height}`
+    })
+  const before = await box()
   await card.getByRole('button', { name: 'Older month' }).click()
   const boxes = new Set<string>()
   for (let i = 0; i < 16; i++) {
-    const b = (await card.boundingBox())!
-    boxes.add(`${b.x},${b.y},${b.width},${b.height}`)
+    boxes.add(await box())
     await page.waitForTimeout(40)
   }
-  expect([...boxes]).toEqual([`${before.x},${before.y},${before.width},${before.height}`])
+  expect([...boxes]).toEqual([before])
   await expect(card).toHaveAttribute('data-settled', '', LOADED)
   await expect(card.locator('[data-month]')).toHaveText('October 2026')
   await expect(card.locator('[data-changes]')).toHaveText('275')
