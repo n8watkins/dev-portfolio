@@ -7,8 +7,10 @@ import { SENTRY_DSN } from '../lib/sentryDsn.mjs'
 import { healthCheck } from './health.js'
 import { missingFile } from './missing-file.js'
 
-// The ISR revalidation queue's Durable Object (wrangler.jsonc durable_objects).
+// The Durable Objects (wrangler.jsonc durable_objects): the ISR revalidation
+// queue, and /api/where's rate-limit counters.
 export { DOQueueHandler } from '../.open-next/worker.js'
+export { RateLimitCounter } from './rate-limit-counter.js'
 
 /**
  * Next marks prerendered pages `s-maxage=<revalidate>, stale-while-revalidate`

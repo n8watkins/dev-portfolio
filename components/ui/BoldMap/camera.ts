@@ -74,24 +74,45 @@ export type Camera = {
   dist: number
   /** A world point in card pixels: [x, y, depth, w]. */
   toPx: (p: Vec3) => [number, number, number, number]
+  /** The lowest a label may reach, in card pixels (the title is below it). */
+  labelMax: number
 }
 
 export function fitCamera(s: Scene, W: number, H: number): Camera {
   const { x0, x1, z0, z1 } = s.bounds
-  const elev = 58 * rad
+  // A card taller than it is wide (the bento card from 768 to 1023px is 351 by
+  // 478) square on would leave a band of empty sea between the country and the
+  // title: there the camera turns and looks more steeply down, and the country
+  // fills the height between the caption and the title.
+  const tall = Math.max(0, Math.min(1, (H / W - 1.05) / 0.3))
+  const elev = (58 + 14 * tall) * rad
+  // Turned to look from the south-east, the country runs corner to corner (Los
+  // Angeles up on the left, the east coast nearer, lower right) and fills a
+  // portrait card far better than square on.
+  const yaw = 28 * tall * rad
+  const bottom = H * 0.73 + tall * (H - 92 - H * 0.73)
   const tgt = [(x0 + x1) / 2, 0, (z0 + z1) / 2]
   const P = persp(30 * rad, W / H, 1, 600)
   let eye: [number, number, number] = [0, 0, 0]
   const build = (dist: number) => {
-    eye = [tgt[0], dist * Math.sin(elev), tgt[2] + dist * Math.cos(elev)]
+    eye = [
+      tgt[0] + dist * Math.sin(yaw) * Math.cos(elev),
+      dist * Math.sin(elev),
+      tgt[2] + dist * Math.cos(yaw) * Math.cos(elev),
+    ]
     return mul(P, lookAt(eye, tgt))
   }
-  const corners: Vec3[] = [
-    [x0, 0, z0],
-    [x1, 0, z0],
-    [x0, 0, z1],
-    [x1, 0, z1],
-  ]
+  // What has to fit: the box round the lower 48 (as the lab sketch fitted it),
+  // or, turned, the country itself, since a turned box's corners are open sea.
+  const corners: Vec3[] =
+    tall > 0
+      ? s.cells.filter((c) => c.us).map((c): Vec3 => [c.X, 0, c.Z])
+      : [
+          [x0, 0, z0],
+          [x1, 0, z0],
+          [x0, 0, z1],
+          [x1, 0, z1],
+        ]
   const extent = (m: Mat4) => {
     let a = Infinity
     let b = -Infinity
@@ -108,12 +129,12 @@ export function fitCamera(s: Scene, W: number, H: number): Camera {
   }
   // Fit the width (a little more room on the left, where Los Angeles' pin is),
   // then centre the country between the caption and the title.
-  const padL = W * 0.11
-  const padR = W * 0.035
+  const padL = W * (0.11 + 0.01 * tall) // the pin and its glow stay clear of the edge
+  const padR = W * (0.035 - 0.025 * tall)
   const want = ((W - padL - padR) / W) * 2
   // On a wide card the height is the limit instead: the country stays between
   // the caption and the top of the title.
-  const wantV = ((H * 0.73 - 44) / H) * 2
+  const wantV = ((bottom - 44) / H) * 2
   let lo = 20
   let hi = 500
   for (let k = 0; k < 22; k++) {
@@ -125,7 +146,8 @@ export function fitCamera(s: Scene, W: number, H: number): Camera {
   const fit = extent(build(hi))
   const m = build(hi)
   const ox = ((padL + (W - padL - padR) / 2) / W) * 2 - 1 - (fit[0] + fit[1]) / 2
-  const oy = 1 - ((44 + H * 0.73) / 2 / H) * 2 - (fit[2] + fit[3]) / 2
+  // Centred between the caption and the title.
+  const oy = 1 - ((44 + bottom) / 2 / H) * 2 - (fit[2] + fit[3]) / 2
   for (let c = 0; c < 4; c++) {
     m[c * 4] += ox * m[c * 4 + 3]
     m[c * 4 + 1] += oy * m[c * 4 + 3]
@@ -134,5 +156,7 @@ export function fitCamera(s: Scene, W: number, H: number): Camera {
     const q = clip(m, p)
     return [((q[0] / q[3]) * 0.5 + 0.5) * W, (0.5 - (q[1] / q[3]) * 0.5) * H, q[2] / q[3], q[3]]
   }
-  return { vp: m, eye, dist: hi, toPx }
+  // Labels stay above the title: 76% of the card, lower on a tall card.
+  const labelMax = H * 0.76 + tall * (H - 96 - H * 0.76)
+  return { vp: m, eye, dist: hi, toPx, labelMax }
 }

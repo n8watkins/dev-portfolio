@@ -20,9 +20,17 @@
   // site never calls revalidateTag or revalidatePath, so there is no tag cache.
   "r2_buckets": [{ "binding": "NEXT_INC_CACHE_R2_BUCKET", "bucket_name": "dev-portfolio-opennext-cache" }],
   "durable_objects": {
-    "bindings": [{ "name": "NEXT_CACHE_DO_QUEUE", "class_name": "DOQueueHandler" }]
+    "bindings": [
+      { "name": "NEXT_CACHE_DO_QUEUE", "class_name": "DOQueueHandler" },
+      // /api/where's rate limit (lib/whereLimit.ts, worker/rate-limit-counter.js):
+      // 30 answers a minute per connection, one counter per hashed address.
+      { "name": "RATE_LIMIT_COUNTERS", "class_name": "RateLimitCounter" }
+    ]
   },
-  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["DOQueueHandler"] }],
+  "migrations": [
+    { "tag": "v1", "new_sqlite_classes": ["DOQueueHandler"] },
+    { "tag": "v2", "new_sqlite_classes": ["RateLimitCounter"] }
+  ],
   // The revalidation queue renders pages again by calling the worker itself.
   "services": [{ "binding": "WORKER_SELF_REFERENCE", "service": "dev-portfolio" }],
   "observability": { "enabled": true, "head_sampling_rate": 1 },

@@ -86,6 +86,14 @@ test('the n8builds.dev teaser links each build to its n8builds.dev page', async 
  * chart of block stacks whose days light up, and two plain text links along
  * the bottom: n8builds.dev and the build log.
  */
+/**
+ * How long the card may take to load its months. Under load WebKit can take
+ * 8 to 12 s from navigation to a loaded card (2026-11-25, twelve test workers
+ * on a busy machine: the page drew 4 to 6 frames in its first 8 s), well past
+ * the 5 s an expect waits by default.
+ */
+const LOADED = { timeout: 20_000 }
+
 test('the build log card shows a month, cycles the months, and links the site and the log', async ({
   page,
 }) => {
@@ -93,7 +101,7 @@ test('the build log card shows a month, cycles the months, and links the site an
   await page.goto('/')
   const card = page.locator('[data-build-log]')
   await card.scrollIntoViewIfNeeded()
-  await expect(card).toHaveAttribute('data-build-log', 'ready')
+  await expect(card).toHaveAttribute('data-build-log', 'ready', LOADED)
   await expect(card.locator('[data-month]')).toHaveText('November 2026')
   await expect(card.locator('[data-changes]')).toHaveText('49')
   // A slot per day; the nine days so far are buttons named with their date and count.
@@ -128,15 +136,34 @@ test('the build log card shows a month, cycles the months, and links the site an
   expect(box!.y + box!.height - (b!.y + b!.height)).toBeLessThan(40)
 })
 
+/**
+ * Brings the build log card on screen and waits until its months are loaded
+ * and its bento cell has finished arriving (it rises 25px and scales up from
+ * 95%). A pointer aimed at a day before then lands beside it: on CI a tap at
+ * the fifth day's centre, measured mid-entrance, picked the sixth (2026-11-25).
+ */
+async function showBuildLog(page: import('@playwright/test').Page) {
+  const card = page.locator('[data-build-log]')
+  await card.evaluate((el) => el.scrollIntoView({ block: 'center', behavior: 'instant' }))
+  await expect(card).toHaveAttribute('data-build-log', 'ready', LOADED)
+  await expect
+    .poll(() =>
+      card.evaluate((el) => {
+        const cell = getComputedStyle(el.parentElement!)
+        return `${cell.transform} ${cell.opacity}`
+      })
+    )
+    .toBe('none 1')
+  return card
+}
+
 test('hovering a build log day lights it up, and the readout shows its date and numbers', async ({
   page,
   isMobile,
 }) => {
   test.skip(isMobile, 'Hover is a desktop pointer; phones tap (see below).')
   await page.goto('/')
-  const card = page.locator('[data-build-log]')
-  await card.evaluate((el) => el.scrollIntoView({ block: 'center', behavior: 'instant' }))
-  await expect(card).toHaveAttribute('data-build-log', 'ready')
+  const card = await showBuildLog(page)
   const readout = card.locator('[data-readout]')
   const day = (name: string) => card.getByRole('button', { name: new RegExp(`^${name}:`) })
   await day('Thursday, November 5').hover()
@@ -168,9 +195,7 @@ test('the build log days can be walked with the arrow keys, Home and End, and le
   page,
 }) => {
   await page.goto('/')
-  const card = page.locator('[data-build-log]')
-  await card.evaluate((el) => el.scrollIntoView({ block: 'center', behavior: 'instant' }))
-  await expect(card).toHaveAttribute('data-build-log', 'ready')
+  const card = await showBuildLog(page)
   const readout = card.locator('[data-readout]')
   // One stop in the tab order: the last day so far.
   const stop = card.locator('[data-chart] button[tabindex="0"]')
@@ -201,6 +226,34 @@ test('the build log days can be walked with the arrow keys, Home and End, and le
   await expect(card.locator('[data-changes]')).toHaveText('49')
 })
 
+/**
+ * WebKit on CI once drew no frame for seconds (2026-11-25), and the readout's
+ * number, which rolls on animation frames, stayed mid-roll ("5" for 49, "20"
+ * for 6). Here the page gets a frame only every 6 s, each stamped a little
+ * before it runs, as WebKit stamps them: the number must still settle.
+ */
+test('the build log readout settles on the right number even when the page draws no frames', async ({ page }) => {
+  await page.addInitScript(() => {
+    window.requestAnimationFrame = (cb) =>
+      window.setTimeout(() => cb(performance.now() - 40), 6000) as unknown as number
+    window.cancelAnimationFrame = (id) => window.clearTimeout(id)
+  })
+  await page.goto('/')
+  const card = page.locator('[data-build-log]')
+  await card.evaluate((el) => el.scrollIntoView({ block: 'center', behavior: 'instant' }))
+  await expect(card).toHaveAttribute('data-build-log', 'ready', LOADED)
+  const number = card.locator('[data-readout] [data-number]')
+  await expect(number).toHaveText('49')
+  await card.locator('[data-chart] button[tabindex="0"]').focus()
+  await page.keyboard.press('Home')
+  await expect(number).toHaveText('6')
+  await page.keyboard.press('End')
+  await page.keyboard.press('ArrowLeft')
+  await expect(number).toHaveText('9')
+  await page.keyboard.press('Escape')
+  await expect(number).toHaveText('49')
+})
+
 test.describe('on a touch screen', () => {
   test.use({ hasTouch: true })
 
@@ -208,9 +261,7 @@ test.describe('on a touch screen', () => {
   // as loading the months (2026-11-25), and holding is best shown by simply waiting past the 5 s.
   test('a tap picks a build log day and holds the month; a tap elsewhere lets go', async ({ page }) => {
     await page.goto('/')
-    const card = page.locator('[data-build-log]')
-    await card.evaluate((el) => el.scrollIntoView({ block: 'center', behavior: 'instant' }))
-    await expect(card).toHaveAttribute('data-build-log', 'ready')
+    const card = await showBuildLog(page)
     await expect(card).toHaveAttribute('data-cycling', '')
     // The month may already have moved on by itself, so pick the fifth day of whichever is showing.
     const day = card.locator('[data-chart] button').nth(4)
@@ -251,13 +302,25 @@ test('the build log card moves on through the months by itself, and holds when a
   // to come after clock.install(), which installs its own requestIdleCallback over anything before.
   await page.addInitScript(() => {
     window.requestIdleCallback = () => 0
+    // The bold map above this card draws a WebGL frame on every animation
+    // frame, and each second of fake time runs sixty of them, in software in
+    // CI: seconds per step. Its still 2D picture (no WebGL2) has no loop.
+    const getContext = HTMLCanvasElement.prototype.getContext
+    HTMLCanvasElement.prototype.getContext = function (
+      this: HTMLCanvasElement,
+      type: string,
+      ...rest: unknown[]
+    ) {
+      if (type === 'webgl2') return null
+      return (getContext as (...a: unknown[]) => RenderingContext | null).call(this, type, ...rest)
+    } as typeof getContext
   })
   await page.goto('/')
   const card = page.locator('[data-build-log]')
   const month = card.locator('[data-month]')
   // Well inside the screen: at its edge, the card's own entrance can carry it in and out of view.
   await card.evaluate((el) => el.scrollIntoView({ block: 'center', behavior: 'instant' }))
-  await expect(card).toHaveAttribute('data-build-log', 'ready')
+  await expect(card).toHaveAttribute('data-build-log', 'ready', LOADED)
   await page.mouse.move(2, 2)
   await expect(card).toHaveAttribute('data-cycling', '')
   // Moves the clock on in small steps until the card shows `text`.
@@ -266,8 +329,10 @@ test('the build log card moves on through the months by itself, and holds when a
       await page.clock.runFor(1000)
       await expect(month).toHaveText(text, { timeout: 500 })
     }).toPass({ timeout: 40_000 })
-  // This month first, then back through the months, round again, every 5 s.
-  await expect(month).toHaveText('November 2026')
+  // Back through the months and round again, every 5 s. (The clock runs on its own until moved, so a
+  // slow machine may already have moved past November here; that the card starts on this month is
+  // checked by the first build log test.)
+  await movesOnTo('November 2026')
   await movesOnTo('October 2026')
   await movesOnTo('September 2026')
   await movesOnTo('November 2026')
@@ -292,7 +357,7 @@ test('the build log card never moves on by itself under reduced motion', async (
   await page.goto('/')
   const card = page.locator('[data-build-log]')
   await card.scrollIntoViewIfNeeded()
-  await expect(card).toHaveAttribute('data-build-log', 'ready')
+  await expect(card).toHaveAttribute('data-build-log', 'ready', LOADED)
   await expect(card).not.toHaveAttribute('data-cycling', '')
   await page.clock.runFor(6_000)
   await expect(card.locator('[data-month]')).toHaveText('November 2026')
@@ -305,7 +370,7 @@ test('under reduced motion a build log day still lights up and shows its numbers
   await page.goto('/')
   const card = page.locator('[data-build-log]')
   await card.evaluate((el) => el.scrollIntoView({ block: 'center', behavior: 'instant' }))
-  await expect(card).toHaveAttribute('data-build-log', 'ready')
+  await expect(card).toHaveAttribute('data-build-log', 'ready', LOADED)
   const day = card.getByRole('button', { name: /^Thursday, November 5:/ })
   await day.focus()
   await expect(day).toHaveAttribute('aria-pressed', 'true')
@@ -334,7 +399,7 @@ test('the build log card falls back to a plain card when the log cannot be read'
   await page.goto('/')
   const card = page.locator('[data-build-log]')
   await card.scrollIntoViewIfNeeded()
-  await expect(card).toHaveAttribute('data-build-log', 'fallback')
+  await expect(card).toHaveAttribute('data-build-log', 'fallback', LOADED)
   await expect(card).toContainText("What I'm shipping")
   await expect(card.locator('[data-chart]')).toHaveCount(0)
   await expect(card.getByRole('link')).toHaveCount(2)
@@ -370,39 +435,219 @@ test('from 1280px, the resume, contact and build log cards are one row of three 
 })
 
 /**
- * The map card's arcs (components/ui/BentoComponents/MapAnimations.tsx) draw
- * themselves in a GSAP loop. Under reduced motion they show fully drawn and
- * hold still; otherwise they keep drawing.
+ * "Ready to relocate" is the bold 3D map (components/ui/BoldMap; owner,
+ * 2026-11-25). Its code loads only as the card nears the screen; it counts
+ * the frames it draws (`data-frames`), says whether it moves (`data-mode`),
+ * whether its loop runs (`data-running`) and what it knows of the visitor
+ * (`data-visitor`). The visitor's rough location comes from /api/where after
+ * the map is up, so the page itself stays static and cached.
  */
-test.describe('the map arcs', () => {
-  const offsets = (page: import('@playwright/test').Page) =>
-    page
-      .locator('.neon-path')
-      .evaluateAll((paths) => paths.map((p) => getComputedStyle(p).strokeDashoffset))
-
-  test('hold still, fully drawn, under reduced motion', async ({ page }) => {
-    await page.emulateMedia({ reducedMotion: 'reduce' })
+test.describe('the bold map', () => {
+  const AUSTIN = { kind: 'us', at: [-97.5, 30.5], near: 'Austin, TX', mi: 1230 }
+  const frames = (map: import('@playwright/test').Locator) =>
+    map.evaluate((el) => Number((el as HTMLElement).dataset.frames))
+  const openMap = async (page: import('@playwright/test').Page) => {
     await page.goto('/')
-    const arcs = page.locator('.neon-path')
-    await arcs.first().scrollIntoViewIfNeeded()
-    await expect(arcs).toHaveCount(3)
-    const before = await offsets(page)
-    await page.waitForTimeout(1500)
-    expect(await offsets(page)).toEqual(before)
-    expect(
-      before.every((o) => parseFloat(o) === 0),
-      `offsets ${before}`
-    ).toBe(true)
+    const slot = page.locator('[data-bold-map-slot]')
+    await slot.scrollIntoViewIfNeeded()
+    const map = slot.locator('[data-bold-map]')
+    await expect(map).toHaveAttribute('data-ready', 'true', { timeout: 20_000 })
+    return map
+  }
+
+  test('loads only as the card nears the screen', async ({ page }) => {
+    const chunks: string[] = []
+    page.on('response', (r) => {
+      if (r.url().includes('/_next/static/') && r.url().endsWith('.js')) chunks.push(r.url())
+    })
+    let asked = 0
+    await page.route('**/api/where', (route) => {
+      asked++
+      return route.fulfill({ json: { visitor: null } })
+    })
+    // A short window, so the card starts well out of reach on every device.
+    const size = page.viewportSize()!
+    await page.setViewportSize({ width: size.width, height: 360 })
+    await page.goto('/')
+    await page.waitForLoadState('networkidle')
+    const gap = await page
+      .locator('[data-bold-map-slot]')
+      .evaluate((el) => el.getBoundingClientRect().top - innerHeight)
+    expect(gap, 'the card starts more than 300px below the window').toBeGreaterThan(300)
+    // Out of reach: the map's code has not loaded and nothing asked where you are.
+    await expect(page.locator('[data-bold-map]')).toHaveCount(0)
+    expect(asked).toBe(0)
+    const before = chunks.length
+    await page.setViewportSize(size)
+    await page.locator('[data-bold-map-slot]').scrollIntoViewIfNeeded()
+    await expect(page.locator('[data-bold-map]')).toHaveAttribute('data-ready', 'true', {
+      timeout: 20_000,
+    })
+    expect(chunks.length).toBeGreaterThan(before)
+    await expect.poll(() => asked).toBe(1)
   })
 
-  test('keep drawing when motion is allowed', async ({ page }) => {
+  test('holds still, fully drawn, under reduced motion', async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+    await page.route('**/api/where', (route) => route.fulfill({ json: { visitor: AUSTIN } }))
+    const map = await openMap(page)
+    await expect(map).toHaveAttribute('data-mode', 'still')
+    // The line to the visitor is drawn at once and labelled.
+    await expect(map.locator('[data-on]', { hasText: 'near Austin, TX' })).toBeVisible()
+    // It draws once per change (the start, the visitor's answer, a late resize
+    // as the page settles), never in a loop.
+    await expect(map).toHaveAttribute('data-running', 'false')
+    await page.waitForTimeout(800)
+    const before = await frames(map)
+    await page.waitForTimeout(1500)
+    expect(await frames(map)).toBe(before)
+    expect(before).toBeLessThan(6)
+  })
+
+  test('moves on screen and pauses off screen', async ({ page }) => {
     await page.emulateMedia({ reducedMotion: 'no-preference' })
+    const map = await openMap(page)
+    test.skip(
+      (await map.getAttribute('data-renderer')) === '2d',
+      'no WebGL2 in this browser: the map is the still 2D picture (tests/lab.spec.ts)'
+    )
+    await expect(map).toHaveAttribute('data-mode', 'moving')
+    await expect(map).toHaveAttribute('data-running', 'true')
+    const before = await frames(map)
+    await expect.poll(() => frames(map)).toBeGreaterThan(before + 2)
+    await page.locator('footer').scrollIntoViewIfNeeded()
+    await expect(map).toHaveAttribute('data-running', 'false')
+    const paused = await frames(map)
+    await page.waitForTimeout(800)
+    expect(await frames(map)).toBe(paused)
+  })
+
+  test('says what it shows to screen readers, and hides the drawing', async ({ page }) => {
+    await page.route('**/api/where', (route) => route.fulfill({ json: { visitor: AUSTIN } }))
+    // Before the map loads, the card already says it.
     await page.goto('/')
-    const arcs = page.locator('.neon-path')
-    await arcs.first().scrollIntoViewIfNeeded()
-    await expect(arcs).toHaveCount(3)
-    const before = await offsets(page)
-    await expect.poll(() => offsets(page)).not.toEqual(before)
+    const slot = page.locator('[data-bold-map-slot]')
+    await expect(slot.locator('.sr-only')).toHaveText(
+      'A map of the United States: Nathan is in Los Angeles, California, and open to relocating anywhere.'
+    )
+    const map = await openMap(page)
+    await expect(map.locator('.sr-only')).toHaveText(
+      /open to relocating anywhere\. You seem to be near Austin, TX, about 1,230 miles away\./
+    )
+    await expect(map.locator('canvas')).toHaveAttribute('aria-hidden', 'true')
+  })
+
+  test('his avatar grows on hover and on a tap, and eases back', async ({ page, isMobile }) => {
+    // The sizes are checked on the still map: a moving map in a browser that
+    // draws WebGL in software (CI, a busy machine) makes every layout read
+    // slow. The ease itself is checked at the end, with motion allowed.
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+    const map = await openMap(page)
+    const avatar = map.getByRole('button', { name: 'Nathan Watkins, in Los Angeles' })
+    const picture = avatar.locator('span').first()
+    const size = async () => (await picture.boundingBox())!.width
+    await page.mouse.move(0, 0)
+    await expect.poll(size).toBeLessThan(40)
+    if (!isMobile) {
+      const box = (await map.boundingBox())!
+      await page.mouse.move(box.x + box.width * 0.6, box.y + box.height * 0.45)
+      await expect.poll(size).toBeGreaterThan(60)
+      await page.mouse.move(0, 0)
+      await expect.poll(size).toBeLessThan(40)
+    }
+    await (isMobile ? avatar.tap() : avatar.click())
+    await expect(avatar).toHaveAttribute('aria-pressed', 'true')
+    await expect.poll(size).toBeGreaterThan(60)
+    await (isMobile ? avatar.tap() : avatar.click())
+    await expect(avatar).toHaveAttribute('aria-pressed', 'false')
+    if (!isMobile) await page.mouse.move(0, 0)
+    await expect.poll(size).toBeLessThan(40)
+    // With motion allowed, the size and the glow ease over half a second.
+    await page.emulateMedia({ reducedMotion: 'no-preference' })
+    await expect
+      .poll(() => picture.evaluate((el) => getComputedStyle(el).transitionDuration))
+      .toMatch(/^0\.5s/)
+  })
+
+  test('under reduced motion the avatar changes size at once, from the keyboard too', async ({
+    page,
+  }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+    const map = await openMap(page)
+    const avatar = map.getByRole('button', { name: 'Nathan Watkins, in Los Angeles' })
+    await avatar.focus()
+    await avatar.press('Enter')
+    await expect(avatar).toHaveAttribute('aria-pressed', 'true')
+    // No transition: the next frame already has the full size.
+    const width = await avatar
+      .locator('span')
+      .first()
+      .evaluate(
+        (el) =>
+          new Promise<number>((done) =>
+            requestAnimationFrame(() => done(el.getBoundingClientRect().width))
+          )
+      )
+    expect(width).toBeGreaterThan(60)
+  })
+
+  test('draws a line to the visitor when /api/where answers with a point', async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+    await page.route('**/api/where', (route) => route.fulfill({ json: { visitor: AUSTIN } }))
+    const map = await openMap(page)
+    await expect(map).toHaveAttribute('data-visitor', 'us')
+    await expect(
+      map.locator('[data-on]', { hasText: /You · near Austin, TX · 1,230 mi/ })
+    ).toBeVisible()
+  })
+
+  for (const [name, answer] of [
+    ['answers empty', { json: { visitor: null } }],
+    ['fails', { status: 500, body: 'no' }],
+    ['answers with something else', { json: { visitor: { kind: 'us', at: 'Austin', mi: 5 } } }],
+    ['is rate limited', { status: 429, json: { visitor: null } }],
+  ] as const) {
+    test(`draws no line when /api/where ${name}`, async ({ page }) => {
+      await page.emulateMedia({ reducedMotion: 'reduce' })
+      let asked = false
+      await page.route('**/api/where', (route) => {
+        asked = true
+        return route.fulfill(answer)
+      })
+      const map = await openMap(page)
+      await expect.poll(() => asked).toBe(true)
+      await page.waitForTimeout(500)
+      await expect(map).toHaveAttribute('data-visitor', 'none')
+      await expect(map.locator('[data-on]')).toHaveCount(0)
+      await expect(map.locator('canvas')).toBeAttached()
+    })
+  }
+
+  test('/api/where answers only a coarse visitor, never cached, with no cookie', async ({
+    request,
+  }) => {
+    const res = await request.get('/api/where')
+    expect(res.status()).toBe(200)
+    const headers = res.headers()
+    expect(headers['cache-control']).toContain('no-store')
+    expect(headers['cache-control']).toContain('private')
+    expect(headers['set-cookie']).toBeUndefined()
+    // Off Workers there is no rate limit binding, and the route says so
+    // (lib/whereLimit.ts; on Workers it says ok, limited or error).
+    expect(headers['x-ratelimit-state']).toBe('absent')
+    const body = await res.json()
+    // Off Cloudflare there is no location: no visitor, and nothing else at all.
+    expect(body).toEqual({ visitor: null })
+  })
+
+  test('the home page itself carries no location and asks for none on the server', async ({
+    request,
+  }) => {
+    const res = await request.get('/')
+    const html = await res.text()
+    expect(html).toContain('data-bold-map-slot')
+    expect(html).not.toMatch(/You seem to be|near [A-Z][a-z]+, [A-Z]{2}/)
+    expect(res.headers()['set-cookie']).toBeUndefined()
   })
 })
 
