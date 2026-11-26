@@ -129,7 +129,9 @@ export function fitCamera(s: Scene, W: number, H: number): Camera {
   }
   // Fit the width (a little more room on the left, where Los Angeles' pin is),
   // then centre the country between the caption and the title.
-  const padL = W * (0.11 + 0.01 * tall) // the pin and its glow stay clear of the edge
+  // Room on the left for his avatar over the sea, west of Los Angeles; the
+  // turned view brings California nearer the edge, so it needs a little more.
+  const padL = W * (0.11 + 0.06 * tall)
   const padR = W * (0.035 - 0.025 * tall)
   const want = ((W - padL - padR) / W) * 2
   // On a wide card the height is the limit instead: the country stays between
