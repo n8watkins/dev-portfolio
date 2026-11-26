@@ -253,6 +253,9 @@ test.describe('dino easter egg (motion allowed)', () => {
   })
 
   test('dropping back onto a row that is already paused, it misses there too', async ({ page }) => {
+    // Each miss may take up to 20s where frames come slowly, so together they
+    // outlast the 30s default (mobile-safari, all five projects at once).
+    test.setTimeout(90_000)
     await onTopRow(page)
     // Down to the bottom row (pausing the top one), then hold the top row
     // still by focusing one of its tiles, as a keyboard user would.
@@ -384,6 +387,14 @@ test.describe('dino easter egg (motion allowed)', () => {
   // them, and on a slow frame (WebKit on a busy CI runner can stall for
   // seconds while the window resizes) they carry it 50px and more in one
   // frame without it ever leaving its tile.
+  // From DinoGame.tsx (shared with n8builds-web): SPEED 140 px/s, MAX_PACE 2.2,
+  // DASH_SPEED 2.4, RAINBOW_PACE 1.8, SNAP 16, GRAVITY 1800, and the 0.05s cap
+  // on its clock a frame.
+  const FASTEST = 140 * 2.2 * 2.4 * 1.8
+  const MAX_FRAME = 0.05
+  const SNAP = 16
+  const GRAVITY = 1800
+  const MARGIN = 4
   type Move = {
     x: number
     y: number
@@ -396,13 +407,17 @@ test.describe('dino easter egg (motion allowed)', () => {
     /** The row's first track's left edge in the panel, and one loop copy's width. */
     track: number | null
     period: number | null
+    /** The animation frame's own timestamp (ms): the one the game's clock reads too. */
+    t: number
+    /** What it was doing, for a failure's message. */
+    why: string
   }
   const recordMoves = (page: Page) =>
     dino(page).evaluate((el) => {
       const panel = el.closest('[data-dino-panel]')!
       const moves: Move[] = []
       ;(window as unknown as { dinoMoves: typeof moves }).dinoMoves = moves
-      const step = () => {
+      const step = (t: number) => {
         const m = new DOMMatrix(getComputedStyle(el).transform)
         const box = panel.getBoundingClientRect()
         const rows = [...panel.querySelectorAll('[data-marquee-row]')]
@@ -411,7 +426,7 @@ test.describe('dino easter egg (motion allowed)', () => {
         const [first, second] = rowEl ? [...rowEl.children] : []
         const track = first ? first.getBoundingClientRect().left - box.left : null
         const period = first && second ? second.getBoundingClientRect().left - first.getBoundingClientRect().left : null
-        moves.push({ x: m.m41, y: m.m42, w: box.width, h: box.height, mode: el.dataset.mode!, level: el.dataset.level!, tops, track, period })
+        moves.push({ x: m.m41, y: m.m42, w: box.width, h: box.height, mode: el.dataset.mode!, level: el.dataset.level!, tops, track, period, t, why: `reaction=${el.dataset.reaction} rainbow=${el.dataset.rainbow}` })
         requestAnimationFrame(step)
       }
       requestAnimationFrame(step)
@@ -453,12 +468,22 @@ test.describe('dino easter egg (motion allowed)', () => {
         if (travel > a.period / 2) travel -= a.period
         else if (travel < -a.period / 2) travel += a.period
       }
-      // Its fastest step: 140 px/s walking x 2.2 (a round's top pace) x 2.4
-      // (a dash) x 1.8 (rainbow) over a capped 50ms frame is 66.5px. A
-      // teleport is a jump of hundreds. (Measured 2026-11-25 in WebKit: steps
-      // of 63 and 66px, which the old 60px limit counted as teleports.)
-      if (Math.abs(b.x - a.x - travel) > 80 || Math.abs(dy) > 80)
-        jumps.push(`${a.mode}@${a.level} (${a.x.toFixed(0)}, ${a.y.toFixed(0)}) -> ${b.mode}@${b.level} (${b.x.toFixed(0)}, ${b.y.toFixed(0)})`)
+      // What one step can be depends on the time it covers, so it is judged as
+      // a speed, not a distance. Both this sampler and the game run on the
+      // same animation frames, and the game caps its own clock at 50ms a
+      // frame (DinoGame's `dt`), so a step is at most its fastest speed over
+      // min(the time between the two samples, 50ms), plus a snap back onto a
+      // tile (SNAP). Across, the fastest speed is walking x a round's top
+      // pace x a dash x rainbow; up and down, a fall from the top of the panel.
+      // (A fixed 60px, then 80px, limit was too low for a rainbow dash on a
+      // slow frame with a snap: 66.5 + 16 = 82.5px, seen in mobile-safari CI.)
+      const seconds = Math.min((b.t - a.t) / 1000, MAX_FRAME)
+      const reachX = FASTEST * seconds + SNAP + MARGIN
+      const reachY = Math.sqrt(2 * GRAVITY * b.h) * seconds + MARGIN
+      if (Math.abs(b.x - a.x - travel) > reachX || Math.abs(dy) > reachY)
+        jumps.push(
+          `${a.mode}@${a.level} (${a.x.toFixed(0)}, ${a.y.toFixed(0)}) -> ${b.mode}@${b.level} (${b.x.toFixed(0)}, ${b.y.toFixed(0)}) in ${(seconds * 1000).toFixed(0)}ms, limit ${reachX.toFixed(0)} across ${reachY.toFixed(0)} up/down, ${b.why}`
+        )
     }
     return jumps
   }
@@ -772,13 +797,27 @@ test.describe('dino easter egg (motion allowed)', () => {
     await onTopRow(page)
     const score = page.locator('[data-dino-score]')
     await expect(score).toHaveAttribute('data-shown', 'false')
+    // The countdown's first reading, taken in the page: the round runs on real
+    // time, so a check that waits for Playwright's polling can see 0:23 on a
+    // busy machine (mobile-safari, all five projects at once).
+    await page.locator('[data-dino-timer-text]').evaluate((el) => {
+      const w = window as unknown as { __timerReads: string[] }
+      w.__timerReads = []
+      new MutationObserver(() => w.__timerReads.push(el.textContent ?? '')).observe(el, {
+        childList: true,
+        characterData: true,
+        subtree: true,
+      })
+    })
     await pokeDino(page)
     await expect(dino(page)).toHaveAttribute('data-game', 'on')
     await expect(dino(page)).toHaveAttribute('data-catches', '1')
     await expect(score).toHaveAttribute('data-shown', 'true')
     await expect(score).toHaveText('Catches 1')
     await expect(page.locator('[data-dino-timer]')).toHaveAttribute('data-shown', 'true')
-    await expect(page.locator('[data-dino-timer-text]')).toHaveText(/^0:(30|29)$/)
+    const firstRead = () =>
+      page.evaluate(() => (window as unknown as { __timerReads: string[] }).__timerReads[0] ?? '')
+    await expect.poll(firstRead).toMatch(/^0:(30|29)$/)
     // The best score shows beside it while a round is on, lit as this round passes it.
     const best = page.locator('[data-dino-best]')
     await expect(best).toHaveAttribute('data-shown', 'true')
