@@ -86,6 +86,14 @@ test('the n8builds.dev teaser links each build to its n8builds.dev page', async 
  * chart of block stacks whose days light up, and two plain text links along
  * the bottom: n8builds.dev and the build log.
  */
+/**
+ * How long the card may take to load its months. Under load WebKit can take
+ * 8 to 12 s from navigation to a loaded card (2026-11-25, twelve test workers
+ * on a busy machine: the page drew 4 to 6 frames in its first 8 s), well past
+ * the 5 s an expect waits by default.
+ */
+const LOADED = { timeout: 20_000 }
+
 test('the build log card shows a month, cycles the months, and links the site and the log', async ({
   page,
 }) => {
@@ -93,7 +101,7 @@ test('the build log card shows a month, cycles the months, and links the site an
   await page.goto('/')
   const card = page.locator('[data-build-log]')
   await card.scrollIntoViewIfNeeded()
-  await expect(card).toHaveAttribute('data-build-log', 'ready')
+  await expect(card).toHaveAttribute('data-build-log', 'ready', LOADED)
   await expect(card.locator('[data-month]')).toHaveText('November 2026')
   await expect(card.locator('[data-changes]')).toHaveText('49')
   // A slot per day; the nine days so far are buttons named with their date and count.
@@ -128,15 +136,34 @@ test('the build log card shows a month, cycles the months, and links the site an
   expect(box!.y + box!.height - (b!.y + b!.height)).toBeLessThan(40)
 })
 
+/**
+ * Brings the build log card on screen and waits until its months are loaded
+ * and its bento cell has finished arriving (it rises 25px and scales up from
+ * 95%). A pointer aimed at a day before then lands beside it: on CI a tap at
+ * the fifth day's centre, measured mid-entrance, picked the sixth (2026-11-25).
+ */
+async function showBuildLog(page: import('@playwright/test').Page) {
+  const card = page.locator('[data-build-log]')
+  await card.evaluate((el) => el.scrollIntoView({ block: 'center', behavior: 'instant' }))
+  await expect(card).toHaveAttribute('data-build-log', 'ready', LOADED)
+  await expect
+    .poll(() =>
+      card.evaluate((el) => {
+        const cell = getComputedStyle(el.parentElement!)
+        return `${cell.transform} ${cell.opacity}`
+      })
+    )
+    .toBe('none 1')
+  return card
+}
+
 test('hovering a build log day lights it up, and the readout shows its date and numbers', async ({
   page,
   isMobile,
 }) => {
   test.skip(isMobile, 'Hover is a desktop pointer; phones tap (see below).')
   await page.goto('/')
-  const card = page.locator('[data-build-log]')
-  await card.evaluate((el) => el.scrollIntoView({ block: 'center', behavior: 'instant' }))
-  await expect(card).toHaveAttribute('data-build-log', 'ready')
+  const card = await showBuildLog(page)
   const readout = card.locator('[data-readout]')
   const day = (name: string) => card.getByRole('button', { name: new RegExp(`^${name}:`) })
   await day('Thursday, November 5').hover()
@@ -168,9 +195,7 @@ test('the build log days can be walked with the arrow keys, Home and End, and le
   page,
 }) => {
   await page.goto('/')
-  const card = page.locator('[data-build-log]')
-  await card.evaluate((el) => el.scrollIntoView({ block: 'center', behavior: 'instant' }))
-  await expect(card).toHaveAttribute('data-build-log', 'ready')
+  const card = await showBuildLog(page)
   const readout = card.locator('[data-readout]')
   // One stop in the tab order: the last day so far.
   const stop = card.locator('[data-chart] button[tabindex="0"]')
@@ -201,6 +226,34 @@ test('the build log days can be walked with the arrow keys, Home and End, and le
   await expect(card.locator('[data-changes]')).toHaveText('49')
 })
 
+/**
+ * WebKit on CI once drew no frame for seconds (2026-11-25), and the readout's
+ * number, which rolls on animation frames, stayed mid-roll ("5" for 49, "20"
+ * for 6). Here the page gets a frame only every 6 s, each stamped a little
+ * before it runs, as WebKit stamps them: the number must still settle.
+ */
+test('the build log readout settles on the right number even when the page draws no frames', async ({ page }) => {
+  await page.addInitScript(() => {
+    window.requestAnimationFrame = (cb) =>
+      window.setTimeout(() => cb(performance.now() - 40), 6000) as unknown as number
+    window.cancelAnimationFrame = (id) => window.clearTimeout(id)
+  })
+  await page.goto('/')
+  const card = page.locator('[data-build-log]')
+  await card.evaluate((el) => el.scrollIntoView({ block: 'center', behavior: 'instant' }))
+  await expect(card).toHaveAttribute('data-build-log', 'ready', LOADED)
+  const number = card.locator('[data-readout] [data-number]')
+  await expect(number).toHaveText('49')
+  await card.locator('[data-chart] button[tabindex="0"]').focus()
+  await page.keyboard.press('Home')
+  await expect(number).toHaveText('6')
+  await page.keyboard.press('End')
+  await page.keyboard.press('ArrowLeft')
+  await expect(number).toHaveText('9')
+  await page.keyboard.press('Escape')
+  await expect(number).toHaveText('49')
+})
+
 test.describe('on a touch screen', () => {
   test.use({ hasTouch: true })
 
@@ -208,9 +261,7 @@ test.describe('on a touch screen', () => {
   // as loading the months (2026-11-25), and holding is best shown by simply waiting past the 5 s.
   test('a tap picks a build log day and holds the month; a tap elsewhere lets go', async ({ page }) => {
     await page.goto('/')
-    const card = page.locator('[data-build-log]')
-    await card.evaluate((el) => el.scrollIntoView({ block: 'center', behavior: 'instant' }))
-    await expect(card).toHaveAttribute('data-build-log', 'ready')
+    const card = await showBuildLog(page)
     await expect(card).toHaveAttribute('data-cycling', '')
     // The month may already have moved on by itself, so pick the fifth day of whichever is showing.
     const day = card.locator('[data-chart] button').nth(4)
@@ -257,7 +308,7 @@ test('the build log card moves on through the months by itself, and holds when a
   const month = card.locator('[data-month]')
   // Well inside the screen: at its edge, the card's own entrance can carry it in and out of view.
   await card.evaluate((el) => el.scrollIntoView({ block: 'center', behavior: 'instant' }))
-  await expect(card).toHaveAttribute('data-build-log', 'ready')
+  await expect(card).toHaveAttribute('data-build-log', 'ready', LOADED)
   await page.mouse.move(2, 2)
   await expect(card).toHaveAttribute('data-cycling', '')
   // Moves the clock on in small steps until the card shows `text`.
@@ -266,8 +317,10 @@ test('the build log card moves on through the months by itself, and holds when a
       await page.clock.runFor(1000)
       await expect(month).toHaveText(text, { timeout: 500 })
     }).toPass({ timeout: 40_000 })
-  // This month first, then back through the months, round again, every 5 s.
-  await expect(month).toHaveText('November 2026')
+  // Back through the months and round again, every 5 s. (The clock runs on its own until moved, so a
+  // slow machine may already have moved past November here; that the card starts on this month is
+  // checked by the first build log test.)
+  await movesOnTo('November 2026')
   await movesOnTo('October 2026')
   await movesOnTo('September 2026')
   await movesOnTo('November 2026')
@@ -292,7 +345,7 @@ test('the build log card never moves on by itself under reduced motion', async (
   await page.goto('/')
   const card = page.locator('[data-build-log]')
   await card.scrollIntoViewIfNeeded()
-  await expect(card).toHaveAttribute('data-build-log', 'ready')
+  await expect(card).toHaveAttribute('data-build-log', 'ready', LOADED)
   await expect(card).not.toHaveAttribute('data-cycling', '')
   await page.clock.runFor(6_000)
   await expect(card.locator('[data-month]')).toHaveText('November 2026')
@@ -305,7 +358,7 @@ test('under reduced motion a build log day still lights up and shows its numbers
   await page.goto('/')
   const card = page.locator('[data-build-log]')
   await card.evaluate((el) => el.scrollIntoView({ block: 'center', behavior: 'instant' }))
-  await expect(card).toHaveAttribute('data-build-log', 'ready')
+  await expect(card).toHaveAttribute('data-build-log', 'ready', LOADED)
   const day = card.getByRole('button', { name: /^Thursday, November 5:/ })
   await day.focus()
   await expect(day).toHaveAttribute('aria-pressed', 'true')
@@ -334,7 +387,7 @@ test('the build log card falls back to a plain card when the log cannot be read'
   await page.goto('/')
   const card = page.locator('[data-build-log]')
   await card.scrollIntoViewIfNeeded()
-  await expect(card).toHaveAttribute('data-build-log', 'fallback')
+  await expect(card).toHaveAttribute('data-build-log', 'fallback', LOADED)
   await expect(card).toContainText("What I'm shipping")
   await expect(card.locator('[data-chart]')).toHaveCount(0)
   await expect(card.getByRole('link')).toHaveCount(2)
