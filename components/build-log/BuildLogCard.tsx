@@ -17,6 +17,8 @@ import {
   FiChevronLeft,
   FiChevronRight,
 } from 'react-icons/fi'
+import { LuCalendarCheck, LuChartPie, LuFlame, LuMedal, LuMoon, LuTrophy } from 'react-icons/lu'
+import type { IconType } from 'react-icons'
 import { monthFacts, type LogMonth } from '@/lib/monthFacts'
 import { latestEntry } from '@/lib/intersection'
 import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion'
@@ -73,7 +75,7 @@ function loadMonths(src: string): Promise<LogMonth[]> {
 const date = (day: string, options: Intl.DateTimeFormatOptions) =>
   new Date(`${day}T12:00:00Z`).toLocaleDateString('en-US', { ...options, timeZone: 'UTC' })
 const shortDay = (day: string) => date(day, { month: 'short', day: 'numeric' })
-const weekdayDay = (day: string) => date(day, { weekday: 'short', month: 'short', day: 'numeric' })
+const weekday = (day: string) => date(day, { weekday: 'short' })
 const longDay = (day: string) => date(day, { weekday: 'long', month: 'long', day: 'numeric' })
 const plural = (n: number, one: string, many: string) => (n === 1 ? one : many)
 const motionAllowed = () => !window.matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -126,16 +128,45 @@ function useRollingNumber(target: number, still: boolean, ms: number) {
   return still ? target : shown
 }
 
-/** A small tag in the readout. */
-function Chip({ children, hot }: { children: ReactNode; hot?: boolean }) {
+/** A streak this long or longer warms its tag up. */
+const WARM_STREAK = 5
+
+/**
+ * A small tag in the readout, with an icon that says what it counts (owner,
+ * 2026-11-25: "maybe we can make that a little bit more exciting. With some
+ * icons that are relevant?"): decorative, the words carry the meaning. `hot`
+ * lights it (the busiest day itself), `warm` gives a long streak its glow.
+ * Each settles in a beat after the one before it (`at`).
+ */
+function Chip({
+  children,
+  icon: Icon,
+  tone = 'plain',
+  at = 0,
+}: {
+  children: ReactNode
+  icon: IconType
+  tone?: 'plain' | 'hot' | 'warm'
+  at?: number
+}) {
   return (
     <span
-      className={`inline-flex h-5 shrink-0 items-center rounded-[3px] px-1.5 font-mono text-[0.62rem] tracking-wide whitespace-nowrap uppercase ${
-        hot
-          ? 'bg-cyan-300/15 text-cyan-200 ring-1 ring-cyan-300/40'
-          : 'bg-white/6 text-slate-300 ring-1 ring-white/10'
+      className={`logcard-chip inline-flex h-5 shrink-0 items-center gap-1 rounded-[4px] pr-1.5 pl-1 font-mono text-[0.62rem] tracking-wide whitespace-nowrap uppercase ring-1 ${
+        tone === 'hot'
+          ? 'bg-cyan-300/15 text-cyan-100 ring-cyan-300/45'
+          : tone === 'warm'
+            ? 'bg-amber-300/10 text-amber-100 ring-amber-300/30'
+            : 'bg-white/6 text-slate-300 ring-white/10'
       }`}
+      style={{ '--logcard-chip-at': at } as CSSProperties}
+      data-tone={tone}
     >
+      <Icon
+        aria-hidden="true"
+        className={`h-3 w-3 shrink-0 ${
+          tone === 'hot' ? 'text-cyan-200' : tone === 'warm' ? 'text-amber-300' : 'text-sky-300/80'
+        }`}
+      />
       {children}
     </span>
   )
@@ -667,7 +698,10 @@ export default function BuildLogCard({
                       ref={dateRef}
                       className="ml-1.5 inline-block font-semibold text-slate-100"
                     >
-                      {weekdayDay(day.day)}
+                      {/* The weekday steps aside where the card is too narrow for it (the homepage's
+                          17rem column with a two-digit day), so the date never runs off the card. */}
+                      <span className="logcard-weekday">{weekday(day.day)}, </span>
+                      {shortDay(day.day)}
                     </span>
                   </>
                 ) : (
@@ -682,31 +716,51 @@ export default function BuildLogCard({
             >
               {day && dayFacts ? (
                 day.count === 0 ? (
-                  <Chip>Nothing shipped</Chip>
+                  <Chip icon={LuMoon}>Nothing shipped</Chip>
                 ) : (
                   <>
-                    <Chip hot={dayFacts.rank === 1}>
-                      {dayFacts.rank === 1
-                        ? 'Busiest day'
-                        : `#${dayFacts.rank} of ${facts.activeDays} days`}
-                    </Chip>
-                    <Chip>
+                    {dayFacts.rank === 1 ? (
+                      <Chip icon={LuTrophy} tone="hot">
+                        Busiest day
+                      </Chip>
+                    ) : (
+                      <Chip icon={LuMedal}>
+                        #{dayFacts.rank} of {facts.activeDays} days
+                      </Chip>
+                    )}
+                    <Chip icon={LuChartPie} at={1}>
                       {dayFacts.share < 1 ? '<1' : dayFacts.share}% {inMonth}
                     </Chip>
-                    {dayFacts.run.length > 1 && <Chip>{dayFacts.run.length}-day streak</Chip>}
+                    {dayFacts.run.length > 1 && (
+                      <Chip
+                        icon={LuFlame}
+                        tone={dayFacts.run.length >= WARM_STREAK ? 'warm' : 'plain'}
+                        at={2}
+                      >
+                        {dayFacts.run.length}-day streak
+                      </Chip>
+                    )}
                   </>
                 )
               ) : (
                 <>
                   {facts.busiest && (
-                    <Chip>
+                    <Chip icon={LuTrophy}>
                       Peak {shortDay(facts.busiest.day)} · {facts.busiest.count}
                     </Chip>
                   )}
-                  <Chip>
+                  <Chip icon={LuCalendarCheck} at={1}>
                     {facts.activeDays} {plural(facts.activeDays, 'day', 'days')} active
                   </Chip>
-                  {facts.longestRun > 1 && <Chip>{facts.longestRun}-day streak</Chip>}
+                  {facts.longestRun > 1 && (
+                    <Chip
+                      icon={LuFlame}
+                      tone={facts.longestRun >= WARM_STREAK ? 'warm' : 'plain'}
+                      at={2}
+                    >
+                      {facts.longestRun}-day streak
+                    </Chip>
+                  )}
                 </>
               )}
             </div>

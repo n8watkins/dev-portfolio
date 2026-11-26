@@ -569,6 +569,41 @@ test('the build log card rises in and changes month in the right state even when
   await expect.poll(() => barMismatches(card)).toEqual([])
 })
 
+/**
+ * The tags carry icons (owner, 2026-11-25: "maybe we can make that a little
+ * bit more exciting. With some icons that are relevant?"), decorative, and
+ * still fit: a tag that does not fit drops out whole, and nothing is wider
+ * than the card, at 390 too.
+ */
+for (const width of [1440, 390]) {
+  test(`every build log tag has its icon and fits the card (${width}px)`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 })
+    await page.goto('/')
+    const card = await showBuildLog(page)
+    for (const state of ['month', 'day'] as const) {
+      if (state === 'day') await card.getByRole('button', { name: /^Thursday, November 5:/ }).focus()
+      const tags = card.locator('[data-readout] .logcard-chip')
+      expect(await tags.count(), state).toBeGreaterThan(1)
+      for (const tag of await tags.all()) await expect(tag.locator('svg[aria-hidden="true"]')).toHaveCount(1)
+      const fit = await card.evaluate((el) => {
+        // Measured at rest: each tag settles in with a small rise.
+        for (const a of el.getAnimations({ subtree: true })) a.finish()
+        const row = el.querySelector('[data-readout] .logcard-chips')!.getBoundingClientRect()
+        const out: string[] = []
+        for (const tag of el.querySelectorAll('[data-readout] .logcard-chip')) {
+          const r = tag.getBoundingClientRect()
+          // Shown whole on the row, or wrapped out of sight below it; never cut.
+          if (r.top < row.bottom && (r.right > row.right + 0.5 || r.bottom > row.bottom + 0.5))
+            out.push(`cut: ${tag.textContent}`)
+        }
+        if (el.scrollWidth > el.clientWidth) out.push('card wider than itself')
+        return out
+      })
+      expect(fit, state).toEqual([])
+    }
+  })
+}
+
 test('the build log card falls back to a plain card when the log cannot be read', async ({ page }) => {
   await page.route('**/api/build-log', (route) => route.fulfill({ json: { months: [] } }))
   await page.goto('/')

@@ -12,6 +12,15 @@
   --logcard-pitch: 5px;
   --logcard-gap: 3px;
 }
+/* The card measures itself, so its readout can fit a narrow column (`.logcard-weekday`). */
+.logcard {
+  container: logcard / inline-size;
+}
+@container logcard (width < 20rem) {
+  .logcard-weekday {
+    display: none;
+  }
+}
 .logcard[data-size='wide'] {
   --logcard-block: 6px;
   --logcard-pitch: 7px;
@@ -175,6 +184,20 @@
   }
   .logcard-month-in .logcard-chips {
     animation: logcard-month-in 0.42s cubic-bezier(0.22, 0.8, 0.3, 1) 0.08s both;
+  }
+}
+/* The tags settle in one after another when they change (a day picked, a new
+   month): a short rise and fade, a beat apart, inside the month's timeline. */
+@keyframes logcard-chip-in {
+  from {
+    opacity: 0;
+    transform: translateY(3px);
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .logcard-chip {
+    animation: logcard-chip-in 0.3s cubic-bezier(0.22, 0.8, 0.3, 1)
+      calc(var(--logcard-chip-at, 0) * 50ms) both;
   }
 }
 /* The readout's words fade in as it switches between the month and a day. */
