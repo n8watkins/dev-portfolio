@@ -208,6 +208,10 @@ async function showBuildLog(
     // by its place on screen, not `hover()`, whose own scrolling into view can move the page,
     // and onto the card's own padding, which is there whatever month it is moving to.
     await page.mouse.move(0, 0)
+    // At rest first: the bento cell rises and scales up from 95% as it arrives, so a box read
+    // earlier is smaller than the card's final one, and a point 8px inside it can land outside
+    // the card once it has grown. No hover then, and the months would cycle on for ever.
+    await cellAtRest(card)
     const box = (await card.boundingBox())!
     await page.mouse.move(box.x + 8, box.y + 8)
     await expect(card).not.toHaveAttribute('data-cycling', '')
