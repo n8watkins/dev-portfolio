@@ -207,8 +207,8 @@ export interface BuildLogCardProps {
   links?: { left?: CardLink; right?: CardLink }
   /** `compact` for a card in a grid; `wide` leads a page, chart beside the readout from 1024px. */
   size?: 'compact' | 'wide'
-  /** The month's heading level: h3 in a section, h2 where the card leads a page. */
-  heading?: 'h2' | 'h3'
+  /** The month's heading level: one under the heading around the card (h2 where it leads a page). */
+  heading?: 'h2' | 'h3' | 'h4'
   /** Whether the months move on by themselves (still never under reduced motion). */
   cycle?: boolean
   /** The month shown, when the page holds it (it shows that month's changes beside the card). */
@@ -621,8 +621,10 @@ export default function BuildLogCard({
                 if (e.pointerType === 'mouse' && !walking) pick(null)
               }}
               onBlur={(e) => {
-                if (!e.currentTarget.contains(e.relatedTarget as Node | null) && !hovered)
-                  pick(null)
+                const to = e.relatedTarget as Element | null
+                // Focus going to the card's own day link keeps the day: that link acts on it.
+                if (to?.closest('[data-logcard-keep]')) return
+                if (!e.currentTarget.contains(to) && !hovered) pick(null)
               }}
               onKeyDown={(e) => {
                 const at = active ?? lastDay
