@@ -14,7 +14,6 @@ import {
   SiCloudflare,
   SiDrizzle,
   SiEslint,
-  SiFigma,
   SiFirebase,
   SiGit,
   SiGithubactions,
@@ -57,13 +56,18 @@ export interface AIStackItem {
  * out my VoiceDock extension that uses it"). `text` is the words in the
  * description that become the link, exactly as written there. Where it goes
  * depends on the site showing the tile (stackLinkHref): a project on the
- * portfolio opens its page there, a build its page on n8builds.dev.
+ * portfolio scrolls to its card on the home page there, a build opens its
+ * page on n8builds.dev.
  */
 export interface StackLink {
   text: string
   /** Its page on n8builds.dev: /builds/<build>. */
   build?: string
-  /** Its page on the portfolio: /projects/<project>. */
+  /**
+   * A project on the portfolio. There it is its card on the home page
+   * (/#project-<project>, which scrolls to the card); from n8builds.dev it is
+   * the project's own page, /projects/<project>.
+   */
   project?: string
   /** Any other page, as a full URL (a blog, say). */
   href?: string
@@ -76,20 +80,26 @@ const SITE_ORIGIN: Record<StackSite, string> = {
   portfolio: 'https://portfolio.n8builds.dev',
 }
 
+/** The id of a project's card on the portfolio's home page (components/Projects/ProjectRow.tsx). */
+export const projectAnchor = (project: string) => `project-${project}`
+
 /**
- * Where a tile's link goes on `site`: the project's page on that site when it
+ * Where a tile's link goes on `site`: the project's place on that site when it
  * has one there, else its page on the other site. `external` says it leaves
- * the site (it then opens in a new tab).
+ * the site (it then opens in a new tab). On the portfolio a project is its
+ * card on the home page (owner, 2026-11-25: "scroll us down to the projects"),
+ * which the home page scrolls to (lib/projectAnchor.ts there).
  */
 export function stackLinkHref(link: StackLink, site: StackSite): { href: string; external: boolean } {
-  const pages: [StackSite, string | undefined][] = [
-    ['n8builds', link.build && `/builds/${link.build}`],
-    ['portfolio', link.project && `/projects/${link.project}`],
+  // [the site, the path from that site, the path from the other site]
+  const pages: [StackSite, string | undefined, string | undefined][] = [
+    ['n8builds', link.build && `/builds/${link.build}`, link.build && `/builds/${link.build}`],
+    ['portfolio', link.project && `/#${projectAnchor(link.project)}`, link.project && `/projects/${link.project}`],
   ]
   const own = pages.find(([where, path]) => where === site && path)
   if (own) return { href: own[1]!, external: false }
-  const other = pages.find(([, path]) => path)
-  if (other) return { href: SITE_ORIGIN[other[0]] + other[1], external: true }
+  const other = pages.find(([, , path]) => path)
+  if (other) return { href: SITE_ORIGIN[other[0]] + other[2], external: true }
   const url = link.href ?? ''
   if (url.startsWith(SITE_ORIGIN[site] + '/')) return { href: url.slice(SITE_ORIGIN[site].length), external: false }
   return { href: url, external: true }
@@ -269,7 +279,12 @@ export const dev_stack: AIStackItem[] = [
     description: 'Solara runs on it: Google sign-in, sync and hosting.',
     link: { text: 'Solara', ...SOLARA },
   },
-  { name: 'AWS', icon: <FaAws className={ICON} style={{ color: '#FF9900' }} />, description: 'Cloud hosting and storage when a project needs it.' },
+  {
+    name: 'AWS',
+    icon: <FaAws className={ICON} style={{ color: '#FF9900' }} />,
+    description: "S3, Lambda and Amplify. Portfolio Rank's screenshots use the S3 API.",
+    link: { text: 'Portfolio Rank', ...PORTFOLIO_RANK },
+  },
   {
     name: 'Google Cloud',
     icon: <SiGooglecloud className={ICON} style={{ color: '#4285F4' }} />,
@@ -323,5 +338,4 @@ export const dev_stack: AIStackItem[] = [
     link: { text: 'Solara', ...SOLARA },
   },
   { name: 'Git', icon: <SiGit className={ICON} style={{ color: '#F05032' }} />, description: 'Small commits, every change on a branch.' },
-  { name: 'Figma', icon: <SiFigma className={ICON} style={{ color: '#F24E1E' }} />, description: 'Mockups before the code, when a design needs it.' },
 ]
