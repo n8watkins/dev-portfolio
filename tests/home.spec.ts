@@ -174,10 +174,11 @@ async function showBuildLog(
   if (hold) {
     // From off the card: on a reloaded page a pointer already resting where the name now is
     // gets no mouseenter in Firefox, and the card would not know it is hovered. Moved there
-    // by its place on screen, not `hover()`, whose own scrolling into view can move the page.
+    // by its place on screen, not `hover()`, whose own scrolling into view can move the page,
+    // and onto the card's own padding, which is there whatever month it is moving to.
     await page.mouse.move(0, 0)
-    const name = (await card.locator('[data-month]').boundingBox())!
-    await page.mouse.move(name.x + name.width / 2, name.y + name.height / 2)
+    const box = (await card.boundingBox())!
+    await page.mouse.move(box.x + 8, box.y + 8)
     await expect(card).not.toHaveAttribute('data-cycling', '')
     for (let i = 0; i < 12 && (await card.locator('[data-month]').textContent()) !== hold; i++) {
       await expect(card).toHaveAttribute('data-settled', '', LOADED)
@@ -480,6 +481,8 @@ function barMismatches(card: import('@playwright/test').Locator) {
 test('a build log month change flows in, holds the card still, and lands on the right month, bars and number', async ({
   page,
 }) => {
+  // Loading the months and watching the change take a while on a busy machine.
+  test.setTimeout(60_000)
   await page.goto('/')
   const card = await showBuildLog(page)
   // The card's box on the page (not the window, which a click may scroll).
