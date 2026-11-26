@@ -6,7 +6,7 @@
  * World units: one per cell; x east, z south, y up; origin at the grid's middle.
  */
 import { GRID, RELIEF } from './mapData.generated'
-import { bytesOf, cellKinds, cellOf, LOS_ANGELES, places, type Place } from './geo'
+import { bytesOf, cellKinds, cellOf, LOS_ANGELES, places, techCities, type Place } from './geo'
 
 export type Cell = {
   i: number
@@ -118,8 +118,13 @@ export function scene(): Scene {
   }
   const la = onGrid(LOS_ANGELES)
   la.city = 2
-  // The map's own routes go only to the checked list, and only where it is a real move.
-  const targets = scenePlaces.filter((p) => p.mi > 300 && p.route)
+  // The map's own routes go to the curated tech hubs (techCities.ts), in their order.
+  const targets: ScenePlace[] = techCities.map((c) => ({
+    ...c,
+    pop: 0,
+    route: true,
+    cell: onGrid(c.at),
+  }))
   let x0 = Infinity
   let x1 = -Infinity
   let z0 = Infinity

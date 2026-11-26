@@ -530,11 +530,11 @@ test.describe('the bold map', () => {
     await page.goto('/')
     const slot = page.locator('[data-bold-map-slot]')
     await expect(slot.locator('.sr-only')).toHaveText(
-      'A map of the United States: Nathan is in Los Angeles, California, and open to relocating anywhere.'
+      'A map of the United States with lines from Los Angeles, where Nathan is based, to the tech hubs he would move to.'
     )
     const map = await openMap(page)
     await expect(map.locator('.sr-only')).toHaveText(
-      /open to relocating anywhere\. You seem to be near Austin, TX, about 1,230 miles away\./
+      /the tech hubs he would move to\. You seem to be near Austin, TX, about 1,230 miles away\./
     )
     await expect(map.locator('canvas')).toHaveAttribute('aria-hidden', 'true')
   })
@@ -548,18 +548,21 @@ test.describe('the bold map', () => {
     const avatar = map.getByRole('button', { name: 'Nathan Watkins, in Los Angeles' })
     const picture = avatar.locator('span').first()
     const size = async () => (await picture.boundingBox())!.width
+    // 36px at rest on the card (44px large), 50px grown (60px large): modest
+    // (owner, 2026-11-25: "my head gets a little too large").
     await page.mouse.move(0, 0)
     await expect.poll(size).toBeLessThan(40)
     if (!isMobile) {
       const box = (await map.boundingBox())!
       await page.mouse.move(box.x + box.width * 0.6, box.y + box.height * 0.45)
-      await expect.poll(size).toBeGreaterThan(60)
+      await expect.poll(size).toBeGreaterThan(46)
+      expect(await size()).toBeLessThan(54)
       await page.mouse.move(0, 0)
       await expect.poll(size).toBeLessThan(40)
     }
     await (isMobile ? avatar.tap() : avatar.click())
     await expect(avatar).toHaveAttribute('aria-pressed', 'true')
-    await expect.poll(size).toBeGreaterThan(60)
+    await expect.poll(size).toBeGreaterThan(46)
     await (isMobile ? avatar.tap() : avatar.click())
     await expect(avatar).toHaveAttribute('aria-pressed', 'false')
     if (!isMobile) await page.mouse.move(0, 0)
@@ -590,7 +593,101 @@ test.describe('the bold map', () => {
             requestAnimationFrame(() => done(el.getBoundingClientRect().width))
           )
       )
-    expect(width).toBeGreaterThan(60)
+    expect(width).toBeGreaterThan(46)
+  })
+
+  test('his avatar sits out over the sea, west of Los Angeles, clear of the chip and the labels', async ({
+    page,
+  }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+    await page.route('**/api/where', (route) => route.fulfill({ json: { visitor: AUSTIN } }))
+    const map = await openMap(page)
+    const avatar = map.getByRole('button', { name: 'Nathan Watkins, in Los Angeles' })
+    // Grown, the largest it gets.
+    await avatar.focus()
+    await avatar.press('Enter')
+    await expect(avatar).toHaveAttribute('aria-pressed', 'true')
+    await expect(map.locator('[data-on]', { hasText: 'near Austin, TX' })).toBeVisible()
+    const r = await map.evaluate((m) => {
+      const box = (el: Element | null) => el!.getBoundingClientRect()
+      const card = box(m)
+      return {
+        card: { l: card.left, t: card.top, r: card.right, b: card.bottom },
+        avatar: box(m.querySelector('button span')),
+        leader: box(m.querySelector('[data-leader]')),
+        chip: box(m.querySelector('[data-chip]')),
+        labels: [...m.querySelectorAll('[data-on]')].map((e) => e.getBoundingClientRect()),
+      }
+    })
+    const overlap = (a: DOMRect, b: DOMRect) =>
+      a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top
+    // Inside the card.
+    expect(r.avatar.left).toBeGreaterThanOrEqual(r.card.l)
+    expect(r.avatar.top).toBeGreaterThanOrEqual(r.card.t)
+    expect(r.avatar.right).toBeLessThanOrEqual(r.card.r)
+    // West of Los Angeles: the leader runs from the city (its right end) out to the avatar.
+    expect(r.leader.width).toBeGreaterThan(4)
+    expect(r.avatar.left + r.avatar.width / 2).toBeLessThan(r.leader.right)
+    expect(overlap(r.avatar, r.chip)).toBe(false)
+    for (const label of r.labels) expect(overlap(r.avatar, label)).toBe(false)
+  })
+
+  test('a visitor in the LA area: no line, no label of their own, the chip greets them', async ({
+    page,
+  }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+    await page.route('**/api/where', (route) =>
+      route.fulfill({ json: { visitor: { kind: 'here', at: [-118, 34], near: 'Pasadena, CA' } } })
+    )
+    const map = await openMap(page)
+    await expect(map).toHaveAttribute('data-visitor', 'here')
+    const chip = map.locator('[data-chip]')
+    await expect(chip).toContainText('Based in Los Angeles')
+    await expect(chip.locator('[data-neighbour]')).toHaveText('Hey, neighbor')
+    // Los Angeles is named once on the card, and no "You" label repeats it.
+    await expect(map.getByText(/^You\b/)).toHaveCount(0)
+    expect(await map.evaluate((m) => (m.textContent!.match(/Los Angeles/g) ?? []).length)).toBe(
+      // The chip once, and the screen-reader sentence twice ("lines from Los
+      // Angeles", "in the Los Angeles area too").
+      3
+    )
+    await expect(map.locator('.sr-only')).toHaveText(/You seem to be in the Los Angeles area too\./)
+  })
+
+  test('the routes go to the curated tech hubs, in their order', async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'no-preference' })
+    await page.route('**/api/where', (route) => route.fulfill({ json: { visitor: null } }))
+    const map = await openMap(page)
+    test.skip(
+      (await map.getAttribute('data-renderer')) === '2d',
+      'no WebGL2 in this browser: the still map shows every hub at once'
+    )
+    // The arrivals are named one at a time; collect a few.
+    const seen = new Set<string>()
+    await expect
+      .poll(
+        async () => {
+          for (const t of await map.locator('[data-on]').allInnerTexts()) seen.add(t.split(' · ')[0])
+          return seen.size
+        },
+        { timeout: 30_000 }
+      )
+      .toBeGreaterThanOrEqual(2)
+    const hubs = [
+      'New York, NY',
+      'Seattle, WA',
+      'Austin, TX',
+      'Boston, MA',
+      'Denver, CO',
+      'Miami, FL',
+      'San Francisco, CA',
+      'Washington, DC',
+      'Salt Lake City, UT',
+      'Atlanta, GA',
+      'Chicago, IL',
+      'Raleigh, NC',
+    ]
+    for (const name of seen) expect(hubs, `${name} is a tech hub`).toContain(name)
   })
 
   test('draws a line to the visitor when /api/where answers with a point', async ({ page }) => {

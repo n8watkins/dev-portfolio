@@ -5,13 +5,34 @@
  */
 import type { Visitor } from './geo'
 
+/**
+ * "Near Los Angeles" (owner, 2026-11-25): within 60 miles of downtown, measured
+ * to the visitor's coarse point or the place named near it. That is the LA
+ * area people mean (Long Beach, Pasadena, the Valley, Orange County,
+ * Riverside); San Diego and Santa Barbara are a real move and get a line.
+ */
+export const NEAR_LA_MILES = 60
+
 /** Miles rounded to tens, with a thousands comma: "1,230". */
 export const formatMiles = (m: number) => (Math.round(m / 10) * 10).toLocaleString('en-US')
+
+/*
+ * The card's words (owner, 2026-11-25: "LA being repeated twice, maybe rethink
+ * that. also maybe rethink the text for los angeles"). Each says one thing:
+ * the caption says what the lines are, the chip says where he is, and the
+ * card's title ("Ready to relocate", gridItem2.tsx) says what he wants.
+ */
+/** The caption, top left: what the lines on the map are. */
+export const CAPTION = "TECH HUBS I'D MOVE TO"
+/** The chip under Los Angeles: the one place the card names the city. */
+export const CHIP_TEXT = 'Based in Los Angeles'
+/** Under the chip, for a visitor in the LA area, instead of a label of their own. */
+export const NEIGHBOUR_TEXT = 'Hey, neighbor'
 
 /** What the map says, for screen readers (the map itself is decorative). */
 export function boldMapText(visitor: Visitor | null) {
   const base =
-    'A map of the United States: Nathan is in Los Angeles, California, and open to relocating anywhere.'
+    'A map of the United States with lines from Los Angeles, where Nathan is based, to the tech hubs he would move to.'
   if (visitor?.kind === 'us') {
     const near = visitor.near ? `near ${visitor.near}, ` : ''
     return `${base} You seem to be ${near}about ${formatMiles(visitor.mi)} miles away.`

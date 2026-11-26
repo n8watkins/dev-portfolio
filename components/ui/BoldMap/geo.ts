@@ -5,6 +5,8 @@
  */
 // With its extension, so `node --test` (tests/unit/boldMapGeo.test.mts) can load it too.
 import { GRID, KINDS, PLACES } from './mapData.generated.ts'
+import { TECH_CITIES } from './techCities.ts'
+import { NEAR_LA_MILES } from './text.ts'
 
 const rad = Math.PI / 180
 const p1 = 29.5 * rad
@@ -38,6 +40,14 @@ export function miles(a: LngLat, b: LngLat): number {
 
 export const LOS_ANGELES: LngLat = [-118.24, 34.05]
 
+/** The map's route destinations (techCities.ts), with their miles from Los Angeles. */
+export const techCities = TECH_CITIES.map((c) => ({
+  name: c.name,
+  state: c.state,
+  at: [c.lon, c.lat] as LngLat,
+  mi: miles(LOS_ANGELES, [c.lon, c.lat]),
+}))
+
 export type Place = {
   name: string
   state: string
@@ -61,14 +71,14 @@ export const places: Place[] = PLACES.map(([name, state, lon, lat, pop, route]) 
 export const placeLabel = (p: Pick<Place, 'name' | 'state'>) =>
   p.state ? `${p.name}, ${p.state}` : p.name
 
-export { formatMiles } from './text.ts'
+export { formatMiles, NEAR_LA_MILES } from './text.ts'
 
 /**
  * What the map is told about the visitor. Never more than a coarse point (half
  * a degree, about 35 miles) and the name of a place near it.
  */
 export type Visitor =
-  /** Within 120 miles of Los Angeles: no line, a "you're here too" label. */
+  /** Within NEAR_LA_MILES of Los Angeles: no line; the Los Angeles chip greets them. */
   | { kind: 'here'; at: LngLat; near: string | null }
   /** Elsewhere in the lower 48: a line from Los Angeles to them. */
   | { kind: 'us'; at: LngLat; near: string | null; mi: number }
@@ -128,7 +138,7 @@ export function visitorAt(lat: number, lng: number, country?: string | null): Vi
   const place = nearName(at)
   const near = place ? placeLabel(place) : null
   const mi = miles(LOS_ANGELES, place ? place.at : at)
-  if (mi < 120) return { kind: 'here', at, near }
+  if (mi < NEAR_LA_MILES) return { kind: 'here', at, near }
   return { kind: 'us', at, near, mi }
 }
 

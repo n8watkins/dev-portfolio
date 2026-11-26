@@ -1,4 +1,4 @@
-import { boldMapText } from './text'
+import { boldMapText, CAPTION } from './text'
 import type { Visitor } from './geo'
 
 export const MONO = 'font-mono font-bold leading-none whitespace-nowrap'
@@ -20,7 +20,7 @@ export default function Backdrop({ visitor }: { visitor: Visitor | null }) {
         aria-hidden="true"
         className={`${MONO} pointer-events-none absolute top-[18px] left-5 z-[1] text-[10px] tracking-[0.16em] text-[#7dd3fc] @min-[400px]:left-[22px] @min-[400px]:text-[11px]`}
       >
-        LOS ANGELES · <b className="font-bold text-[#e0f2fe]">OPEN TO ANYWHERE</b>
+        {CAPTION}
       </span>
     </>
   )

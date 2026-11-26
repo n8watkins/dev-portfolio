@@ -6,7 +6,7 @@ import Footer from '@/components/layout/Footer'
 import { BentoGrid, BentoGridItem } from '@/components/ui/BentoGrid'
 import BoldMap from '@/components/ui/BoldMap/BoldMap'
 import type { Visitor } from '@/components/ui/BoldMap/geo'
-import { formatMiles } from '@/components/ui/BoldMap/text'
+import { formatMiles, NEAR_LA_MILES } from '@/components/ui/BoldMap/text'
 import { relocateCard } from '@/data/grid/items/gridItem2'
 import { subpageNavItems } from '@/data/navigation'
 
@@ -22,7 +22,7 @@ function describe(visitor: Visitor | null, source: 'query' | 'request') {
   }
   const near = visitor.near ? `near ${visitor.near}` : `at ${visitor.at[1]}, ${visitor.at[0]}`
   if (visitor.kind === 'here')
-    return `${from}: ${near}, in the Los Angeles area, so no line, a "you're here too" label.`
+    return `${from}: ${near}, in the Los Angeles area (within ${NEAR_LA_MILES} miles), so no line: the Los Angeles chip greets you.`
   return `${from}: ${near}, ${formatMiles(visitor.mi)} miles from Los Angeles.`
 }
 
