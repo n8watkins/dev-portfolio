@@ -1,5 +1,4 @@
 import BuildLogCard from '@/components/build-log/BuildLogCard'
-import BuildLogHighlightSwitch from '@/components/ui/BentoComponents/BuildLogHighlightSwitch'
 import { BUILD_LOG_PAGE } from '@/lib/buildLog'
 import { N8BUILDS } from '@/lib/sites'
 import type { GridItemConfig } from '@/lib/types/gridItem'
@@ -18,24 +17,23 @@ export const gridItem6: GridItemConfig = {
   gridItemContainer:
     'col-span-2 row-span-3 md:col-span-4 md:row-span-2 lg:row-span-2 xl:col-span-4 xl:row-span-3',
   renderForeground: () => (
-    // TEMPORARY: ?log=3's stronger highlight, this site only (see the wrapper).
-    <BuildLogHighlightSwitch>
-      <BuildLogCard
-        links={{
-          left: {
-            label: N8BUILDS.name,
-            href: N8BUILDS.url,
-            external: true,
-            note: 'I post everything here',
-          },
-          right: {
-            label: 'Build log',
-            href: BUILD_LOG_PAGE,
-            external: true,
-            srExtra: ' on n8builds.dev',
-          },
-        }}
-      />
-    </BuildLogHighlightSwitch>
+    <BuildLogCard
+      links={{
+        left: {
+          label: N8BUILDS.name,
+          href: N8BUILDS.url,
+          external: true,
+          note: 'I post everything here',
+          // Its square monogram beside its name (owner, 2026-11-25).
+          icon: '/brand/n8-monogram.webp',
+        },
+        right: {
+          label: 'Build log',
+          href: BUILD_LOG_PAGE,
+          external: true,
+          srExtra: ' on n8builds.dev',
+        },
+      }}
+    />
   ),
 }

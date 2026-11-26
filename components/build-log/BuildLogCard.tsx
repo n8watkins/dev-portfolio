@@ -9,6 +9,7 @@ import {
   type MouseEvent,
   type ReactNode,
 } from 'react'
+import Image from 'next/image'
 import {
   FiArrowDown,
   FiArrowRight,
@@ -33,8 +34,18 @@ import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion'
 const AUTO_MS = 5000
 /** After an arrow is used, the months hold still this long before moving on again. */
 const MANUAL_HOLD_MS = 15000
-/** How long the readout's number takes to roll to a new value, in ms. */
+/** How long the readout's number takes to roll to a picked day's count, in ms. */
 const ROLL_MS = 240
+/**
+ * One month changing to the next (owner, 2026-11-25: "a little more flowy"):
+ * every bar eases to its new height, a wave across the month, while the name
+ * and readout cross over and the number rolls, all on this one timeline. Each
+ * bar takes BAR_MS, and the wave reaches the last bar WAVE_MS after the first
+ * (build-log-card.css reads both from the card's style).
+ */
+const BAR_MS = 340
+const WAVE_MS = 200
+const MONTH_MS = BAR_MS + WAVE_MS
 
 /**
  * Each size's chart: a bar is a stack of up to `levels` square blocks (the
@@ -65,10 +76,11 @@ const shortDay = (day: string) => date(day, { month: 'short', day: 'numeric' })
 const weekdayDay = (day: string) => date(day, { weekday: 'short', month: 'short', day: 'numeric' })
 const longDay = (day: string) => date(day, { weekday: 'long', month: 'long', day: 'numeric' })
 const plural = (n: number, one: string, many: string) => (n === 1 ? one : many)
+const motionAllowed = () => !window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
 /**
- * Counts up or down to `target` over a short ease, so the readout's number
- * rolls rather than pops.
+ * Counts up or down to `target` over `ms` on an ease out, so the readout's
+ * number rolls rather than pops.
  *
  * The roll's progress is read from the clock, not from the frame's own
  * timestamp: WebKit stamps a frame with the moment it began, which can come
@@ -78,26 +90,31 @@ const plural = (n: number, one: string, many: string) => (n === 1 ? one : many)
  * or a page too busy to paint (WebKit on CI went seconds without one,
  * 2026-11-25, and the number stayed mid-roll).
  */
-function useRollingNumber(target: number, still: boolean) {
+function useRollingNumber(target: number, still: boolean, ms: number) {
   const [shown, setShown] = useState(target)
   const from = useRef(target)
+  const duration = useRef(ms)
+  useEffect(() => {
+    duration.current = ms
+  })
   useEffect(() => {
     if (still) return
     const start = from.current
     const began = performance.now()
+    const length = duration.current
     const show = (value: number) => {
       from.current = value
       setShown(value)
     }
     let frame = requestAnimationFrame(function tick() {
-      const t = Math.min(1, Math.max(0, (performance.now() - began) / ROLL_MS))
+      const t = Math.min(1, Math.max(0, (performance.now() - began) / length))
       show(Math.round(start + (target - start) * (1 - (1 - t) ** 3)))
       if (t < 1) frame = requestAnimationFrame(tick)
     })
     const settle = setTimeout(() => {
       cancelAnimationFrame(frame)
       show(target)
-    }, ROLL_MS + 60)
+    }, length + 60)
     return () => {
       cancelAnimationFrame(frame)
       clearTimeout(settle)
@@ -138,6 +155,11 @@ export interface CardLink {
   srExtra?: string
   /** Its arrow: out (a new tab, the default for `external`), on (this site) or down (this page). */
   arrow?: 'out' | 'on' | 'down'
+  /**
+   * A small square mark before the label (n8builds.dev's monogram beside its
+   * name, owner, 2026-11-25), decorative: the label already says the name.
+   */
+  icon?: string
 }
 
 const ARROWS = { out: FiArrowUpRight, on: FiArrowRight, down: FiArrowDown }
@@ -155,6 +177,18 @@ function FooterLink({ link }: { link: CardLink }) {
     'group/link -mx-1 -my-0.5 inline-flex cursor-pointer items-center gap-1 rounded-sm px-1 py-0.5 text-sm font-semibold text-slate-200 transition-colors hover:text-sky-200 focus:outline-hidden focus-visible:text-sky-200 focus-visible:ring-2 focus-visible:ring-sky-400'
   const inner = (
     <>
+      {link.icon && (
+        // A little over the text's cap height, a pixel lower so it sits on the baseline with the name.
+        <Image
+          src={link.icon}
+          alt=""
+          width={15}
+          height={15}
+          unoptimized
+          className="mr-0.5 h-[15px] w-[15px] shrink-0 translate-y-px rounded-[4px]"
+          data-logcard-icon
+        />
+      )}
       <span className="relative whitespace-nowrap">
         {link.label}
         <span
@@ -234,12 +268,22 @@ export interface BuildLogCardProps {
  * date, rank, share of the month and streak. A tap elsewhere lets go on a
  * phone. Each day is a button named with its date and count for screen readers.
  *
+ * A new month flows in on one timeline (MONTH_MS): each day's bar eases from
+ * its old height to its new one, a wave across the month (from the right
+ * going back to an older month, from the left going on to a newer one), while
+ * the month's name and readout slide in from the same side and the number
+ * rolls. The bars rise the same way the first time the card is seen. Under
+ * reduced motion everything changes at once.
+ *
  * With `cycle`, the months move on by themselves, this month first and then
  * back through the months, one every 5 seconds. They hold while the card is
  * hovered or has keyboard focus, while a day is picked, for 15 seconds after
  * an arrow, off screen, in a hidden tab, and always under reduced motion (WCAG
  * 2.2.2), where a day still lights up and the readout still changes but
  * nothing moves. Only a month picked with the arrows is announced.
+ *
+ * `data-settled` is on the card when it shows its months and nothing is on
+ * its way in, so tests (and anything else) can wait for it.
  *
  * While the months load, the card holds its final layout; if they can't be
  * read, it is a plain card with its links.
@@ -264,36 +308,60 @@ export default function BuildLogCard({
   const [hovered, setHovered] = useState(false)
   const [focused, setFocused] = useState(false)
   const [inView, setInView] = useState(false)
+  /** The first look from the on-screen watcher has come in: the card is hydrated. */
+  const [live, setLive] = useState(false)
   const [tabVisible, setTabVisible] = useState(
     () => typeof document === 'undefined' || document.visibilityState === 'visible'
   )
   const [manualAt, setManualAt] = useState(0)
   /** The picked day, for the month it was picked in (a new month starts with none). */
   const [picked, setPicked] = useState<{ month: string; day: number; dir: number } | null>(null)
+  /**
+   * The bars' entrance: `idle` as rendered, `armed` (flat, waiting to be seen)
+   * or `rising` (on their way up).
+   */
+  const [entrance, setEntrance] = useState<'idle' | 'armed' | 'rising'>('idle')
+  /** A month on its way in: which way the wave runs (1 back to an older month, -1 on to a newer one). */
+  const [moving, setMoving] = useState<{ dir: number; at: number } | null>(null)
+  const settleTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const reduceMotion = usePrefersReducedMotion()
   const root = useRef<HTMLDivElement>(null)
   const chart = useRef<HTMLDivElement>(null)
   /** How the last press on the chart came: a tap only looks at a day, it never clicks it. */
   const lastPointer = useRef('')
+  /** The mouse is over the card, as of the event itself (the `hovered` state follows a render later). */
+  const pointerOn = useRef(false)
   const Heading = heading
   const wide = size === 'wide'
   const levels = LEVELS[size]
 
   useEffect(() => {
     if (given) return
-    let live = true
-    loadMonths(src).then((m) => live && setLoaded(m))
+    let on = true
+    loadMonths(src).then((m) => {
+      if (!on) return
+      // Fetched after the page drew: the bars rise into place once the card is seen.
+      if (m.length && motionAllowed()) setEntrance('armed')
+      setLoaded(m)
+    })
     return () => {
-      live = false
+      on = false
     }
   }, [given, src])
 
   useEffect(() => {
     const el = root.current
     if (!el) return
-    const observer = new IntersectionObserver((entries) =>
-      setInView(latestEntry(entries).isIntersecting)
-    )
+    let first = true
+    const observer = new IntersectionObserver((entries) => {
+      const entry = latestEntry(entries)
+      setInView(entry.isIntersecting)
+      if (!first) return
+      first = false
+      setLive(true)
+      // Rendered with its months (on the server) but off screen: the bars wait flat to rise when seen.
+      if (given?.length && !entry.isIntersecting && motionAllowed()) setEntrance('armed')
+    })
     observer.observe(el)
     const onVisibility = () => setTabVisible(document.visibilityState === 'visible')
     document.addEventListener('visibilitychange', onVisibility)
@@ -301,7 +369,32 @@ export default function BuildLogCard({
       observer.disconnect()
       document.removeEventListener('visibilitychange', onVisibility)
     }
+    // `given` is read once, on the first look; a later change of months is a month change, not an entrance.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  /** Runs a month change or the entrance to its end on a timer, never waiting on a frame. */
+  const beginMove = (dir: number) => {
+    clearTimeout(settleTimer.current)
+    if (!motionAllowed()) return setMoving(null)
+    setMoving((m) => ({ dir, at: (m?.at ?? 0) + 1 }))
+    settleTimer.current = setTimeout(() => {
+      setMoving(null)
+      setEntrance((e) => (e === 'rising' ? 'idle' : e))
+    }, MONTH_MS + 40)
+  }
+  useEffect(() => () => clearTimeout(settleTimer.current), [])
+
+  // Armed and now on screen: the bars rise. A moment's wait first, so the flat bars are
+  // drawn and the rise has somewhere to start from.
+  useEffect(() => {
+    if (entrance !== 'armed' || !inView) return
+    const id = setTimeout(() => {
+      setEntrance('rising')
+      beginMove(-1)
+    }, 30)
+    return () => clearTimeout(id)
+  }, [entrance, inView])
 
   const month = months?.[index]
   const count = months?.length ?? 0
@@ -323,7 +416,9 @@ export default function BuildLogCard({
     indexRef.current = index
     onIndexRef.current = onIndexChange
   })
-  const show = (next: number) => {
+  const show = (next: number, dir: number) => {
+    if (next === indexRef.current) return
+    beginMove(dir)
     if (heldIndex === undefined) setOwnIndex(next)
     onIndexRef.current?.(next)
   }
@@ -357,20 +452,24 @@ export default function BuildLogCard({
   useEffect(() => {
     if (!cycling) return
     const id = setInterval(() => {
+      // A pointer that has just come onto the card holds it already, before React has
+      // drawn the hover: on a slow page a tick in between moved the month away from
+      // under it (the portfolio's flaky hover test, 2026-11-25).
+      if (pointerOn.current) return
       const due = Math.max(lastMove.current + AUTO_MS, manualAt + MANUAL_HOLD_MS)
       if (Date.now() >= due) {
         lastMove.current = Date.now()
-        const next = (indexRef.current + 1) % count
-        if (heldIndex === undefined) setOwnIndex(next)
-        onIndexRef.current?.(next)
+        show((indexRef.current + 1) % count, 1)
       }
     }, 250)
     return () => clearInterval(id)
+    // `show` reads only refs and setters.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cycling, count, manualAt, heldIndex])
   const step = (by: number) => {
     if (!months) return
     const next = (index + by + count) % count
-    show(next)
+    show(next, by)
     setManualAt(Date.now())
     setAnnounce(`${months[next].title}: ${months[next].changes} changes shipped`)
   }
@@ -397,9 +496,14 @@ export default function BuildLogCard({
     chart.current?.querySelector<HTMLButtonElement>(`[data-index="${target}"]`)?.focus()
   }
 
+  const armed = entrance === 'armed'
   const day = active !== null && month ? month.days[active] : null
   const dayFacts = active !== null && facts ? facts.days[active] : null
-  const number = useRollingNumber(day ? day.count : (month?.changes ?? 0), reduceMotion)
+  const number = useRollingNumber(
+    armed ? 0 : day ? day.count : (month?.changes ?? 0),
+    reduceMotion,
+    moving ? MONTH_MS : ROLL_MS
+  )
   // The page hears of the day being looked at.
   const lookedAt = day?.day ?? null
   const onDayRef = useRef(onDayChange)
@@ -434,12 +538,15 @@ export default function BuildLogCard({
   const ready = count > 0 && month && facts
   // Wide and loaded: from 1024px the chart takes the right, beside the readout.
   const grid = wide && ready
+  const settled = ready && !moving && entrance === 'idle'
+  // The month's name and readout slide in from the side the wave starts on (not on the first view).
+  const swap = moving && entrance === 'idle' ? 'logcard-month-in' : ''
 
   const footer =
     links?.left || links?.right ? (
       <div
         className={`mt-2.5 flex items-end justify-between gap-3 ${
-          grid ? 'lg:col-start-1 lg:row-start-3 lg:justify-start lg:self-end lg:gap-8' : ''
+          grid ? 'lg:col-start-1 lg:row-start-3 lg:justify-start lg:gap-8 lg:self-end' : ''
         }`}
       >
         {links.left ? (
@@ -465,14 +572,31 @@ export default function BuildLogCard({
           ? 'flex flex-col lg:grid lg:grid-cols-[minmax(17rem,22rem)_minmax(0,1fr)] lg:grid-rows-[auto_auto_1fr] lg:gap-x-10 lg:p-7'
           : 'flex flex-col'
       }`}
-      style={{ '--logcard-levels': levels } as CSSProperties}
+      style={
+        {
+          '--logcard-levels': levels,
+          '--logcard-bar-ms': `${BAR_MS}ms`,
+          '--logcard-dir': moving?.dir ?? 1,
+        } as CSSProperties
+      }
       data-build-log={months === null ? 'loading' : count ? 'ready' : 'fallback'}
       data-size={size}
       data-cycling={cycling ? '' : undefined}
       // Hydrated and on screen: tests wait for it before they aim at a day.
       data-in-view={inView ? '' : undefined}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
+      data-live={live ? '' : undefined}
+      // Showing its months with nothing on its way in (a month change or the entrance).
+      data-settled={settled ? '' : undefined}
+      data-entrance={entrance}
+      data-month-id={month?.id}
+      onMouseEnter={() => {
+        pointerOn.current = true
+        setHovered(true)
+      }}
+      onMouseLeave={() => {
+        pointerOn.current = false
+        setHovered(false)
+      }}
       onFocus={(e) => setFocused(e.target.matches(':focus-visible'))}
       onBlur={(e) => {
         if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setFocused(false)
@@ -503,7 +627,7 @@ export default function BuildLogCard({
             </div>
             <Heading
               key={month.id}
-              className={`logcard-month-in truncate font-bold tracking-tight text-slate-50 ${
+              className={`${swap} truncate font-bold tracking-tight text-slate-50 ${
                 wide ? 'text-xl lg:text-2xl' : 'text-lg lg:text-xl'
               }`}
               data-month
@@ -515,7 +639,7 @@ export default function BuildLogCard({
           {/* The readout: the month, or the day being looked at. Screen readers get the same from the bars. */}
           <div
             key={month.id}
-            className={`logcard-month-in mt-2.5 ${grid ? 'lg:col-start-1 lg:row-start-2 lg:mt-4' : ''}`}
+            className={`${swap} mt-2.5 ${grid ? 'lg:col-start-1 lg:row-start-2 lg:mt-4' : ''}`}
             aria-hidden="true"
             data-readout
           >
@@ -554,7 +678,7 @@ export default function BuildLogCard({
             <div
               key={day ? 'day' : 'month'}
               // A chip that doesn't fit wraps out of sight, whole, rather than being cut.
-              className="logcard-swap -mx-px mt-[5px] flex h-[22px] flex-wrap gap-x-1.5 gap-y-2 overflow-hidden p-px"
+              className="logcard-swap logcard-chips -mx-px mt-[5px] flex h-[22px] flex-wrap gap-x-1.5 gap-y-2 overflow-hidden p-px"
             >
               {day && dayFacts ? (
                 day.count === 0 ? (
@@ -601,7 +725,6 @@ export default function BuildLogCard({
             }`}
           >
             <div
-              key={month.id}
               ref={chart}
               role="group"
               aria-label={`Changes per day in ${month.title}. Left and right arrow keys move between days.`}
@@ -647,56 +770,60 @@ export default function BuildLogCard({
                 focusDay(to)
               }}
             >
+              {/* A column per day, kept by its place in the month (the 1st, the 2nd...), so a new
+                  month eases each bar from its old height rather than drawing a new chart. */}
               {month.days.map((d, i) => {
-                const blocks = d.count > 0 ? Math.max(1, Math.round((d.count / peak) * levels)) : 0
+                const blocks = d.future
+                  ? 0
+                  : d.count > 0
+                    ? Math.max(1, Math.round((d.count / peak) * levels))
+                    : 1
                 const distance = active === null ? undefined : Math.min(3, Math.abs(i - active))
-                if (d.future)
-                  return (
-                    <span
-                      key={d.day}
-                      aria-hidden="true"
-                      className="flex h-full min-w-0 flex-1 items-end"
-                    >
-                      <span className="block h-1 w-full rounded-[1px] bg-white/5" />
-                    </span>
-                  )
+                // The wave: from the right going back a month, from the left going on.
+                const place = month.days.length > 1 ? i / (month.days.length - 1) : 0
+                const wave = (moving?.dir ?? -1) > 0 ? 1 - place : place
                 return (
-                  <button
-                    key={d.day}
-                    type="button"
-                    tabIndex={i === tabStop ? 0 : -1}
-                    aria-label={`${longDay(d.day)}: ${d.count} ${plural(d.count, 'change', 'changes')}${
-                      facts.days[i]?.rank === 1 ? ', the busiest day' : ''
-                    }`}
-                    aria-pressed={i === active}
-                    data-index={i}
-                    data-day={d.day}
+                  <span
+                    key={i}
+                    className="logcard-day relative flex h-full min-w-0 flex-1 items-end"
                     data-d={distance}
-                    className="logcard-day relative flex h-full min-w-0 flex-1 cursor-pointer items-end rounded-[2px] focus:outline-hidden"
-                    onFocus={() => pick(i)}
-                    onClick={(e) => clickDay(e, i)}
+                    data-future={d.future ? '' : undefined}
+                    style={
+                      {
+                        '--logcard-n': armed ? 0 : blocks,
+                        '--logcard-delay': `${Math.round(wave * WAVE_MS)}ms`,
+                      } as CSSProperties
+                    }
                   >
-                    <span aria-hidden="true" className="logcard-col" />
-                    <span
-                      aria-hidden="true"
-                      className="logcard-stack relative block w-full"
-                      style={{ '--logcard-n': Math.max(1, blocks) } as CSSProperties}
-                    >
+                    <span aria-hidden="true" className="logcard-slot" />
+                    <span aria-hidden="true" className="logcard-stack relative block w-full">
                       <span
-                        className={`logcard-fill absolute inset-0 origin-bottom ${
-                          blocks ? 'logcard-fill-on' : 'logcard-fill-off'
+                        className={`logcard-fill absolute inset-0 ${
+                          d.count > 0 ? 'logcard-fill-on' : 'logcard-fill-off'
                         }`}
-                        style={{ animationDelay: `${i * 12}ms` }}
                       >
-                        {blocks > 0 && (
-                          <span
-                            className="logcard-lit absolute inset-0"
-                            style={{ '--levels': blocks } as CSSProperties}
-                          />
-                        )}
+                        {d.count > 0 && <span className="logcard-lit absolute inset-0" />}
                       </span>
                     </span>
-                  </button>
+                    {!d.future && (
+                      <button
+                        type="button"
+                        tabIndex={i === tabStop ? 0 : -1}
+                        aria-label={`${longDay(d.day)}: ${d.count} ${plural(d.count, 'change', 'changes')}${
+                          facts.days[i]?.rank === 1 ? ', the busiest day' : ''
+                        }`}
+                        aria-pressed={i === active}
+                        data-index={i}
+                        data-day={d.day}
+                        data-d={distance}
+                        className="logcard-hit absolute inset-0 cursor-pointer rounded-[2px] focus:outline-hidden"
+                        onFocus={() => pick(i)}
+                        onClick={(e) => clickDay(e, i)}
+                      >
+                        <span aria-hidden="true" className="logcard-col" />
+                      </button>
+                    )}
+                  </span>
                 )
               })}
             </div>
@@ -713,8 +840,12 @@ export default function BuildLogCard({
                   }}
                 />
               )}
-              <span>{shortDay(month.days[0].day)}</span>
-              <span>{shortDay(month.days[month.days.length - 1].day)}</span>
+              <span key={`${month.id}-first`} className={swap}>
+                {shortDay(month.days[0].day)}
+              </span>
+              <span key={`${month.id}-last`} className={swap}>
+                {shortDay(month.days[month.days.length - 1].day)}
+              </span>
             </div>
           </div>
           <p className="sr-only" aria-live="polite">
