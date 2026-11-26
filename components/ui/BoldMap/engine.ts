@@ -233,8 +233,13 @@ export function createMapEngine(el: MapElements, opts: MapOptions): MapEngine {
     const b = el.card.getBoundingClientRect()
     return { x: a.left - b.left, y: a.top - b.top, w: a.width, h: a.height }
   }
-  // The avatar as drawn (its picture grows on hover), not its fixed hit box.
-  const pinRect = () => rectOf((el.pin.firstElementChild as HTMLElement | null) ?? el.pin)
+  // The avatar at its grown size, whatever it is now, so a label placed while
+  // it is small is still clear of it once it grows.
+  const pinRect = () => {
+    const r = rectOf(el.pin)
+    const grown = r.w * GROWN_RATIO
+    return { x: r.x + r.w / 2 - grown / 2, y: r.y + r.h / 2 - grown / 2, w: grown, h: grown }
+  }
   type Rect = ReturnType<typeof rectOf>
   const clear = (rects: Rect[], lx: number, ly: number, w: number, h: number, bottom: number) =>
     lx >= 6 &&
