@@ -18,9 +18,23 @@ test('the lab page shows the map at the home card size, then larger', async ({ p
   await expect(maps.first()).toHaveAttribute('data-ready', 'true')
   // What the map says, for screen readers; the drawing itself is hidden from them.
   await expect(maps.first().locator('.sr-only')).toHaveText(
-    /Nathan is in Los Angeles, California, and open to relocating anywhere\. You seem to be near Austin, TX, about 1,230 miles away\./
+    /where Nathan is based, to the tech hubs he would move to\. You seem to be near Austin, TX, about 1,230 miles away\./
   )
   await expect(maps.first().locator('canvas')).toHaveAttribute('aria-hidden', 'true')
+})
+
+test('from Los Angeles: no line and no "You" label, the chip greets you instead', async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.goto('/lab/map?from=Los%20Angeles')
+  const map = page.locator('[data-bold-map]').first()
+  await map.scrollIntoViewIfNeeded()
+  await expect(map).toHaveAttribute('data-ready', 'true')
+  await expect(map).toHaveAttribute('data-visitor', 'here')
+  await expect(map.locator('[data-chip] [data-neighbour]')).toHaveText('Hey, neighbor')
+  await expect(map.locator('[data-on]')).toHaveCount(0)
+  await expect(page.locator('[data-visitor-source]')).toContainText('within 60 miles')
 })
 
 test('the lab page is hidden: noindex, out of the sitemap and the nav', async ({

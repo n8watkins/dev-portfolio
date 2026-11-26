@@ -17,16 +17,18 @@
  */
 import { fitCamera, clip, type Camera, type Vec3 } from './camera'
 import { cellOf, formatMiles, placeLabel, type Visitor } from './geo'
-import { scene, seeded, type Cell, type ScenePlace } from './scene'
+import { scene, type Cell, type ScenePlace } from './scene'
 import { BOX_FS, BOX_VS, GLOW_FS, GLOW_VS, RIB_FS, RIB_VS, SEA_FS, SEA_VS } from './shaders'
 
 export type MapElements = {
   /** The card: sized by the page; the map fills it. */
   card: HTMLElement
   canvas: HTMLCanvasElement
-  /** His portrait, riding the light over Los Angeles. */
+  /** His portrait, out over the Pacific west of Los Angeles. */
   pin: HTMLElement
-  /** "Los Angeles, CA", under the pin. */
+  /** The short line from Los Angeles to the portrait. */
+  leader: HTMLElement
+  /** The Los Angeles chip, under the city. */
   chip: HTMLElement
   /** The visitor's label. */
   you: HTMLElement
@@ -55,6 +57,8 @@ export type MapEngine = {
 // Timing, as the owner picked it (2026-11-11): a route every 0.5 s, drawn in
 // 2.4 s, held 1.6 s, faded in 2 s, so about twelve are alive at once; the line
 // to the visitor is drawn in 2 s.
+/** The avatar's grown size over its size at rest (BoldMap.tsx: 36 to 50px on a card, 44 to 60px large). */
+const GROWN_RATIO = 50 / 36
 const EVERY = 0.5
 const DRAW = 2.4
 const HOLD = 1.6
@@ -89,7 +93,6 @@ function setText(el: HTMLElement, parts: (string | [tag: 'b' | 'em', text: strin
 
 export function createMapEngine(el: MapElements, opts: MapOptions): MapEngine {
   const S = scene()
-  const rnd = seeded(20261124)
   const gl = el.canvas.getContext('webgl2', {
     antialias: true,
     alpha: false,
@@ -129,13 +132,11 @@ export function createMapEngine(el: MapElements, opts: MapOptions): MapEngine {
         v.near ? ` · near ${v.near} ` : ' ',
         ['em', `· ${formatMiles(v.mi)} mi`],
       ])
-    } else if (v?.kind === 'here') {
-      setText(el.you, [
-        ['b', 'You'],
-        v.near ? ` · near ${v.near} ` : ' ',
-        ['em', "· you're here too"],
-      ])
-    } else el.you.replaceChildren()
+    } else {
+      // In the LA area (or unknown) there is no visitor label: the Los Angeles
+      // chip greets a neighbour itself (BoldMap.tsx), so LA is never said twice.
+      el.you.replaceChildren()
+    }
     el.you.toggleAttribute('data-on', false)
     youPlaced = false
     el.card.dataset.visitor = v ? v.kind : 'none'
@@ -143,66 +144,38 @@ export function createMapEngine(el: MapElements, opts: MapOptions): MapEngine {
   let youPlaced = false
   applyVisitor(opts.visitor, 0.8)
 
-  // Routes go to a shuffled bag of the checked places, never two near each other in a row.
-  let bagLeft: ScenePlace[] = []
-  const bag = () => {
-    if (!bagLeft.length) {
-      bagLeft = [...S.targets]
-      for (let i = bagLeft.length - 1; i > 0; i--) {
-        const j = Math.floor(rnd() * (i + 1))
-        ;[bagLeft[i], bagLeft[j]] = [bagLeft[j], bagLeft[i]]
-      }
+  // Routes go to the curated tech hubs in their order (techCities.ts), round and
+  // round; the visitor's own city is skipped, since their line is already there.
+  let nextCity = 0
+  const pick = () => {
+    for (let k = 0; k < S.targets.length; k++) {
+      const p = S.targets[nextCity++ % S.targets.length]
+      if (p.cell !== youCell) return p
     }
-    return bagLeft.pop()!
+    return S.targets[0]
   }
   const arcs: Arc[] = []
   const arrivals: [number, number, number][] = []
-  let lastPick: ScenePlace | null = null
   const screenOf = (p: ScenePlace) => px.get(p) ?? cam.toPx(endOf(p.cell))
-  const far = (p: ScenePlace) => {
-    if (!lastPick) return true
-    const a = screenOf(p)
-    const b = screenOf(lastPick)
-    return Math.hypot(a[0] - b[0], a[1] - b[1]) >= W * 0.22
-  }
-  const pick = () => {
-    let p = bag()
-    for (
-      let k = 0;
-      k < 24 && (p.cell === youCell || !far(p) || arcs.some((r) => !r.still && r.p === p));
-      k++
-    )
-      p = bag()
-    lastPick = p
-    return p
-  }
   let nextAuto = youArc ? 0.8 + YOU_DRAW + 0.6 : 0.6
 
-  // Every listed place a real move away can be pointed at; beyond a short reach nothing answers.
-  // (The visitor's own place is skipped when pointing, in nearestPlace.)
-  const pickable = S.places.filter(
-    (p) => p.mi > 150 && p.cell !== S.la && !(p.name === 'Kansas City' && p.state === 'KS')
-  )
-  // Within reach, a larger place wins over a hamlet a few pixels nearer.
-  const pull = new Map(
-    pickable.map((p) => [
-      p,
-      1 + 1.6 * Math.max(0, Math.min(1, (Math.log10(Math.max(p.pop, 1)) - 4) / 2.5)),
-    ])
-  )
+  // Only the tech hubs answer the pointer (owner, 2026-11-25: the map naming
+  // whatever small place was under it read as "random spots"). Near a hub its
+  // label shows and its line brightens; anywhere else nothing is named and the
+  // routes' own label carries on. The visitor's own city is left to their label.
+  const pickable = S.targets
   const px = new Map<ScenePlace, [number, number, number, number]>()
-  let reach = 24
-  const nearestPlace = (x: number, y: number) => {
+  /** How near a hub the pointer must be, in card pixels: a finger gets more room. */
+  const REACH = { mouse: 30, touch: 44 }
+  const nearestPlace = (x: number, y: number, reach: number) => {
     let best: ScenePlace | null = null
-    let bs = Infinity
+    let bd = reach * reach
     for (const p of pickable) {
       if (p.cell === youCell) continue
       const q = px.get(p)!
       const d = (q[0] - x) ** 2 + (q[1] - y) ** 2
-      if (d > reach * reach) continue
-      const s = d / pull.get(p)! ** 2
-      if (s < bs) {
-        bs = s
+      if (d <= bd) {
+        bd = d
         best = p
       }
     }
@@ -218,7 +191,8 @@ export function createMapEngine(el: MapElements, opts: MapOptions): MapEngine {
   let hovAt: [number, number] = [0, 0]
   const at = (e: PointerEvent) => {
     const r = el.card.getBoundingClientRect()
-    return nearestPlace(e.clientX - r.left, e.clientY - r.top)
+    const reach = e.pointerType === 'touch' ? REACH.touch : REACH.mouse
+    return nearestPlace(e.clientX - r.left, e.clientY - r.top, reach)
   }
   const onMove = (e: PointerEvent) => {
     if (e.pointerType !== 'touch' || touching) {
@@ -259,45 +233,71 @@ export function createMapEngine(el: MapElements, opts: MapOptions): MapEngine {
     const b = el.card.getBoundingClientRect()
     return { x: a.left - b.left, y: a.top - b.top, w: a.width, h: a.height }
   }
-  // The avatar as drawn (its picture grows on hover), not its fixed hit box.
-  const pinRect = () => rectOf((el.pin.firstElementChild as HTMLElement | null) ?? el.pin)
+  // The avatar at its grown size, whatever it is now, so a label placed while
+  // it is small is still clear of it once it grows.
+  const pinRect = () => {
+    const r = rectOf(el.pin)
+    const grown = r.w * GROWN_RATIO
+    return { x: r.x + r.w / 2 - grown / 2, y: r.y + r.h / 2 - grown / 2, w: grown, h: grown }
+  }
   type Rect = ReturnType<typeof rectOf>
   const clear = (rects: Rect[], lx: number, ly: number, w: number, h: number, bottom: number) =>
     lx >= 6 &&
     lx + w <= W - 6 &&
-    ly >= 30 &&
+    ly >= cam.top - 8 &&
     ly + h <= bottom &&
     !rects.some(
       (r) => lx < r.x + r.w + 4 && lx + w > r.x - 4 && ly < r.y + r.h + 4 && ly + h > r.y - 4
     )
 
+  /**
+   * His avatar sits out over the Pacific, west of Los Angeles, joined to the
+   * city by a short leader, so it never covers the land, the routes' origin or
+   * a label (owner, 2026-11-25: "it should be more off to the side in the
+   * ocean"). Placed for its grown size, so growing never pushes it onto land
+   * or off the card. `fx, fy` is Los Angeles on the card.
+   */
+  function placeAvatar(fx: number, fy: number) {
+    const box = el.pin.offsetWidth // at rest: 36px on a card, 44px on a large map
+    const grownR = (box * GROWN_RATIO) / 2
+    const margin = 6
+    // Left of the city and a little above it, clear of the chip hanging below.
+    let cx = fx - grownR - Math.max(14, box * 0.55)
+    let cy = fy - grownR * 0.55 - 6
+    cx = Math.max(margin + grownR, cx)
+    cy = Math.max(cam.top + grownR, cy)
+    // Too little sea on a narrow card: rise until the circle clears the city.
+    const clearance = grownR + 10
+    if (Math.hypot(fx - cx, fy - cy) < clearance) {
+      cy = Math.max(cam.top + grownR, fy - Math.sqrt(Math.max(0, clearance ** 2 - (fx - cx) ** 2)))
+    }
+    el.pin.style.transform = `translate(${cx - box / 2}px, ${cy - box / 2}px)`
+    // The leader: from the city to the avatar's edge at rest.
+    const dx = cx - fx
+    const dy = cy - fy
+    const len = Math.max(0, Math.hypot(dx, dy) - box / 2)
+    el.leader.style.width = `${len}px`
+    el.leader.style.transform = `translate(${fx}px, ${fy}px) rotate(${Math.atan2(dy, dx)}rad)`
+  }
+
   function placeYou() {
-    if (!visitor) return
+    // Only a visitor with a line has a label; in the LA area the chip greets them.
+    if (!youArc) return
     const rects = [pinRect(), rectOf(el.chip)]
     const w = el.you.offsetWidth
     const h = el.you.offsetHeight
-    let spots: [number, number][]
-    let x: number
-    let y: number
-    if (visitor.kind === 'here' || !youArc) {
-      const r = rects[1]
-      x = r.x + r.w / 2
-      y = r.y + r.h + 4
-      spots = [[Math.max(8, x - w / 2), y + 4]]
-    } else {
-      ;[x, y] = cam.toPx(youArc.end)
-      spots = [
-        [x + 12, y - h / 2],
-        [x - w / 2, y + 12],
-        [x - 12 - w, y - h / 2],
-        [x - w / 2, y - 14 - h],
-        [x - w - 6, y + 10],
-        [x - w, y - h - 12],
-      ]
-    }
+    const [x, y] = cam.toPx(youArc.end)
+    const spots: [number, number][] = [
+      [x + 12, y - h / 2],
+      [x - w / 2, y + 12],
+      [x - 12 - w, y - h / 2],
+      [x - w / 2, y - 14 - h],
+      [x - w - 6, y + 10],
+      [x - w, y - h - 12],
+    ]
     const s = spots.find(([lx, ly]) => clear(rects, lx, ly, w, h, cam.labelMax + H * 0.02)) ?? [
       Math.max(6, Math.min(W - w - 6, x - w / 2)),
-      Math.max(30, Math.min(cam.labelMax - h, y + 12)),
+      Math.max(cam.top - 8, Math.min(cam.labelMax - h, y + 12)),
     ]
     el.you.style.transform = `translate(${Math.round(s[0])}px, ${Math.round(s[1])}px)`
   }
@@ -320,6 +320,7 @@ export function createMapEngine(el: MapElements, opts: MapOptions): MapEngine {
     if (!p && named) p = named.p
     if (!p) {
       el.label.toggleAttribute('data-on', false)
+      el.label.toggleAttribute('data-hover', false)
       labelFor = null
       return
     }
@@ -345,7 +346,7 @@ export function createMapEngine(el: MapElements, opts: MapOptions): MapEngine {
     ]
     const spot = spots.find(([lx, ly]) => clear(rects, lx, ly, w, h, cam.labelMax)) ?? [
       Math.max(6, Math.min(W - w - 6, x + 12)),
-      Math.max(30, y - h - 12),
+      Math.max(cam.top - 8, y - h - 12),
     ]
     el.label.style.transform = `translate(${Math.round(spot[0])}px, ${Math.round(spot[1])}px)`
     el.label.toggleAttribute('data-on', true)
@@ -385,10 +386,9 @@ export function createMapEngine(el: MapElements, opts: MapOptions): MapEngine {
   }
 
   if (still) {
-    for (let k = 0; k < 6; k++) {
-      const p = bag()
+    // The still map shows every hub's line at once, quietly.
+    for (const p of S.targets)
       arcs.push({ p, end: endOf(p.cell), t0: -99, landed: true, still: true })
-    }
   }
 
   // ---- what to draw this frame, shared by both renderers
@@ -427,9 +427,9 @@ export function createMapEngine(el: MapElements, opts: MapOptions): MapEngine {
         alpha: (strong ? 0.3 : 0.22) * k,
       })
     }
-    // The pillar of light from Los Angeles up to his face.
+    // A short beacon of light over Los Angeles (his face is beside it, over the sea).
     ribbons.push({
-      pts: [la, [la[0], la[1] + 2.5, la[2]], [la[0], la[1] + 5.2, la[2]]],
+      pts: [la, [la[0], la[1] + 1.2, la[2]], [la[0], la[1] + 2.4, la[2]]],
       width: 3.2,
       alpha: (u) => 0.75 * (1 - u * 0.75),
     })
@@ -446,7 +446,7 @@ export function createMapEngine(el: MapElements, opts: MapOptions): MapEngine {
       youOn = still ? 1 : smooth((age - YOU_DRAW) / 2)
       settle(youArc.end, (age - YOU_DRAW) / 2, 1, true)
       el.you.toggleAttribute('data-on', age >= YOU_DRAW * 0.95)
-    } else if (visitor) el.you.toggleAttribute('data-on', true)
+    }
     // The routes: drawn slowly, held, then faded.
     for (const a of arcs) {
       const age = a.still ? 99 : T - a.t0
@@ -455,12 +455,13 @@ export function createMapEngine(el: MapElements, opts: MapOptions): MapEngine {
       if (upTo > 0) line(a.end, upTo, 0.72 * life, 1.4)
       settle(a.end, a.still ? 1 : (age - DRAW) / 1.0, life, false)
     }
-    // Pointing at a place: it lights softly, the columns round it rise a little,
-    // and a faint line to it fades in along its whole length at once.
+    // Pointing at a hub: it lights, the columns round it rise a little, and its
+    // line comes up bright along its whole length at once.
     if (hovAmt > 0 && hovPlace) {
       const e = endOf(hovPlace.cell)
       const k = smooth(hovAmt)
-      line(e, 1, 0.3 * k, 1.3)
+      line(e, 1, 0.9 * k, 1.8)
+      line(e, 1, 0.18 * k, 5)
       glows.push({ p: [e[0], e[1] + 0.9, e[2]], size: 18, alpha: 0.55 * k })
       heads.set([e[0], e[1] + 1.8, e[2], 0.7 * k], 12)
     }
@@ -817,10 +818,8 @@ export function createMapEngine(el: MapElements, opts: MapOptions): MapEngine {
     else if (ctx2d) draw2D(ctx2d)
     // His face rides the top of the pillar; the label hangs under Los Angeles.
     const la = laTop()
-    const top = cam.toPx([la[0], la[1] + 5.2, la[2]])
     const foot = cam.toPx(la)
-    const half = el.pin.offsetWidth / 2 // 18px on a card, more on a large map
-    el.pin.style.transform = `translate(${top[0] - half}px, ${top[1] - 14 - half}px)`
+    placeAvatar(foot[0], foot[1])
     el.chip.style.transform = `translate(${Math.max(8, foot[0] - el.chip.offsetWidth / 2)}px, ${foot[1] + 12}px)`
     if (visitor && !youPlaced && el.you.hasAttribute('data-on')) {
       youPlaced = true
@@ -842,7 +841,10 @@ export function createMapEngine(el: MapElements, opts: MapOptions): MapEngine {
     el.canvas.height = Math.round(H * DPR)
     cam = fitCamera(S, W, H)
     for (const p of pickable) px.set(p, cam.toPx(endOf(p.cell)))
-    reach = Math.max(24, W * 0.065)
+    // Where each hub is on the card, for the tests (public names and card pixels only).
+    el.card.dataset.hubs = JSON.stringify(
+      pickable.map((p) => [placeLabel(p), Math.round(px.get(p)![0]), Math.round(px.get(p)![1])])
+    )
     youPlaced = false
     render()
   }

@@ -858,3 +858,28 @@ select:focus-visible {
   font-size: 0.75rem;
   line-height: 1rem;
 }
+
+/* A project card a stack link landed on (lib/projectAnchor.ts): a short glow
+   so the eye finds it, kept while the card has keyboard focus. Under reduced
+   motion it comes and goes at once. */
+[data-project-anchor] {
+  scroll-margin-top: 96px;
+  outline: none;
+}
+[data-project-anchor] article {
+  transition:
+    border-color 500ms ease,
+    box-shadow 500ms ease;
+}
+[data-project-anchor][data-project-highlight] article,
+[data-project-anchor]:focus-visible article {
+  border-color: rgb(125 211 252 / 0.85);
+  box-shadow:
+    0 0 0 3px rgb(56 189 248 / 0.45),
+    0 0 48px rgb(56 189 248 / 0.25);
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-project-anchor] article {
+    transition: none;
+  }
+}

@@ -1,5 +1,6 @@
 import { getCloudflareContext } from '@opennextjs/cloudflare'
-import { visitorAt, type Visitor } from '@/components/ui/BoldMap/geo'
+import type { Visitor } from '@/components/ui/BoldMap/geo'
+import { visitorAt } from '@/components/ui/BoldMap/visitorGeo'
 
 /**
  * Where this request comes from, roughly, for the bold map's line to the

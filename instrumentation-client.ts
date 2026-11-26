@@ -4,8 +4,10 @@
 // seconds of script time on a phone (2026-11-04). Until then these listeners
 // catch any error so it is reported once the SDK is up.
 import { captureError, captureRouterTransitionStart, loadSentry } from '@/lib/sentry/lazy'
+import { SENTRY_DSN } from '@/lib/sentryDsn.mjs'
 
-if (typeof window !== 'undefined') {
+// Without a DSN (test builds: lib/sentryDsn.mjs) the SDK is never even loaded.
+if (typeof window !== 'undefined' && SENTRY_DSN) {
   const onError = (event: ErrorEvent) => captureError(event.error ?? event.message)
   const onRejection = (event: PromiseRejectionEvent) => captureError(event.reason)
   window.addEventListener('error', onError)

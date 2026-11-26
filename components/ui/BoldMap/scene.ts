@@ -6,7 +6,15 @@
  * World units: one per cell; x east, z south, y up; origin at the grid's middle.
  */
 import { GRID, RELIEF } from './mapData.generated'
-import { bytesOf, cellKinds, cellOf, LOS_ANGELES, places, type Place } from './geo'
+import {
+  bytesOf,
+  cellKinds,
+  cellOf,
+  LOS_ANGELES,
+  lights as litPlaces,
+  techCities,
+  type Place,
+} from './geo'
 
 export type Cell = {
   i: number
@@ -26,7 +34,6 @@ export type ScenePlace = Place & { cell: Cell }
 
 export type Scene = {
   cells: Cell[]
-  places: ScenePlace[]
   lights: ScenePlace[]
   targets: ScenePlace[]
   la: Cell
@@ -110,16 +117,15 @@ export function scene(): Scene {
     const [x, y] = cellOf(at)
     return nearestUs(x - cx, y - cz)
   }
-  const scenePlaces: ScenePlace[] = places.map((p) => ({ ...p, cell: onGrid(p.at) }))
-  // Only the larger places are lights; every listed place can still be pointed at.
-  const lights = scenePlaces.filter((p) => p.pop >= 300_000)
+  // The larger places are lights on the map (never named: only the hubs are).
+  const lights: ScenePlace[] = litPlaces.map((p) => ({ ...p, cell: onGrid(p.at) }))
   for (const p of lights) {
     p.cell.city = Math.max(p.cell.city, Math.max(0.3, Math.min(1, (Math.log10(p.pop) - 4.6) / 2.4)))
   }
   const la = onGrid(LOS_ANGELES)
   la.city = 2
-  // The map's own routes go only to the checked list, and only where it is a real move.
-  const targets = scenePlaces.filter((p) => p.mi > 300 && p.route)
+  // The map's own routes go to the curated tech hubs (techCities.ts), in their order.
+  const targets: ScenePlace[] = techCities.map((c) => ({ ...c, cell: onGrid(c.at) }))
   let x0 = Infinity
   let x1 = -Infinity
   let z0 = Infinity
@@ -132,7 +138,6 @@ export function scene(): Scene {
   }
   cached = {
     cells,
-    places: scenePlaces,
     lights,
     targets,
     la,

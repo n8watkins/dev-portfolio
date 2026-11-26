@@ -19,11 +19,11 @@ test('/stack lists every tool once, by layer, each with its reason', async ({ pa
   await page.goto('/stack')
   const items = page.locator('[data-stack-layer] > li')
   const names = await items.locator('p.font-semibold').allTextContents()
-  // data/stack.tsx: 7 agents and models, 3 local AI tools, 26 in the dev stack
-  // (owner, 2026-11-25: Claude Fable 5.2 in; Cursor, OpenAI and Upstash out).
-  expect(names).toHaveLength(36)
-  expect(new Set(names).size).toBe(36)
-  for (const dropped of ['Cursor', 'OpenAI', 'Upstash']) expect(names).not.toContain(dropped)
+  // data/stack.tsx: 7 agents and models, 3 local AI tools, 25 in the dev stack
+  // (owner, 2026-11-25: Claude Fable 5.2 in; Cursor, OpenAI, Upstash and Figma out).
+  expect(names).toHaveLength(35)
+  expect(new Set(names).size).toBe(35)
+  for (const dropped of ['Cursor', 'OpenAI', 'Upstash', 'Figma']) expect(names).not.toContain(dropped)
   expect(names).toContain('Claude Fable 5.2')
   for (const reason of await items.locator('p.text-sm').allTextContents()) {
     expect(reason.trim().length).toBeGreaterThan(5)
@@ -31,21 +31,25 @@ test('/stack lists every tool once, by layer, each with its reason', async ({ pa
 })
 
 // data/stack.tsx: the tiles whose description names a project (owner, 2026-11-25).
-const LINKED_TILES = 17
+const LINKED_TILES = 18
 
 test('/stack links each tool to the project that uses it', async ({ page }) => {
   await page.goto('/stack')
   const links = page.locator('[data-stack-layer] a')
   // One per linked tile: a link whose words are missing from its description would show none.
   await expect(links).toHaveCount(LINKED_TILES)
-  // The portfolio's own projects open their page here.
+  // The portfolio's own projects go to their card on the home page.
   // (Never Wren: the tiles also show on n8builds.dev, which Wren left on 2026-11-11.)
   await expect(page.locator('main')).not.toContainText(/\bWren\b/)
-  await expect(links.filter({ hasText: 'NetTrailers' })).toHaveAttribute('href', '/projects/net-trailers')
+  await expect(links.filter({ hasText: 'NetTrailers' })).toHaveAttribute('href', '/#project-net-trailers')
   for (const pr of await links.filter({ hasText: 'Portfolio Rank' }).all()) {
-    await expect(pr).toHaveAttribute('href', '/projects/portfolio-rank')
+    await expect(pr).toHaveAttribute('href', '/#project-portfolio-rank')
     await expect(pr).not.toHaveAttribute('target', '_blank')
   }
+  // AWS, backed by the resume and Portfolio Rank's S3 API uploads (2026-11-25).
+  await expect(page.locator('[data-stack-layer] li', { hasText: 'AWS' }).locator('p.text-sm')).toHaveText(
+    "S3, Lambda and Amplify. Portfolio Rank's screenshots use the S3 API."
+  )
   // The other builds open theirs on n8builds.dev, in a new tab that says so.
   const voicedock = links.filter({ hasText: 'VoiceDock' })
   await expect(voicedock).toHaveAttribute('href', 'https://n8builds.dev/builds/voicedock')
@@ -71,7 +75,7 @@ test.describe('the tech stack tiles (motion allowed)', () => {
       })
       await page.goto('/stack')
       const tiles = page.locator('[data-dino-panel] [data-marquee-row] > :first-child > figure')
-      await expect(tiles).toHaveCount(36)
+      await expect(tiles).toHaveCount(35)
       const misfits = await tiles.evaluateAll((figures) =>
         figures.flatMap((figure) => {
           ;(figure as HTMLElement).focus({ preventScroll: true })
@@ -141,7 +145,7 @@ test.describe('the tech stack tiles (motion allowed)', () => {
 test.describe('the tech stack tiles (reduced motion: they hold still)', () => {
   test.use({ contextOptions: { reducedMotion: 'reduce' } })
 
-  test('hovering or tapping a tile, then its link, opens the project', async ({ page, hasTouch }) => {
+  test('hovering or tapping a tile, then its link, lands on the project on the home page', async ({ page, hasTouch }) => {
     await page.goto('/stack')
     const tile = page
       .getByRole('region', { name: 'AI kit' })
@@ -161,7 +165,127 @@ test.describe('the tech stack tiles (reduced motion: they hold still)', () => {
     await expect(tile.locator('.description')).toHaveCSS('opacity', '1')
     if (hasTouch) await link.tap()
     else await link.click()
-    await expect(page).toHaveURL(/\/projects\/portfolio-rank$/)
+    await expect(page).toHaveURL(/\/#project-portfolio-rank$/)
+    await expect(page.locator('#project-portfolio-rank')).toHaveAttribute('data-landed', '')
+  })
+})
+
+/**
+ * A stack link to one of the portfolio's projects lands on its card on the
+ * home page (owner, 2026-11-25: "scroll us down to the projects";
+ * lib/projectAnchor.ts): a scroll there (smooth, or a jump under reduced
+ * motion), the hash in the address, a short highlight and focus on the card.
+ * Each test waits for `data-landed`, set once the scroll has settled, before
+ * measuring anything.
+ */
+test.describe('stack links land on the project on the home page', () => {
+  const anchor = (page: import('@playwright/test').Page, slug: string) => page.locator(`#project-${slug}`)
+  // The home page, once it handles the links (hydrated; before that a click is the browser's own jump).
+  const goHome = async (page: import('@playwright/test').Page) => {
+    await page.goto('/')
+    await expect(page.locator('html')).toHaveAttribute('data-project-links', 'ready')
+  }
+  // The landed card sits below the fixed nav, at the landing offset, unless the page ends first.
+  const expectInView = async (page: import('@playwright/test').Page, slug: string) => {
+    const m = await anchor(page, slug).evaluate((el) => {
+      const nav = document.querySelector('[aria-label="Main navigation"]')!.getBoundingClientRect()
+      const box = el.getBoundingClientRect()
+      const atEnd = document.documentElement.scrollHeight - window.innerHeight - window.scrollY < 2
+      return { top: box.top, navBottom: nav.bottom, atEnd, height: innerHeight }
+    })
+    expect(m.top, 'card top below the nav').toBeGreaterThanOrEqual(m.navBottom)
+    if (!m.atEnd) expect(Math.abs(m.top - 96), `card top ${m.top}px, aimed at 96px`).toBeLessThanOrEqual(8)
+    expect(m.top, 'card top on screen').toBeLessThan(m.height / 2)
+  }
+  // The home page's tech stack card: a linked tile's link (the loop's first copy
+  // while the rows move; under reduced motion there is only the one).
+  const homeLink = (page: import('@playwright/test').Page, tile: string, text: string) =>
+    page
+      .locator('#about [data-dino-panel] [data-marquee-row] figure')
+      .filter({ has: page.locator('[data-tile-name]', { hasText: new RegExp(`^${tile}$`) }) })
+      .first()
+      .getByRole('link', { name: text })
+
+  test.describe('motion allowed', () => {
+    test.use({ contextOptions: { reducedMotion: 'no-preference' } })
+
+    test('from the home page: it scrolls to the card, highlights it, focuses it and puts it in the address', async ({ page }) => {
+      await goHome(page)
+      const link = homeLink(page, 'Gemini', 'Portfolio Rank')
+      await expect(link).toHaveAttribute('href', '/#project-portfolio-rank')
+      // A click on the link itself (the row moves, so not by pointer position).
+      await link.evaluate((a: HTMLElement) => a.click())
+      await expect(page).toHaveURL(/\/#project-portfolio-rank$/)
+      const card = anchor(page, 'portfolio-rank')
+      await expect(card).toHaveAttribute('data-landed', '', { timeout: 10_000 })
+      await expect(card).toHaveAttribute('data-project-highlight', '')
+      await expect(card).toBeFocused()
+      await expectInView(page, 'portfolio-rank')
+      // The highlight is brief.
+      await expect(card).not.toHaveAttribute('data-project-highlight', '', { timeout: 5_000 })
+      // Back returns to where the link was.
+      await page.goBack()
+      await expect(page).toHaveURL(/\/$/)
+    })
+
+    test('from /stack: the link goes home and lands on the card once the page has loaded', async ({ page }) => {
+      await page.goto('/stack')
+      await page.locator('[data-stack-layer] a', { hasText: 'NetTrailers' }).click()
+      await expect(page).toHaveURL(/\/#project-net-trailers$/)
+      const card = anchor(page, 'net-trailers')
+      await expect(card).toHaveAttribute('data-landed', '', { timeout: 10_000 })
+      await expect(card).toBeFocused()
+      await expectInView(page, 'net-trailers')
+    })
+
+    test('by keyboard: Enter on a tile’s link lands on the card, and the next Tab goes into it', async ({ page, hasTouch }) => {
+      test.skip(hasTouch, 'keyboard')
+      await goHome(page)
+      const tile = page
+        .locator('#about [data-dino-panel] [data-marquee-row] > :first-child > figure')
+        .filter({ has: page.locator('[data-tile-name]', { hasText: /^Turso$/ }) })
+      await tile.evaluate((el: HTMLElement) => el.focus({ preventScroll: true }))
+      await page.keyboard.press('Tab')
+      await expect(tile.getByRole('link', { name: 'Portfolio Rank' })).toBeFocused()
+      await page.keyboard.press('Enter')
+      const card = anchor(page, 'portfolio-rank')
+      await expect(card).toHaveAttribute('data-landed', '', { timeout: 10_000 })
+      await expect(card).toBeFocused()
+      await expectInView(page, 'portfolio-rank')
+      await page.keyboard.press('Tab')
+      expect(await card.evaluate((el) => el.contains(document.activeElement) && el !== document.activeElement)).toBe(true)
+    })
+  })
+
+  test.describe('reduced motion', () => {
+    test.use({ contextOptions: { reducedMotion: 'reduce' } })
+
+    test('it jumps straight to the card, and still highlights it', async ({ page }) => {
+      await goHome(page)
+      const link = homeLink(page, 'Gemini', 'Portfolio Rank')
+      // Where the page is one frame after the click: already at the card.
+      const jumped = await link.evaluate(
+        (a: HTMLElement) =>
+          new Promise<number>((resolve) => {
+            a.click()
+            requestAnimationFrame(() =>
+              resolve(Math.abs(document.getElementById('project-portfolio-rank')!.getBoundingClientRect().top - 96))
+            )
+          })
+      )
+      expect(jumped, 'px off the landing spot one frame later').toBeLessThanOrEqual(8)
+      const card = anchor(page, 'portfolio-rank')
+      await expect(card).toHaveAttribute('data-landed', '')
+      await expect(card).toHaveAttribute('data-project-highlight', '')
+      await expectInView(page, 'portfolio-rank')
+    })
+
+    test('a shared link (/#project-net-trailers) opens at the card', async ({ page }) => {
+      await page.goto('/#project-net-trailers')
+      const card = anchor(page, 'net-trailers')
+      await expect(card).toHaveAttribute('data-landed', '', { timeout: 10_000 })
+      await expectInView(page, 'net-trailers')
+    })
   })
 })
 

@@ -8,6 +8,7 @@ import { FloatingNav } from '@/components/layout/FloatingNav'
 import { navItems } from '@/data/navigation'
 import { useSectionTracking } from '@/hooks/useSectionTracking'
 import { useScrollTracking } from '@/hooks/useScrollTracking'
+import { useProjectAnchors } from '@/lib/projectAnchor'
 import SectionErrorBoundary from '@/components/SectionErrorBoundary'
 import dynamic from 'next/dynamic'
 
@@ -23,6 +24,9 @@ export default function Home() {
 
   // Track scroll depth milestones
   useScrollTracking()
+
+  // The tech stack's project links (/#project-<slug>) land on the project's card.
+  useProjectAnchors()
 
   // On the way to /about (any link there): remember how far down the page is,
   // for /about's "Continue where you were".

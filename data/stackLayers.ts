@@ -63,12 +63,7 @@ export const stackLayers: StackLayer[] = [
     blurb: 'How it stays working.',
     items: pick(['Playwright', 'GitHub Actions', 'ESLint', 'Prettier', 'Git', 'Sentry', 'Google Analytics']),
   },
-  {
-    id: 'design',
-    title: 'Design',
-    blurb: 'Before the code, when it needs it.',
-    items: pick(['Figma']),
-  },
+  // No Design layer: Figma went on 2026-11-25 (nothing in the owner's repos or resume backs it).
 ]
 
 /** How many tiles data/stack.tsx has: every one sits in exactly one layer (tests/stack.spec.ts). */

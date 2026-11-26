@@ -1169,8 +1169,12 @@ test.describe('dino easter egg (reduced motion)', () => {
       await expect(ai.getByText(tool, { exact: true })).toHaveCount(1)
     }
     const dev = page.getByRole('region', { name: 'Dev stack' })
-    for (const tool of ['Next.js', 'React', 'Firebase', 'AWS', 'Playwright', 'GitHub Actions', 'Figma']) {
+    for (const tool of ['Next.js', 'React', 'Firebase', 'AWS', 'Playwright', 'GitHub Actions']) {
       await expect(dev.getByText(tool, { exact: true })).toHaveCount(1)
+    }
+    // Dropped by the owner on 2026-11-25 (Figma: nothing backs it).
+    for (const dropped of ['Figma', 'Cursor', 'OpenAI', 'Upstash']) {
+      await expect(page.locator('[data-dino-panel]').getByText(dropped, { exact: true })).toHaveCount(0)
     }
     // Dropped as filler or dated (the owner's call, 2026-10-29).
     for (const dropped of ['HTML5', 'CSS3', 'ES6+', 'Recoil', 'Material-UI', 'Paypal API', 'Postman', 'Jest', 'MySQL', 'Stripe API', 'GraphQL', 'AWS Amplify', 'Prisma', 'REST APIs']) {

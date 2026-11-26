@@ -9,6 +9,7 @@ import PauseOffscreen from '@/components/ui/PauseOffscreen'
 import ProjectShowcase from './ProjectShowcase'
 import PixelMark from './PixelMark'
 import { markFor } from './marks'
+import { projectAnchor } from '@/data/stack'
 
 /**
  * One project on the home page: its card and its pixel mark. On wide screens
@@ -22,16 +23,22 @@ export default function ProjectRow({ project, index }: { project: Project; index
   const kind = markFor[project.accent]
   return (
     <PauseOffscreen className={`relative flex ${side === 'right' ? '' : 'xl:justify-end'}`}>
-      <motion.div
-        ref={cardRef}
-        variants={fadeInUpVariants}
-        {...defaultAnimationConfig}
-        viewport={{ once: true, amount: 0.1 }}
-        className="w-full xl:w-[60%]"
-        data-grid-avoid=""
-      >
-        <ProjectShowcase project={project} />
-      </motion.div>
+      {/* The card's anchor (/#project-<slug>): the stack's links land here
+          (lib/projectAnchor.ts). It never moves, unlike the card inside it,
+          which slides up as it reveals, so a scroll to it lands where the
+          card ends up; it takes focus when a link lands on it. */}
+      <div id={projectAnchor(project.slug)} data-project-anchor="" tabIndex={-1} className="w-full xl:w-[60%]">
+        <motion.div
+          ref={cardRef}
+          variants={fadeInUpVariants}
+          {...defaultAnimationConfig}
+          viewport={{ once: true, amount: 0.1 }}
+          className="w-full"
+          data-grid-avoid=""
+        >
+          <ProjectShowcase project={project} />
+        </motion.div>
+      </div>
       <PixelMark
         kind={kind}
         rgb={accents[project.accent].rgb}
