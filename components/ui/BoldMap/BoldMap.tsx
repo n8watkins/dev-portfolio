@@ -7,7 +7,7 @@ import { latestEntry } from '@/lib/intersection'
 import Backdrop, { MONO } from './Backdrop'
 import { createMapEngine, type MapEngine } from './engine'
 import type { Visitor } from './geo'
-import { asVisitor } from './text'
+import { asVisitor, CHIP_TEXT, NEIGHBOUR_TEXT } from './text'
 
 // Place labels: 12px on a phone card, 13px at the bento size, 15px on a large map
 // (owner, 2026-11-25: the old 11px semibold read too small and too thin).
@@ -52,6 +52,7 @@ export default function BoldMap({
   const card = useRef<HTMLDivElement>(null)
   const stage = useRef<HTMLDivElement>(null)
   const pin = useRef<HTMLButtonElement>(null)
+  const leader = useRef<HTMLSpanElement>(null)
   const chip = useRef<HTMLSpanElement>(null)
   const you = useRef<HTMLSpanElement>(null)
   const label = useRef<HTMLSpanElement>(null)
@@ -69,7 +70,16 @@ export default function BoldMap({
   useEffect(() => {
     const root = card.current
     const host = stage.current
-    if (!root || !host || !pin.current || !chip.current || !you.current || !label.current) return
+    if (
+      !root ||
+      !host ||
+      !pin.current ||
+      !leader.current ||
+      !chip.current ||
+      !you.current ||
+      !label.current
+    )
+      return
     // A fresh canvas per engine: a canvas keeps the first kind of context it was asked for.
     const canvas = document.createElement('canvas')
     canvas.className = 'absolute inset-0 h-full w-full'
@@ -80,6 +90,7 @@ export default function BoldMap({
         card: root,
         canvas,
         pin: pin.current,
+        leader: leader.current,
         chip: chip.current,
         you: you.current,
         label: label.current,
@@ -158,11 +169,25 @@ export default function BoldMap({
       <Backdrop visitor={known} />
       {/* Placed by the engine; hidden until it has placed them. */}
       <div aria-hidden="true" className={`relative z-[2] ${PLACED}`}>
+        {/* The leader from Los Angeles out to his avatar over the sea. */}
+        <span
+          ref={leader}
+          data-leader
+          className="pointer-events-none absolute top-0 left-0 h-[2px] origin-[0_50%] -translate-y-px rounded-full bg-linear-to-r from-[#e0f2fe] to-[#7dd3fc]/70 shadow-[0_0_8px_rgba(34,211,238,.7)]"
+        />
         <span
           ref={chip}
-          className={`${MONO} pointer-events-none absolute top-0 left-0 rounded-[7px] border border-[rgba(125,211,252,.5)] bg-[rgba(3,37,108,.94)] px-2.5 py-[7px] text-[13px] text-white shadow-[0_4px_14px_rgba(0,0,0,.35)] @min-[400px]:text-sm @min-[700px]:px-3 @min-[700px]:py-2 @min-[700px]:text-base`}
+          data-chip
+          className={`${MONO} pointer-events-none absolute top-0 left-0 flex flex-col gap-1 rounded-[7px] border border-[rgba(125,211,252,.5)] bg-[rgba(3,37,108,.94)] px-2.5 py-[7px] text-[13px] text-white shadow-[0_4px_14px_rgba(0,0,0,.35)] @min-[400px]:text-sm @min-[700px]:px-3 @min-[700px]:py-2 @min-[700px]:text-base`}
         >
-          Los Angeles, CA
+          {/* The one place the card names the city (owner, 2026-11-25: LA was said twice). */}
+          <span>{CHIP_TEXT}</span>
+          {/* A visitor in the LA area gets no label of their own: the chip greets them. */}
+          {known?.kind === 'here' && (
+            <span data-neighbour className="text-[0.85em] text-[#a5f3fc]">
+              {NEIGHBOUR_TEXT}
+            </span>
+          )}
         </span>
         <span
           ref={label}
@@ -186,10 +211,12 @@ export default function BoldMap({
           data-big={big || undefined}
           onClick={() => setBig((b) => !b)}
           onBlur={() => setBig(false)}
-          className="group/pin absolute top-0 left-0 size-9 cursor-default rounded-full outline-none @min-[700px]:size-12"
+          className="group/pin absolute top-0 left-0 size-9 cursor-default rounded-full outline-none @min-[700px]:size-11"
         >
+          {/* Drawn at its grown size (50px on a card, 60px large) and scaled down
+              to 36 or 44px at rest; it grows in place (engine.ts GROWN_RATIO). */}
           <span
-            className={`absolute bottom-0 left-[-14px] size-16 origin-bottom scale-(--rest) overflow-hidden [--rest:0.5625] @min-[700px]:left-[-20px] @min-[700px]:size-22 @min-[700px]:[--rest:0.5455] rounded-full bg-[#012485] shadow-[0_0_0_3.5px_#7dd3fc,0_0_34px_7px_rgba(34,211,238,.55),0_10px_24px_rgba(0,0,0,.5)] transition-[scale,box-shadow] duration-500 ease-[cubic-bezier(.2,.9,.3,1.25)] motion-reduce:transition-none ${GROW}`}
+            className={`absolute top-[-7px] left-[-7px] size-[50px] origin-center scale-(--rest) overflow-hidden [--rest:0.72] @min-[700px]:top-[-8px] @min-[700px]:left-[-8px] @min-[700px]:size-15 @min-[700px]:[--rest:0.7333] rounded-full bg-[#012485] shadow-[0_0_0_3.5px_#7dd3fc,0_0_34px_7px_rgba(34,211,238,.55),0_10px_24px_rgba(0,0,0,.5)] transition-[scale,box-shadow] duration-500 ease-[cubic-bezier(.2,.9,.3,1.25)] motion-reduce:transition-none ${GROW}`}
           >
             <Image
               src="/hero/portrait.jpg"

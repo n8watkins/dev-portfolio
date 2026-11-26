@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { visitorAt, visitorFromQuery } from '../../components/ui/BoldMap/geo.ts'
+import { visitorAt, visitorFromQuery } from '../../components/ui/BoldMap/visitorGeo.ts'
 
 test('a visitor in Austin gets a line, named near Austin, about 1,230 miles out', () => {
   const v = visitorAt(30.27, -97.74, 'US')
