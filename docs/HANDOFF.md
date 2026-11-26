@@ -47,7 +47,7 @@ It funnels visitors to the two other sites:
 - `npm test` runs Playwright against a production build on port 4829 (it builds first, or reuses a server already running there locally).
   `E2E_PORT=4839 npm test` uses another port, so a running `npm run dev` on 4829 is not mistaken for the test build.
   No retries: a flaky test gets fixed.
-- Specs: `tests/consent.spec.ts` (the analytics consent banner), `tests/dino.spec.ts` (the dino game on /stack: n8builds.dev's dino tests, kept in step with its `tests/e2e/ai-kit.spec.ts`), `tests/dino-music.spec.ts` (the dino game's music toggle and its sound checked offline, never out loud: n8builds.dev's `tests/e2e/dino-music.spec.ts`), `tests/home.spec.ts` (the footer cards, the n8builds.dev card's links, the build log card, the map arcs, Experience), `tests/about.spec.ts` (the About page and its breadcrumb, the home About teaser's facts, the nav from subpages, the sitemap), `tests/stack.spec.ts` (the stack card's link, /stack and its play area), `tests/projects.spec.ts` (the project cards, /projects and the project pages, the in-progress card, the retired apps' redirects, the status API), `tests/seo.spec.ts` (titles, share cards, no em dashes, no Sentry example routes), `tests/web-vitals.spec.ts` (Web Vitals budgets and axe accessibility), `tests/lab.spec.ts` (the bold map's lab page).
+- Specs: `tests/consent.spec.ts` (the analytics consent banner), `tests/dino.spec.ts` (the dino game on /stack: n8builds.dev's dino tests, kept in step with its `tests/e2e/ai-kit.spec.ts`), `tests/dino-music.spec.ts` (the dino game's music toggle and its sound checked offline, never out loud: n8builds.dev's `tests/e2e/dino-music.spec.ts`), `tests/home.spec.ts` (the footer cards, the n8builds.dev card's links, the build log card, the bold map and `/api/where`, Experience), `tests/about.spec.ts` (the About page and its breadcrumb, the home About teaser's facts, the nav from subpages, the sitemap), `tests/stack.spec.ts` (the stack card's link, /stack and its play area), `tests/projects.spec.ts` (the project cards, /projects and the project pages, the in-progress card, the retired apps' redirects, the status API), `tests/seo.spec.ts` (titles, share cards, no em dashes, no Sentry example routes), `tests/web-vitals.spec.ts` (Web Vitals budgets and axe accessibility), `tests/lab.spec.ts` (the bold map's `/lab/map` test bed).
 - The site scrolls smoothly (`scroll-smooth` on every element), so a test that scrolls must wait for the scroll to stop before hovering or clicking.
 - GitHub Actions (`.github/workflows/ci.yml`): lint, types and build, then the Playwright suite on the same five browsers as n8builds.dev (chromium, firefox, webkit, mobile-chrome, mobile-safari) inside Playwright's Docker image (its version read from `package-lock.json`).
   WebKit and mobile Safari each run as two shards with one worker: they have no GPU in CI, so their frames come slowly (about 10 fps on this page), and competing workers make that worse.
@@ -102,7 +102,7 @@ The owner picked layout B (a work-first home page plus detail pages) over A (one
   `/projects` and the project pages lead "Back to home" (`components/Projects/BackToHome.tsx`, to the top of `/`).
   The nav (on every page) jumps to these sections; on other pages it goes home first (`subpageNavItems` in `data/navigation.tsx`). The detail pages are reached from the sections.
 - **Hero terminal**: two lines, "I build AI products end to end." and "Open to full-time, part-time or contract roles.", with no "$" prompt line; a blinking block cursor stays at the end of the last line, in the typing caret's own box (`.whoami-cursor`).
-- **Projects**: each project as a big, full-width card (`components/Projects/ProjectShowcase.tsx`): its looping clip (or first screenshot) across the top, wide and short (16:9 on phones, 21:9 from 768px), then icon, name, a sentence or two, a "What's interesting" line (`highlight`), Live demo and Full story. "Detailed view" (right of the heading) opens `/projects` (`components/ProjectsPage.tsx`, `ProjectFull.tsx`): every screenshot, the whole description, features, tech, and Live demo / Source / Full story.
+- **Projects**: each project as a big card (`components/Projects/ProjectShowcase.tsx`), full width below 1280px and 60% wide on alternating sides from 1280px, beside its pixel mark (see "The pixel marks" below): its looping clip (or first screenshot) across the top, wide and short (16:9 on phones, 21:9 from 768px), then icon, name, a sentence or two, a "What's interesting" line (`highlight`), Live demo and Full story. "Detailed view" (right of the heading) opens `/projects` (`components/ProjectsPage.tsx`, `ProjectFull.tsx`): every screenshot, the whole description, features, tech, and Live demo / Source / Full story.
   The n8builds.dev card comes after them: "n8builds.dev" on top as a heading that is plainly a link (underlined, an arrow, a hover state), "See more of my selected work" under it, then its builds one at a time, its featured ones first.
   OpenPing and Solara show the product in use: n8builds.dev's own build-page clips (`public/builds/<slug>/clip.mp4` and `clip-poster.webp`, recorded by n8builds-web's `scripts/product-clips/`), played by `ProjectClip`; the others keep their screenshots. Re-copy the clips when n8builds-web re-records them.
 - **Clips** (from layout A): `clip` in `data/projects.tsx`, files in `public/projects/clips/` (about 7 seconds, about 200 KB, H.264 MP4 and a WebP poster), played by `components/Projects/ProjectClip.tsx`: loaded only near the screen, paused off screen, the poster under reduced motion, a pause button.
@@ -130,25 +130,65 @@ The owner picked layout B (a work-first home page plus detail pages) over A (one
 - **Tighter stack tiles** (owner, 2026-11-25): the tech stack panel's tiles (home card, `/stack`, with and without motion) are 188 x 84 with 18px names, 24px marks, 6px side padding and 12px hover text, set in portfolio-only CSS in `app/globals.css` (the shared `StackTile` is h-28 w-52 and stays byte-identical). Gaps stay 40px across and 36px between rows (the dino's hops need them); `components/features/TechStack.tsx` scales the row durations to the 228px pitch so both rows keep ~22px/s. `tests/stack.spec.ts` pins the size, in the server's HTML and once live.
 - The dino tests run on `/stack` (`STACK_PAGE` in `tests/dino.spec.ts` and `tests/dino-music.spec.ts`); n8builds-web's copies run on its home page.
 
-## The bold map, on trial at /lab/map (owner, 2026-11-24)
+## The pixel marks (owner, 2026-11-24 and 25)
 
-The owner picked the "bold" 3D map from the stage 1 lab boards (local branch `preview/toys`, `preview/feel/map-bold.html`) to replace the globe picture in "Ready to relocate".
-It is built for real but not on the home page yet: the owner decides after seeing `/lab/map`.
+The Projects section carries the hero's 52px grid (`styles.grid` in `components/Projects/marks.module.css`) with its own wandering deep-blue cells (`GridLife.tsx`), and from 1280px (Tailwind's `xl`) each card stands at 60% of the row on alternating sides with its project's pixel mark in the open grid beside it (`ProjectRow.tsx`).
+The marks are drawn from the grid's own squares: Portfolio Rank's podium (three bars), NetTrailers' play button and Wren's bird.
+They flip in square by square like a split-flap board when they come on screen and flip out when they leave, and every few seconds one of them does something small (the bird blinks, pecks, flicks its tail or finds a seed; the play button pauses or runs a playhead; the podium reshuffles), never two at once.
 
-- `/lab/map` (`app/lab/map/page.tsx`, `components/lab/MapLab.tsx`) is hidden: not in the nav or the sitemap, `noindex`.
-  It shows the new card and the current one at their bento sizes (the home page's own grid classes), then the new map larger.
-  `?from=` places the visitor: `lat,lng`, a listed place (`Denver`, `Austin, TX`), `LA`, `NYC`, or `London` for abroad.
-- The map is `components/ui/BoldMap/`: `BoldMap.tsx` (the card, its labels and the screen-reader text), `engine.ts` (hand-written WebGL2, with a still 2D-canvas fallback), `scene.ts` (one column per grid cell, height from real elevation), `camera.ts`, `shaders.ts`, `geo.ts` (the projection, places and the visitor).
+Easter eggs (owner, 2026-11-25: "something to play with"):
+
+- Hovering a mark (or tapping it) plays its surprise: the podium races from the start line and the winner is crowned; the play button presses in and plays an equaliser; the bird turns to the pointer, hops twice and sings a few notes.
+- Clicking or tapping the open grid around the bird (its yard, cursor `cell`) drops a seed that falls to the ground; the bird walks over and eats it.
+  At most four seeds wait at once, and every third seed it puffs up and sings.
+
+The owner's decisions:
+
+- The marks live only in the Projects section, beside the cards, and only on wide screens; below 1280px the cards are full width as before.
+- They never follow the pointer around the page; reacting when hovered, and the bird glancing toward a seed, is fine.
+- The real project icons stay beside the names on the cards; the marks are an extra, not a replacement.
+- Portfolio Rank's bars are all one yellow (its accent); NetTrailers' red keeps all its chroma and more light, so it reads red, not wine (the `--chroma` and `--lift` per mark in `marks.module.css`).
+- Loudness: louder than the first "quiet" trial, not as loud as the "bold" one ("a little bit ADHD but not too much"); the values are on `.root` in `marks.module.css`.
+- The bird can be fed, and eats by itself now and then.
+
+How they behave, and why:
+
+- Decorative: `aria-hidden`, nothing focusable; the pointer areas (`[data-core]`, the mark's own box, and `[data-yard]`, the bird's yard) never cover a card, and the yard is clamped to the open space between the card and the screen's edge.
+- Reduced motion shows each mark complete and still, with no idle actions, no easter eggs and no pointer areas; there is no other switch.
+- Nothing runs while a mark is off screen: its timers are cleared when it flips out, and the grid's cells park until the section is back.
+- Everything is a flip of a cell (only `transform` and `opacity` animate); the poses are bitmaps in `marks.ts`, one character per grid cell, and a pose change flips only the cells that differ.
+- `tests/projects.spec.ts` ("pixel marks") covers the layout, the breakpoint, the flips in and out, each easter egg, the seeds and their cap, touch, reduced motion and the off-screen rest.
+  At exactly 1280px a browser with a classic scrollbar (WebKit on Linux) is just under 80rem, so there the cards are full width and no mark is drawn, as the breakpoint says.
+
+To add a mark for a new project:
+
+1. Draw its poses in `POSES` in `components/Projects/marks.ts`: every pose the same size, at most about 7 cells across so it fits beside a 60% card at 1280px, using the characters listed at the top of that file.
+2. Add its kind to `MarkKind`, its build order to `ORDER` (`up` from the floor, or `across` the way it faces) and its accent to `markFor`.
+3. Give it a `--chroma`, `--lift` and `--edge-k` rule in `marks.module.css`, so its colour reads as the accent on the dark grid.
+4. In `components/Projects/PixelMark.tsx`, give it an idle action in `act` and a hover easter egg in `next` (a function like `race` or `play`); anything drawn outside its box is a sprite (`sprite`, `move`, `unsprite`).
+5. Add it to `KINDS` and `EGGS` in the "pixel marks" tests, and check it in Chromium, Firefox and WebKit at 1280, 1440 and 1920.
+
+## The bold map in "Ready to relocate" (owner, 2026-11-24 and 2026-11-25)
+
+The owner picked the "bold" 3D map from the stage 1 lab boards (local branch `preview/toys`, `preview/feel/map-bold.html`), tried it at `/lab/map` (#91), then had it replace the globe picture and its gsap arcs on the home page (2026-11-25).
+Round two of his review: his avatar grows (card hover, avatar hover or keyboard focus, a tap), and the city labels are larger and bold.
+
+- The card is `gridItem2` (`data/grid/items/gridItem2.tsx`): `relocateCard(map)` builds it, and the home page's map is `BoldMapLazy`.
+- `components/ui/BoldMap/`: `BoldMapLazy.tsx` (the home card: the backdrop at once, the map's code and data only once the card is within 300px of the viewport), `Backdrop.tsx` (the navy, the band, the caption and the screen-reader sentence, shown before and under the map so nothing moves), `BoldMap.tsx` (the map, its labels, the avatar, and the location request), `engine.ts` (hand-written WebGL2, with a still 2D-canvas fallback), `scene.ts` (one column per grid cell, height from real elevation), `camera.ts`, `shaders.ts`, `geo.ts` (the projection, places and the visitor), `text.ts` (the sentence and the check on the location answer, without the data).
   `mapData.generated.ts` comes from `scripts/map-data/` (Natural Earth, public domain) through `node scripts/gen-map-data.mjs`; never edit it by hand.
-  The card's config is `gridItem2Bold` in `data/grid/items/`; it is not in `gridItems`.
+- The camera fits the lower 48 to the card's width and centres them between the caption and the title.
+  On a card taller than wide (about 353 by 480 from 768 to 1023px) it turns to look from the south-east and more steeply down, so the country runs corner to corner instead of leaving a band of empty sea above the title (`tall` in `camera.ts`); every other width keeps the lab sketch's view.
 - It runs only on screen in a visible tab, and is drawn once and held still under reduced motion.
-  The element carries `data-mode` (moving or still), `data-renderer` (webgl2 or 2d), `data-running` and `data-frames` for the tests.
-- The visitor's line: `lib/visitor.ts` reads Cloudflare's `request.cf` (latitude, longitude, country) through OpenNext's `getCloudflareContext()`, in its sync form so `next dev` falls back to no visitor instead of starting a local Workers runtime.
-  Only a point rounded to half a degree and the name of a listed place near it reach the page; nothing is stored or logged.
-  Only visitors in the lower 48 get a line; within 120 miles of Los Angeles it says "you're here too"; abroad, or with no data, there is no line.
+  The element carries `data-mode` (moving or still), `data-renderer` (webgl2 or 2d), `data-running`, `data-frames` and `data-visitor` (us, here or none) for the tests.
+- **The line to the visitor.** The home page stays prerendered and cached and never carries anyone's location: once the map is up it asks `GET /api/where` (`app/api/where/route.ts`), with no cookies.
+  That route answers `{ visitor }`: null, or a point rounded to half a degree, the name of a listed place near it and the miles from Los Angeles (`lib/visitor.ts`, from Cloudflare's `request.cf` through OpenNext's `getCloudflareContext()`, sync form, so `next dev` and `next start` answer null).
+  Never the IP address or the raw `cf` data; `Cache-Control: private, no-store, max-age=0`; nothing stored or logged.
+  Cloudflare's rate limiter (`WHERE_RATE_LIMIT` in `wrangler.jsonc`, 30 a minute per connection) answers 429 past that.
+  Only visitors in the lower 48 get a line; within 120 miles of Los Angeles the label says "you're here too"; abroad, with no data, on any error or after 5 seconds, there is no line and the map is otherwise the same.
   The privacy page is n8builds.dev's (`/privacy`, in n8builds-web), which says this.
-- To ship it: render `gridItem2Bold(() => <BoldMap visitor={...} />)` in place of `gridItem2`, give it the visitor without making the home page dynamic (it is prerendered and cached; a small `no-store` route that returns `visitorFromRequest()`, fetched after load, keeps it that way, and the line is drawn first anyway), retire `MapDetails`, `MapAnimations`, `public/bento/globe.jpeg` and gsap if nothing else uses them, and move the "map arcs" tests in `tests/home.spec.ts` to the new map.
-- Tests: `tests/lab.spec.ts` (the page, noindex, the sitemap, reduced motion, pausing off screen, the 2D fallback, `?from=`) and `tests/unit/boldMapGeo.test.mts` (the visitor's rounding and limits).
+- `/lab/map` (`app/lab/map/page.tsx`, `components/lab/MapLab.tsx`) stays as a test bed: hidden (not in the nav or the sitemap, `noindex`), it takes the visitor from `?from=` (`lat,lng`, a listed place such as `Denver` or `Austin, TX`, `LA`, `NYC`, or `London` for abroad), so the line can be seen on a local server, which has no Cloudflare location.
+  It shows the card at its home size, then larger.
+- Tests: `tests/home.spec.ts` "the bold map" (lazy loading, reduced motion, pausing off screen, the screen-reader sentence, the avatar, a line or none from each kind of `/api/where` answer, the route's headers and body, and no location in the page), `tests/lab.spec.ts` (the lab page, `?from=`, the 2D fallback) and `tests/unit/boldMapGeo.test.mts` (the visitor's rounding and limits).
 
 ## Tech for Pros (owner, 2026-11-01)
 
@@ -226,7 +266,7 @@ It was reworked on 2026-11-25 (owner, after a preview: "I want it to be fun to l
 
 - `lib/seo.ts`: site address, titles, descriptions, `shareSummary`.
 - `app/layout.tsx`: metadata, fonts, GA snippet. `app/opengraph-image.tsx` (+ `twitter-image.tsx`): the share card.
-- `components/Projects/ProjectShowcase.tsx` (home cards), `ProjectFull.tsx` (/projects), `ProjectClip.tsx`, `ProjectGallery.tsx`, `ProjectIcon.tsx`, `WrenMark.tsx`, `lib/accents.ts`.
+- `components/Projects/ProjectShowcase.tsx` (home cards), `ProjectRow.tsx` (a card and its mark), `PixelMark.tsx`, `marks.ts`, `marks.module.css`, `GridLife.tsx` (the pixel marks and the section's grid), `ProjectFull.tsx` (/projects), `ProjectClip.tsx`, `ProjectGallery.tsx`, `ProjectIcon.tsx`, `WrenMark.tsx`, `lib/accents.ts`.
 - `components/Projects/ProjectDetail.tsx`, `app/projects/[slug]/page.tsx`: project detail pages.
 - `components/Projects/BuildsTeaser.tsx`: the n8builds.dev teaser. `components/sections/HeroGrid.tsx`: the hero grid (from n8builds.dev).
 - `components/sections/AboutTeaser.tsx`, `StackRow.tsx`, `Experience.tsx`, `Hero.tsx`; the pages `components/ProjectsPage.tsx`, `StackPage.tsx`, `AboutPage.tsx` (with `components/about/Decals.tsx`).

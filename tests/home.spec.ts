@@ -302,6 +302,18 @@ test('the build log card moves on through the months by itself, and holds when a
   // to come after clock.install(), which installs its own requestIdleCallback over anything before.
   await page.addInitScript(() => {
     window.requestIdleCallback = () => 0
+    // The bold map above this card draws a WebGL frame on every animation
+    // frame, and each second of fake time runs sixty of them, in software in
+    // CI: seconds per step. Its still 2D picture (no WebGL2) has no loop.
+    const getContext = HTMLCanvasElement.prototype.getContext
+    HTMLCanvasElement.prototype.getContext = function (
+      this: HTMLCanvasElement,
+      type: string,
+      ...rest: unknown[]
+    ) {
+      if (type === 'webgl2') return null
+      return (getContext as (...a: unknown[]) => RenderingContext | null).call(this, type, ...rest)
+    } as typeof getContext
   })
   await page.goto('/')
   const card = page.locator('[data-build-log]')
@@ -423,39 +435,216 @@ test('from 1280px, the resume, contact and build log cards are one row of three 
 })
 
 /**
- * The map card's arcs (components/ui/BentoComponents/MapAnimations.tsx) draw
- * themselves in a GSAP loop. Under reduced motion they show fully drawn and
- * hold still; otherwise they keep drawing.
+ * "Ready to relocate" is the bold 3D map (components/ui/BoldMap; owner,
+ * 2026-11-25). Its code loads only as the card nears the screen; it counts
+ * the frames it draws (`data-frames`), says whether it moves (`data-mode`),
+ * whether its loop runs (`data-running`) and what it knows of the visitor
+ * (`data-visitor`). The visitor's rough location comes from /api/where after
+ * the map is up, so the page itself stays static and cached.
  */
-test.describe('the map arcs', () => {
-  const offsets = (page: import('@playwright/test').Page) =>
-    page
-      .locator('.neon-path')
-      .evaluateAll((paths) => paths.map((p) => getComputedStyle(p).strokeDashoffset))
-
-  test('hold still, fully drawn, under reduced motion', async ({ page }) => {
-    await page.emulateMedia({ reducedMotion: 'reduce' })
+test.describe('the bold map', () => {
+  const AUSTIN = { kind: 'us', at: [-97.5, 30.5], near: 'Austin, TX', mi: 1230 }
+  const frames = (map: import('@playwright/test').Locator) =>
+    map.evaluate((el) => Number((el as HTMLElement).dataset.frames))
+  const openMap = async (page: import('@playwright/test').Page) => {
     await page.goto('/')
-    const arcs = page.locator('.neon-path')
-    await arcs.first().scrollIntoViewIfNeeded()
-    await expect(arcs).toHaveCount(3)
-    const before = await offsets(page)
-    await page.waitForTimeout(1500)
-    expect(await offsets(page)).toEqual(before)
-    expect(
-      before.every((o) => parseFloat(o) === 0),
-      `offsets ${before}`
-    ).toBe(true)
+    const slot = page.locator('[data-bold-map-slot]')
+    await slot.scrollIntoViewIfNeeded()
+    const map = slot.locator('[data-bold-map]')
+    await expect(map).toHaveAttribute('data-ready', 'true', { timeout: 20_000 })
+    return map
+  }
+
+  test('loads only as the card nears the screen', async ({ page }) => {
+    const chunks: string[] = []
+    page.on('response', (r) => {
+      if (r.url().includes('/_next/static/') && r.url().endsWith('.js')) chunks.push(r.url())
+    })
+    let asked = 0
+    await page.route('**/api/where', (route) => {
+      asked++
+      return route.fulfill({ json: { visitor: null } })
+    })
+    // A short window, so the card starts well out of reach on every device.
+    const size = page.viewportSize()!
+    await page.setViewportSize({ width: size.width, height: 360 })
+    await page.goto('/')
+    await page.waitForLoadState('networkidle')
+    const gap = await page
+      .locator('[data-bold-map-slot]')
+      .evaluate((el) => el.getBoundingClientRect().top - innerHeight)
+    expect(gap, 'the card starts more than 300px below the window').toBeGreaterThan(300)
+    // Out of reach: the map's code has not loaded and nothing asked where you are.
+    await expect(page.locator('[data-bold-map]')).toHaveCount(0)
+    expect(asked).toBe(0)
+    const before = chunks.length
+    await page.setViewportSize(size)
+    await page.locator('[data-bold-map-slot]').scrollIntoViewIfNeeded()
+    await expect(page.locator('[data-bold-map]')).toHaveAttribute('data-ready', 'true', {
+      timeout: 20_000,
+    })
+    expect(chunks.length).toBeGreaterThan(before)
+    await expect.poll(() => asked).toBe(1)
   })
 
-  test('keep drawing when motion is allowed', async ({ page }) => {
+  test('holds still, fully drawn, under reduced motion', async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+    await page.route('**/api/where', (route) => route.fulfill({ json: { visitor: AUSTIN } }))
+    const map = await openMap(page)
+    await expect(map).toHaveAttribute('data-mode', 'still')
+    // The line to the visitor is drawn at once and labelled.
+    await expect(map.locator('[data-on]', { hasText: 'near Austin, TX' })).toBeVisible()
+    // It draws once per change (the start, the visitor's answer, a late resize
+    // as the page settles), never in a loop.
+    await expect(map).toHaveAttribute('data-running', 'false')
+    await page.waitForTimeout(800)
+    const before = await frames(map)
+    await page.waitForTimeout(1500)
+    expect(await frames(map)).toBe(before)
+    expect(before).toBeLessThan(6)
+  })
+
+  test('moves on screen and pauses off screen', async ({ page }) => {
     await page.emulateMedia({ reducedMotion: 'no-preference' })
+    const map = await openMap(page)
+    test.skip(
+      (await map.getAttribute('data-renderer')) === '2d',
+      'no WebGL2 in this browser: the map is the still 2D picture (tests/lab.spec.ts)'
+    )
+    await expect(map).toHaveAttribute('data-mode', 'moving')
+    await expect(map).toHaveAttribute('data-running', 'true')
+    const before = await frames(map)
+    await expect.poll(() => frames(map)).toBeGreaterThan(before + 2)
+    await page.locator('footer').scrollIntoViewIfNeeded()
+    await expect(map).toHaveAttribute('data-running', 'false')
+    const paused = await frames(map)
+    await page.waitForTimeout(800)
+    expect(await frames(map)).toBe(paused)
+  })
+
+  test('says what it shows to screen readers, and hides the drawing', async ({ page }) => {
+    await page.route('**/api/where', (route) => route.fulfill({ json: { visitor: AUSTIN } }))
+    // Before the map loads, the card already says it.
     await page.goto('/')
-    const arcs = page.locator('.neon-path')
-    await arcs.first().scrollIntoViewIfNeeded()
-    await expect(arcs).toHaveCount(3)
-    const before = await offsets(page)
-    await expect.poll(() => offsets(page)).not.toEqual(before)
+    const slot = page.locator('[data-bold-map-slot]')
+    await expect(slot.locator('.sr-only')).toHaveText(
+      'A map of the United States: Nathan is in Los Angeles, California, and open to relocating anywhere.'
+    )
+    const map = await openMap(page)
+    await expect(map.locator('.sr-only')).toHaveText(
+      /open to relocating anywhere\. You seem to be near Austin, TX, about 1,230 miles away\./
+    )
+    await expect(map.locator('canvas')).toHaveAttribute('aria-hidden', 'true')
+  })
+
+  test('his avatar grows on hover and on a tap, and eases back', async ({ page, isMobile }) => {
+    // The sizes are checked on the still map: a moving map in a browser that
+    // draws WebGL in software (CI, a busy machine) makes every layout read
+    // slow. The ease itself is checked at the end, with motion allowed.
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+    const map = await openMap(page)
+    const avatar = map.getByRole('button', { name: 'Nathan Watkins, in Los Angeles' })
+    const picture = avatar.locator('span').first()
+    const size = async () => (await picture.boundingBox())!.width
+    await page.mouse.move(0, 0)
+    await expect.poll(size).toBeLessThan(40)
+    if (!isMobile) {
+      const box = (await map.boundingBox())!
+      await page.mouse.move(box.x + box.width * 0.6, box.y + box.height * 0.45)
+      await expect.poll(size).toBeGreaterThan(60)
+      await page.mouse.move(0, 0)
+      await expect.poll(size).toBeLessThan(40)
+    }
+    await (isMobile ? avatar.tap() : avatar.click())
+    await expect(avatar).toHaveAttribute('aria-pressed', 'true')
+    await expect.poll(size).toBeGreaterThan(60)
+    await (isMobile ? avatar.tap() : avatar.click())
+    await expect(avatar).toHaveAttribute('aria-pressed', 'false')
+    if (!isMobile) await page.mouse.move(0, 0)
+    await expect.poll(size).toBeLessThan(40)
+    // With motion allowed, the size and the glow ease over half a second.
+    await page.emulateMedia({ reducedMotion: 'no-preference' })
+    await expect
+      .poll(() => picture.evaluate((el) => getComputedStyle(el).transitionDuration))
+      .toMatch(/^0\.5s/)
+  })
+
+  test('under reduced motion the avatar changes size at once, from the keyboard too', async ({
+    page,
+  }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+    const map = await openMap(page)
+    const avatar = map.getByRole('button', { name: 'Nathan Watkins, in Los Angeles' })
+    await avatar.focus()
+    await avatar.press('Enter')
+    await expect(avatar).toHaveAttribute('aria-pressed', 'true')
+    // No transition: the next frame already has the full size.
+    const width = await avatar
+      .locator('span')
+      .first()
+      .evaluate(
+        (el) =>
+          new Promise<number>((done) =>
+            requestAnimationFrame(() => done(el.getBoundingClientRect().width))
+          )
+      )
+    expect(width).toBeGreaterThan(60)
+  })
+
+  test('draws a line to the visitor when /api/where answers with a point', async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+    await page.route('**/api/where', (route) => route.fulfill({ json: { visitor: AUSTIN } }))
+    const map = await openMap(page)
+    await expect(map).toHaveAttribute('data-visitor', 'us')
+    await expect(
+      map.locator('[data-on]', { hasText: /You · near Austin, TX · 1,230 mi/ })
+    ).toBeVisible()
+  })
+
+  for (const [name, answer] of [
+    ['answers empty', { json: { visitor: null } }],
+    ['fails', { status: 500, body: 'no' }],
+    ['answers with something else', { json: { visitor: { kind: 'us', at: 'Austin', mi: 5 } } }],
+    ['is rate limited', { status: 429, json: { visitor: null } }],
+  ] as const) {
+    test(`draws no line when /api/where ${name}`, async ({ page }) => {
+      await page.emulateMedia({ reducedMotion: 'reduce' })
+      let asked = false
+      await page.route('**/api/where', (route) => {
+        asked = true
+        return route.fulfill(answer)
+      })
+      const map = await openMap(page)
+      await expect.poll(() => asked).toBe(true)
+      await page.waitForTimeout(500)
+      await expect(map).toHaveAttribute('data-visitor', 'none')
+      await expect(map.locator('[data-on]')).toHaveCount(0)
+      await expect(map.locator('canvas')).toBeAttached()
+    })
+  }
+
+  test('/api/where answers only a coarse visitor, never cached, with no cookie', async ({
+    request,
+  }) => {
+    const res = await request.get('/api/where')
+    expect(res.status()).toBe(200)
+    const headers = res.headers()
+    expect(headers['cache-control']).toContain('no-store')
+    expect(headers['cache-control']).toContain('private')
+    expect(headers['set-cookie']).toBeUndefined()
+    const body = await res.json()
+    // Off Cloudflare there is no location: no visitor, and nothing else at all.
+    expect(body).toEqual({ visitor: null })
+  })
+
+  test('the home page itself carries no location and asks for none on the server', async ({
+    request,
+  }) => {
+    const res = await request.get('/')
+    const html = await res.text()
+    expect(html).toContain('data-bold-map-slot')
+    expect(html).not.toMatch(/You seem to be|near [A-Z][a-z]+, [A-Z]{2}/)
+    expect(res.headers()['set-cookie']).toBeUndefined()
   })
 })
 

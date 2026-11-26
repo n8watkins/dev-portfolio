@@ -61,8 +61,7 @@ export const places: Place[] = PLACES.map(([name, state, lon, lat, pop, route]) 
 export const placeLabel = (p: Pick<Place, 'name' | 'state'>) =>
   p.state ? `${p.name}, ${p.state}` : p.name
 
-/** Miles rounded to tens, with a thousands comma: "1,230". */
-export const formatMiles = (m: number) => (Math.round(m / 10) * 10).toLocaleString('en-US')
+export { formatMiles } from './text.ts'
 
 /**
  * What the map is told about the visitor. Never more than a coarse point (half
