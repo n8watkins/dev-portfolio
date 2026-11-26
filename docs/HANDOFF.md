@@ -184,6 +184,8 @@ Round two of his review: his avatar grows (card hover, avatar hover or keyboard 
   That route answers `{ visitor }`: null, or a point rounded to half a degree, the name of a listed place near it and the miles from Los Angeles (`lib/visitor.ts`, from Cloudflare's `request.cf` through OpenNext's `getCloudflareContext()`, sync form, so `next dev` and `next start` answer null).
   Never the IP address or the raw `cf` data; `Cache-Control: private, no-store, max-age=0`; nothing stored or logged.
   Cloudflare's rate limiter (`WHERE_RATE_LIMIT` in `wrangler.jsonc`, 30 a minute per connection) answers 429 past that.
+  The route fails open but says which way in `X-RateLimit-State` (`lib/whereLimit.ts`): `ok`, `limited`, `absent` (no binding: `next dev`, `next start`) or `error` (`limit()` failed; one log line with only the error's name).
+  On 2026-11-26 the live route answered 160 requests in two minutes with 200 and nothing said why; `npx wrangler dev --local` on the OpenNext build answered 29 `ok` then `limited`, so check the live header first when the limit seems not to bite.
   Only visitors in the lower 48 get a line; within 120 miles of Los Angeles the label says "you're here too"; abroad, with no data, on any error or after 5 seconds, there is no line and the map is otherwise the same.
   The privacy page is n8builds.dev's (`/privacy`, in n8builds-web), which says this.
 - `/lab/map` (`app/lab/map/page.tsx`, `components/lab/MapLab.tsx`) stays as a test bed: hidden (not in the nav or the sitemap, `noindex`), it takes the visitor from `?from=` (`lat,lng`, a listed place such as `Denver` or `Austin, TX`, `LA`, `NYC`, or `London` for abroad), so the line can be seen on a local server, which has no Cloudflare location.

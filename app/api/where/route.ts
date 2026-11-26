@@ -1,5 +1,6 @@
 import { getCloudflareContext } from '@opennextjs/cloudflare'
 import { visitorFromRequest } from '@/lib/visitor'
+import { asLimiter, checkLimit, LIMIT_HEADER, type Limiter } from '@/lib/whereLimit'
 
 /**
  * Where the visitor roughly is, for the home map's line to them
@@ -12,7 +13,8 @@ import { visitorFromRequest } from '@/lib/visitor'
  * anywhere, so one visitor's answer can't reach another.
  *
  * Cloudflare's rate limiter allows 30 answers a minute per connection; past
- * that it answers 429 with no visitor.
+ * that it answers 429 with no visitor. `X-RateLimit-State` says whether the
+ * limit was checked: ok, limited, absent (no binding) or error.
  */
 export const dynamic = 'force-dynamic'
 
@@ -21,32 +23,25 @@ const HEADERS = {
   'X-Robots-Tag': 'noindex',
 }
 
-/** Workers' rate limiting binding (wrangler.jsonc `ratelimits`). */
-type Limiter = { limit(options: { key: string }): Promise<{ success: boolean }> }
-
-async function allowed(request: Request): Promise<boolean> {
-  let limiter: Limiter | undefined
+function limiter(): Limiter | undefined {
   try {
-    limiter = (getCloudflareContext().env as { WHERE_RATE_LIMIT?: Limiter }).WHERE_RATE_LIMIT
+    return asLimiter(
+      (getCloudflareContext().env as { WHERE_RATE_LIMIT?: unknown }).WHERE_RATE_LIMIT
+    )
   } catch {
-    return true // Not on Workers (next dev, next start): nothing to protect.
-  }
-  if (!limiter) return true
-  // The key only lives in Cloudflare's short-lived counter for this limit.
-  const key = request.headers.get('cf-connecting-ip') ?? 'unknown'
-  try {
-    return (await limiter.limit({ key })).success
-  } catch {
-    return true
+    return undefined // Not on Workers (next dev, next start): nothing to protect.
   }
 }
 
 export async function GET(request: Request) {
-  if (!(await allowed(request))) {
+  const state = await checkLimit(limiter(), request.headers.get('cf-connecting-ip'))
+  // Says whether the limit was checked (lib/whereLimit.ts); nothing about the visitor.
+  const headers = { ...HEADERS, [LIMIT_HEADER]: state }
+  if (state === 'limited') {
     return Response.json(
       { visitor: null },
-      { status: 429, headers: { ...HEADERS, 'Retry-After': '60' } }
+      { status: 429, headers: { ...headers, 'Retry-After': '60' } }
     )
   }
-  return Response.json({ visitor: visitorFromRequest() }, { headers: HEADERS })
+  return Response.json({ visitor: visitorFromRequest() }, { headers })
 }
