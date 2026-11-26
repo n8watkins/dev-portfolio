@@ -300,6 +300,8 @@ test('the build log card moves on through the months by itself, and holds when a
   // page's, so that clear can hit this card's interval, which then never fires again (about one run
   // in ten, 2026-11-24). Real visitors have a native setTimeout and are not affected. This stub has
   // to come after clock.install(), which installs its own requestIdleCallback over anything before.
+  // (Test builds no longer load Sentry at all, lib/sentryDsn.mjs; 28 of 30 WebKit repeats passed
+  // without the stub on a saturated machine, so it stays until a clean 30 of 30.)
   await page.addInitScript(() => {
     window.requestIdleCallback = () => 0
     // The bold map above this card draws a WebGL frame on every animation
