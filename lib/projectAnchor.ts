@@ -108,7 +108,11 @@ export function useProjectAnchors() {
     const onHashChange = () => landOnHash(window.location.hash)
     document.addEventListener('click', onClick)
     window.addEventListener('hashchange', onHashChange)
+    // Listening now (the page has hydrated): before this a click is the
+    // browser's own jump to the hash. The tests wait for it.
+    document.documentElement.setAttribute('data-project-links', 'ready')
     return () => {
+      document.documentElement.removeAttribute('data-project-links')
       stop()
       cancelLanding?.()
       document.removeEventListener('click', onClick)

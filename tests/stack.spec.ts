@@ -180,6 +180,11 @@ test.describe('the tech stack tiles (reduced motion: they hold still)', () => {
  */
 test.describe('stack links land on the project on the home page', () => {
   const anchor = (page: import('@playwright/test').Page, slug: string) => page.locator(`#project-${slug}`)
+  // The home page, once it handles the links (hydrated; before that a click is the browser's own jump).
+  const goHome = async (page: import('@playwright/test').Page) => {
+    await page.goto('/')
+    await expect(page.locator('html')).toHaveAttribute('data-project-links', 'ready')
+  }
   // The landed card sits below the fixed nav, at the landing offset, unless the page ends first.
   const expectInView = async (page: import('@playwright/test').Page, slug: string) => {
     const m = await anchor(page, slug).evaluate((el) => {
@@ -205,7 +210,7 @@ test.describe('stack links land on the project on the home page', () => {
     test.use({ contextOptions: { reducedMotion: 'no-preference' } })
 
     test('from the home page: it scrolls to the card, highlights it, focuses it and puts it in the address', async ({ page }) => {
-      await page.goto('/')
+      await goHome(page)
       const link = homeLink(page, 'Gemini', 'Portfolio Rank')
       await expect(link).toHaveAttribute('href', '/#project-portfolio-rank')
       // A click on the link itself (the row moves, so not by pointer position).
@@ -235,7 +240,7 @@ test.describe('stack links land on the project on the home page', () => {
 
     test('by keyboard: Enter on a tile’s link lands on the card, and the next Tab goes into it', async ({ page, hasTouch }) => {
       test.skip(hasTouch, 'keyboard')
-      await page.goto('/')
+      await goHome(page)
       const tile = page
         .locator('#about [data-dino-panel] [data-marquee-row] > :first-child > figure')
         .filter({ has: page.locator('[data-tile-name]', { hasText: /^Turso$/ }) })
@@ -256,7 +261,7 @@ test.describe('stack links land on the project on the home page', () => {
     test.use({ contextOptions: { reducedMotion: 'reduce' } })
 
     test('it jumps straight to the card, and still highlights it', async ({ page }) => {
-      await page.goto('/')
+      await goHome(page)
       const link = homeLink(page, 'Gemini', 'Portfolio Rank')
       // Where the page is one frame after the click: already at the card.
       const jumped = await link.evaluate(
