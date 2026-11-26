@@ -1190,6 +1190,40 @@ test('"Expand all" opens the roles with more in place, and closes them again', a
   for (let i = 0; i < 3; i++) await expect(toggles.nth(i)).toHaveAttribute('aria-expanded', 'false')
 })
 
+test('after "Expand all" every role, The Coder School included, lights up on hover', async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.goto('/')
+  const experience = page.locator('#experience')
+  await experience.getByRole('button', { name: 'Expand all' }).scrollIntoViewIfNeeded()
+  await experience.getByRole('button', { name: 'Expand all' }).click()
+  await expect(experience.locator('[data-role-toggle][aria-expanded="true"]')).toHaveCount(3)
+  const roles = experience.locator('div.group\\/exp')
+  const names = [
+    'Tech for Pros',
+    'Appturnity',
+    'Lifeline Clinical Labs',
+    'Donovan Golf',
+    'Realtek Solutions',
+    'The Coder School',
+  ]
+  for (const name of names) {
+    const role = roles.filter({ hasText: name })
+    const card = role.locator('div.group\\/card')
+    const header = role.locator('[data-role-header]')
+    await header.scrollIntoViewIfNeeded()
+    // Park the pointer away, then onto the header of this role.
+    await page.mouse.move(0, 0)
+    const resting = await card.evaluate((el) => getComputedStyle(el).borderTopColor)
+    const box = (await header.boundingBox())!
+    await page.mouse.move(box.x + 8, box.y + box.height - 8)
+    await expect
+      .poll(() => card.evaluate((el) => getComputedStyle(el).borderTopColor), name)
+      .not.toBe(resting)
+  }
+})
+
 test('a whole role row opens on a click or from the keyboard, and its link still works', async ({
   page,
 }) => {

@@ -10,15 +10,16 @@ const CELL = 36
 const DENSITY = 14
 // Cells that wander (fade out, jump to a free cell on screen, fade back in):
 // at most this many at once, fewer on a phone.
-const WANDER = 30
+const WANDER = 42
 // Words keep this much clear grid around them (px), so no cell sits behind or
 // right against a line of text.
 const CLEARANCE = 20
 
-// Timings (ms): livelier than the hero grid (owner, 2026-11-25: "a bit slow").
-const FADE = [450, 850] as const
-const HOLD = [900, 2600] as const
-const GAP = [60, 260] as const
+// Timings (ms): livelier than the hero grid (owner, 2026-11-25: "a bit slow"; 2026-11-26: faster
+// again, about 40% shorter timings, and about 40% more wandering cells).
+const FADE = [320, 600] as const
+const HOLD = [640, 1850] as const
+const GAP = [40, 180] as const
 const EASE = 'cubic-bezier(0.37, 0, 0.63, 1)'
 
 /** The tint of each part of the story, in the site's sky, blue and cyan. */
@@ -147,7 +148,7 @@ export default function AboutGrid({ layout, reduce }: { layout: StoryLayout; red
 
   // The wanderers: fade out, jump to a free cell on screen (clear of the
   // resting cells and of each other), fade back in, hold, again.
-  const count = Math.min(WANDER, Math.max(8, Math.round(free.length / 24)))
+  const count = Math.min(WANDER, Math.max(8, Math.round(free.length / 17)))
   useEffect(() => {
     if (reduce) return
     const nodes = wanderers.current
