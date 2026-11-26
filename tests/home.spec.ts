@@ -94,6 +94,29 @@ test('the n8builds.dev teaser links each build to its n8builds.dev page', async 
  */
 const LOADED = { timeout: 20_000 }
 
+/**
+ * Waits until every box around the build log card (the bento cell, which rises 25px and
+ * scales up from 95% as it arrives, even under reduced motion) is at rest. Measured or
+ * clicked before then, the card is still on its way: on WebKit under load a click aimed at
+ * an arrow landed on the card's padding (2026-11-26, 6 of 100), and on a phone the two
+ * footer links, read one after the other, were 2.6px apart.
+ */
+async function cellAtRest(card: import('@playwright/test').Locator) {
+  await expect
+    .poll(() =>
+      card.evaluate((el) => {
+        const moving: string[] = []
+        for (let at = el.parentElement; at && at !== document.body; at = at.parentElement) {
+          const s = getComputedStyle(at)
+          const still = s.transform === 'none' || s.transform === 'matrix(1, 0, 0, 1, 0, 0)'
+          if (!still || s.opacity !== '1') moving.push(at.className)
+        }
+        return moving
+      })
+    )
+    .toEqual([])
+}
+
 test('the build log card shows a month, cycles the months, and links the site and the log', async ({
   page,
 }) => {
@@ -102,6 +125,8 @@ test('the build log card shows a month, cycles the months, and links the site an
   const card = page.locator('[data-build-log]')
   await card.scrollIntoViewIfNeeded()
   await expect(card).toHaveAttribute('data-build-log', 'ready', LOADED)
+  await expect(card).toHaveAttribute('data-settled', '', LOADED)
+  await cellAtRest(card)
   await expect(card.locator('[data-month]')).toHaveText('November 2026')
   await expect(card.locator('[data-changes]')).toHaveText('49')
   // A slot per day; the nine days so far are buttons named with their date and count.
@@ -187,20 +212,7 @@ async function showBuildLog(
     await expect(card.locator('[data-month]')).toHaveText(hold)
     await expect(card).toHaveAttribute('data-settled', '', LOADED)
   }
-  await expect
-    .poll(() =>
-      // Every box around the card (the bento cell...) at rest.
-      card.evaluate((el) => {
-        const moving: string[] = []
-        for (let at = el.parentElement; at && at !== document.body; at = at.parentElement) {
-          const s = getComputedStyle(at)
-          const still = s.transform === 'none' || s.transform === 'matrix(1, 0, 0, 1, 0, 0)'
-          if (!still || s.opacity !== '1') moving.push(at.className)
-        }
-        return moving
-      })
-    )
-    .toEqual([])
+  await cellAtRest(card)
   return card
 }
 
