@@ -1,6 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { miles, techCities, visitorAt, NEAR_LA_MILES } from '../../components/ui/BoldMap/geo.ts'
+import { miles, techCities, NEAR_LA_MILES } from '../../components/ui/BoldMap/geo.ts'
+import { visitorAt } from '../../components/ui/BoldMap/visitorGeo.ts'
 import { TECH_CITIES } from '../../components/ui/BoldMap/techCities.ts'
 
 // Great-circle miles from downtown Los Angeles, from published distance tables.

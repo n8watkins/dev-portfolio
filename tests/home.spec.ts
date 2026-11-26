@@ -654,6 +654,33 @@ test.describe('the bold map', () => {
     await expect(map.locator('.sr-only')).toHaveText(/You seem to be in the Los Angeles area too\./)
   })
 
+  test('the pointer names only a tech hub: near one it names it, anywhere else nothing', async ({
+    page,
+    isMobile,
+  }) => {
+    test.skip(isMobile, 'A phone has no hover; a resting finger works the same way.')
+    await page.emulateMedia({ reducedMotion: 'no-preference' })
+    await page.route('**/api/where', (route) => route.fulfill({ json: { visitor: null } }))
+    const map = await openMap(page)
+    test.skip(
+      (await map.getAttribute('data-renderer')) === '2d',
+      'no WebGL2 in this browser: the still map takes no pointer'
+    )
+    const box = (await map.boundingBox())!
+    const hubs = JSON.parse((await map.getAttribute('data-hubs'))!) as [string, number, number][]
+    expect(hubs.map((h) => h[0])).toContain('Denver, CO')
+    // Away from every hub (and over the card, which grows the avatar): no pointer label.
+    const far = { x: box.width * 0.5, y: box.height * 0.08 }
+    for (const [, x, y] of hubs) expect(Math.hypot(x - far.x, y - far.y)).toBeGreaterThan(40)
+    await page.mouse.move(box.x + far.x, box.y + far.y)
+    await page.waitForTimeout(800)
+    await expect(map.locator('[data-hover]')).toHaveCount(0)
+    // On a hub: that hub, with its real distance.
+    const [, dx, dy] = hubs.find((h) => h[0] === 'Denver, CO')!
+    await page.mouse.move(box.x + dx + 6, box.y + dy - 4)
+    await expect(map.locator('[data-hover]')).toHaveText(/^Denver, CO · 830 mi$/)
+  })
+
   test('the routes go to the curated tech hubs, in their order', async ({ page }) => {
     await page.emulateMedia({ reducedMotion: 'no-preference' })
     await page.route('**/api/where', (route) => route.fulfill({ json: { visitor: null } }))

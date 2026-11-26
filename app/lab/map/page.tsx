@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { connection } from 'next/server'
 import MapLab from '@/components/lab/MapLab'
-import { visitorFromQuery } from '@/components/ui/BoldMap/geo'
+import { visitorFromQuery } from '@/components/ui/BoldMap/visitorGeo'
 import { visitorFromRequest } from '@/lib/visitor'
 
 // A hidden trial page (owner, 2026-11-24): not in the nav or the sitemap, and

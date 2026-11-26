@@ -159,31 +159,23 @@ export function createMapEngine(el: MapElements, opts: MapOptions): MapEngine {
   const screenOf = (p: ScenePlace) => px.get(p) ?? cam.toPx(endOf(p.cell))
   let nextAuto = youArc ? 0.8 + YOU_DRAW + 0.6 : 0.6
 
-  // Every listed place a real move away can be pointed at; beyond a short reach nothing answers.
-  // (The visitor's own place is skipped when pointing, in nearestPlace.)
-  const pickable = S.places.filter(
-    (p) => p.mi > 150 && p.cell !== S.la && !(p.name === 'Kansas City' && p.state === 'KS')
-  )
-  // Within reach, a larger place wins over a hamlet a few pixels nearer.
-  const pull = new Map(
-    pickable.map((p) => [
-      p,
-      1 + 1.6 * Math.max(0, Math.min(1, (Math.log10(Math.max(p.pop, 1)) - 4) / 2.5)),
-    ])
-  )
+  // Only the tech hubs answer the pointer (owner, 2026-11-25: the map naming
+  // whatever small place was under it read as "random spots"). Near a hub its
+  // label shows and its line brightens; anywhere else nothing is named and the
+  // routes' own label carries on. The visitor's own city is left to their label.
+  const pickable = S.targets
   const px = new Map<ScenePlace, [number, number, number, number]>()
-  let reach = 24
-  const nearestPlace = (x: number, y: number) => {
+  /** How near a hub the pointer must be, in card pixels: a finger gets more room. */
+  const REACH = { mouse: 30, touch: 44 }
+  const nearestPlace = (x: number, y: number, reach: number) => {
     let best: ScenePlace | null = null
-    let bs = Infinity
+    let bd = reach * reach
     for (const p of pickable) {
       if (p.cell === youCell) continue
       const q = px.get(p)!
       const d = (q[0] - x) ** 2 + (q[1] - y) ** 2
-      if (d > reach * reach) continue
-      const s = d / pull.get(p)! ** 2
-      if (s < bs) {
-        bs = s
+      if (d <= bd) {
+        bd = d
         best = p
       }
     }
@@ -199,7 +191,8 @@ export function createMapEngine(el: MapElements, opts: MapOptions): MapEngine {
   let hovAt: [number, number] = [0, 0]
   const at = (e: PointerEvent) => {
     const r = el.card.getBoundingClientRect()
-    return nearestPlace(e.clientX - r.left, e.clientY - r.top)
+    const reach = e.pointerType === 'touch' ? REACH.touch : REACH.mouse
+    return nearestPlace(e.clientX - r.left, e.clientY - r.top, reach)
   }
   const onMove = (e: PointerEvent) => {
     if (e.pointerType !== 'touch' || touching) {
@@ -322,6 +315,7 @@ export function createMapEngine(el: MapElements, opts: MapOptions): MapEngine {
     if (!p && named) p = named.p
     if (!p) {
       el.label.toggleAttribute('data-on', false)
+      el.label.toggleAttribute('data-hover', false)
       labelFor = null
       return
     }
@@ -456,12 +450,13 @@ export function createMapEngine(el: MapElements, opts: MapOptions): MapEngine {
       if (upTo > 0) line(a.end, upTo, 0.72 * life, 1.4)
       settle(a.end, a.still ? 1 : (age - DRAW) / 1.0, life, false)
     }
-    // Pointing at a place: it lights softly, the columns round it rise a little,
-    // and a faint line to it fades in along its whole length at once.
+    // Pointing at a hub: it lights, the columns round it rise a little, and its
+    // line comes up bright along its whole length at once.
     if (hovAmt > 0 && hovPlace) {
       const e = endOf(hovPlace.cell)
       const k = smooth(hovAmt)
-      line(e, 1, 0.3 * k, 1.3)
+      line(e, 1, 0.9 * k, 1.8)
+      line(e, 1, 0.18 * k, 5)
       glows.push({ p: [e[0], e[1] + 0.9, e[2]], size: 18, alpha: 0.55 * k })
       heads.set([e[0], e[1] + 1.8, e[2], 0.7 * k], 12)
     }
@@ -841,7 +836,10 @@ export function createMapEngine(el: MapElements, opts: MapOptions): MapEngine {
     el.canvas.height = Math.round(H * DPR)
     cam = fitCamera(S, W, H)
     for (const p of pickable) px.set(p, cam.toPx(endOf(p.cell)))
-    reach = Math.max(24, W * 0.065)
+    // Where each hub is on the card, for the tests (public names and card pixels only).
+    el.card.dataset.hubs = JSON.stringify(
+      pickable.map((p) => [placeLabel(p), Math.round(px.get(p)![0]), Math.round(px.get(p)![1])])
+    )
     youPlaced = false
     render()
   }
