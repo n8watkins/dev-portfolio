@@ -173,12 +173,12 @@ export default function BoldMap({
         <span
           ref={leader}
           data-leader
-          className="pointer-events-none absolute top-0 left-0 h-[2px] origin-[0_50%] -translate-y-px rounded-full bg-linear-to-r from-[#e0f2fe] to-[#7dd3fc]/70 shadow-[0_0_8px_rgba(34,211,238,.7)]"
+          className="pointer-events-none absolute top-0 left-0 h-[2px] transition-none origin-[0_50%] -translate-y-px rounded-full bg-linear-to-r from-[#e0f2fe] to-[#7dd3fc]/70 shadow-[0_0_8px_rgba(34,211,238,.7)]"
         />
         <span
           ref={chip}
           data-chip
-          className={`${MONO} pointer-events-none absolute top-0 left-0 flex flex-col gap-1 rounded-[7px] border border-[rgba(125,211,252,.5)] bg-[rgba(3,37,108,.94)] px-2.5 py-[7px] text-[13px] text-white shadow-[0_4px_14px_rgba(0,0,0,.35)] @min-[400px]:text-sm @min-[700px]:px-3 @min-[700px]:py-2 @min-[700px]:text-base`}
+          className={`${MONO} pointer-events-none absolute top-0 left-0 flex flex-col gap-1 transition-none rounded-[7px] border border-[rgba(125,211,252,.5)] bg-[rgba(3,37,108,.94)] px-2.5 py-[7px] text-[13px] text-white shadow-[0_4px_14px_rgba(0,0,0,.35)] @min-[400px]:text-sm @min-[700px]:px-3 @min-[700px]:py-2 @min-[700px]:text-base`}
         >
           {/* The one place the card names the city (owner, 2026-11-25: LA was said twice). */}
           <span>{CHIP_TEXT}</span>
@@ -211,7 +211,7 @@ export default function BoldMap({
           data-big={big || undefined}
           onClick={() => setBig((b) => !b)}
           onBlur={() => setBig(false)}
-          className="group/pin absolute top-0 left-0 size-9 cursor-default rounded-full outline-none @min-[700px]:size-11"
+          className="group/pin absolute top-0 left-0 size-9 cursor-default transition-none rounded-full outline-none @min-[700px]:size-11"
         >
           {/* Drawn at its grown size (50px on a card, 60px large) and scaled down
               to 36 or 44px at rest; it grows in place (engine.ts GROWN_RATIO). */}
