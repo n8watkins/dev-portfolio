@@ -9,20 +9,17 @@ test("every page's footer has my two sites' cards and the site map", async ({ pa
   for (const path of ['/', '/projects', '/stack', '/about', '/projects/net-trailers']) {
     await page.goto(path)
     const footer = page.locator('footer')
-    await expect(
-      footer.getByRole('link', { name: /I build in public\s*n8builds\.dev/ }),
-      path
-    ).toHaveAttribute('href', /n8builds\.dev/)
-    await expect(
-      footer.getByRole('link', { name: /Where I work\s*techforpros\.com/ }),
-      path
-    ).toHaveAttribute('href', 'https://techforpros.com')
+    await expect(footer.getByRole('link', { name: /I build in public\s*n8builds\.dev/ }), path).toHaveAttribute(
+      'href',
+      /n8builds\.dev/
+    )
+    await expect(footer.getByRole('link', { name: /Where I work\s*techforpros\.com/ }), path).toHaveAttribute(
+      'href',
+      'https://techforpros.com'
+    )
     const map = footer.getByRole('navigation', { name: 'Site map' })
     for (const name of ['Projects', 'Stack', 'About me', 'Resume', 'Contact', 'Build log']) {
-      await expect(
-        map.getByRole('link', { name: new RegExp(`^${name}`) }).first(),
-        `${path} ${name}`
-      ).toBeAttached()
+      await expect(map.getByRole('link', { name: new RegExp(`^${name}`) }).first(), `${path} ${name}`).toBeAttached()
     }
   }
   // No workshop pitches left anywhere.
@@ -48,9 +45,7 @@ test('the n8builds.dev teaser links each build to its n8builds.dev page', async 
     // Firefox on CI), so click until the counter shows the build.
     await expect(async () => {
       await teaser.getByRole('button', { name: `Show ${name}` }).click()
-      await expect(teaser.getByText(new RegExp(`^${name}, \\d+ of \\d+$`))).toBeVisible({
-        timeout: 1000,
-      })
+      await expect(teaser.getByText(new RegExp(`^${name}, \\d+ of \\d+$`))).toBeVisible({ timeout: 1000 })
     }).toPass()
     const link = teaser.getByRole('link', { name: `See the build: ${name} on n8builds.dev` })
     await expect(link).toHaveAttribute('href', `https://n8builds.dev/builds/${slug}`)
@@ -84,9 +79,12 @@ test('the n8builds.dev teaser links each build to its n8builds.dev page', async 
 })
 
 /**
- * The bento's build log card (rounds 4 and 5 of 2026-11-09): a month of
- * n8builds.dev's build log, from its JSON (here the fixture), with arrows that
- * go round the months, and two links on top: n8builds.dev and the build log.
+ * The bento's build log card (rounds 4 and 5 of 2026-11-09, reworked
+ * 2026-11-25): a month of n8builds.dev's build log, from its JSON (here the
+ * fixture: November 2026 has 6, 3, 0, 13, 18, 0, 0, 9, 0 changes on its first
+ * nine days and the rest still to come). Month arrows top left, a readout, a
+ * chart of block stacks whose days light up, and two plain text links along
+ * the bottom: n8builds.dev and the build log.
  */
 test('the build log card shows a month, cycles the months, and links the site and the log', async ({
   page,
@@ -98,7 +96,12 @@ test('the build log card shows a month, cycles the months, and links the site an
   await expect(card).toHaveAttribute('data-build-log', 'ready')
   await expect(card.locator('[data-month]')).toHaveText('November 2026')
   await expect(card.locator('[data-changes]')).toHaveText('49')
-  await expect(card.locator('[data-bars] > span')).toHaveCount(30)
+  // A slot per day; the nine days so far are buttons named with their date and count.
+  await expect(card.locator('[data-chart] > *')).toHaveCount(30)
+  await expect(card.locator('[data-chart] button')).toHaveCount(9)
+  await expect(card.getByRole('button', { name: 'Thursday, November 5: 18 changes, the busiest day' })).toBeVisible()
+  await expect(card.locator('[data-readout]')).toContainText('Peak Nov 5 · 18')
+  await expect(card.locator('[data-readout]')).toContainText('5 days active')
   await card.getByRole('button', { name: 'Older month' }).click()
   await expect(card.locator('[data-month]')).toHaveText('October 2026')
   await expect(card.locator('[data-changes]')).toHaveText('275')
@@ -106,17 +109,129 @@ test('the build log card shows a month, cycles the months, and links the site an
   await card.getByRole('button', { name: 'Newer month' }).click()
   await card.getByRole('button', { name: 'Newer month' }).click()
   await expect(card.locator('[data-month]')).toHaveText('September 2026')
-  // Two links, and the card itself is not one.
+  // Two plain text links, and the card itself is not one.
   const links = card.getByRole('link')
   await expect(links).toHaveCount(2)
-  await expect(card.getByRole('link', { name: /^n8builds\.dev/ })).toHaveAttribute(
-    'href',
-    'https://n8builds.dev'
-  )
-  await expect(card.getByRole('link', { name: /^Build log/ })).toHaveAttribute(
-    'href',
-    'https://n8builds.dev/builds'
-  )
+  const site = card.getByRole('link', { name: /^n8builds\.dev/ })
+  const log = card.getByRole('link', { name: /^Build log/ })
+  await expect(site).toHaveAttribute('href', 'https://n8builds.dev')
+  await expect(log).toHaveAttribute('href', 'https://n8builds.dev/builds')
+  for (const link of [site, log]) {
+    await expect(link).toHaveAttribute('target', '_blank')
+    await expect(link.locator('img')).toHaveCount(0)
+  }
+  await expect(card.getByText('I post everything here')).toBeVisible()
+  // Side by side on one line, along the bottom of the card.
+  const [a, b, box] = [await site.boundingBox(), await log.boundingBox(), await card.boundingBox()]
+  expect(Math.abs(a!.y + a!.height - (b!.y + b!.height))).toBeLessThan(2)
+  expect(a!.x).toBeLessThan(b!.x)
+  expect(box!.y + box!.height - (b!.y + b!.height)).toBeLessThan(40)
+})
+
+test('hovering a build log day lights it up, and the readout shows its date and numbers', async ({
+  page,
+  isMobile,
+}) => {
+  test.skip(isMobile, 'Hover is a desktop pointer; phones tap (see below).')
+  await page.goto('/')
+  const card = page.locator('[data-build-log]')
+  await card.evaluate((el) => el.scrollIntoView({ block: 'center', behavior: 'instant' }))
+  await expect(card).toHaveAttribute('data-build-log', 'ready')
+  const readout = card.locator('[data-readout]')
+  const day = (name: string) => card.getByRole('button', { name: new RegExp(`^${name}:`) })
+  await day('Thursday, November 5').hover()
+  await expect(day('Thursday, November 5')).toHaveAttribute('aria-pressed', 'true')
+  await expect(day('Thursday, November 5')).toHaveAttribute('data-d', '0')
+  // Its neighbours lean in.
+  await expect(day('Wednesday, November 4')).toHaveAttribute('data-d', '1')
+  await expect(day('Tuesday, November 3')).toHaveAttribute('data-d', '2')
+  await expect(card.locator('[data-chart]')).toHaveAttribute('data-exploring', '')
+  await expect(readout.locator('[data-number]')).toHaveText('18')
+  await expect(readout).toContainText(/changes on\s*Thu, Nov 5/)
+  await expect(readout).toContainText('Busiest day')
+  await expect(readout).toContainText('37% of month')
+  await expect(readout).toContainText('2-day streak')
+  // Sweep on to another day.
+  await day('Sunday, November 8').hover()
+  await expect(readout.locator('[data-number]')).toHaveText('9')
+  await expect(readout).toContainText(/changes on\s*Sun, Nov 8/)
+  await expect(readout).toContainText('#3 of 5 days')
+  await expect(day('Thursday, November 5')).toHaveAttribute('aria-pressed', 'false')
+  // Off the chart, the month again.
+  await page.mouse.move(2, 2)
+  await expect(card.locator('[data-chart]')).not.toHaveAttribute('data-exploring', '')
+  await expect(card.locator('[data-changes]')).toHaveText('49')
+  await expect(readout).toContainText('changes shipped')
+})
+
+test('the build log days can be walked with the arrow keys, Home and End, and let go with Escape', async ({
+  page,
+}) => {
+  await page.goto('/')
+  const card = page.locator('[data-build-log]')
+  await card.evaluate((el) => el.scrollIntoView({ block: 'center', behavior: 'instant' }))
+  await expect(card).toHaveAttribute('data-build-log', 'ready')
+  const readout = card.locator('[data-readout]')
+  // One stop in the tab order: the last day so far.
+  const stop = card.locator('[data-chart] button[tabindex="0"]')
+  await expect(stop).toHaveCount(1)
+  await expect(stop).toHaveAccessibleName('Monday, November 9: 0 changes')
+  await stop.focus()
+  const focused = page.locator(':focus')
+  await expect(focused).toHaveAttribute('aria-pressed', 'true')
+  await expect(readout).toContainText(/changes on\s*Mon, Nov 9/)
+  await page.keyboard.press('Home')
+  await expect(focused).toHaveAccessibleName('Sunday, November 1: 6 changes')
+  await expect(readout.locator('[data-number]')).toHaveText('6')
+  await page.keyboard.press('ArrowRight')
+  await expect(focused).toHaveAccessibleName('Monday, November 2: 3 changes')
+  await expect(readout).toContainText(/changes on\s*Mon, Nov 2/)
+  await page.keyboard.press('ArrowLeft')
+  await page.keyboard.press('ArrowLeft')
+  await expect(focused).toHaveAccessibleName('Sunday, November 1: 6 changes')
+  // End is the last day so far, not a day still to come, and the walk stops there.
+  await page.keyboard.press('End')
+  await page.keyboard.press('ArrowRight')
+  await expect(focused).toHaveAccessibleName('Monday, November 9: 0 changes')
+  await expect(readout).toContainText('Nothing shipped')
+  await page.keyboard.press('ArrowLeft')
+  await expect(focused).toHaveAccessibleName('Sunday, November 8: 9 changes')
+  await page.keyboard.press('Escape')
+  await expect(card.locator('[data-chart] [aria-pressed="true"]')).toHaveCount(0)
+  await expect(card.locator('[data-changes]')).toHaveText('49')
+})
+
+test.describe('on a touch screen', () => {
+  test.use({ hasTouch: true })
+
+  // Real time, not the fake clock: under the fake clock WebKit with touch sometimes never got as far
+  // as loading the months (2026-11-25), and holding is best shown by simply waiting past the 5 s.
+  test('a tap picks a build log day and holds the month; a tap elsewhere lets go', async ({ page }) => {
+    await page.goto('/')
+    const card = page.locator('[data-build-log]')
+    await card.evaluate((el) => el.scrollIntoView({ block: 'center', behavior: 'instant' }))
+    await expect(card).toHaveAttribute('data-build-log', 'ready')
+    await expect(card).toHaveAttribute('data-cycling', '')
+    // The month may already have moved on by itself, so pick the fifth day of whichever is showing.
+    const day = card.locator('[data-chart] button').nth(4)
+    await day.tap()
+    await expect(day).toHaveAttribute('aria-pressed', 'true')
+    const month = await card.locator('[data-month]').textContent()
+    const [, weekday, monthName] = (await day.getAttribute('aria-label'))!.match(/^(\w{3})\w*, (\w{3})\w* 5:/)!
+    await expect(card.locator('[data-readout]')).toContainText(
+      new RegExp(`changes? on\\s*${weekday}, ${monthName} 5`)
+    )
+    // Picked, the month holds well past its 5 s.
+    await expect(card).not.toHaveAttribute('data-cycling', '')
+    await page.waitForTimeout(6_500)
+    await expect(card.locator('[data-month]')).toHaveText(month!)
+    await expect(day).toHaveAttribute('aria-pressed', 'true')
+    // A tap elsewhere (the page's side margin, level with the card) lets go, and the months move on again.
+    const box = (await card.boundingBox())!
+    await page.touchscreen.tap(2, box.y + box.height / 2)
+    await expect(day).toHaveAttribute('aria-pressed', 'false')
+    await expect(card).toHaveAttribute('data-cycling', '')
+  })
 })
 
 test('the build log card moves on through the months by itself, and holds when asked', async ({
@@ -195,19 +310,48 @@ test('the build log card never moves on by itself under reduced motion', async (
   await expect(card.locator('[data-month]')).toHaveText('November 2026')
 })
 
-test('the build log card falls back to a plain card when the log cannot be read', async ({
+test('under reduced motion a build log day still lights up and shows its numbers, in place', async ({
   page,
 }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.goto('/')
+  const card = page.locator('[data-build-log]')
+  await card.evaluate((el) => el.scrollIntoView({ block: 'center', behavior: 'instant' }))
+  await expect(card).toHaveAttribute('data-build-log', 'ready')
+  const day = card.getByRole('button', { name: /^Thursday, November 5:/ })
+  await day.focus()
+  await expect(day).toHaveAttribute('aria-pressed', 'true')
+  // The number is there at once, with no count up.
+  await expect(card.locator('[data-readout] [data-number]')).toHaveText('18', { timeout: 100 })
+  await expect(card.locator('[data-readout]')).toContainText('Busiest day')
+  // Lit, but nothing lifts or slides: no transforms, and the blocks light all at once.
+  const styles = await card.evaluate((el) => {
+    const pick = (s: string) => getComputedStyle(el.querySelector(s)!)
+    return {
+      lift: pick('[aria-pressed="true"] .log-stack').transform,
+      neighbour: pick('[data-d="1"] .log-stack').transform,
+      fill: pick('[aria-pressed="true"] .log-lit').transitionDuration,
+      lit: pick('[aria-pressed="true"] .log-lit').transform,
+    }
+  })
+  expect(styles.lift).toBe('none')
+  expect(styles.neighbour).toBe('none')
+  // (The site's global reduced-motion rule leaves a token 0.01 ms.)
+  expect(parseFloat(styles.fill)).toBeLessThan(0.001)
+  expect(styles.lit).toBe('matrix(1, 0, 0, 1, 0, 0)')
+})
+
+test('the build log card falls back to a plain card when the log cannot be read', async ({ page }) => {
   await page.route('**/api/build-log', (route) => route.fulfill({ json: { months: [] } }))
   await page.goto('/')
   const card = page.locator('[data-build-log]')
   await card.scrollIntoViewIfNeeded()
   await expect(card).toHaveAttribute('data-build-log', 'fallback')
   await expect(card).toContainText("What I'm shipping")
-  await expect(card.getByRole('link', { name: /^Build log/ })).toHaveAttribute(
-    'href',
-    'https://n8builds.dev/builds'
-  )
+  await expect(card.locator('[data-chart]')).toHaveCount(0)
+  await expect(card.getByRole('link')).toHaveCount(2)
+  await expect(card.getByRole('link', { name: /^n8builds\.dev/ })).toHaveAttribute('href', 'https://n8builds.dev')
+  await expect(card.getByRole('link', { name: /^Build log/ })).toHaveAttribute('href', 'https://n8builds.dev/builds')
 })
 
 test('from 1280px, the resume, contact and build log cards are one row of three equal columns', async ({
@@ -484,9 +628,7 @@ test('Experience links Tech for Pros and the live client sites only, and Appturn
   const experience = page.locator('#experience')
   const card = experience.locator('div.group\\/exp', { hasText: 'Appturnity' })
   await expect(card).toHaveCount(1)
-  await expect(
-    card.getByRole('heading', { name: 'Full-Stack Developer', exact: true })
-  ).toBeAttached()
+  await expect(card.getByRole('heading', { name: 'Full-Stack Developer', exact: true })).toBeAttached()
   await expect(card.getByText('Appturnity', { exact: true })).toBeAttached()
   // Nowhere outside Experience.
   const outside = await page.evaluate(() => {
@@ -503,9 +645,9 @@ test('Experience links Tech for Pros and the live client sites only, and Appturn
 
   // Exactly these: the company's site, and the client sites still live (round 5 of
   // 2026-11-09: clients whose sites are gone are described, never linked).
-  const hrefs = await experience
-    .locator('a[href]')
-    .evaluateAll((links) => links.map((a) => (a as HTMLAnchorElement).href).sort())
+  const hrefs = await experience.locator('a[href]').evaluateAll((links) =>
+    links.map((a) => (a as HTMLAnchorElement).href).sort()
+  )
   expect(hrefs).toEqual([
     'https://comfort1hvac.com/',
     'https://debellgolf.com/',
@@ -595,9 +737,7 @@ test("a role's site cards are one scrolling row, paged by Previous and Next when
   await expect(first).not.toBeInViewport()
   await expect(shown).toHaveText(isMobile ? '6 of 6' : '4 to 6 of 6')
   // The page itself never scrolls sideways.
-  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(
-    true
-  )
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
   // Appturnity's two cards fit on a desktop, so it has no buttons there (a phone shows one at a time).
   const appturnity = role('Appturnity')
   await appturnity.locator('[data-role-toggle]').click()
@@ -620,15 +760,9 @@ test('every role shows its basics; only the roles with more to say expand', asyn
   await experience.getByRole('button', { name: 'Expand all' }).scrollIntoViewIfNeeded()
   const role = (name: string) => experience.locator('div.group\\/exp', { hasText: name })
   // The basics show with no click, for every role.
-  await expect(
-    role('Tech for Pros').getByText(/Deployed AI receptionists in a 12-client pilot/)
-  ).toBeVisible()
-  await expect(
-    role('Lifeline Clinical Labs').getByText(/Python order-entry pipeline/)
-  ).toBeVisible()
-  await expect(
-    role('Realtek Solutions').getByText(/Launched 5\+ small-business websites/)
-  ).toBeVisible()
+  await expect(role('Tech for Pros').getByText(/Deployed AI receptionists in a 12-client pilot/)).toBeVisible()
+  await expect(role('Lifeline Clinical Labs').getByText(/Python order-entry pipeline/)).toBeVisible()
+  await expect(role('Realtek Solutions').getByText(/Launched 5\+ small-business websites/)).toBeVisible()
   await expect(role('The Coder School').getByText(/Taught JavaScript, Python/)).toBeVisible()
   // Three roles expand; Realtek and The Coder School don't, and the school's site isn't linked.
   for (const name of ['Tech for Pros', 'Appturnity', 'Donovan Golf']) {
@@ -749,10 +883,7 @@ test('experience cards show on a small phone', async ({ page }) => {
 
 /** The top right corner has the resume only (owner, 2026-11-08: "Message me" removed). */
 test('the top corner offers the resume and no Message me', async ({ page, isMobile }) => {
-  test.skip(
-    isMobile,
-    'The corner buttons show from 640px up; on a phone the hero carries the resume.'
-  )
+  test.skip(isMobile, 'The corner buttons show from 640px up; on a phone the hero carries the resume.')
   await page.goto('/')
   await expect(page.getByRole('link', { name: /^Message me/ })).toHaveCount(0)
   await expect(page.getByRole('link', { name: /^Resume/ }).first()).toBeVisible()
@@ -795,9 +926,7 @@ test("hovering a role shows its own picture, which stays, quieter, while it's op
   await expect.poll(opacity).toBeCloseTo(0.5, 1)
   // Each role keeps its own: Appturnity's is Appturnity's home page.
   await expect(
-    page
-      .locator('#experience div.group\\/exp', { hasText: 'Appturnity' })
-      .locator('[data-role-image] img')
+    page.locator('#experience div.group\\/exp', { hasText: 'Appturnity' }).locator('[data-role-image] img')
   ).toHaveAttribute('src', /appturnity/)
 })
 
@@ -820,9 +949,7 @@ test("a link under the top bar's fade still takes the click", async ({ page }) =
   expect(await fade.evaluate((el) => getComputedStyle(el).pointerEvents)).toBe('none')
 })
 
-test('the buttons beside a section heading arrive with it, in a reveal of their own', async ({
-  page,
-}) => {
+test('the buttons beside a section heading arrive with it, in a reveal of their own', async ({ page }) => {
   await page.goto('/')
   for (const [heading, button] of [
     ['Building for the', 'Detailed view'],

@@ -47,7 +47,7 @@ It funnels visitors to the two other sites:
 - `npm test` runs Playwright against a production build on port 4829 (it builds first, or reuses a server already running there locally).
   `E2E_PORT=4839 npm test` uses another port, so a running `npm run dev` on 4829 is not mistaken for the test build.
   No retries: a flaky test gets fixed.
-- Specs: `tests/consent.spec.ts` (the analytics consent banner), `tests/dino.spec.ts` (the dino game on /stack: n8builds.dev's dino tests, kept in step with its `tests/e2e/ai-kit.spec.ts`), `tests/dino-music.spec.ts` (the dino game's music toggle and its sound checked offline, never out loud: n8builds.dev's `tests/e2e/dino-music.spec.ts`), `tests/home.spec.ts` (the footer cards, the n8builds.dev card's links, the bold map and `/api/where`, Experience), `tests/about.spec.ts` (the About page and its breadcrumb, the home About teaser's facts, the nav from subpages, the sitemap), `tests/stack.spec.ts` (the stack card's link, /stack and its play area), `tests/projects.spec.ts` (the project cards, /projects and the project pages, the in-progress card, the retired apps' redirects, the status API), `tests/seo.spec.ts` (titles, share cards, no em dashes, no Sentry example routes), `tests/web-vitals.spec.ts` (Web Vitals budgets and axe accessibility), `tests/lab.spec.ts` (the bold map's `/lab/map` test bed).
+- Specs: `tests/consent.spec.ts` (the analytics consent banner), `tests/dino.spec.ts` (the dino game on /stack: n8builds.dev's dino tests, kept in step with its `tests/e2e/ai-kit.spec.ts`), `tests/dino-music.spec.ts` (the dino game's music toggle and its sound checked offline, never out loud: n8builds.dev's `tests/e2e/dino-music.spec.ts`), `tests/home.spec.ts` (the footer cards, the n8builds.dev card's links, the build log card, the bold map and `/api/where`, Experience), `tests/about.spec.ts` (the About page and its breadcrumb, the home About teaser's facts, the nav from subpages, the sitemap), `tests/stack.spec.ts` (the stack card's link, /stack and its play area), `tests/projects.spec.ts` (the project cards, /projects and the project pages, the in-progress card, the retired apps' redirects, the status API), `tests/seo.spec.ts` (titles, share cards, no em dashes, no Sentry example routes), `tests/web-vitals.spec.ts` (Web Vitals budgets and axe accessibility), `tests/lab.spec.ts` (the bold map's `/lab/map` test bed).
 - The site scrolls smoothly (`scroll-smooth` on every element), so a test that scrolls must wait for the scroll to stop before hovering or clicking.
 - GitHub Actions (`.github/workflows/ci.yml`): lint, types and build, then the Playwright suite on the same five browsers as n8builds.dev (chromium, firefox, webkit, mobile-chrome, mobile-safari) inside Playwright's Docker image (its version read from `package-lock.json`).
   WebKit and mobile Safari each run as two shards with one worker: they have no GPU in CI, so their frames come slowly (about 10 fps on this page), and competing workers make that worse.
@@ -96,14 +96,13 @@ It funnels visitors to the two other sites:
 The owner picked layout B (a work-first home page plus detail pages) over A (one long page) and asked for this rework, bringing in A's visuals.
 
 - **Home** (owner's review, 2026-11-08): the hero, About (the intro, then the bento exactly as before: Ready to relocate, the tech stack card with the dino, the resume card, "Have a project? Let's connect"), Projects, Experience, Contact.
-  Since round 4 of 2026-11-09 the bento has a fifth card, the n8builds.dev build log (`components/ui/BentoComponents/BuildLogCard.tsx`): a month, its changes and a bar per day, live from https://n8builds.dev/builds/months.json through `app/api/build-log` (an hour of cache; a plain card when it cannot be read), with arrows that go round the months, and links to n8builds.dev (top left) and the build log (top right).
-  The months also move on by themselves every 5 s (owner, 2026-11-09), holding while hovered or keyboard-focused, for 15 s after an arrow, off screen, in a hidden tab and under reduced motion.
+  Since round 4 of 2026-11-09 the bento has a fifth card, the n8builds.dev build log; see "The build log card" below.
   From 1280px the grid has 12 columns: Ready to relocate (5) and the stack (7), then the resume, "Have a project?" and the build log as three equal columns (round 5).
   About on the home page is a short intro (two sentences, owner's round 3) ending in two proof chips (75+ client sites shipped end to end, the owner's career count; 30+ open source projects, his public GitHub repos; the hero's n8builds.dev card keeps its own count, `N8BUILDS_BUILD_COUNT` in `lib/sites.ts`) and "More about me" (to `/about`), where the full story lives; the heading, copy, chips and a small portrait are one compact block (`components/sections/Grid.tsx`, owner 2026-11-24); the tech stack card has "See my stack" (to `/stack`).
   `/projects` and the project pages lead "Back to home" (`components/Projects/BackToHome.tsx`, to the top of `/`).
   The nav (on every page) jumps to these sections; on other pages it goes home first (`subpageNavItems` in `data/navigation.tsx`). The detail pages are reached from the sections.
 - **Hero terminal**: two lines, "I build AI products end to end." and "Open to full-time, part-time or contract roles.", with no "$" prompt line; a blinking block cursor stays at the end of the last line, in the typing caret's own box (`.whoami-cursor`).
-- **Projects**: each project as a big, full-width card (`components/Projects/ProjectShowcase.tsx`): its looping clip (or first screenshot) across the top, wide and short (16:9 on phones, 21:9 from 768px), then icon, name, a sentence or two, a "What's interesting" line (`highlight`), Live demo and Full story. "Detailed view" (right of the heading) opens `/projects` (`components/ProjectsPage.tsx`, `ProjectFull.tsx`): every screenshot, the whole description, features, tech, and Live demo / Source / Full story.
+- **Projects**: each project as a big card (`components/Projects/ProjectShowcase.tsx`), full width below 1280px and 60% wide on alternating sides from 1280px, beside its pixel mark (see "The pixel marks" below): its looping clip (or first screenshot) across the top, wide and short (16:9 on phones, 21:9 from 768px), then icon, name, a sentence or two, a "What's interesting" line (`highlight`), Live demo and Full story. "Detailed view" (right of the heading) opens `/projects` (`components/ProjectsPage.tsx`, `ProjectFull.tsx`): every screenshot, the whole description, features, tech, and Live demo / Source / Full story.
   The n8builds.dev card comes after them: "n8builds.dev" on top as a heading that is plainly a link (underlined, an arrow, a hover state), "See more of my selected work" under it, then its builds one at a time, its featured ones first.
   OpenPing and Solara show the product in use: n8builds.dev's own build-page clips (`public/builds/<slug>/clip.mp4` and `clip-poster.webp`, recorded by n8builds-web's `scripts/product-clips/`), played by `ProjectClip`; the others keep their screenshots. Re-copy the clips when n8builds-web re-records them.
 - **Clips** (from layout A): `clip` in `data/projects.tsx`, files in `public/projects/clips/` (about 7 seconds, about 200 KB, H.264 MP4 and a WebP poster), played by `components/Projects/ProjectClip.tsx`: loaded only near the screen, paused off screen, the poster under reduced motion, a pause button.
@@ -128,7 +127,46 @@ The owner picked layout B (a work-first home page plus detail pages) over A (one
   `/about`, `/projects` and `/stack` have the scroll-to-top button too.
 - **Footer** on every page (`components/layout/Footer.tsx`): the contact card, whose border carries a slow light around it (`.contact-glow`, still under reduced motion, paused off screen), the hero's two cards (n8builds.dev, Tech for Pros), and a site map (home sections, the pages, Resume, my sites).
 - The workshop section (the big Tech for Pros and n8builds.dev pitches) is gone, and so is the compact project-page footer.
+- **Tighter stack tiles** (owner, 2026-11-25): the tech stack panel's tiles (home card, `/stack`, with and without motion) are 188 x 84 with 18px names, 24px marks, 6px side padding and 12px hover text, set in portfolio-only CSS in `app/globals.css` (the shared `StackTile` is h-28 w-52 and stays byte-identical). Gaps stay 40px across and 36px between rows (the dino's hops need them); `components/features/TechStack.tsx` scales the row durations to the 228px pitch so both rows keep ~22px/s. `tests/stack.spec.ts` pins the size, in the server's HTML and once live.
 - The dino tests run on `/stack` (`STACK_PAGE` in `tests/dino.spec.ts` and `tests/dino-music.spec.ts`); n8builds-web's copies run on its home page.
+
+## The pixel marks (owner, 2026-11-24 and 25)
+
+The Projects section carries the hero's 52px grid (`styles.grid` in `components/Projects/marks.module.css`) with its own wandering deep-blue cells (`GridLife.tsx`), and from 1280px (Tailwind's `xl`) each card stands at 60% of the row on alternating sides with its project's pixel mark in the open grid beside it (`ProjectRow.tsx`).
+The marks are drawn from the grid's own squares: Portfolio Rank's podium (three bars), NetTrailers' play button and Wren's bird.
+They flip in square by square like a split-flap board when they come on screen and flip out when they leave, and every few seconds one of them does something small (the bird blinks, pecks, flicks its tail or finds a seed; the play button pauses or runs a playhead; the podium reshuffles), never two at once.
+
+Easter eggs (owner, 2026-11-25: "something to play with"):
+
+- Hovering a mark (or tapping it) plays its surprise: the podium races from the start line and the winner is crowned; the play button presses in and plays an equaliser; the bird turns to the pointer, hops twice and sings a few notes.
+- Clicking or tapping the open grid around the bird (its yard, cursor `cell`) drops a seed that falls to the ground; the bird walks over and eats it.
+  At most four seeds wait at once, and every third seed it puffs up and sings.
+
+The owner's decisions:
+
+- The marks live only in the Projects section, beside the cards, and only on wide screens; below 1280px the cards are full width as before.
+- They never follow the pointer around the page; reacting when hovered, and the bird glancing toward a seed, is fine.
+- The real project icons stay beside the names on the cards; the marks are an extra, not a replacement.
+- Portfolio Rank's bars are all one yellow (its accent); NetTrailers' red keeps all its chroma and more light, so it reads red, not wine (the `--chroma` and `--lift` per mark in `marks.module.css`).
+- Loudness: louder than the first "quiet" trial, not as loud as the "bold" one ("a little bit ADHD but not too much"); the values are on `.root` in `marks.module.css`.
+- The bird can be fed, and eats by itself now and then.
+
+How they behave, and why:
+
+- Decorative: `aria-hidden`, nothing focusable; the pointer areas (`[data-core]`, the mark's own box, and `[data-yard]`, the bird's yard) never cover a card, and the yard is clamped to the open space between the card and the screen's edge.
+- Reduced motion shows each mark complete and still, with no idle actions, no easter eggs and no pointer areas; there is no other switch.
+- Nothing runs while a mark is off screen: its timers are cleared when it flips out, and the grid's cells park until the section is back.
+- Everything is a flip of a cell (only `transform` and `opacity` animate); the poses are bitmaps in `marks.ts`, one character per grid cell, and a pose change flips only the cells that differ.
+- `tests/projects.spec.ts` ("pixel marks") covers the layout, the breakpoint, the flips in and out, each easter egg, the seeds and their cap, touch, reduced motion and the off-screen rest.
+  At exactly 1280px a browser with a classic scrollbar (WebKit on Linux) is just under 80rem, so there the cards are full width and no mark is drawn, as the breakpoint says.
+
+To add a mark for a new project:
+
+1. Draw its poses in `POSES` in `components/Projects/marks.ts`: every pose the same size, at most about 7 cells across so it fits beside a 60% card at 1280px, using the characters listed at the top of that file.
+2. Add its kind to `MarkKind`, its build order to `ORDER` (`up` from the floor, or `across` the way it faces) and its accent to `markFor`.
+3. Give it a `--chroma`, `--lift` and `--edge-k` rule in `marks.module.css`, so its colour reads as the accent on the dark grid.
+4. In `components/Projects/PixelMark.tsx`, give it an idle action in `act` and a hover easter egg in `next` (a function like `race` or `play`); anything drawn outside its box is a sprite (`sprite`, `move`, `unsprite`).
+5. Add it to `KINDS` and `EGGS` in the "pixel marks" tests, and check it in Chromium, Firefox and WebKit at 1280, 1440 and 1920.
 
 ## The bold map in "Ready to relocate" (owner, 2026-11-24 and 2026-11-25)
 
@@ -139,7 +177,7 @@ Round two of his review: his avatar grows (card hover, avatar hover or keyboard 
 - `components/ui/BoldMap/`: `BoldMapLazy.tsx` (the home card: the backdrop at once, the map's code and data only once the card is within 300px of the viewport), `Backdrop.tsx` (the navy, the band, the caption and the screen-reader sentence, shown before and under the map so nothing moves), `BoldMap.tsx` (the map, its labels, the avatar, and the location request), `engine.ts` (hand-written WebGL2, with a still 2D-canvas fallback), `scene.ts` (one column per grid cell, height from real elevation), `camera.ts`, `shaders.ts`, `geo.ts` (the projection, places and the visitor), `text.ts` (the sentence and the check on the location answer, without the data).
   `mapData.generated.ts` comes from `scripts/map-data/` (Natural Earth, public domain) through `node scripts/gen-map-data.mjs`; never edit it by hand.
 - The camera fits the lower 48 to the card's width and centres them between the caption and the title.
-  On a card taller than wide (351 by 478 from 768 to 1023px) it looks more steeply down, narrows the side margins and sets the country lower, so no band of empty sea is left above the title (`tall` in `camera.ts`).
+  On a card taller than wide (about 353 by 480 from 768 to 1023px) it turns to look from the south-east and more steeply down, so the country runs corner to corner instead of leaving a band of empty sea above the title (`tall` in `camera.ts`); every other width keeps the lab sketch's view.
 - It runs only on screen in a visible tab, and is drawn once and held still under reduced motion.
   The element carries `data-mode` (moving or still), `data-renderer` (webgl2 or 2d), `data-running`, `data-frames` and `data-visitor` (us, here or none) for the tests.
 - **The line to the visitor.** The home page stays prerendered and cached and never carries anyone's location: once the map is up it asks `GET /api/where` (`app/api/where/route.ts`), with no cookies.
@@ -187,6 +225,27 @@ Round two of his review: his avatar grows (card hover, avatar hover or keyboard 
 Under the projects, `components/Projects/BuildsTeaser.tsx` shows n8builds.dev's builds one at a time (Scribe, OpenPing, Solara, TubeVault, Piper TTS, TL;DW; Portfolio Rank left it for the project rows on 2026-11-08), each with its real icon (`public/builds/<slug>/`), its accent, a Live site link when it has one and "See the build" on n8builds.dev (owner, 2026-10-26; it replaced the "Building in public" bento card and the More builds strip).
   Since round 4 of 2026-11-09 it also shows two upcoming builds (KeysReady, Pivot, from n8builds-web's `data/upcoming.ts`) with "Join the waitlist" (`https://n8builds.dev/upcoming?interest=<slug>#waitlist`) and their landing pages.
 
+## The build log card
+
+`components/ui/BentoComponents/BuildLogCard.tsx` shows a month of n8builds.dev's build log, live from https://n8builds.dev/builds/months.json through `app/api/build-log` (an hour of cache; the E2E suite reads `tests/fixtures/build-log-months.json` instead).
+It was reworked on 2026-11-25 (owner, after a preview: "I want it to be fun to look around and hover over").
+
+- **The feed has only a count per day** (`day`, `count`, and `future` for days still to come), plus each month's total and title.
+  There are no repos or commit subjects, so the card never shows them.
+  Everything else in the readout (rank, share of the month, streaks, the busiest day, active days) is worked out from those counts by `monthFacts` in `lib/buildLog.ts`, covered by `tests/unit/buildLog.test.mts`.
+- **Layout**: the older and newer month arrows top left with the month beside them, the readout (the month's total and tags, or the picked day's count, date and tags), the chart, and two plain text links along the bottom: "n8builds.dev" (with "I post everything here" above it) and "Build log".
+  Each link's underline draws in from the left on hover or keyboard focus and its arrow nudges.
+- **The chart**: each day is a stack of up to 10 square blocks (a CSS mask cuts the bar into blocks; the busiest day fills it).
+  Hovering, tapping or arrowing onto a day picks it: its blocks fill bottom to top, it lifts and glows, its neighbours lean in, the other days dim a little, and a pixel under the chart marks it, while the readout's number rolls to the day's count.
+  The owner did not want "the full thing being highlighted", so the picked day stands out by its own bar, with no lit column.
+  Keys: Left and Right walk the days, Home and End go to the first day and the last day so far, Escape lets go; the chart is one tab stop.
+  On a phone a tap picks a day, a sideways drag scrubs, and a tap elsewhere lets go.
+  Screen readers get each day as a button named with its date and count, and the month's summary as text.
+- **The months move on by themselves** every 5 s (owner, 2026-11-09), this month first and then back through the months, holding while hovered or keyboard-focused, while a day is picked, for 15 s after an arrow, off screen, in a hidden tab and under reduced motion.
+  Under reduced motion a day still lights up and the readout still changes, but nothing moves.
+- **Temporary**: `?log=3` shows the first preview's stronger highlight (a lit column, the other days dimmed further) for the owner to compare; remove it (the `strong` switch in the card and the `[data-highlight='strong']` rules in `app/globals.css`) once he has.
+- If the months cannot be read, the card is a plain "What I'm shipping" card with the same two links.
+
 ## Conventions
 
 - Conventional Commits (`feat:`, `fix:`, `docs:`...).
@@ -207,7 +266,7 @@ Under the projects, `components/Projects/BuildsTeaser.tsx` shows n8builds.dev's 
 
 - `lib/seo.ts`: site address, titles, descriptions, `shareSummary`.
 - `app/layout.tsx`: metadata, fonts, GA snippet. `app/opengraph-image.tsx` (+ `twitter-image.tsx`): the share card.
-- `components/Projects/ProjectShowcase.tsx` (home cards), `ProjectFull.tsx` (/projects), `ProjectClip.tsx`, `ProjectGallery.tsx`, `ProjectIcon.tsx`, `WrenMark.tsx`, `lib/accents.ts`.
+- `components/Projects/ProjectShowcase.tsx` (home cards), `ProjectRow.tsx` (a card and its mark), `PixelMark.tsx`, `marks.ts`, `marks.module.css`, `GridLife.tsx` (the pixel marks and the section's grid), `ProjectFull.tsx` (/projects), `ProjectClip.tsx`, `ProjectGallery.tsx`, `ProjectIcon.tsx`, `WrenMark.tsx`, `lib/accents.ts`.
 - `components/Projects/ProjectDetail.tsx`, `app/projects/[slug]/page.tsx`: project detail pages.
 - `components/Projects/BuildsTeaser.tsx`: the n8builds.dev teaser. `components/sections/HeroGrid.tsx`: the hero grid (from n8builds.dev).
 - `components/sections/AboutTeaser.tsx`, `StackRow.tsx`, `Experience.tsx`, `Hero.tsx`; the pages `components/ProjectsPage.tsx`, `StackPage.tsx`, `AboutPage.tsx` (with `components/about/Decals.tsx`).
