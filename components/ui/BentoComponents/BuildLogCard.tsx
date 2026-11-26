@@ -47,7 +47,21 @@ const plural = (n: number, one: string, many: string) => (n === 1 ? one : many)
 const subscribeNever = () => () => {}
 const strongHighlight = () => new URLSearchParams(window.location.search).get('log') === '3'
 
-/** Counts up or down to `target` over a short ease, so the readout's number rolls rather than pops. */
+/** How long the readout's number takes to roll to a new value, in ms. */
+const ROLL_MS = 240
+
+/**
+ * Counts up or down to `target` over a short ease, so the readout's number
+ * rolls rather than pops.
+ *
+ * The roll's progress is read from the clock, not from the frame's own
+ * timestamp: WebKit stamps a frame with the moment it began, which can come
+ * before the key press that started the roll, and the number then ran the
+ * wrong way first (9 to 49 by way of 5). And the final value lands on a timer
+ * too, so the number always settles even when no frame comes: a hidden tab,
+ * or a page too busy to paint (WebKit on CI went seconds without one,
+ * 2026-11-25, and the number stayed mid-roll).
+ */
 function useRollingNumber(target: number, still: boolean) {
   const [shown, setShown] = useState(target)
   const from = useRef(target)
@@ -55,14 +69,23 @@ function useRollingNumber(target: number, still: boolean) {
     if (still) return
     const start = from.current
     const began = performance.now()
-    let frame = requestAnimationFrame(function tick(now) {
-      const t = Math.min(1, (now - began) / 240)
-      const value = Math.round(start + (target - start) * (1 - (1 - t) ** 3))
+    const show = (value: number) => {
       from.current = value
       setShown(value)
+    }
+    let frame = requestAnimationFrame(function tick() {
+      const t = Math.min(1, Math.max(0, (performance.now() - began) / ROLL_MS))
+      show(Math.round(start + (target - start) * (1 - (1 - t) ** 3)))
       if (t < 1) frame = requestAnimationFrame(tick)
     })
-    return () => cancelAnimationFrame(frame)
+    const settle = setTimeout(() => {
+      cancelAnimationFrame(frame)
+      show(target)
+    }, ROLL_MS + 60)
+    return () => {
+      cancelAnimationFrame(frame)
+      clearTimeout(settle)
+    }
   }, [target, still])
   useEffect(() => {
     if (still) from.current = target
