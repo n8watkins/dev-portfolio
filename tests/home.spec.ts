@@ -579,6 +579,9 @@ test.describe('the bold map', () => {
     expect(headers['cache-control']).toContain('no-store')
     expect(headers['cache-control']).toContain('private')
     expect(headers['set-cookie']).toBeUndefined()
+    // Off Workers there is no rate limit binding, and the route says so
+    // (lib/whereLimit.ts; on Workers it says ok, limited or error).
+    expect(headers['x-ratelimit-state']).toBe('absent')
     const body = await res.json()
     // Off Cloudflare there is no location: no visitor, and nothing else at all.
     expect(body).toEqual({ visitor: null })
