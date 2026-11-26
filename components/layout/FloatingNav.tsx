@@ -4,7 +4,7 @@ import React, { useState } from 'react'
 import { motion } from 'motion/react'
 import { Link } from 'react-scroll'
 import NextLink from 'next/link'
-import { SCROLL_TO_KEY } from '@/components/Projects/BackToHome'
+import { SCROLL_TO_KEY } from '@/lib/returnTo'
 import CornerLinks from './CornerLinks'
 
 const cn = (...classes: (string | boolean | undefined | null)[]): string =>

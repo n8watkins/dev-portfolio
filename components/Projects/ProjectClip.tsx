@@ -13,7 +13,8 @@ import { latestEntry } from '@/lib/intersection'
  * screen and pauses off it. Under reduced motion it stays on the poster
  * until the visitor presses play. The corner button pauses and plays it
  * (WCAG 2.2.2: anything moving for more than five seconds can be stopped).
- * Clicking the clip opens the project's page.
+ * Clicking the clip opens the project's page (`onOpen`); without one (on that
+ * page itself) it is only a picture.
  */
 export default function ProjectClip({
   title,
@@ -24,6 +25,7 @@ export default function ProjectClip({
   onOpen,
   className = 'w-full shrink-0 md:w-1/2',
   aspectClassName = 'aspect-16/10',
+  sizes = '(max-width: 768px) 100vw, 50vw',
 }: {
   title: string
   src: string
@@ -34,6 +36,8 @@ export default function ProjectClip({
   className?: string
   /** The frame's shape; the clip fills it from the top. */
   aspectClassName?: string
+  /** The poster's `sizes`, for the box it is shown in. */
+  sizes?: string
 }) {
   const box = useRef<HTMLDivElement>(null)
   const video = useRef<HTMLVideoElement>(null)
@@ -77,19 +81,22 @@ export default function ProjectClip({
     else v.pause()
   }, [playing])
 
+  // On the project's own page there is nothing to open: the clip is just a picture.
+  const Surface = onOpen ? 'button' : 'div'
+
   return (
     <div ref={box} className={className}>
       <div
         className={`group/clip relative ${aspectClassName} overflow-hidden rounded-2xl border bg-[#07101d] transition-[border-color,box-shadow] duration-300 ${frameClassName}`}
       >
-        <button
-          type="button"
-          onClick={onOpen}
-          aria-label={`Open ${title}'s page`}
-          className="absolute inset-0 cursor-pointer focus-visible:outline-hidden"
+        <Surface
+          {...(onOpen
+            ? { type: 'button' as const, onClick: onOpen, 'aria-label': `Open ${title}'s page` }
+            : {})}
+          className={`absolute inset-0 ${onOpen ? 'cursor-pointer focus-visible:outline-hidden' : ''}`}
         >
           {/* The poster: the first paint, and all that shows under reduced motion. */}
-          <Image src={poster} alt={alt} fill sizes="(max-width: 768px) 100vw, 50vw" className="object-cover object-top" />
+          <Image src={poster} alt={alt} fill sizes={sizes} className="object-cover object-top" />
           {near && wanted && (
             <video
               ref={video}
@@ -105,7 +112,7 @@ export default function ProjectClip({
             </video>
           )}
           <span className="pointer-events-none absolute inset-0 bg-linear-to-t from-darkBlue/30 to-transparent" />
-        </button>
+        </Surface>
         <button
           type="button"
           onClick={() => setChoice(!wanted)}

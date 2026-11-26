@@ -1326,13 +1326,35 @@ test("hovering a role shows its own picture, which stays, quieter, while it's op
   ).toHaveAttribute('src', /appturnity/)
 })
 
-test('/projects and the project pages lead back to the home page', async ({ page }) => {
-  for (const path of ['/projects', '/projects/net-trailers']) {
+/**
+ * The subpages share one top (owner, 2026-11-26: the detail pages had "Back to
+ * home" where /about had its breadcrumb, and "home should just be Portfolio"):
+ * the nav, then "Portfolio / <page>" in the same place, Portfolio leading home.
+ */
+test('/projects, the project pages and /about share the Portfolio breadcrumb, in the same place', async ({
+  page,
+}) => {
+  const tops: number[] = []
+  for (const [path, current] of [
+    ['/projects', 'Projects'],
+    ['/projects/net-trailers', 'NetTrailers'],
+    ['/projects/portfolio-rank', 'Portfolio Rank'],
+    ['/about', 'About me'],
+  ]) {
     await page.goto(path)
-    const back = page.getByRole('link', { name: 'Back to home' })
-    await expect(back, path).toHaveAttribute('href', '/')
-    await expect(page.getByRole('link', { name: 'Back to projects' }), path).toHaveCount(0)
+    await expect(page.getByRole('navigation', { name: 'Main navigation' }), path).toBeVisible()
+    const crumbs = page.getByRole('navigation', { name: 'Breadcrumb' })
+    await expect(crumbs.getByRole('link', { name: 'Portfolio' }), path).toHaveAttribute('href', '/')
+    await expect(crumbs.locator('[aria-current="page"]'), path).toHaveText(current)
+    // No "home" wording left on the way back.
+    await expect(page.getByRole('link', { name: /back to home|home page/i }), path).toHaveCount(0)
+    tops.push(Math.round((await crumbs.boundingBox())!.y))
   }
+  expect(new Set(tops).size, `breadcrumb tops ${tops.join(', ')}`).toBe(1)
+
+  await page.goto('/projects/portfolio-rank')
+  await page.getByRole('navigation', { name: 'Breadcrumb' }).getByRole('link', { name: 'Portfolio' }).click()
+  await expect(page).toHaveURL(/\/$/, { timeout: 15_000 })
 })
 
 /**

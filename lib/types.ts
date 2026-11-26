@@ -19,6 +19,35 @@ export interface Technologies {
   Cloud: TechnologyCategory
 }
 
+/** A chapter's picture: one of the project's screenshots, by index (the clip opens the page). */
+export type StoryMedia = { image: number; caption: string }
+
+/**
+ * One beat of a project's story. The beats run the same way on every page
+ * (owner, 2026-11-26: "tell a story"): the spark, the question, the build,
+ * how it grew, where it is now.
+ */
+export interface StoryChapter {
+  /** The anchor and the "On this page" entry. */
+  id: 'spark' | 'question' | 'build' | 'grew' | 'now'
+  /** The beat's name, small above the title ("The spark"). */
+  beat: string
+  title: string
+  paragraphs: string[]
+  /** A line set large, the question the project asks. */
+  quote?: string
+  /** Shown after the words that mention it. */
+  media?: StoryMedia
+  /** Dated steps, oldest first, each from the project's history. */
+  timeline?: { when: string; what: string }[]
+}
+
+export interface ProjectStory {
+  /** The opening line under the title. */
+  lede: string
+  chapters: StoryChapter[]
+}
+
 export interface Project {
   id: number
   /** URL slug for the project's detail page, e.g. /projects/net-trailers */
@@ -53,11 +82,8 @@ export interface Project {
   /** A 1200x630 card for link previews, when the first screenshot isn't one. */
   shareImage?: string
   technologies: Technologies
-  /** The "why" - the goal / what this project is exploring / the question behind it. */
-  purpose?: string
-  /** How the project actually uses AI - the model, the technique, the implementation. */
-  aiUsage?: string
-  highlights?: string[]
+  /** The project's page, told as a short story in my voice (owner, 2026-11-26). */
+  story: ProjectStory
   github?: string
   liveSite?: string
   /** The people and work it builds on, credited on its card and its page. */

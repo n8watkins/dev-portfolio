@@ -13,8 +13,7 @@ import Decals from '@/components/about/Decals'
 import { subpageNavItems } from '@/data/navigation'
 import { aboutPortrait, aboutScenes, type AboutPhoto, type AboutScene } from '@/data/about'
 import { TECH_FOR_PROS } from '@/lib/sites'
-import { homeSpot, returnToHomeSpot } from '@/lib/returnTo'
-import { SCROLL_TO_KEY } from '@/components/Projects/BackToHome'
+import { homeSpot, returnToHomeSpot, SCROLL_TO_KEY } from '@/lib/returnTo'
 import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion'
 import { useStoryLayout } from '@/components/about/storyLayout'
 import { useSceneReveal } from '@/components/about/useSceneReveal'
@@ -161,7 +160,7 @@ function WaysOn() {
         </Link>
         <Link href="/" className={`${WAY} ${WAY_QUIET}`}>
           <ArrowUp className="h-4 w-4" aria-hidden="true" />
-          Back to the top of the home page
+          Back to the top of the portfolio
         </Link>
       </div>
     </nav>

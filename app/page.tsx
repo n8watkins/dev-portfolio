@@ -1,7 +1,6 @@
 'use client'
 import React, { useEffect } from 'react'
-import { SCROLL_TO_KEY } from '@/components/Projects/BackToHome'
-import { forgetHomeSpot, rememberHomeSpot, takeRestoreSpot } from '@/lib/returnTo'
+import { forgetHomeSpot, rememberHomeSpot, SCROLL_TO_KEY, takeRestoreSpot } from '@/lib/returnTo'
 import Hero from '@/components/sections/Hero'
 import Grid from '@/components/sections/Grid'
 import { FloatingNav } from '@/components/layout/FloatingNav'
