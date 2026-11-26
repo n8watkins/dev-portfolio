@@ -200,6 +200,11 @@
 /* Under reduced motion a day still lights up, all at once and in place, and a
    new month is simply there. */
 @media (prefers-reduced-motion: reduce) {
+  /* None at all, not even the near-zero transition both sites' reduced-motion rule
+     gives every element: WebKit left a bar at its old month's height under it. */
+  .logcard-fill {
+    transition: none !important;
+  }
   .logcard-lit,
   .logcard-cursor,
   .logcard-underline,

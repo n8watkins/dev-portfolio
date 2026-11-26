@@ -172,7 +172,12 @@ async function showBuildLog(
   await expect(card).toHaveAttribute('data-build-log', 'ready', LOADED)
   await expect(card).toHaveAttribute('data-settled', '', LOADED)
   if (hold) {
-    await card.locator('[data-month]').hover()
+    // From off the card: on a reloaded page a pointer already resting where the name now is
+    // gets no mouseenter in Firefox, and the card would not know it is hovered. Moved there
+    // by its place on screen, not `hover()`, whose own scrolling into view can move the page.
+    await page.mouse.move(0, 0)
+    const name = (await card.locator('[data-month]').boundingBox())!
+    await page.mouse.move(name.x + name.width / 2, name.y + name.height / 2)
     await expect(card).not.toHaveAttribute('data-cycling', '')
     for (let i = 0; i < 12 && (await card.locator('[data-month]').textContent()) !== hold; i++) {
       await expect(card).toHaveAttribute('data-settled', '', LOADED)
@@ -528,7 +533,12 @@ test('under reduced motion a new build log month is simply there', async ({ page
   await expect(card.locator('[data-changes]')).toHaveText('275', { timeout: 200 })
   await expect(card).toHaveAttribute('data-settled', '', { timeout: 200 })
   const moving = await card.evaluate(
-    (el) => [...el.querySelectorAll('.logcard-fill')].flatMap((f) => f.getAnimations()).length
+    // Any that takes time: the site's reduced-motion rule leaves near-zero transitions,
+    // which WebKit still lists.
+    (el) =>
+      [...el.querySelectorAll('.logcard-fill')]
+        .flatMap((f) => f.getAnimations())
+        .filter((a) => Number(a.effect?.getTiming().duration) > 1).length
   )
   expect(moving).toBe(0)
   expect(await barMismatches(card)).toEqual([])
