@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
@@ -15,6 +15,10 @@ import { aboutPortrait, aboutScenes, type AboutPhoto, type AboutScene } from '@/
 import { TECH_FOR_PROS } from '@/lib/sites'
 import { homeSpot, returnToHomeSpot } from '@/lib/returnTo'
 import { SCROLL_TO_KEY } from '@/components/Projects/BackToHome'
+import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion'
+import { useStoryLayout } from '@/components/about/storyLayout'
+import { useSceneReveal } from '@/components/about/useSceneReveal'
+import AboutGrid from '@/components/about/AboutGrid'
 
 const ScrollToTop = dynamic(() => import('@/components/ui/ScrollToTop'), { ssr: false })
 
@@ -33,23 +37,27 @@ const BODIES: Record<string, React.ReactNode> = {
   work: (
     <>
       <p>
-        These days I consult on AI and build <Out href={TECH_FOR_PROS.url}>{TECH_FOR_PROS.name}</Out>,
-        a platform for service businesses: pool, HVAC, landscaping and the like. It turns a few
-        details about a business into a launch-ready website, then takes the follow-up off their
-        plate: lead capture, reviews, reminders and missed-call text-back.
+        Most of my work now is using AI to help people get things done. I consult on it, and I build{' '}
+        <Out href={TECH_FOR_PROS.url}>{TECH_FOR_PROS.name}</Out> for service businesses: the pool,
+        HVAC and landscaping owners who would rather be on the job than at a computer.
       </p>
-      <p>Before that I spent three years building client apps at a consulting firm.</p>
+      <p>
+        If AI can pick up the missed call, send the follow-up or keep the website current,
+        that&apos;s time they get back.
+      </p>
     </>
   ),
   la: (
     <>
       <p>
-        I live in Los Angeles, and I&apos;m ready to relocate for the right role.
+        I&apos;m born and raised in LA, and I&apos;ve traveled all over the country over the years.
       </p>
       <p>
-        For about two years I taught JavaScript, Python and app development at The Coder School in
+        In the last few years I&apos;ve built client apps at a consulting firm, consulted on AI, and
+        spent about two years teaching JavaScript, Python and app development at The Coder School in
         Santa Monica: how to debug, and how to use AI coding tools responsibly.
       </p>
+      <p>And I&apos;m ready to relocate for the right role.</p>
     </>
   ),
   setup: (
@@ -104,7 +112,8 @@ function ScenePhoto({ photo, mood }: { photo: AboutPhoto; mood: AboutScene['mood
 
 const WAY =
   'group inline-flex items-center justify-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold transition-colors focus:outline-hidden focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:ring-offset-2 focus-visible:ring-offset-darkBlue'
-const WAY_QUIET = 'border border-white/12 bg-white/4 text-slate-100 hover:border-sky-400/50 hover:bg-white/8 hover:text-sky-200'
+const WAY_QUIET =
+  'border border-white/12 bg-white/4 text-slate-100 hover:border-sky-400/50 hover:bg-white/8 hover:text-sky-200'
 
 /**
  * The ways on, at the end of the story (owner, 2026-11-08): back to where you
@@ -164,17 +173,30 @@ function WaysOn() {
  * opening, then the story in a few photo scenes (at work, in LA, the setup),
  * with stickers drifting around them. The work itself (projects, experience,
  * stack) lives on the home page and its detail pages.
+ *
+ * Since 2026-11-25 (owner) the background is alive: the site's grid with
+ * moving squares that keep clear of the words (components/about/AboutGrid.tsx),
+ * and the scenes rise in as they scroll
+ * into view (useSceneReveal). It is drawn after the page has been measured,
+ * absolute behind the content, so it shifts nothing.
  */
 export default function AboutPage() {
+  const reduce = usePrefersReducedMotion()
+  const mainRef = useRef<HTMLElement>(null)
+  const layout = useStoryLayout(mainRef)
+  useSceneReveal(mainRef, !reduce)
   return (
     <>
       <FloatingNav navItems={subpageNavItems} />
       <main
+        ref={mainRef}
         id="main-content"
         tabIndex={-1}
         className="relative w-full overflow-hidden bg-darkBlue text-slate-200 focus:outline-hidden"
       >
-        <div className="mx-auto max-w-md px-4 pt-14 sm:max-w-xl md:max-w-3xl md:pt-36 lg:max-w-4xl xl:max-w-6xl 2xl:max-w-7xl">
+        {layout && <AboutGrid layout={layout} reduce={reduce} />}
+        {/* Relative, so the content paints over the background. */}
+        <div className="relative mx-auto max-w-md px-4 pt-14 sm:max-w-xl md:max-w-3xl md:pt-36 lg:max-w-4xl xl:max-w-6xl 2xl:max-w-7xl">
           <Breadcrumb current="About me" className="mb-8 md:mb-10" />
           <PauseOffscreen className="relative">
             <section
@@ -246,7 +268,7 @@ export default function AboutPage() {
 
           <WaysOn />
         </div>
-        <div className="mx-auto max-w-md sm:max-w-xl md:max-w-3xl lg:max-w-4xl xl:max-w-6xl 2xl:max-w-7xl">
+        <div className="relative mx-auto max-w-md sm:max-w-xl md:max-w-3xl lg:max-w-4xl xl:max-w-6xl 2xl:max-w-7xl">
           <Footer />
         </div>
         <ScrollToTop />
