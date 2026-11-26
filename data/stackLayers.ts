@@ -1,7 +1,7 @@
 import { ai_agents, ai_tools, dev_stack, type AIStackItem } from './stack'
 
 /**
- * The stack grouped by layer, for /stack. The tiles and their one-line reasons
+ * The stack grouped by layer, for /stack. The tiles and their one-line "how I use it"
  * come from data/stack.tsx (shared byte for byte with n8builds-web, so it is
  * not edited here); this file only sorts them into layers by name.
  */
@@ -30,7 +30,7 @@ export const stackLayers: StackLayer[] = [
   {
     id: 'local-ai',
     title: 'Local AI',
-    blurb: 'Models that run on your own machine.',
+    blurb: 'Models that run on my own PC, inside the things I build.',
     items: ai_tools,
   },
   {
@@ -43,7 +43,7 @@ export const stackLayers: StackLayer[] = [
     id: 'data',
     title: 'Data',
     blurb: 'Where the data lives, and how it is queried.',
-    items: pick(['PostgreSQL', 'Turso', 'Drizzle', 'Firebase', 'Sanity', 'Upstash']),
+    items: pick(['PostgreSQL', 'Turso', 'Drizzle', 'Firebase', 'Sanity']),
   },
   {
     id: 'cloud',
@@ -63,12 +63,7 @@ export const stackLayers: StackLayer[] = [
     blurb: 'How it stays working.',
     items: pick(['Playwright', 'GitHub Actions', 'ESLint', 'Prettier', 'Git', 'Sentry', 'Google Analytics']),
   },
-  {
-    id: 'design',
-    title: 'Design',
-    blurb: 'Before the code, when it needs it.',
-    items: pick(['Figma']),
-  },
+  // No Design layer: Figma went on 2026-11-25 (nothing in the owner's repos or resume backs it).
 ]
 
 /** How many tiles data/stack.tsx has: every one sits in exactly one layer (tests/stack.spec.ts). */

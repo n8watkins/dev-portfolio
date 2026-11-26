@@ -79,10 +79,21 @@ test('the n8builds.dev teaser links each build to its n8builds.dev page', async 
 })
 
 /**
- * The bento's build log card (rounds 4 and 5 of 2026-11-09): a month of
- * n8builds.dev's build log, from its JSON (here the fixture), with arrows that
- * go round the months, and two links on top: n8builds.dev and the build log.
+ * The bento's build log card (rounds 4 and 5 of 2026-11-09, reworked
+ * 2026-11-25): a month of n8builds.dev's build log, from its JSON (here the
+ * fixture: November 2026 has 6, 3, 0, 13, 18, 0, 0, 9, 0 changes on its first
+ * nine days and the rest still to come). Month arrows top left, a readout, a
+ * chart of block stacks whose days light up, and two plain text links along
+ * the bottom: n8builds.dev and the build log.
  */
+/**
+ * How long the card may take to load its months. Under load WebKit can take
+ * 8 to 12 s from navigation to a loaded card (2026-11-25, twelve test workers
+ * on a busy machine: the page drew 4 to 6 frames in its first 8 s), well past
+ * the 5 s an expect waits by default.
+ */
+const LOADED = { timeout: 20_000 }
+
 test('the build log card shows a month, cycles the months, and links the site and the log', async ({
   page,
 }) => {
@@ -90,10 +101,15 @@ test('the build log card shows a month, cycles the months, and links the site an
   await page.goto('/')
   const card = page.locator('[data-build-log]')
   await card.scrollIntoViewIfNeeded()
-  await expect(card).toHaveAttribute('data-build-log', 'ready')
+  await expect(card).toHaveAttribute('data-build-log', 'ready', LOADED)
   await expect(card.locator('[data-month]')).toHaveText('November 2026')
   await expect(card.locator('[data-changes]')).toHaveText('49')
-  await expect(card.locator('[data-bars] > span')).toHaveCount(30)
+  // A slot per day; the nine days so far are buttons named with their date and count.
+  await expect(card.locator('[data-chart] > *')).toHaveCount(30)
+  await expect(card.locator('[data-chart] button')).toHaveCount(9)
+  await expect(card.getByRole('button', { name: 'Thursday, November 5: 18 changes, the busiest day' })).toBeVisible()
+  await expect(card.locator('[data-readout]')).toContainText('Peak Nov 5 · 18')
+  await expect(card.locator('[data-readout]')).toContainText('5 days active')
   await card.getByRole('button', { name: 'Older month' }).click()
   await expect(card.locator('[data-month]')).toHaveText('October 2026')
   await expect(card.locator('[data-changes]')).toHaveText('275')
@@ -101,11 +117,172 @@ test('the build log card shows a month, cycles the months, and links the site an
   await card.getByRole('button', { name: 'Newer month' }).click()
   await card.getByRole('button', { name: 'Newer month' }).click()
   await expect(card.locator('[data-month]')).toHaveText('September 2026')
-  // Two links, and the card itself is not one.
+  // Two plain text links, and the card itself is not one.
   const links = card.getByRole('link')
   await expect(links).toHaveCount(2)
-  await expect(card.getByRole('link', { name: /^n8builds\.dev/ })).toHaveAttribute('href', 'https://n8builds.dev')
-  await expect(card.getByRole('link', { name: /^Build log/ })).toHaveAttribute('href', 'https://n8builds.dev/builds')
+  const site = card.getByRole('link', { name: /^n8builds\.dev/ })
+  const log = card.getByRole('link', { name: /^Build log/ })
+  await expect(site).toHaveAttribute('href', 'https://n8builds.dev')
+  await expect(log).toHaveAttribute('href', 'https://n8builds.dev/builds')
+  for (const link of [site, log]) {
+    await expect(link).toHaveAttribute('target', '_blank')
+    await expect(link.locator('img')).toHaveCount(0)
+  }
+  await expect(card.getByText('I post everything here')).toBeVisible()
+  // Side by side on one line, along the bottom of the card.
+  const [a, b, box] = [await site.boundingBox(), await log.boundingBox(), await card.boundingBox()]
+  expect(Math.abs(a!.y + a!.height - (b!.y + b!.height))).toBeLessThan(2)
+  expect(a!.x).toBeLessThan(b!.x)
+  expect(box!.y + box!.height - (b!.y + b!.height)).toBeLessThan(40)
+})
+
+/**
+ * Brings the build log card on screen and waits until its months are loaded
+ * and its bento cell has finished arriving (it rises 25px and scales up from
+ * 95%). A pointer aimed at a day before then lands beside it: on CI a tap at
+ * the fifth day's centre, measured mid-entrance, picked the sixth (2026-11-25).
+ */
+async function showBuildLog(page: import('@playwright/test').Page) {
+  const card = page.locator('[data-build-log]')
+  await card.evaluate((el) => el.scrollIntoView({ block: 'center', behavior: 'instant' }))
+  await expect(card).toHaveAttribute('data-build-log', 'ready', LOADED)
+  await expect
+    .poll(() =>
+      card.evaluate((el) => {
+        const cell = getComputedStyle(el.parentElement!)
+        return `${cell.transform} ${cell.opacity}`
+      })
+    )
+    .toBe('none 1')
+  return card
+}
+
+test('hovering a build log day lights it up, and the readout shows its date and numbers', async ({
+  page,
+  isMobile,
+}) => {
+  test.skip(isMobile, 'Hover is a desktop pointer; phones tap (see below).')
+  await page.goto('/')
+  const card = await showBuildLog(page)
+  const readout = card.locator('[data-readout]')
+  const day = (name: string) => card.getByRole('button', { name: new RegExp(`^${name}:`) })
+  await day('Thursday, November 5').hover()
+  await expect(day('Thursday, November 5')).toHaveAttribute('aria-pressed', 'true')
+  await expect(day('Thursday, November 5')).toHaveAttribute('data-d', '0')
+  // Its neighbours lean in.
+  await expect(day('Wednesday, November 4')).toHaveAttribute('data-d', '1')
+  await expect(day('Tuesday, November 3')).toHaveAttribute('data-d', '2')
+  await expect(card.locator('[data-chart]')).toHaveAttribute('data-exploring', '')
+  await expect(readout.locator('[data-number]')).toHaveText('18')
+  await expect(readout).toContainText(/changes on\s*Thu, Nov 5/)
+  await expect(readout).toContainText('Busiest day')
+  await expect(readout).toContainText('37% of month')
+  await expect(readout).toContainText('2-day streak')
+  // Sweep on to another day.
+  await day('Sunday, November 8').hover()
+  await expect(readout.locator('[data-number]')).toHaveText('9')
+  await expect(readout).toContainText(/changes on\s*Sun, Nov 8/)
+  await expect(readout).toContainText('#3 of 5 days')
+  await expect(day('Thursday, November 5')).toHaveAttribute('aria-pressed', 'false')
+  // Off the chart, the month again.
+  await page.mouse.move(2, 2)
+  await expect(card.locator('[data-chart]')).not.toHaveAttribute('data-exploring', '')
+  await expect(card.locator('[data-changes]')).toHaveText('49')
+  await expect(readout).toContainText('changes shipped')
+})
+
+test('the build log days can be walked with the arrow keys, Home and End, and let go with Escape', async ({
+  page,
+}) => {
+  await page.goto('/')
+  const card = await showBuildLog(page)
+  const readout = card.locator('[data-readout]')
+  // One stop in the tab order: the last day so far.
+  const stop = card.locator('[data-chart] button[tabindex="0"]')
+  await expect(stop).toHaveCount(1)
+  await expect(stop).toHaveAccessibleName('Monday, November 9: 0 changes')
+  await stop.focus()
+  const focused = page.locator(':focus')
+  await expect(focused).toHaveAttribute('aria-pressed', 'true')
+  await expect(readout).toContainText(/changes on\s*Mon, Nov 9/)
+  await page.keyboard.press('Home')
+  await expect(focused).toHaveAccessibleName('Sunday, November 1: 6 changes')
+  await expect(readout.locator('[data-number]')).toHaveText('6')
+  await page.keyboard.press('ArrowRight')
+  await expect(focused).toHaveAccessibleName('Monday, November 2: 3 changes')
+  await expect(readout).toContainText(/changes on\s*Mon, Nov 2/)
+  await page.keyboard.press('ArrowLeft')
+  await page.keyboard.press('ArrowLeft')
+  await expect(focused).toHaveAccessibleName('Sunday, November 1: 6 changes')
+  // End is the last day so far, not a day still to come, and the walk stops there.
+  await page.keyboard.press('End')
+  await page.keyboard.press('ArrowRight')
+  await expect(focused).toHaveAccessibleName('Monday, November 9: 0 changes')
+  await expect(readout).toContainText('Nothing shipped')
+  await page.keyboard.press('ArrowLeft')
+  await expect(focused).toHaveAccessibleName('Sunday, November 8: 9 changes')
+  await page.keyboard.press('Escape')
+  await expect(card.locator('[data-chart] [aria-pressed="true"]')).toHaveCount(0)
+  await expect(card.locator('[data-changes]')).toHaveText('49')
+})
+
+/**
+ * WebKit on CI once drew no frame for seconds (2026-11-25), and the readout's
+ * number, which rolls on animation frames, stayed mid-roll ("5" for 49, "20"
+ * for 6). Here the page gets a frame only every 6 s, each stamped a little
+ * before it runs, as WebKit stamps them: the number must still settle.
+ */
+test('the build log readout settles on the right number even when the page draws no frames', async ({ page }) => {
+  await page.addInitScript(() => {
+    window.requestAnimationFrame = (cb) =>
+      window.setTimeout(() => cb(performance.now() - 40), 6000) as unknown as number
+    window.cancelAnimationFrame = (id) => window.clearTimeout(id)
+  })
+  await page.goto('/')
+  const card = page.locator('[data-build-log]')
+  await card.evaluate((el) => el.scrollIntoView({ block: 'center', behavior: 'instant' }))
+  await expect(card).toHaveAttribute('data-build-log', 'ready', LOADED)
+  const number = card.locator('[data-readout] [data-number]')
+  await expect(number).toHaveText('49')
+  await card.locator('[data-chart] button[tabindex="0"]').focus()
+  await page.keyboard.press('Home')
+  await expect(number).toHaveText('6')
+  await page.keyboard.press('End')
+  await page.keyboard.press('ArrowLeft')
+  await expect(number).toHaveText('9')
+  await page.keyboard.press('Escape')
+  await expect(number).toHaveText('49')
+})
+
+test.describe('on a touch screen', () => {
+  test.use({ hasTouch: true })
+
+  // Real time, not the fake clock: under the fake clock WebKit with touch sometimes never got as far
+  // as loading the months (2026-11-25), and holding is best shown by simply waiting past the 5 s.
+  test('a tap picks a build log day and holds the month; a tap elsewhere lets go', async ({ page }) => {
+    await page.goto('/')
+    const card = await showBuildLog(page)
+    await expect(card).toHaveAttribute('data-cycling', '')
+    // The month may already have moved on by itself, so pick the fifth day of whichever is showing.
+    const day = card.locator('[data-chart] button').nth(4)
+    await day.tap()
+    await expect(day).toHaveAttribute('aria-pressed', 'true')
+    const month = await card.locator('[data-month]').textContent()
+    const [, weekday, monthName] = (await day.getAttribute('aria-label'))!.match(/^(\w{3})\w*, (\w{3})\w* 5:/)!
+    await expect(card.locator('[data-readout]')).toContainText(
+      new RegExp(`changes? on\\s*${weekday}, ${monthName} 5`)
+    )
+    // Picked, the month holds well past its 5 s.
+    await expect(card).not.toHaveAttribute('data-cycling', '')
+    await page.waitForTimeout(6_500)
+    await expect(card.locator('[data-month]')).toHaveText(month!)
+    await expect(day).toHaveAttribute('aria-pressed', 'true')
+    // A tap elsewhere (the page's side margin, level with the card) lets go, and the months move on again.
+    const box = (await card.boundingBox())!
+    await page.touchscreen.tap(2, box.y + box.height / 2)
+    await expect(day).toHaveAttribute('aria-pressed', 'false')
+    await expect(card).toHaveAttribute('data-cycling', '')
+  })
 })
 
 test('the build log card moves on through the months by itself, and holds when asked', async ({
@@ -123,15 +300,29 @@ test('the build log card moves on through the months by itself, and holds when a
   // page's, so that clear can hit this card's interval, which then never fires again (about one run
   // in ten, 2026-11-24). Real visitors have a native setTimeout and are not affected. This stub has
   // to come after clock.install(), which installs its own requestIdleCallback over anything before.
+  // (Test builds no longer load Sentry at all, lib/sentryDsn.mjs; 28 of 30 WebKit repeats passed
+  // without the stub on a saturated machine, so it stays until a clean 30 of 30.)
   await page.addInitScript(() => {
     window.requestIdleCallback = () => 0
+    // The bold map above this card draws a WebGL frame on every animation
+    // frame, and each second of fake time runs sixty of them, in software in
+    // CI: seconds per step. Its still 2D picture (no WebGL2) has no loop.
+    const getContext = HTMLCanvasElement.prototype.getContext
+    HTMLCanvasElement.prototype.getContext = function (
+      this: HTMLCanvasElement,
+      type: string,
+      ...rest: unknown[]
+    ) {
+      if (type === 'webgl2') return null
+      return (getContext as (...a: unknown[]) => RenderingContext | null).call(this, type, ...rest)
+    } as typeof getContext
   })
   await page.goto('/')
   const card = page.locator('[data-build-log]')
   const month = card.locator('[data-month]')
   // Well inside the screen: at its edge, the card's own entrance can carry it in and out of view.
   await card.evaluate((el) => el.scrollIntoView({ block: 'center', behavior: 'instant' }))
-  await expect(card).toHaveAttribute('data-build-log', 'ready')
+  await expect(card).toHaveAttribute('data-build-log', 'ready', LOADED)
   await page.mouse.move(2, 2)
   await expect(card).toHaveAttribute('data-cycling', '')
   // Moves the clock on in small steps until the card shows `text`.
@@ -140,8 +331,10 @@ test('the build log card moves on through the months by itself, and holds when a
       await page.clock.runFor(1000)
       await expect(month).toHaveText(text, { timeout: 500 })
     }).toPass({ timeout: 40_000 })
-  // This month first, then back through the months, round again, every 5 s.
-  await expect(month).toHaveText('November 2026')
+  // Back through the months and round again, every 5 s. (The clock runs on its own until moved, so a
+  // slow machine may already have moved past November here; that the card starts on this month is
+  // checked by the first build log test.)
+  await movesOnTo('November 2026')
   await movesOnTo('October 2026')
   await movesOnTo('September 2026')
   await movesOnTo('November 2026')
@@ -166,10 +359,41 @@ test('the build log card never moves on by itself under reduced motion', async (
   await page.goto('/')
   const card = page.locator('[data-build-log]')
   await card.scrollIntoViewIfNeeded()
-  await expect(card).toHaveAttribute('data-build-log', 'ready')
+  await expect(card).toHaveAttribute('data-build-log', 'ready', LOADED)
   await expect(card).not.toHaveAttribute('data-cycling', '')
   await page.clock.runFor(6_000)
   await expect(card.locator('[data-month]')).toHaveText('November 2026')
+})
+
+test('under reduced motion a build log day still lights up and shows its numbers, in place', async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.goto('/')
+  const card = page.locator('[data-build-log]')
+  await card.evaluate((el) => el.scrollIntoView({ block: 'center', behavior: 'instant' }))
+  await expect(card).toHaveAttribute('data-build-log', 'ready', LOADED)
+  const day = card.getByRole('button', { name: /^Thursday, November 5:/ })
+  await day.focus()
+  await expect(day).toHaveAttribute('aria-pressed', 'true')
+  // The number is there at once, with no count up.
+  await expect(card.locator('[data-readout] [data-number]')).toHaveText('18', { timeout: 100 })
+  await expect(card.locator('[data-readout]')).toContainText('Busiest day')
+  // Lit, but nothing lifts or slides: no transforms, and the blocks light all at once.
+  const styles = await card.evaluate((el) => {
+    const pick = (s: string) => getComputedStyle(el.querySelector(s)!)
+    return {
+      lift: pick('[aria-pressed="true"] .log-stack').transform,
+      neighbour: pick('[data-d="1"] .log-stack').transform,
+      fill: pick('[aria-pressed="true"] .log-lit').transitionDuration,
+      lit: pick('[aria-pressed="true"] .log-lit').transform,
+    }
+  })
+  expect(styles.lift).toBe('none')
+  expect(styles.neighbour).toBe('none')
+  // (The site's global reduced-motion rule leaves a token 0.01 ms.)
+  expect(parseFloat(styles.fill)).toBeLessThan(0.001)
+  expect(styles.lit).toBe('matrix(1, 0, 0, 1, 0, 0)')
 })
 
 test('the build log card falls back to a plain card when the log cannot be read', async ({ page }) => {
@@ -177,8 +401,11 @@ test('the build log card falls back to a plain card when the log cannot be read'
   await page.goto('/')
   const card = page.locator('[data-build-log]')
   await card.scrollIntoViewIfNeeded()
-  await expect(card).toHaveAttribute('data-build-log', 'fallback')
+  await expect(card).toHaveAttribute('data-build-log', 'fallback', LOADED)
   await expect(card).toContainText("What I'm shipping")
+  await expect(card.locator('[data-chart]')).toHaveCount(0)
+  await expect(card.getByRole('link')).toHaveCount(2)
+  await expect(card.getByRole('link', { name: /^n8builds\.dev/ })).toHaveAttribute('href', 'https://n8builds.dev')
   await expect(card.getByRole('link', { name: /^Build log/ })).toHaveAttribute('href', 'https://n8builds.dev/builds')
 })
 
@@ -210,39 +437,349 @@ test('from 1280px, the resume, contact and build log cards are one row of three 
 })
 
 /**
- * The map card's arcs (components/ui/BentoComponents/MapAnimations.tsx) draw
- * themselves in a GSAP loop. Under reduced motion they show fully drawn and
- * hold still; otherwise they keep drawing.
+ * "Ready to relocate" is the bold 3D map (components/ui/BoldMap; owner,
+ * 2026-11-25). Its code loads only as the card nears the screen; it counts
+ * the frames it draws (`data-frames`), says whether it moves (`data-mode`),
+ * whether its loop runs (`data-running`) and what it knows of the visitor
+ * (`data-visitor`). The visitor's rough location comes from /api/where after
+ * the map is up, so the page itself stays static and cached.
  */
-test.describe('the map arcs', () => {
-  const offsets = (page: import('@playwright/test').Page) =>
-    page
-      .locator('.neon-path')
-      .evaluateAll((paths) => paths.map((p) => getComputedStyle(p).strokeDashoffset))
-
-  test('hold still, fully drawn, under reduced motion', async ({ page }) => {
-    await page.emulateMedia({ reducedMotion: 'reduce' })
+test.describe('the bold map', () => {
+  const AUSTIN = { kind: 'us', at: [-97.5, 30.5], near: 'Austin, TX', mi: 1230 }
+  const frames = (map: import('@playwright/test').Locator) =>
+    map.evaluate((el) => Number((el as HTMLElement).dataset.frames))
+  const openMap = async (page: import('@playwright/test').Page) => {
     await page.goto('/')
-    const arcs = page.locator('.neon-path')
-    await arcs.first().scrollIntoViewIfNeeded()
-    await expect(arcs).toHaveCount(3)
-    const before = await offsets(page)
-    await page.waitForTimeout(1500)
-    expect(await offsets(page)).toEqual(before)
-    expect(
-      before.every((o) => parseFloat(o) === 0),
-      `offsets ${before}`
-    ).toBe(true)
+    const slot = page.locator('[data-bold-map-slot]')
+    await slot.scrollIntoViewIfNeeded()
+    const map = slot.locator('[data-bold-map]')
+    await expect(map).toHaveAttribute('data-ready', 'true', { timeout: 20_000 })
+    return map
+  }
+
+  test('loads only as the card nears the screen', async ({ page }) => {
+    const chunks: string[] = []
+    page.on('response', (r) => {
+      if (r.url().includes('/_next/static/') && r.url().endsWith('.js')) chunks.push(r.url())
+    })
+    let asked = 0
+    await page.route('**/api/where', (route) => {
+      asked++
+      return route.fulfill({ json: { visitor: null } })
+    })
+    // A short window, so the card starts well out of reach on every device.
+    const size = page.viewportSize()!
+    await page.setViewportSize({ width: size.width, height: 360 })
+    await page.goto('/')
+    await page.waitForLoadState('networkidle')
+    const gap = await page
+      .locator('[data-bold-map-slot]')
+      .evaluate((el) => el.getBoundingClientRect().top - innerHeight)
+    expect(gap, 'the card starts more than 300px below the window').toBeGreaterThan(300)
+    // Out of reach: the map's code has not loaded and nothing asked where you are.
+    await expect(page.locator('[data-bold-map]')).toHaveCount(0)
+    expect(asked).toBe(0)
+    const before = chunks.length
+    await page.setViewportSize(size)
+    await page.locator('[data-bold-map-slot]').scrollIntoViewIfNeeded()
+    await expect(page.locator('[data-bold-map]')).toHaveAttribute('data-ready', 'true', {
+      timeout: 20_000,
+    })
+    expect(chunks.length).toBeGreaterThan(before)
+    await expect.poll(() => asked).toBe(1)
   })
 
-  test('keep drawing when motion is allowed', async ({ page }) => {
+  test('holds still, fully drawn, under reduced motion', async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+    await page.route('**/api/where', (route) => route.fulfill({ json: { visitor: AUSTIN } }))
+    const map = await openMap(page)
+    await expect(map).toHaveAttribute('data-mode', 'still')
+    // The line to the visitor is drawn at once and labelled.
+    await expect(map.locator('[data-on]', { hasText: 'near Austin, TX' })).toBeVisible()
+    // It draws once per change (the start, the visitor's answer, a late resize
+    // as the page settles), never in a loop.
+    await expect(map).toHaveAttribute('data-running', 'false')
+    await page.waitForTimeout(800)
+    const before = await frames(map)
+    await page.waitForTimeout(1500)
+    expect(await frames(map)).toBe(before)
+    expect(before).toBeLessThan(6)
+  })
+
+  test('moves on screen and pauses off screen', async ({ page }) => {
     await page.emulateMedia({ reducedMotion: 'no-preference' })
+    const map = await openMap(page)
+    test.skip(
+      (await map.getAttribute('data-renderer')) === '2d',
+      'no WebGL2 in this browser: the map is the still 2D picture (tests/lab.spec.ts)'
+    )
+    await expect(map).toHaveAttribute('data-mode', 'moving')
+    await expect(map).toHaveAttribute('data-running', 'true')
+    const before = await frames(map)
+    await expect.poll(() => frames(map)).toBeGreaterThan(before + 2)
+    await page.locator('footer').scrollIntoViewIfNeeded()
+    await expect(map).toHaveAttribute('data-running', 'false')
+    const paused = await frames(map)
+    await page.waitForTimeout(800)
+    expect(await frames(map)).toBe(paused)
+  })
+
+  test('says what it shows to screen readers, and hides the drawing', async ({ page }) => {
+    await page.route('**/api/where', (route) => route.fulfill({ json: { visitor: AUSTIN } }))
+    // Before the map loads, the card already says it.
     await page.goto('/')
-    const arcs = page.locator('.neon-path')
-    await arcs.first().scrollIntoViewIfNeeded()
-    await expect(arcs).toHaveCount(3)
-    const before = await offsets(page)
-    await expect.poll(() => offsets(page)).not.toEqual(before)
+    const slot = page.locator('[data-bold-map-slot]')
+    await expect(slot.locator('.sr-only')).toHaveText(
+      'A map of the United States with lines from Los Angeles, where Nathan is based, to the tech hubs he would move to.'
+    )
+    const map = await openMap(page)
+    await expect(map.locator('.sr-only')).toHaveText(
+      /the tech hubs he would move to\. You seem to be near Austin, TX, about 1,230 miles away\./
+    )
+    await expect(map.locator('canvas')).toHaveAttribute('aria-hidden', 'true')
+    // No caption over the map (owner, 2026-11-25): the sentence says what the lines are.
+    await expect(slot.getByText(/TECH HUBS|OPEN TO ANYWHERE/)).toHaveCount(0)
+  })
+
+  test('his avatar grows on hover and on a tap, and eases back', async ({ page, isMobile }) => {
+    // The sizes are checked on the still map: a moving map in a browser that
+    // draws WebGL in software (CI, a busy machine) makes every layout read
+    // slow. The ease itself is checked at the end, with motion allowed.
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+    const map = await openMap(page)
+    const avatar = map.getByRole('button', { name: 'Nathan Watkins, in Los Angeles' })
+    const picture = avatar.locator('span').first()
+    const size = async () => (await picture.boundingBox())!.width
+    // 36px at rest on the card (44px large), 50px grown (60px large): modest
+    // (owner, 2026-11-25: "my head gets a little too large").
+    await page.mouse.move(0, 0)
+    await expect.poll(size).toBeLessThan(40)
+    if (!isMobile) {
+      const box = (await map.boundingBox())!
+      await page.mouse.move(box.x + box.width * 0.6, box.y + box.height * 0.45)
+      await expect.poll(size).toBeGreaterThan(46)
+      expect(await size()).toBeLessThan(54)
+      await page.mouse.move(0, 0)
+      await expect.poll(size).toBeLessThan(40)
+    }
+    await (isMobile ? avatar.tap() : avatar.click())
+    await expect(avatar).toHaveAttribute('aria-pressed', 'true')
+    await expect.poll(size).toBeGreaterThan(46)
+    await (isMobile ? avatar.tap() : avatar.click())
+    await expect(avatar).toHaveAttribute('aria-pressed', 'false')
+    if (!isMobile) await page.mouse.move(0, 0)
+    await expect.poll(size).toBeLessThan(40)
+    // With motion allowed, the size and the glow ease over half a second.
+    await page.emulateMedia({ reducedMotion: 'no-preference' })
+    await expect
+      .poll(() => picture.evaluate((el) => getComputedStyle(el).transitionDuration))
+      .toMatch(/^0\.5s/)
+  })
+
+  test('under reduced motion the avatar changes size at once, from the keyboard too', async ({
+    page,
+  }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+    const map = await openMap(page)
+    const avatar = map.getByRole('button', { name: 'Nathan Watkins, in Los Angeles' })
+    await avatar.focus()
+    await avatar.press('Enter')
+    await expect(avatar).toHaveAttribute('aria-pressed', 'true')
+    // No transition: the next frame already has the full size.
+    const width = await avatar
+      .locator('span')
+      .first()
+      .evaluate(
+        (el) =>
+          new Promise<number>((done) =>
+            requestAnimationFrame(() => done(el.getBoundingClientRect().width))
+          )
+      )
+    expect(width).toBeGreaterThan(46)
+  })
+
+  test('his avatar sits out over the sea, west of Los Angeles, clear of the chip and the labels', async ({
+    page,
+  }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+    await page.route('**/api/where', (route) => route.fulfill({ json: { visitor: AUSTIN } }))
+    const map = await openMap(page)
+    const avatar = map.getByRole('button', { name: 'Nathan Watkins, in Los Angeles' })
+    // Grown, the largest it gets.
+    await avatar.focus()
+    await avatar.press('Enter')
+    await expect(avatar).toHaveAttribute('aria-pressed', 'true')
+    await expect(map.locator('[data-on]', { hasText: 'near Austin, TX' })).toBeVisible()
+    const r = await map.evaluate((m) => {
+      const box = (el: Element | null) => el!.getBoundingClientRect()
+      const card = box(m)
+      return {
+        card: { l: card.left, t: card.top, r: card.right, b: card.bottom },
+        avatar: box(m.querySelector('button span')),
+        leader: box(m.querySelector('[data-leader]')),
+        chip: box(m.querySelector('[data-chip]')),
+        labels: [...m.querySelectorAll('[data-on]')].map((e) => e.getBoundingClientRect()),
+      }
+    })
+    const overlap = (a: DOMRect, b: DOMRect) =>
+      a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top
+    // Inside the card.
+    expect(r.avatar.left).toBeGreaterThanOrEqual(r.card.l)
+    expect(r.avatar.top).toBeGreaterThanOrEqual(r.card.t)
+    expect(r.avatar.right).toBeLessThanOrEqual(r.card.r)
+    // West of Los Angeles: the leader runs from the city (its right end) out to the avatar.
+    expect(r.leader.width).toBeGreaterThan(4)
+    expect(r.avatar.left + r.avatar.width / 2).toBeLessThan(r.leader.right)
+    expect(overlap(r.avatar, r.chip)).toBe(false)
+    for (const label of r.labels) expect(overlap(r.avatar, label)).toBe(false)
+  })
+
+  test('a visitor in the LA area: no line, no label of their own, the chip greets them', async ({
+    page,
+  }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+    await page.route('**/api/where', (route) =>
+      route.fulfill({ json: { visitor: { kind: 'here', at: [-118, 34], near: 'Pasadena, CA' } } })
+    )
+    const map = await openMap(page)
+    await expect(map).toHaveAttribute('data-visitor', 'here')
+    const chip = map.locator('[data-chip]')
+    await expect(chip).toContainText('Los Angeles · home base')
+    await expect(chip.locator('[data-neighbour]')).toHaveText('Hey, neighbor')
+    // Both lines inside the card, even on a phone.
+    const [c, m] = [(await chip.boundingBox())!, (await map.boundingBox())!]
+    expect(c.x).toBeGreaterThanOrEqual(m.x)
+    expect(c.x + c.width).toBeLessThanOrEqual(m.x + m.width)
+    // Los Angeles is named once on the card, and no "You" label repeats it.
+    await expect(map.getByText(/^You\b/)).toHaveCount(0)
+    expect(await map.evaluate((m) => (m.textContent!.match(/Los Angeles/g) ?? []).length)).toBe(
+      // The chip once, and the screen-reader sentence twice ("lines from Los
+      // Angeles", "in the Los Angeles area too").
+      3
+    )
+    await expect(map.locator('.sr-only')).toHaveText(/You seem to be in the Los Angeles area too\./)
+  })
+
+  test('the pointer names only a tech hub: near one it names it, anywhere else nothing', async ({
+    page,
+    isMobile,
+  }) => {
+    test.skip(isMobile, 'A phone has no hover; a resting finger works the same way.')
+    await page.emulateMedia({ reducedMotion: 'no-preference' })
+    await page.route('**/api/where', (route) => route.fulfill({ json: { visitor: null } }))
+    const map = await openMap(page)
+    test.skip(
+      (await map.getAttribute('data-renderer')) === '2d',
+      'no WebGL2 in this browser: the still map takes no pointer'
+    )
+    const box = (await map.boundingBox())!
+    const hubs = JSON.parse((await map.getAttribute('data-hubs'))!) as [string, number, number][]
+    expect(hubs.map((h) => h[0])).toContain('Denver, CO')
+    // Away from every hub (and over the card, which grows the avatar): no pointer label.
+    const far = { x: box.width * 0.5, y: box.height * 0.08 }
+    for (const [, x, y] of hubs) expect(Math.hypot(x - far.x, y - far.y)).toBeGreaterThan(40)
+    await page.mouse.move(box.x + far.x, box.y + far.y)
+    await page.waitForTimeout(800)
+    await expect(map.locator('[data-hover]')).toHaveCount(0)
+    // On a hub: that hub, with its real distance.
+    const [, dx, dy] = hubs.find((h) => h[0] === 'Denver, CO')!
+    await page.mouse.move(box.x + dx + 6, box.y + dy - 4)
+    await expect(map.locator('[data-hover]')).toHaveText(/^Denver, CO · 830 mi$/)
+  })
+
+  test('the routes go to the curated tech hubs, in their order', async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'no-preference' })
+    await page.route('**/api/where', (route) => route.fulfill({ json: { visitor: null } }))
+    const map = await openMap(page)
+    test.skip(
+      (await map.getAttribute('data-renderer')) === '2d',
+      'no WebGL2 in this browser: the still map shows every hub at once'
+    )
+    // The arrivals are named one at a time; collect a few.
+    const seen = new Set<string>()
+    await expect
+      .poll(
+        async () => {
+          for (const t of await map.locator('[data-on]').allInnerTexts()) seen.add(t.split(' · ')[0])
+          return seen.size
+        },
+        { timeout: 30_000 }
+      )
+      .toBeGreaterThanOrEqual(2)
+    const hubs = [
+      'New York, NY',
+      'Seattle, WA',
+      'Austin, TX',
+      'Boston, MA',
+      'Denver, CO',
+      'Miami, FL',
+      'San Francisco, CA',
+      'Washington, DC',
+      'Salt Lake City, UT',
+      'Atlanta, GA',
+      'Chicago, IL',
+      'Raleigh, NC',
+    ]
+    for (const name of seen) expect(hubs, `${name} is a tech hub`).toContain(name)
+  })
+
+  test('draws a line to the visitor when /api/where answers with a point', async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+    await page.route('**/api/where', (route) => route.fulfill({ json: { visitor: AUSTIN } }))
+    const map = await openMap(page)
+    await expect(map).toHaveAttribute('data-visitor', 'us')
+    await expect(
+      map.locator('[data-on]', { hasText: /You · near Austin, TX · 1,230 mi/ })
+    ).toBeVisible()
+  })
+
+  for (const [name, answer] of [
+    ['answers empty', { json: { visitor: null } }],
+    ['fails', { status: 500, body: 'no' }],
+    ['answers with something else', { json: { visitor: { kind: 'us', at: 'Austin', mi: 5 } } }],
+    ['is rate limited', { status: 429, json: { visitor: null } }],
+  ] as const) {
+    test(`draws no line when /api/where ${name}`, async ({ page }) => {
+      await page.emulateMedia({ reducedMotion: 'reduce' })
+      let asked = false
+      await page.route('**/api/where', (route) => {
+        asked = true
+        return route.fulfill(answer)
+      })
+      const map = await openMap(page)
+      await expect.poll(() => asked).toBe(true)
+      await page.waitForTimeout(500)
+      await expect(map).toHaveAttribute('data-visitor', 'none')
+      await expect(map.locator('[data-on]')).toHaveCount(0)
+      await expect(map.locator('canvas')).toBeAttached()
+    })
+  }
+
+  test('/api/where answers only a coarse visitor, never cached, with no cookie', async ({
+    request,
+  }) => {
+    const res = await request.get('/api/where')
+    expect(res.status()).toBe(200)
+    const headers = res.headers()
+    expect(headers['cache-control']).toContain('no-store')
+    expect(headers['cache-control']).toContain('private')
+    expect(headers['set-cookie']).toBeUndefined()
+    // Off Workers there is no rate limit binding, and the route says so
+    // (lib/whereLimit.ts; on Workers it says ok, limited or error).
+    expect(headers['x-ratelimit-state']).toBe('absent')
+    const body = await res.json()
+    // Off Cloudflare there is no location: no visitor, and nothing else at all.
+    expect(body).toEqual({ visitor: null })
+  })
+
+  test('the home page itself carries no location and asks for none on the server', async ({
+    request,
+  }) => {
+    const res = await request.get('/')
+    const html = await res.text()
+    expect(html).toContain('data-bold-map-slot')
+    expect(html).not.toMatch(/You seem to be|near [A-Z][a-z]+, [A-Z]{2}/)
+    expect(res.headers()['set-cookie']).toBeUndefined()
   })
 })
 

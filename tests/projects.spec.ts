@@ -120,6 +120,67 @@ test('a project card opens its page and its live demo', async ({ page }) => {
   ).not.toHaveCount(0)
 })
 
+type FadeSample = { opacity: number; transforms: string[]; inRow: number }
+type FadeLog = { samples: FadeSample[]; done: boolean }
+
+/**
+ * The control beside a heading must hold still while it fades in: a pointer that
+ * goes down on a link that then moves comes up on something else, and the click
+ * is lost (Firefox on CI, 3 of 40 runs under load, 2026-11-25).
+ *
+ * What is measured is the control against its own row, and its transform, every
+ * frame from before the reveal starts until it is fully shown. Its place in the
+ * viewport is not: a scroll still settling or a card above it loading moves that
+ * by a pixel or three (WebKit on CI) with the control itself standing still.
+ */
+for (const [section, name, role] of [
+  ['#projects', 'Detailed view', 'link'],
+  ['#experience', 'Expand all', 'button'],
+] as const) {
+  test(`"${name}" fades in without moving`, async ({ page }) => {
+    test.setTimeout(90000)
+    await page.goto('/')
+    await page.evaluate(() => document.fonts.ready)
+    const control = page.locator(section).getByRole(role, { name })
+    await control.waitFor({ state: 'attached' })
+    // Sample every frame from here, while the control is still hidden below the fold.
+    await control.evaluate((el) => {
+      const reveal = el.closest('[data-reveal]') as HTMLElement
+      const row = reveal.parentElement as HTMLElement
+      const log: FadeLog = { samples: [], done: false }
+      ;(window as unknown as { __fade: FadeLog }).__fade = log
+      const frame = () => {
+        const opacity = Number(getComputedStyle(reveal).opacity)
+        log.samples.push({
+          opacity,
+          transforms: [getComputedStyle(reveal).transform, getComputedStyle(el).transform],
+          inRow: el.getBoundingClientRect().top - row.getBoundingClientRect().top,
+        })
+        if (opacity === 1 && log.samples.some((s) => s.opacity < 1)) log.done = true
+        else requestAnimationFrame(frame)
+      }
+      requestAnimationFrame(frame)
+    })
+    await control.scrollIntoViewIfNeeded()
+    await expect
+      .poll(() => page.evaluate(() => (window as unknown as { __fade: FadeLog }).__fade.done), {
+        timeout: 30000,
+      })
+      .toBe(true)
+    const { samples } = await page.evaluate(() => (window as unknown as { __fade: FadeLog }).__fade)
+    // The fade was seen from its start: hidden first, then fully shown.
+    expect(samples[0].opacity, 'hidden before the reveal').toBeLessThan(1)
+    // Never lifted, scaled or shifted by a transform.
+    expect(samples.flatMap((s) => s.transforms).filter((t) => t !== 'none')).toEqual([])
+    // And it stays where it is in its own row.
+    const offsets = samples.map((s) => s.inRow)
+    expect(
+      Math.max(...offsets) - Math.min(...offsets),
+      `offsets in its row: ${offsets.join(', ')}`
+    ).toBeLessThan(0.5)
+  })
+}
+
 test('"Detailed view" opens /projects, with every project at full size', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.goto('/')
@@ -187,4 +248,290 @@ test("a project page's footer links my sites with their marks", async ({ page })
   await expect(
     page.locator('footer').getByRole('link', { name: /Built in public at n8builds\.dev/ })
   ).toBeVisible()
+})
+
+/**
+ * The pixel marks (owner, 2026-11-24 and 25): on wide screens (Tailwind's xl,
+ * 80rem) each card takes 60% of the row, on alternating sides, and its
+ * project's mark (Portfolio Rank's podium, NetTrailers' play button, Wren's
+ * bird) is drawn from the section's grid squares beside it. Hovering a mark
+ * plays its easter egg; clicking the open grid around the bird drops a seed it
+ * eats. The marks are decorative, never cover a card, keep still under
+ * reduced motion and do nothing while off screen.
+ *
+ * Every check waits for a settled state (a mark's `data-in`, a card that has
+ * stopped moving) before it measures or clicks: the reveal animations move
+ * their targets, and clicking a moving target is what made two tests flaky.
+ */
+const WIDE = { width: 1440, height: 900 }
+const KINDS = ['rank', 'play', 'wren'] as const
+type Kind = (typeof KINDS)[number]
+const markOf = (page: Page, kind: Kind) => page.locator(`[data-mark="${kind}"]`)
+/** Lit squares in a mark, its seeds, notes and crown included. */
+const litIn = (page: Page, kind: Kind) => markOf(page, kind).locator('i[data-lit]').count()
+const seedsIn = (page: Page) => markOf(page, 'wren').locator('[data-k="S"]').count()
+
+/** Opens the home page wide, centres a mark on screen and waits until it has flipped in. */
+async function showMark(page: Page, kind: Kind) {
+  await page.setViewportSize(WIDE)
+  await page.goto('/')
+  const mark = markOf(page, kind)
+  await mark.evaluate((el) => el.scrollIntoView({ block: 'center', behavior: 'instant' }))
+  await expect(mark).toHaveAttribute('data-in', '', { timeout: 15000 })
+  return mark
+}
+
+/**
+ * Waits until every mark has been snapped onto the grid beside its card
+ * (`data-ready`; until then it is hidden at the row's corner), when the
+ * window is wide enough for marks at all.
+ */
+async function placed(page: Page) {
+  if (await page.evaluate(() => matchMedia('(min-width: 80rem)').matches))
+    await expect(page.locator('[data-mark][data-ready]')).toHaveCount(KINDS.length)
+}
+
+/** Waits until an element's box has stopped moving (its reveal is over). */
+async function settled(page: Page, selector: string) {
+  let last = ''
+  await expect
+    .poll(async () => {
+      const box = JSON.stringify(await page.locator(selector).first().boundingBox())
+      const same = box === last
+      last = box
+      return same
+    }, { intervals: [250], timeout: 15000 })
+    .toBe(true)
+}
+
+/**
+ * How many changes the marks and the grid's lit cells make over `ms` (the rest
+ * of the section, the build teaser's carousel and the clips, has its own life).
+ */
+function changesIn(page: Page, ms: number) {
+  return page.evaluate(
+    (ms) =>
+      new Promise<number>((done) => {
+        let n = 0
+        const watch = new MutationObserver((records) => (n += records.length))
+        for (const el of document.querySelectorAll('[data-mark], [data-marks-grid]'))
+          watch.observe(el, { subtree: true, childList: true, attributes: true })
+        setTimeout(() => (watch.disconnect(), done(n)), ms)
+      }),
+    ms
+  )
+}
+
+/** A point in the bird's yard, outside the bird's own box, `row` cells below the yard's top. */
+async function yardPoint(page: Page, row = 0) {
+  return markOf(page, 'wren').evaluate((el, row) => {
+    const yard = el.querySelector('[data-yard]')!.getBoundingClientRect()
+    const bird = el.getBoundingClientRect()
+    const x = yard.right - 26 > bird.right ? yard.right - 26 : yard.left + 26
+    return { x, y: yard.top + 26 + row * 52, step: x > bird.right ? -52 : 52 }
+  }, row)
+}
+
+test('below the wide layout the cards are full width and no mark is drawn', async ({ page, isMobile }) => {
+  if (!isMobile) await page.setViewportSize({ width: 1279, height: 900 })
+  await page.goto('/')
+  for (const kind of KINDS) {
+    await expect(markOf(page, kind)).toBeAttached()
+    expect(await markOf(page, kind).evaluate((el) => getComputedStyle(el).display), kind).toBe('none')
+  }
+  const shares = await page.locator('[data-mark]').evaluateAll((marks) =>
+    marks.map((m) => {
+      const row = m.parentElement!.getBoundingClientRect()
+      return m.parentElement!.firstElementChild!.getBoundingClientRect().width / row.width
+    })
+  )
+  for (const share of shares) expect(share).toBeCloseTo(1, 2)
+})
+
+test.describe('pixel marks', () => {
+  test.skip(({ isMobile }) => isMobile, 'The marks are drawn on wide screens only.')
+  test.describe.configure({ timeout: 60000 })
+
+  test('the cards alternate sides beside their marks, Portfolio Rank, NetTrailers, Wren', async ({
+    page,
+  }) => {
+    await page.setViewportSize(WIDE)
+    await page.goto('/')
+    await placed(page)
+    await expect(page.locator('#projects article h3')).toHaveText(['Portfolio Rank', 'NetTrailers', 'Wren'])
+    const rows = await page.locator('[data-mark]').evaluateAll((marks) =>
+      marks.map((m) => {
+        const row = m.parentElement!.getBoundingClientRect()
+        const card = m.parentElement!.firstElementChild!.getBoundingClientRect()
+        return {
+          kind: (m as HTMLElement).dataset.mark,
+          share: card.width / row.width,
+          cardLeft: Math.round(card.left - row.left),
+          cardRight: Math.round(row.right - card.right),
+          markRightOfCard: m.getBoundingClientRect().left >= card.right,
+        }
+      })
+    )
+    expect(rows.map((r) => r.kind)).toEqual(['rank', 'play', 'wren'])
+    rows.forEach((row, i) => {
+      expect(row.share, row.kind).toBeCloseTo(0.6, 2)
+      // Left, right, left; the mark always on the open side.
+      expect(i % 2 === 0 ? row.cardLeft : row.cardRight, row.kind).toBe(0)
+      expect(row.markRightOfCard, row.kind).toBe(i % 2 === 0)
+    })
+  })
+
+  test('each mark is drawn at the wide layout, hidden from screen readers, with nothing focusable', async ({
+    page,
+  }) => {
+    for (const width of [1280, 1920]) {
+      await page.setViewportSize({ width, height: 900 })
+      await page.goto('/')
+      // At 1280 exactly a browser with a classic scrollbar (WebKit on Linux)
+      // is just under 80rem: there, like the cards, the marks follow the
+      // breakpoint, not the window.
+      const wide = await page.evaluate(() => matchMedia('(min-width: 80rem)').matches)
+      if (width === 1920) expect(wide).toBe(true)
+      for (const kind of KINDS) {
+        const mark = markOf(page, kind)
+        expect(await mark.evaluate((el) => getComputedStyle(el).display), `${kind} at ${width}`).toBe(
+          wide ? 'block' : 'none'
+        )
+        await expect(mark).toHaveAttribute('aria-hidden', 'true')
+        await expect(mark.locator('a, button, input, select, textarea, [tabindex]')).toHaveCount(0)
+      }
+    }
+  })
+
+  test('a mark flips in when its card comes into view and out when it leaves', async ({ page }) => {
+    const mark = await showMark(page, 'play')
+    expect(await litIn(page, 'play')).toBeGreaterThan(0)
+    await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }))
+    await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0)
+    // The flip out waits for the browser's intersection callback, which a
+    // busy machine can hold back for a few seconds.
+    await expect.poll(() => litIn(page, 'play'), { timeout: 15000 }).toBe(0)
+    await expect(mark).not.toHaveAttribute('data-in')
+    await mark.evaluate((el) => el.scrollIntoView({ block: 'center', behavior: 'instant' }))
+    await expect(mark).toHaveAttribute('data-in', '', { timeout: 15000 })
+    expect(await litIn(page, 'play')).toBeGreaterThan(0)
+  })
+
+  const EGGS: [Kind, string, string][] = [
+    ['rank', 'the podium races and the winner is crowned', '[data-k="K"]'],
+    ['play', 'the play button plays an equaliser', '[data-k="P"][data-lit]'],
+    ['wren', 'the bird sings', '[data-k="N"]'],
+  ]
+  for (const [kind, what, sign] of EGGS) {
+    test(`hovering the ${kind} mark plays its easter egg: ${what}`, async ({ page }) => {
+      const mark = await showMark(page, kind)
+      await expect(mark.locator(sign)).toHaveCount(0)
+      await mark.locator('[data-core]').hover()
+      // An idle action may be playing; the egg follows it.
+      await expect(mark.locator(sign).first()).toBeAttached({ timeout: 15000 })
+    })
+  }
+
+  test('clicking beside the bird drops a seed, and the bird eats it', async ({ page }) => {
+    await showMark(page, 'wren')
+    // Start from an empty yard (the bird finds a seed by itself now and then).
+    await expect.poll(() => seedsIn(page), { timeout: 20000 }).toBe(0)
+    const { x, y } = await yardPoint(page)
+    await page.mouse.click(x, y)
+    expect(await seedsIn(page)).toBeGreaterThanOrEqual(1)
+    await expect.poll(() => seedsIn(page), { timeout: 20000 }).toBe(0)
+  })
+
+  test('at most four seeds wait for the bird at once', async ({ page }) => {
+    await showMark(page, 'wren')
+    await expect.poll(() => seedsIn(page), { timeout: 20000 }).toBe(0)
+    const { x, y, step } = await yardPoint(page)
+    let most = 0
+    for (let n = 0; n < 6; n++) {
+      await page.mouse.click(x + n * step, y)
+      most = Math.max(most, await seedsIn(page))
+    }
+    expect(most).toBe(4)
+    await expect.poll(() => seedsIn(page), { timeout: 30000 }).toBe(0)
+  })
+
+  test('the marks never cover a card, and the cards still open', async ({ page }) => {
+    for (const width of [1280, 1440, 1920]) {
+      await page.setViewportSize({ width, height: 900 })
+      await page.goto('/')
+      await placed(page)
+      const overlaps = await page.locator('[data-mark]').evaluateAll((marks) =>
+        marks.flatMap((m) => {
+          const card = m.parentElement!.firstElementChild!.getBoundingClientRect()
+          return [...m.querySelectorAll('[data-core], [data-yard]')]
+            .map((z) => z.getBoundingClientRect())
+            .filter((z) => z.width > 0)
+            .filter((z) => z.left < card.right && z.right > card.left && z.top < card.bottom && z.bottom > card.top)
+            .map(() => (m as HTMLElement).dataset.mark)
+        })
+      )
+      expect(overlaps, `at ${width}`).toEqual([])
+    }
+    await showMark(page, 'wren')
+    const story = card(page, 'Wren').getByRole('link', { name: 'Read the full story of Wren' })
+    await settled(page, 'article[aria-label="Wren"]')
+    await story.click()
+    await expect(page).toHaveURL(/\/projects\/wren$/, { timeout: 30000 })
+  })
+
+  test('under reduced motion the marks keep still and drop no seeds', async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+    await page.setViewportSize(WIDE)
+    await page.goto('/')
+    const bird = markOf(page, 'wren')
+    await bird.evaluate((el) => el.scrollIntoView({ block: 'center', behavior: 'instant' }))
+    await expect(bird).toHaveAttribute('data-still', '')
+    await expect(bird.locator('[data-core]')).toBeHidden()
+    await expect(bird.locator('[data-yard]')).toBeHidden()
+    const before = await litIn(page, 'wren')
+    expect(before).toBeGreaterThan(0)
+    // Click where the yard would be, beside the bird.
+    const box = (await bird.boundingBox())!
+    await page.mouse.click(box.x + box.width + 26, box.y - 26)
+    // Once the grid has placed its still set, nothing changes for a few seconds.
+    await page.waitForTimeout(1000)
+    expect(await changesIn(page, 3000)).toBe(0)
+    expect(await seedsIn(page)).toBe(0)
+    expect(await litIn(page, 'wren')).toBe(before)
+  })
+
+  test('nothing in the section runs while it is off screen', async ({ page }) => {
+    await showMark(page, 'wren')
+    await page.evaluate(() =>
+      window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'instant' })
+    )
+    for (const kind of KINDS) await expect.poll(() => litIn(page, kind), { timeout: 15000 }).toBe(0)
+    // Let the last flips and the grid's fades finish, then watch.
+    await page.waitForTimeout(2500)
+    expect(await changesIn(page, 4000)).toBe(0)
+  })
+
+  test.describe('on a touch screen', () => {
+    test.use({ hasTouch: true })
+
+    test('a tap on a mark plays it once, and a tap beside the bird drops a seed', async ({ page }) => {
+      const podium = await showMark(page, 'rank')
+      const box = (await podium.boundingBox())!
+      await page.touchscreen.tap(box.x + box.width / 2, box.y + box.height / 2)
+      const crown = podium.locator('[data-k="K"]')
+      await expect(crown).toBeAttached({ timeout: 15000 })
+      await expect(crown).toHaveCount(0, { timeout: 15000 })
+      // Nothing is left hovered: no second race starts by itself.
+      await page.waitForTimeout(4500)
+      await expect(crown).toHaveCount(0)
+
+      await markOf(page, 'wren').evaluate((el) => el.scrollIntoView({ block: 'center', behavior: 'instant' }))
+      await expect(markOf(page, 'wren')).toHaveAttribute('data-in', '', { timeout: 15000 })
+      await expect.poll(() => seedsIn(page), { timeout: 20000 }).toBe(0)
+      const { x, y } = await yardPoint(page)
+      await page.touchscreen.tap(x, y)
+      expect(await seedsIn(page)).toBeGreaterThanOrEqual(1)
+      await expect.poll(() => seedsIn(page), { timeout: 20000 }).toBe(0)
+    })
+  })
 })

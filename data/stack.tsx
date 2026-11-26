@@ -12,10 +12,8 @@ import {
   SiClaude,
   SiClerk,
   SiCloudflare,
-  SiCursor,
   SiDrizzle,
   SiEslint,
-  SiFigma,
   SiFirebase,
   SiGit,
   SiGithubactions,
@@ -33,7 +31,6 @@ import {
   SiTailwindcss,
   SiTurso,
   SiTypescript,
-  SiUpstash,
   SiVercel,
   SiVite,
   SiZod,
@@ -45,8 +42,79 @@ import { FaAws } from 'react-icons/fa6'
 export interface AIStackItem {
   name: string
   icon: ReactElement
+  /**
+   * How I use it, in my own words (owner, 2026-11-25: what I use it for, not
+   * what it is). Short: it shows on the tile's hover in three lines at most.
+   */
   description: string
+  /** The project the description names, linked (see StackLink). */
+  link?: StackLink
 }
+
+/**
+ * A project a tile's description names, made a link (owner, 2026-11-25: "check
+ * out my VoiceDock extension that uses it"). `text` is the words in the
+ * description that become the link, exactly as written there. Where it goes
+ * depends on the site showing the tile (stackLinkHref): a project on the
+ * portfolio scrolls to its card on the home page there, a build opens its
+ * page on n8builds.dev.
+ */
+export interface StackLink {
+  text: string
+  /** Its page on n8builds.dev: /builds/<build>. */
+  build?: string
+  /**
+   * A project on the portfolio. There it is its card on the home page
+   * (/#project-<project>, which scrolls to the card); from n8builds.dev it is
+   * the project's own page, /projects/<project>.
+   */
+  project?: string
+  /** Any other page, as a full URL (a blog, say). */
+  href?: string
+}
+
+export type StackSite = 'n8builds' | 'portfolio'
+
+const SITE_ORIGIN: Record<StackSite, string> = {
+  n8builds: 'https://n8builds.dev',
+  portfolio: 'https://portfolio.n8builds.dev',
+}
+
+/** The id of a project's card on the portfolio's home page (components/Projects/ProjectRow.tsx). */
+export const projectAnchor = (project: string) => `project-${project}`
+
+/**
+ * Where a tile's link goes on `site`: the project's place on that site when it
+ * has one there, else its page on the other site. `external` says it leaves
+ * the site (it then opens in a new tab). On the portfolio a project is its
+ * card on the home page (owner, 2026-11-25: "scroll us down to the projects"),
+ * which the home page scrolls to (lib/projectAnchor.ts there).
+ */
+export function stackLinkHref(link: StackLink, site: StackSite): { href: string; external: boolean } {
+  // [the site, the path from that site, the path from the other site]
+  const pages: [StackSite, string | undefined, string | undefined][] = [
+    ['n8builds', link.build && `/builds/${link.build}`, link.build && `/builds/${link.build}`],
+    ['portfolio', link.project && `/#${projectAnchor(link.project)}`, link.project && `/projects/${link.project}`],
+  ]
+  const own = pages.find(([where, path]) => where === site && path)
+  if (own) return { href: own[1]!, external: false }
+  const other = pages.find(([, , path]) => path)
+  if (other) return { href: SITE_ORIGIN[other[0]] + other[2], external: true }
+  const url = link.href ?? ''
+  if (url.startsWith(SITE_ORIGIN[site] + '/')) return { href: url.slice(SITE_ORIGIN[site].length), external: false }
+  return { href: url, external: true }
+}
+
+// The projects the tiles link to. Never Wren: it left n8builds.dev at the
+// owner's request (2026-11-11, "Wren should not be in my n8builds"), and this
+// file shows on both sites, so no line names it.
+const SCRIBE = { build: 'scribe' }
+const VOICEDOCK = { build: 'voicedock' }
+const OPENPING = { build: 'openping' }
+const SOLARA = { build: 'solara' }
+const TLDW = { build: 'tldw' }
+const PORTFOLIO_RANK = { build: 'portfolio-rank', project: 'portfolio-rank' }
+const NET_TRAILERS = { project: 'net-trailers' }
 
 const ICON = 'w-7 h-7'
 
@@ -121,7 +189,7 @@ function PiMark({ className, style }: MarkProps) {
 }
 
 // Colours: the brands' own, lifted where a dark mark would vanish on the dark
-// tiles (Cursor, OpenAI and ggml are black-and-white marks: light here).
+// tiles (OpenAI and ggml are black-and-white marks: light here).
 const LIGHT = '#e6edf6'
 
 /**
@@ -134,21 +202,41 @@ export const rowDuration = (tiles: number) => `${Math.round(tiles * 11.3)}s`
 
 // Row 1 - agents & models (the heavy lifters)
 export const ai_agents: AIStackItem[] = [
-  { name: 'Claude Code', icon: <SiClaude className={ICON} style={{ color: '#D97757' }} />, description: 'My pair-programmer - I build most things here now.' },
+  { name: 'Claude Code', icon: <SiClaude className={ICON} style={{ color: '#D97757' }} />, description: 'Where I build everything now, one pull request at a time.' },
   { name: 'Claude Opus 5.5', icon: <SiAnthropic className={ICON} style={{ color: '#F0EEE6' }} />, description: 'The model behind Claude Code when I build.' },
-  { name: 'ChatGPT', icon: <BsOpenai className={ICON} style={{ color: LIGHT }} />, description: 'Where I talk a problem through before building.' },
-  { name: 'Codex', icon: <BsOpenai className={ICON} style={{ color: LIGHT }} />, description: 'A second opinion when a fix gets stubborn.' },
+  // The owner's orchestrator (2026-11-25): Anthropic's mark, as on Opus beside it.
+  { name: 'Claude Fable 5.2', icon: <SiAnthropic className={ICON} style={{ color: '#F0EEE6' }} />, description: 'My orchestrator. It plans the work and directs the other agents.' },
+  { name: 'ChatGPT', icon: <BsOpenai className={ICON} style={{ color: LIGHT }} />, description: 'Where I plan a build first, often out loud in voice mode.' },
+  { name: 'Codex', icon: <BsOpenai className={ICON} style={{ color: LIGHT }} />, description: 'My second opinion when a bug fights back.' },
   { name: 'Pi', icon: <PiMark className={ICON} style={{ color: LIGHT }} />, description: 'A minimal agent harness that runs any model.' },
-  { name: 'Cursor', icon: <SiCursor className={ICON} style={{ color: LIGHT }} />, description: 'Inline, context-aware edits when my hands are on the keys.' },
-  { name: 'OpenAI', icon: <BsOpenai className={ICON} style={{ color: LIGHT }} />, description: 'Generation pipelines and structured outputs.' },
-  { name: 'Gemini', icon: <SiGooglegemini className={ICON} style={{ color: '#4285F4' }} />, description: 'Long-context summarization in my extensions.' },
+  {
+    name: 'Gemini',
+    icon: <SiGooglegemini className={ICON} style={{ color: '#4285F4' }} />,
+    description: 'The AI in my apps: Portfolio Rank, NetTrailers and TL;DW.',
+    link: { text: 'Portfolio Rank', ...PORTFOLIO_RANK },
+  },
 ]
 
 // Row 2 - local-first & tooling (whisper.cpp powers Scribe, Piper and Kokoro power the VoiceDock extension)
 export const ai_tools: AIStackItem[] = [
-  { name: 'whisper.cpp', icon: <GgmlMark className={ICON} style={{ color: LIGHT }} />, description: 'Local speech-to-text (powers Scribe).' },
-  { name: 'Piper', icon: <PiperMark className={ICON} style={{ color: LIGHT }} />, description: 'Local text-to-speech (one of the voice engines in my VoiceDock extension).' },
-  { name: 'Hugging Face', icon: <SiHuggingface className={ICON} style={{ color: '#FFD21E' }} />, description: 'Models and datasets to pull from.' },
+  {
+    name: 'whisper.cpp',
+    icon: <GgmlMark className={ICON} style={{ color: LIGHT }} />,
+    description: 'Local speech to text. Scribe runs on it, and I dictate with it all day.',
+    link: { text: 'Scribe', ...SCRIBE },
+  },
+  {
+    name: 'Piper',
+    icon: <PiperMark className={ICON} style={{ color: LIGHT }} />,
+    description: 'Local text to speech. My VoiceDock extension reads pages aloud with it.',
+    link: { text: 'VoiceDock', ...VOICEDOCK },
+  },
+  {
+    name: 'Hugging Face',
+    icon: <SiHuggingface className={ICON} style={{ color: '#FFD21E' }} />,
+    description: 'Where Scribe and VoiceDock download their models and voices.',
+    link: { text: 'Scribe', ...SCRIBE },
+  },
 ]
 
 // Row 3 (the portfolio's second row) - the stack I ship with, roughly
@@ -156,34 +244,98 @@ export const ai_tools: AIStackItem[] = [
 // show light or in another of their brand colours: the sites use no purple.
 export const dev_stack: AIStackItem[] = [
   { name: 'Next.js', icon: <SiNextdotjs className={ICON} style={{ color: LIGHT }} />, description: 'Every web app I make starts here.' },
-  { name: 'React', icon: <SiReact className={ICON} style={{ color: '#61DAFB' }} />, description: 'The UI layer under all of it.' },
+  { name: 'React', icon: <SiReact className={ICON} style={{ color: '#61DAFB' }} />, description: 'My UI, in web apps and Chrome extensions alike.' },
   { name: 'TypeScript', icon: <SiTypescript className={ICON} style={{ color: '#3178C6' }} />, description: 'Strict mode everywhere.' },
-  { name: 'Tailwind CSS', icon: <SiTailwindcss className={ICON} style={{ color: '#06B6D4' }} />, description: 'Styling right in the markup.' },
-  { name: 'Zod', icon: <SiZod className={ICON} style={{ color: '#3E67B1' }} />, description: 'Validates forms and API input, typed end to end.' },
+  { name: 'Tailwind CSS', icon: <SiTailwindcss className={ICON} style={{ color: '#06B6D4' }} />, description: 'How I style every project I ship.' },
+  {
+    name: 'Zod',
+    icon: <SiZod className={ICON} style={{ color: '#3E67B1' }} />,
+    description: "Checks every form and API input. OpenPing's API runs on it.",
+    link: { text: 'OpenPing', ...OPENPING },
+  },
   { name: 'ShadCN', icon: <SiShadcnui className={ICON} style={{ color: LIGHT }} />, description: 'Accessible components I own and restyle.' },
-  { name: 'Vite', icon: <SiVite className={ICON} style={{ color: '#FFC517' }} />, description: 'Fast builds for my apps and extensions outside Next.js.' },
-  { name: 'PostgreSQL', icon: <SiPostgresql className={ICON} style={{ color: '#6B9BD8' }} />, description: 'A full relational database when SQLite is not enough.' },
-  { name: 'Turso', icon: <SiTurso className={ICON} style={{ color: '#4FF8D2' }} />, description: 'SQLite at the edge for my apps.' },
-  { name: 'Drizzle', icon: <SiDrizzle className={ICON} style={{ color: '#C5F74F' }} />, description: 'Type-safe queries, checked against the schema.' },
-  { name: 'Firebase', icon: <SiFirebase className={ICON} style={{ color: '#FFCA28' }} />, description: 'Auth and realtime data for quick builds.' },
-  { name: 'AWS', icon: <FaAws className={ICON} style={{ color: '#FF9900' }} />, description: 'Cloud hosting and storage when a project needs it.' },
-  { name: 'Google Cloud', icon: <SiGooglecloud className={ICON} style={{ color: '#4285F4' }} />, description: 'Google APIs and cloud services.' },
-  { name: 'Vercel', icon: <SiVercel className={ICON} style={{ color: LIGHT }} />, description: 'Push to main and it ships.' },
-  { name: 'Cloudflare', icon: <SiCloudflare className={ICON} style={{ color: '#F38020' }} />, description: 'R2 file storage and Turnstile spam checks.' },
-  { name: 'Sanity', icon: <SiSanity className={ICON} style={{ color: '#F03E2F' }} />, description: 'The CMS behind my blog.' },
-  { name: 'Upstash', icon: <SiUpstash className={ICON} style={{ color: '#00E9A3' }} />, description: 'Redis for rate limits and the dino scores.' },
-  { name: 'Clerk', icon: <SiClerk className={ICON} style={{ color: LIGHT }} />, description: 'Drop-in sign-in and user management.' },
-  { name: 'NextAuth', icon: <SiNextdotjs className={ICON} style={{ color: LIGHT }} />, description: 'Sign-in for Next.js apps I host myself.' },
+  {
+    name: 'Vite',
+    icon: <SiVite className={ICON} style={{ color: '#FFC517' }} />,
+    description: "Builds TL;DW and Scribe's dashboard, where Next.js doesn't fit.",
+    link: { text: 'TL;DW', ...TLDW },
+  },
+  { name: 'PostgreSQL', icon: <SiPostgresql className={ICON} style={{ color: '#6B9BD8' }} />, description: 'Object-relational, for when an app outgrows SQLite.' },
+  {
+    name: 'Turso',
+    icon: <SiTurso className={ICON} style={{ color: '#4FF8D2' }} />,
+    description: "SQLite for my quick apps. Portfolio Rank's votes live here.",
+    link: { text: 'Portfolio Rank', ...PORTFOLIO_RANK },
+  },
+  {
+    name: 'Drizzle',
+    icon: <SiDrizzle className={ICON} style={{ color: '#C5F74F' }} />,
+    description: 'My queries on Turso, checked against the schema. NetTrailers uses it.',
+    link: { text: 'NetTrailers', ...NET_TRAILERS },
+  },
+  {
+    name: 'Firebase',
+    icon: <SiFirebase className={ICON} style={{ color: '#FFCA28' }} />,
+    description: 'Solara runs on it: Google sign-in, sync and hosting.',
+    link: { text: 'Solara', ...SOLARA },
+  },
+  {
+    name: 'AWS',
+    icon: <FaAws className={ICON} style={{ color: '#FF9900' }} />,
+    description: "S3, Lambda and Amplify. Portfolio Rank's screenshots use the S3 API.",
+    link: { text: 'Portfolio Rank', ...PORTFOLIO_RANK },
+  },
+  {
+    name: 'Google Cloud',
+    icon: <SiGooglecloud className={ICON} style={{ color: '#4285F4' }} />,
+    description: "Google's APIs: Calendar in Solara, PageSpeed in Portfolio Rank.",
+    link: { text: 'Solara', ...SOLARA },
+  },
+  { name: 'Vercel', icon: <SiVercel className={ICON} style={{ color: LIGHT }} />, description: 'For quick ones now. My live apps moved to Cloudflare.' },
+  {
+    name: 'Cloudflare',
+    icon: <SiCloudflare className={ICON} style={{ color: '#F38020' }} />,
+    description: 'My go-to: hosting, data and file storage. OpenPing lives on it.',
+    link: { text: 'OpenPing', ...OPENPING },
+  },
+  {
+    name: 'Sanity',
+    icon: <SiSanity className={ICON} style={{ color: '#F03E2F' }} />,
+    description: "Where I write my N8's Notions posts.",
+    link: { text: "N8's Notions", href: 'https://n8builds.dev/blog' },
+  },
+  {
+    name: 'Clerk',
+    icon: <SiClerk className={ICON} style={{ color: LIGHT }} />,
+    description: 'Sign-in on Cutely Ask Me, my date-planner app.',
+    link: { text: 'Cutely Ask Me', href: 'https://n8builds.dev/upcoming#cutelyaskme' },
+  },
+  {
+    name: 'NextAuth',
+    icon: <SiNextdotjs className={ICON} style={{ color: LIGHT }} />,
+    description: 'GitHub sign-in, so Portfolio Rank counts one vote per matchup.',
+    link: { text: 'Portfolio Rank', ...PORTFOLIO_RANK },
+  },
   { name: 'Sentry', icon: <SiSentry className={ICON} style={{ color: LIGHT }} />, description: 'Tells me when something breaks in production.' },
   { name: 'Google Analytics', icon: <SiGoogleanalytics className={ICON} style={{ color: '#E37400' }} />, description: 'Visitor numbers, only with consent.' },
   {
     name: 'Playwright',
     icon: <Image src="/projectIcons/playwright.svg" alt="" width={28} height={28} unoptimized className={ICON} />,
-    description: 'End-to-end tests in five browsers.',
+    description: "Tests every pull request, and takes Portfolio Rank's screenshots.",
+    link: { text: 'Portfolio Rank', ...PORTFOLIO_RANK },
   },
-  { name: 'GitHub Actions', icon: <SiGithubactions className={ICON} style={{ color: '#2088FF' }} />, description: 'CI on every pull request.' },
+  {
+    name: 'GitHub Actions',
+    icon: <SiGithubactions className={ICON} style={{ color: '#2088FF' }} />,
+    description: "CI on every pull request, and Scribe's signed installers.",
+    link: { text: 'Scribe', ...SCRIBE },
+  },
   { name: 'ESLint', icon: <SiEslint className={ICON} style={{ color: LIGHT }} />, description: 'Lint that fails the build on any warning.' },
-  { name: 'Prettier', icon: <SiPrettier className={ICON} style={{ color: '#F7B93E' }} />, description: 'One code style, never argued about.' },
+  {
+    name: 'Prettier',
+    icon: <SiPrettier className={ICON} style={{ color: '#F7B93E' }} />,
+    description: "Keeps Solara's code formatted; lint fails if it isn't.",
+    link: { text: 'Solara', ...SOLARA },
+  },
   { name: 'Git', icon: <SiGit className={ICON} style={{ color: '#F05032' }} />, description: 'Small commits, every change on a branch.' },
-  { name: 'Figma', icon: <SiFigma className={ICON} style={{ color: '#F24E1E' }} />, description: 'Mockups before the code, when a design needs it.' },
 ]

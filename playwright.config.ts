@@ -87,6 +87,9 @@ export default defineConfig({
         STATUS_FIXTURE: '1',
         // n8builds.dev's build log months from a fixture, never the live feed (app/api/build-log).
         BUILD_LOG_FIXTURE: '1',
+        // No Sentry in test runs: without a DSN it sends nothing, so no test page is reported
+        // to the real project as a visitor (lib/sentryDsn.mjs, tests/no-sentry.spec.ts).
+        NEXT_PUBLIC_SENTRY_DISABLED: '1',
       }).filter(([, value]) => value !== undefined)
     ) as Record<string, string>,
   },

@@ -31,15 +31,19 @@ export const aboutPortrait = {
 /**
  * The story, in a few scenes, each with a photo. To add a photo: put it in
  * public/about/ (4:3, at least 1200x900, WebP) and set its `src` here.
+ * Until the owner makes his own (owner, 2026-11-25), the first two are stock
+ * photos (credits in public/about/CREDITS.md) and the setup is a screenshot
+ * of n8builds.dev; their alt text says what is in them, never that it is him.
  */
 export const aboutScenes: Omit<AboutScene, 'body'>[] = [
   {
     id: 'work',
     eyebrow: 'At work',
-    title: 'Building Tech for Pros',
+    title: 'Using AI to help people get things done',
     mood: 'work',
     photo: {
-      alt: 'Nathan at work',
+      src: '/about/at-work.webp',
+      alt: 'An electrician in a yellow hard hat and work gloves wiring a panel on a wall',
       wanted: 'You at work: at your desk, or with a client or team, 4:3 landscape',
     },
   },
@@ -49,7 +53,8 @@ export const aboutScenes: Omit<AboutScene, 'body'>[] = [
     title: 'In LA, and open to moving',
     mood: 'la',
     photo: {
-      alt: 'Nathan in Los Angeles',
+      src: '/about/teaching.webp',
+      alt: 'A man pointing at a laptop screen while a boy beside him follows along',
       wanted: 'LA life: you outdoors somewhere in Los Angeles you like, 4:3 landscape',
     },
   },
@@ -59,7 +64,8 @@ export const aboutScenes: Omit<AboutScene, 'body'>[] = [
     title: 'Where I build in public',
     mood: 'setup',
     photo: {
-      alt: "Nathan's desk setup",
+      src: '/about/n8builds.webp',
+      alt: 'The home page of n8builds.dev',
       wanted: 'Your setup: the desk, screens, keyboard and mic you build and stream from, 4:3 landscape',
     },
   },
