@@ -135,10 +135,16 @@ test('the build log card shows a month, cycles the months, and links the site an
   await expect(site).toHaveAccessibleName(/^n8builds\.dev/)
   await expect(log.locator('img')).toHaveCount(0)
   // About the text's height, on its line.
-  const [iconBox, label] = [await icon.boundingBox(), await site.getByText('n8builds.dev').boundingBox()]
+  const iconBox = await icon.boundingBox()
   expect(iconBox!.height).toBeGreaterThan(12)
   expect(iconBox!.height).toBeLessThan(18)
-  expect(Math.abs(iconBox!.y + iconBox!.height / 2 - (label!.y + label!.height / 2))).toBeLessThan(3)
+  // Measured settled: the card's months flow in, and a box read mid-flow is off by pixels.
+  await expect
+    .poll(async () => {
+      const [i, l] = [await icon.boundingBox(), await site.getByText('n8builds.dev').boundingBox()]
+      return Math.abs(i!.y + i!.height / 2 - (l!.y + l!.height / 2))
+    })
+    .toBeLessThan(3)
   await expect(card.getByText('I post everything here')).toBeVisible()
   // Side by side on one line, along the bottom of the card.
   const [a, b, box] = [await site.boundingBox(), await log.boundingBox(), await card.boundingBox()]
