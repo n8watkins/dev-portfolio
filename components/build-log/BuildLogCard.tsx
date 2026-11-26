@@ -750,7 +750,10 @@ export default function BuildLogCard({
                 if (!e.currentTarget.contains(to) && !hovered) pick(null)
               }}
               onKeyDown={(e) => {
-                const at = active ?? lastDay
+                // From the day that has focus now, not the last one drawn: keys pressed faster
+                // than the page draws (WebKit with no frames, 2026-11-25) walked from a stale day.
+                const own = (e.target as HTMLElement).dataset?.index
+                const at = own !== undefined ? Number(own) : (active ?? lastDay)
                 const to =
                   e.key === 'ArrowRight'
                     ? at + 1
