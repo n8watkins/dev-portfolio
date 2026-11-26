@@ -47,7 +47,7 @@ It funnels visitors to the two other sites:
 - `npm test` runs Playwright against a production build on port 4829 (it builds first, or reuses a server already running there locally).
   `E2E_PORT=4839 npm test` uses another port, so a running `npm run dev` on 4829 is not mistaken for the test build.
   No retries: a flaky test gets fixed.
-- Specs: `tests/consent.spec.ts` (the analytics consent banner), `tests/dino.spec.ts` (the dino game on /stack: n8builds.dev's dino tests, kept in step with its `tests/e2e/ai-kit.spec.ts`), `tests/dino-music.spec.ts` (the dino game's music toggle and its sound checked offline, never out loud: n8builds.dev's `tests/e2e/dino-music.spec.ts`), `tests/home.spec.ts` (the footer cards, the n8builds.dev card's links, the build log card, the map arcs, Experience), `tests/about.spec.ts` (the About page and its breadcrumb, the home About teaser's facts, the nav from subpages, the sitemap), `tests/stack.spec.ts` (the stack card's link, /stack and its play area), `tests/projects.spec.ts` (the project cards, /projects and the project pages, the in-progress card, the retired apps' redirects, the status API), `tests/seo.spec.ts` (titles, share cards, no em dashes, no Sentry example routes), `tests/web-vitals.spec.ts` (Web Vitals budgets and axe accessibility), `tests/lab.spec.ts` (the bold map's lab page).
+- Specs: `tests/consent.spec.ts` (the analytics consent banner), `tests/dino.spec.ts` (the dino game on /stack: n8builds.dev's dino tests, kept in step with its `tests/e2e/ai-kit.spec.ts`), `tests/dino-music.spec.ts` (the dino game's music toggle and its sound checked offline, never out loud: n8builds.dev's `tests/e2e/dino-music.spec.ts`), `tests/home.spec.ts` (the footer cards, the n8builds.dev card's links, the build log card, the bold map and `/api/where`, Experience), `tests/about.spec.ts` (the About page and its breadcrumb, the home About teaser's facts, the nav from subpages, the sitemap), `tests/stack.spec.ts` (the stack card's link, /stack and its play area), `tests/projects.spec.ts` (the project cards, /projects and the project pages, the in-progress card, the retired apps' redirects, the status API), `tests/seo.spec.ts` (titles, share cards, no em dashes, no Sentry example routes), `tests/web-vitals.spec.ts` (Web Vitals budgets and axe accessibility), `tests/lab.spec.ts` (the bold map's `/lab/map` test bed).
 - The site scrolls smoothly (`scroll-smooth` on every element), so a test that scrolls must wait for the scroll to stop before hovering or clicking.
 - GitHub Actions (`.github/workflows/ci.yml`): lint, types and build, then the Playwright suite on the same five browsers as n8builds.dev (chromium, firefox, webkit, mobile-chrome, mobile-safari) inside Playwright's Docker image (its version read from `package-lock.json`).
   WebKit and mobile Safari each run as two shards with one worker: they have no GPU in CI, so their frames come slowly (about 10 fps on this page), and competing workers make that worse.
@@ -168,25 +168,27 @@ To add a mark for a new project:
 4. In `components/Projects/PixelMark.tsx`, give it an idle action in `act` and a hover easter egg in `next` (a function like `race` or `play`); anything drawn outside its box is a sprite (`sprite`, `move`, `unsprite`).
 5. Add it to `KINDS` and `EGGS` in the "pixel marks" tests, and check it in Chromium, Firefox and WebKit at 1280, 1440 and 1920.
 
-## The bold map, on trial at /lab/map (owner, 2026-11-24)
+## The bold map in "Ready to relocate" (owner, 2026-11-24 and 2026-11-25)
 
-The owner picked the "bold" 3D map from the stage 1 lab boards (local branch `preview/toys`, `preview/feel/map-bold.html`) to replace the globe picture in "Ready to relocate".
-It is built for real but not on the home page yet: the owner decides after seeing `/lab/map`.
+The owner picked the "bold" 3D map from the stage 1 lab boards (local branch `preview/toys`, `preview/feel/map-bold.html`), tried it at `/lab/map` (#91), then had it replace the globe picture and its gsap arcs on the home page (2026-11-25).
+Round two of his review: his avatar grows (card hover, avatar hover or keyboard focus, a tap), and the city labels are larger and bold.
 
-- `/lab/map` (`app/lab/map/page.tsx`, `components/lab/MapLab.tsx`) is hidden: not in the nav or the sitemap, `noindex`.
-  It shows the new card and the current one at their bento sizes (the home page's own grid classes), then the new map larger.
-  `?from=` places the visitor: `lat,lng`, a listed place (`Denver`, `Austin, TX`), `LA`, `NYC`, or `London` for abroad.
-- The map is `components/ui/BoldMap/`: `BoldMap.tsx` (the card, its labels and the screen-reader text), `engine.ts` (hand-written WebGL2, with a still 2D-canvas fallback), `scene.ts` (one column per grid cell, height from real elevation), `camera.ts`, `shaders.ts`, `geo.ts` (the projection, places and the visitor).
+- The card is `gridItem2` (`data/grid/items/gridItem2.tsx`): `relocateCard(map)` builds it, and the home page's map is `BoldMapLazy`.
+- `components/ui/BoldMap/`: `BoldMapLazy.tsx` (the home card: the backdrop at once, the map's code and data only once the card is within 300px of the viewport), `Backdrop.tsx` (the navy, the band, the caption and the screen-reader sentence, shown before and under the map so nothing moves), `BoldMap.tsx` (the map, its labels, the avatar, and the location request), `engine.ts` (hand-written WebGL2, with a still 2D-canvas fallback), `scene.ts` (one column per grid cell, height from real elevation), `camera.ts`, `shaders.ts`, `geo.ts` (the projection, places and the visitor), `text.ts` (the sentence and the check on the location answer, without the data).
   `mapData.generated.ts` comes from `scripts/map-data/` (Natural Earth, public domain) through `node scripts/gen-map-data.mjs`; never edit it by hand.
-  The card's config is `gridItem2Bold` in `data/grid/items/`; it is not in `gridItems`.
+- The camera fits the lower 48 to the card's width and centres them between the caption and the title.
+  On a card taller than wide (about 353 by 480 from 768 to 1023px) it turns to look from the south-east and more steeply down, so the country runs corner to corner instead of leaving a band of empty sea above the title (`tall` in `camera.ts`); every other width keeps the lab sketch's view.
 - It runs only on screen in a visible tab, and is drawn once and held still under reduced motion.
-  The element carries `data-mode` (moving or still), `data-renderer` (webgl2 or 2d), `data-running` and `data-frames` for the tests.
-- The visitor's line: `lib/visitor.ts` reads Cloudflare's `request.cf` (latitude, longitude, country) through OpenNext's `getCloudflareContext()`, in its sync form so `next dev` falls back to no visitor instead of starting a local Workers runtime.
-  Only a point rounded to half a degree and the name of a listed place near it reach the page; nothing is stored or logged.
-  Only visitors in the lower 48 get a line; within 120 miles of Los Angeles it says "you're here too"; abroad, or with no data, there is no line.
+  The element carries `data-mode` (moving or still), `data-renderer` (webgl2 or 2d), `data-running`, `data-frames` and `data-visitor` (us, here or none) for the tests.
+- **The line to the visitor.** The home page stays prerendered and cached and never carries anyone's location: once the map is up it asks `GET /api/where` (`app/api/where/route.ts`), with no cookies.
+  That route answers `{ visitor }`: null, or a point rounded to half a degree, the name of a listed place near it and the miles from Los Angeles (`lib/visitor.ts`, from Cloudflare's `request.cf` through OpenNext's `getCloudflareContext()`, sync form, so `next dev` and `next start` answer null).
+  Never the IP address or the raw `cf` data; `Cache-Control: private, no-store, max-age=0`; nothing stored or logged.
+  Cloudflare's rate limiter (`WHERE_RATE_LIMIT` in `wrangler.jsonc`, 30 a minute per connection) answers 429 past that.
+  Only visitors in the lower 48 get a line; within 120 miles of Los Angeles the label says "you're here too"; abroad, with no data, on any error or after 5 seconds, there is no line and the map is otherwise the same.
   The privacy page is n8builds.dev's (`/privacy`, in n8builds-web), which says this.
-- To ship it: render `gridItem2Bold(() => <BoldMap visitor={...} />)` in place of `gridItem2`, give it the visitor without making the home page dynamic (it is prerendered and cached; a small `no-store` route that returns `visitorFromRequest()`, fetched after load, keeps it that way, and the line is drawn first anyway), retire `MapDetails`, `MapAnimations`, `public/bento/globe.jpeg` and gsap if nothing else uses them, and move the "map arcs" tests in `tests/home.spec.ts` to the new map.
-- Tests: `tests/lab.spec.ts` (the page, noindex, the sitemap, reduced motion, pausing off screen, the 2D fallback, `?from=`) and `tests/unit/boldMapGeo.test.mts` (the visitor's rounding and limits).
+- `/lab/map` (`app/lab/map/page.tsx`, `components/lab/MapLab.tsx`) stays as a test bed: hidden (not in the nav or the sitemap, `noindex`), it takes the visitor from `?from=` (`lat,lng`, a listed place such as `Denver` or `Austin, TX`, `LA`, `NYC`, or `London` for abroad), so the line can be seen on a local server, which has no Cloudflare location.
+  It shows the card at its home size, then larger.
+- Tests: `tests/home.spec.ts` "the bold map" (lazy loading, reduced motion, pausing off screen, the screen-reader sentence, the avatar, a line or none from each kind of `/api/where` answer, the route's headers and body, and no location in the page), `tests/lab.spec.ts` (the lab page, `?from=`, the 2D fallback) and `tests/unit/boldMapGeo.test.mts` (the visitor's rounding and limits).
 
 ## Tech for Pros (owner, 2026-11-01)
 

@@ -4,15 +4,17 @@ import Image from 'next/image'
 import { useEffect, useRef, useState } from 'react'
 import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion'
 import { latestEntry } from '@/lib/intersection'
-import { createMapEngine } from './engine'
-import { formatMiles, type Visitor } from './geo'
+import Backdrop, { MONO } from './Backdrop'
+import { createMapEngine, type MapEngine } from './engine'
+import type { Visitor } from './geo'
+import { asVisitor } from './text'
 
-const MONO = 'font-mono font-bold leading-none whitespace-nowrap'
 // Place labels: 12px on a phone card, 13px at the bento size, 15px on a large map
 // (owner, 2026-11-25: the old 11px semibold read too small and too thin).
 const TAG = `${MONO} pointer-events-none absolute top-0 left-0 px-2 py-1.5 text-xs opacity-0 data-[on]:opacity-100 @min-[400px]:text-[13px] @min-[700px]:px-2.5 @min-[700px]:py-[7px] @min-[700px]:text-[15px] [&_em]:not-italic [&_em]:text-[#8ee0ff]`
 /** Hidden until the engine has placed what is inside. */
-const PLACED = 'opacity-0 transition-opacity duration-300 group-data-[ready]/map:opacity-100'
+const PLACED =
+  'opacity-0 transition-opacity duration-300 group-data-[ready]/map:opacity-100 motion-reduce:transition-none'
 /** The avatar grows: card hovered, avatar hovered or keyboard-focused, or tapped. */
 const GROW = [
   'group-hover/map:scale-100 group-hover/pin:scale-100 group-focus-visible/pin:scale-100 group-data-[big]/pin:scale-100',
@@ -22,17 +24,8 @@ const GROW = [
   'group-data-[big]/pin:shadow-[0_0_0_3px_#e0f2fe,0_0_46px_12px_rgba(34,211,238,.7),0_12px_28px_rgba(0,0,0,.55)]',
 ].join(' ')
 
-/** What the map says, for screen readers (the map itself is decorative). */
-export function boldMapText(visitor: Visitor | null) {
-  const base =
-    'A map of the United States: Nathan is in Los Angeles, California, and open to relocating anywhere.'
-  if (visitor?.kind === 'us') {
-    const near = visitor.near ? `near ${visitor.near}, ` : ''
-    return `${base} You seem to be ${near}about ${formatMiles(visitor.mi)} miles away.`
-  }
-  if (visitor?.kind === 'here') return `${base} You seem to be in the Los Angeles area too.`
-  return base
-}
+/** Where the home page asks for the visitor's rough location (app/api/where). */
+export const WHERE_URL = '/api/where'
 
 /**
  * The bold 3D map of the "Ready to relocate" card: the site's lit grid raised
@@ -41,18 +34,37 @@ export function boldMapText(visitor: Visitor | null) {
  *
  * It fills its parent (which sets the size, so nothing shifts), runs only on
  * screen in a visible tab, and is drawn once and held still under reduced
- * motion. `visitor` comes from the server, coarse (see geo.ts).
+ * motion.
+ *
+ * The visitor is either given (`visitor`, the lab page's `?from=`) or, with
+ * `locate`, asked for after the map is up from /api/where, so the page around
+ * it stays static and cached and never carries anyone's location. The map is
+ * complete without it; a known visitor just gets a line drawn from that moment.
  */
-export default function BoldMap({ visitor }: { visitor: Visitor | null }) {
+export default function BoldMap({
+  visitor = null,
+  locate = false,
+}: {
+  visitor?: Visitor | null
+  locate?: boolean
+}) {
   const still = usePrefersReducedMotion()
   const card = useRef<HTMLDivElement>(null)
   const stage = useRef<HTMLDivElement>(null)
   const pin = useRef<HTMLButtonElement>(null)
-  const [big, setBig] = useState(false)
   const chip = useRef<HTMLSpanElement>(null)
   const you = useRef<HTMLSpanElement>(null)
   const label = useRef<HTMLSpanElement>(null)
-  const visitorKey = JSON.stringify(visitor)
+  const engine = useRef<MapEngine | null>(null)
+  const [big, setBig] = useState(false)
+  const [located, setLocated] = useState<Visitor | null>(null)
+  const known = located ?? visitor
+  const knownKey = JSON.stringify(known)
+  // The engine is made once per motion setting; it reads the visitor known by then.
+  const knownRef = useRef(known)
+  useEffect(() => {
+    knownRef.current = JSON.parse(knownKey) as Visitor | null
+  }, [knownKey])
 
   useEffect(() => {
     const root = card.current
@@ -63,7 +75,7 @@ export default function BoldMap({ visitor }: { visitor: Visitor | null }) {
     canvas.className = 'absolute inset-0 h-full w-full'
     canvas.setAttribute('aria-hidden', 'true')
     host.replaceChildren(canvas)
-    const engine = createMapEngine(
+    const map = createMapEngine(
       {
         card: root,
         canvas,
@@ -72,12 +84,13 @@ export default function BoldMap({ visitor }: { visitor: Visitor | null }) {
         you: you.current,
         label: label.current,
       },
-      { visitor: JSON.parse(visitorKey) as Visitor | null, still }
+      { visitor: knownRef.current, still }
     )
+    engine.current = map
     root.dataset.ready = 'true'
 
     let onScreen = false
-    const update = () => engine.setActive(onScreen && document.visibilityState === 'visible')
+    const update = () => map.setActive(onScreen && document.visibilityState === 'visible')
     const io = new IntersectionObserver((entries) => {
       onScreen = latestEntry(entries).isIntersecting
       update()
@@ -88,7 +101,7 @@ export default function BoldMap({ visitor }: { visitor: Visitor | null }) {
     const ro = new ResizeObserver(() => {
       // One re-fit per frame, however many sizes a resize passes through.
       cancelAnimationFrame(frame)
-      frame = requestAnimationFrame(() => engine.resize())
+      frame = requestAnimationFrame(() => map.resize())
     })
     ro.observe(root)
     return () => {
@@ -96,11 +109,40 @@ export default function BoldMap({ visitor }: { visitor: Visitor | null }) {
       ro.disconnect()
       io.disconnect()
       document.removeEventListener('visibilitychange', update)
-      engine.destroy()
+      map.destroy()
+      engine.current = null
       canvas.remove()
       delete root.dataset.ready
     }
-  }, [still, visitorKey])
+  }, [still])
+
+  // A visitor learned after the engine started gets their line now.
+  const shown = useRef(knownKey)
+  useEffect(() => {
+    if (shown.current === knownKey) return
+    shown.current = knownKey
+    engine.current?.setVisitor(JSON.parse(knownKey) as Visitor | null)
+  }, [knownKey])
+
+  // Ask where the visitor is, once, after the map is up. No cookies; any
+  // failure, a slow answer or an empty one simply leaves the map without a line.
+  useEffect(() => {
+    if (!locate) return
+    const abort = new AbortController()
+    const timer = setTimeout(() => abort.abort(), 5000)
+    fetch(WHERE_URL, { cache: 'no-store', credentials: 'omit', signal: abort.signal })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((body: { visitor?: unknown } | null) => {
+        const v = asVisitor(body?.visitor)
+        if (v) setLocated(v)
+      })
+      .catch(() => {})
+      .finally(() => clearTimeout(timer))
+    return () => {
+      clearTimeout(timer)
+      abort.abort()
+    }
+  }, [locate])
 
   return (
     <div
@@ -108,38 +150,34 @@ export default function BoldMap({ visitor }: { visitor: Visitor | null }) {
       data-bold-map
       className="group/map absolute inset-0 touch-pan-y overflow-hidden bg-[#0b1b36] select-none @container"
     >
-      <p className="sr-only">{boldMapText(visitor)}</p>
-      <div aria-hidden="true">
-        <div ref={stage} className="absolute inset-0" />
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[40%] bg-linear-to-t from-[#0d304c] from-24% via-[#0d304c]/72 via-46% to-[#0d304c]/0" />
+      <div
+        ref={stage}
+        aria-hidden="true"
+        className="absolute inset-0 opacity-0 transition-opacity duration-500 group-data-[ready]/map:opacity-100 motion-reduce:transition-none"
+      />
+      <Backdrop visitor={known} />
+      {/* Placed by the engine; hidden until it has placed them. */}
+      <div aria-hidden="true" className={`relative z-[2] ${PLACED}`}>
         <span
-          className={`${MONO} pointer-events-none absolute top-[18px] left-5 text-[10px] tracking-[0.16em] text-[#7dd3fc] @min-[400px]:left-[22px] @min-[400px]:text-[11px]`}
+          ref={chip}
+          className={`${MONO} pointer-events-none absolute top-0 left-0 rounded-[7px] border border-[rgba(125,211,252,.5)] bg-[rgba(3,37,108,.94)] px-2.5 py-[7px] text-[13px] text-white shadow-[0_4px_14px_rgba(0,0,0,.35)] @min-[400px]:text-sm @min-[700px]:px-3 @min-[700px]:py-2 @min-[700px]:text-base`}
         >
-          LOS ANGELES · <b className="font-bold text-[#e0f2fe]">OPEN TO ANYWHERE</b>
+          Los Angeles, CA
         </span>
-        {/* Placed by the engine; hidden until it has placed them. */}
-        <div className={PLACED}>
-          <span
-            ref={chip}
-            className={`${MONO} pointer-events-none absolute top-0 left-0 rounded-[7px] border border-[rgba(125,211,252,.5)] bg-[rgba(3,37,108,.94)] px-2.5 py-[7px] text-[13px] text-white shadow-[0_4px_14px_rgba(0,0,0,.35)] @min-[400px]:text-sm @min-[700px]:px-3 @min-[700px]:py-2 @min-[700px]:text-base`}
-          >
-            Los Angeles, CA
-          </span>
-          <span
-            ref={label}
-            className={`${TAG} rounded-md border border-[rgba(34,211,238,.45)] bg-[rgba(8,20,39,.92)] text-[#e0f2fe] transition-opacity duration-250 data-[hover]:border-[rgba(224,242,254,.8)] data-[hover]:text-white data-[hover]:transition-none`}
-          />
-          <span
-            ref={you}
-            className={`${TAG} rounded-md border border-[rgba(224,242,254,.85)] bg-[rgba(3,37,108,.95)] text-white transition-opacity duration-1000 [&_b]:text-[#a5f3fc]`}
-          />
-        </div>
+        <span
+          ref={label}
+          className={`${TAG} rounded-md border border-[rgba(34,211,238,.45)] bg-[rgba(8,20,39,.92)] text-[#e0f2fe] transition-opacity duration-250 data-[hover]:border-[rgba(224,242,254,.8)] data-[hover]:text-white data-[hover]:transition-none`}
+        />
+        <span
+          ref={you}
+          className={`${TAG} rounded-md border border-[rgba(224,242,254,.85)] bg-[rgba(3,37,108,.95)] text-white transition-opacity duration-1000 [&_b]:text-[#a5f3fc]`}
+        />
       </div>
       {/* His face, over Los Angeles: it grows when the card is hovered, when it
           is hovered or focused itself, and on a tap, so it reads as something
           to look at. Drawn at its large size and scaled down at rest, so it
           stays sharp when it grows. Last, so it sits over the labels. */}
-      <div className={PLACED}>
+      <div className={`relative z-[3] ${PLACED}`}>
         <button
           ref={pin}
           type="button"
