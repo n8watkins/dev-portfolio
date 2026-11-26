@@ -16,7 +16,7 @@ Last updated: 2026-11-25.
 ### Next
 
 1. Wren's clip is recorded with demo-kit (`~/projects/dev-tools/demo-kit/storyboards/wren.ts`): re-record it there when Wren's first screen or answers change, then encode it to 960x600 as `public/projects/clips/wren.mp4`.
-2. Keep the shared files in sync with n8builds-web after any change there (`npm run check:sync`): the dino, the marquee and its tiles, and the tile list `data/stack.tsx` (edit it in n8builds-web, then copy it here).
+2. Keep the shared files in sync with n8builds-web after any change there (`npm run check:sync`): the dino, the marquee and its tiles, the tile list `data/stack.tsx` (edit it in n8builds-web, then copy it here), and the build log card (see "The build log card").
    The check fetches the sibling checkout and compares against its `origin/main` (never its local `main`); it prints the commit, exits 2 if the checkout is missing, and takes a path for a worktree: `npm run check:sync -- ~/n8builds/n8builds-web`.
    It is not in CI (it would need a second checkout, and a merge in n8builds-web would turn this repo's CI red); `components/Projects/TechStackCycle.tsx` is portfolio-only (n8builds-web removed it in #167), so it is not on the list.
 
@@ -241,14 +241,20 @@ Under the projects, `components/Projects/BuildsTeaser.tsx` shows n8builds.dev's 
 
 ## The build log card
 
-`components/ui/BentoComponents/BuildLogCard.tsx` shows a month of n8builds.dev's build log, live from https://n8builds.dev/builds/months.json through `app/api/build-log` (an hour of cache; the E2E suite reads `tests/fixtures/build-log-months.json` instead).
+`components/build-log/BuildLogCard.tsx` shows a month of n8builds.dev's build log, live from https://n8builds.dev/builds/months.json through `app/api/build-log` (an hour of cache; the E2E suite reads `tests/fixtures/build-log-months.json` instead).
 It was reworked on 2026-11-25 (owner, after a preview: "I want it to be fun to look around and hover over").
+
+- **Shared with n8builds.dev** (owner, 2026-11-25: the card should "also be available to n8builds, both on the main page on n8builds and also on the build logs page").
+  Three files are byte-identical in both repos and on the `check:sync` list: the card, `components/build-log/build-log-card.css` (its styles, imported by `app/globals.css`; every class starts `logcard-`) and `lib/monthFacts.ts` (the month and day types and `monthFacts`).
+  Change them in one repo and copy them to the other in the same change; `npm run check:sync` fails while they differ (also in `.prettierignore` here, so a format pass cannot split them).
+  What differs per site is props: this site passes its two links (`data/grid/items/gridItem6.tsx`) and lets the card fetch `/api/build-log`; n8builds.dev passes its months from its own log, its own links, `size="wide"` on /builds, `cycle={false}` on its homepage (the updates beside it already move) and what a picked day does there.
+  `lib/buildLog.ts` keeps only this site's side: the feed address, its User-Agent and `toLogMonths`.
 
 - **The feed has only a count per day** (`day`, `count`, and `future` for days still to come), plus each month's total and title.
   There are no repos or commit subjects, so the card never shows them.
-  Everything else in the readout (rank, share of the month, streaks, the busiest day, active days) is worked out from those counts by `monthFacts` in `lib/buildLog.ts`, covered by `tests/unit/buildLog.test.mts`.
+  Everything else in the readout (rank, share of the month, streaks, the busiest day, active days) is worked out from those counts by `monthFacts` in `lib/monthFacts.ts`, covered by `tests/unit/buildLog.test.mts`.
 - **Layout**: the older and newer month arrows top left with the month beside them, the readout (the month's total and tags, or the picked day's count, date and tags), the chart, and two plain text links along the bottom: "n8builds.dev" (with "I post everything here" above it) and "Build log".
-  Each link's underline draws in from the left on hover or keyboard focus and its arrow nudges.
+  Each link's underline draws in from the left on hover or keyboard focus and its arrow nudges (until 2026-11-25 the underline never showed: a missing space joined two class names).
 - **The chart**: each day is a stack of up to 10 square blocks (a CSS mask cuts the bar into blocks; the busiest day fills it).
   Hovering, tapping or arrowing onto a day picks it: its blocks fill bottom to top, it lifts and glows, its neighbours lean in, the other days dim a little, and a pixel under the chart marks it, while the readout's number rolls to the day's count.
   The owner did not want "the full thing being highlighted", so the picked day stands out by its own bar, with no lit column.
@@ -257,7 +263,6 @@ It was reworked on 2026-11-25 (owner, after a preview: "I want it to be fun to l
   Screen readers get each day as a button named with its date and count, and the month's summary as text.
 - **The months move on by themselves** every 5 s (owner, 2026-11-09), this month first and then back through the months, holding while hovered or keyboard-focused, while a day is picked, for 15 s after an arrow, off screen, in a hidden tab and under reduced motion.
   Under reduced motion a day still lights up and the readout still changes, but nothing moves.
-- **Temporary**: `?log=3` shows the first preview's stronger highlight (a lit column, the other days dimmed further) for the owner to compare; remove it (the `strong` switch in the card and the `[data-highlight='strong']` rules in `app/globals.css`) once he has.
 - If the months cannot be read, the card is a plain "What I'm shipping" card with the same two links.
 
 ## Conventions

@@ -467,6 +467,8 @@ export default function BuildLogCard({
       data-build-log={months === null ? 'loading' : count ? 'ready' : 'fallback'}
       data-size={size}
       data-cycling={cycling ? '' : undefined}
+      // Hydrated and on screen: tests wait for it before they aim at a day.
+      data-in-view={inView ? '' : undefined}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       onFocus={(e) => setFocused(e.target.matches(':focus-visible'))}
