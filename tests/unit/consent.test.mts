@@ -2,7 +2,7 @@
 // same bootstrap runs on n8builds.dev; its suite there is the fuller one.
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { CONSENT_COOKIE, CONSENT_REGIONS, CONSENT_STORAGE_KEY, GA_GRACE_MS, consentBootstrapScript, isConsentTimeZone } from '../../lib/consent.ts'
+import { CONSENT_COOKIE, CONSENT_REGIONS, CONSENT_STORAGE_KEY, GA_GRACE_MS, GA_IDLE_TIMEOUT_MS, consentBootstrapScript, isConsentTimeZone } from '../../lib/consent.ts'
 
 type Api = { state: string; choice: string | null; ask: boolean; gpc: boolean; set: (v: 'granted' | 'denied') => void }
 
@@ -33,11 +33,15 @@ function boot({ timeZone = 'America/Los_Angeles', cookie = '', stored = null as 
   }
   const timers: { fn: () => void; ms: number }[] = []
   const listeners = new Map<string, () => void>()
+  const idleTimeouts: (number | undefined)[] = []
   const window: Record<string, unknown> = {
     location: { hostname, protocol: 'https:' },
     navigator: { globalPrivacyControl: gpc },
     localStorage: { getItem: (k: string) => storage.get(k) ?? null, setItem: (k: string, v: string) => void storage.set(k, v) },
-    requestIdleCallback: (f: () => void) => f(),
+    requestIdleCallback: (f: () => void, options?: { timeout?: number }) => {
+      idleTimeouts.push(options?.timeout)
+      f()
+    },
     setTimeout: (fn: () => void, ms: number) => (holdTimers ? timers.push({ fn, ms }) : fn()),
     addEventListener: (type: string, fn: () => void) => void listeners.set(type, fn),
     removeEventListener: (type: string, fn: () => void) => {
@@ -48,7 +52,7 @@ function boot({ timeZone = 'America/Los_Angeles', cookie = '', stored = null as 
   const Intl = { DateTimeFormat: () => ({ resolvedOptions: () => ({ timeZone }) }) }
   class CustomEvent {}
   new Function('window', 'document', 'Intl', 'CustomEvent', consentBootstrapScript('G-TEST'))(window, document, Intl, CustomEvent)
-  return { consent: window.n8Consent as Api, scripts, cookieWrites, jar, timers, listeners }
+  return { consent: window.n8Consent as Api, scripts, cookieWrites, jar, timers, listeners, idleTimeouts }
 }
 
 test('asks European and Quebec time zones only', () => {
@@ -81,6 +85,23 @@ test('GA waits for a first interaction, or GA_GRACE_MS after load, and loads onc
   const accepted = boot({ timeZone: 'Europe/Berlin', holdTimers: true })
   accepted.consent.set('granted')
   assert.equal(accepted.scripts.length, 1, 'an Accept loads GA at once')
+})
+
+test('GA waits for an idle moment for at most 2s, so a busy page still loads it', () => {
+  assert.equal(GA_IDLE_TIMEOUT_MS, 2000)
+  const { scripts, idleTimeouts } = boot()
+  assert.deepEqual(idleTimeouts, [GA_IDLE_TIMEOUT_MS])
+  assert.equal(scripts.length, 1)
+})
+
+test('a saved choice is read when the cookie is not the first one in document.cookie', () => {
+  const declined = boot({ timeZone: 'Europe/Berlin', cookie: `_ga=GA1.1.1; ${CONSENT_COOKIE}=denied` })
+  assert.equal(declined.consent.state, 'denied')
+  assert.equal(declined.consent.choice, 'denied')
+  assert.deepEqual(declined.scripts, [])
+  const granted = boot({ timeZone: 'Europe/Berlin', cookie: `_ga=GA1.1.1; theme=dark; ${CONSENT_COOKIE}=granted` })
+  assert.equal(granted.consent.state, 'granted')
+  assert.equal(granted.scripts.length, 1)
 })
 
 test('Europe or Quebec without a choice: pending, no GA', () => {
