@@ -120,7 +120,7 @@ The owner picked layout B (a work-first home page plus detail pages) over A (one
   No line names Wren: the same tiles show on n8builds.dev, which Wren left at the owner's request (2026-11-11).
   Every line is backed by a repo on the PC (the evidence is in the PR for branch `feat/stack-how-i-use-it`).
   The owner's picks (2026-11-25): Cursor, OpenAI and Upstash dropped; PostgreSQL kept with no project named ("Object-relational, for when an app outgrows SQLite."); Pi left as it is; Claude Fable 5.2 added beside Claude Opus 5.5 as his orchestrator.
-  Then "address the small things" (owner, 2026-11-25, told AWS and Figma had no backing): Figma dropped (nothing in his repos or resume backs it, and the Design layer with it), and AWS reads "S3, Lambda and Amplify. Portfolio Rank's screenshots go through the S3 API." (his resume's "AWS (S3, Lambda, Amplify)"; Portfolio Rank's pipeline uploads through the S3 SDK to R2), linking Portfolio Rank. That wording and the Figma removal were the coordinating agent's call on his behalf; he can change them.
+  Then "address the small things" (owner, 2026-11-25, told AWS and Figma had no backing): Figma dropped (nothing in his repos or resume backs it, and the Design layer with it), and AWS reads "S3, Lambda and Amplify. Portfolio Rank's screenshots use the S3 API." (his resume's "AWS (S3, Lambda, Amplify)"; Portfolio Rank's pipeline uploads through the S3 SDK to R2), linking Portfolio Rank. That wording and the Figma removal were the coordinating agent's call on his behalf; he can change them.
   35 tiles: 7 agents and models, 3 local AI, 25 in the dev stack.
   A line must fit the tile in three lines: `tests/stack.spec.ts` measures every tile at 1440 and 390.
   The resume stays the header button too.

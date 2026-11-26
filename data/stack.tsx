@@ -282,7 +282,7 @@ export const dev_stack: AIStackItem[] = [
   {
     name: 'AWS',
     icon: <FaAws className={ICON} style={{ color: '#FF9900' }} />,
-    description: "S3, Lambda and Amplify. Portfolio Rank's screenshots go through the S3 API.",
+    description: "S3, Lambda and Amplify. Portfolio Rank's screenshots use the S3 API.",
     link: { text: 'Portfolio Rank', ...PORTFOLIO_RANK },
   },
   {

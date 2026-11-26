@@ -48,7 +48,7 @@ test('/stack links each tool to the project that uses it', async ({ page }) => {
   }
   // AWS, backed by the resume and Portfolio Rank's S3 API uploads (2026-11-25).
   await expect(page.locator('[data-stack-layer] li', { hasText: 'AWS' }).locator('p.text-sm')).toHaveText(
-    "S3, Lambda and Amplify. Portfolio Rank's screenshots go through the S3 API."
+    "S3, Lambda and Amplify. Portfolio Rank's screenshots use the S3 API."
   )
   // The other builds open theirs on n8builds.dev, in a new tab that says so.
   const voicedock = links.filter({ hasText: 'VoiceDock' })
