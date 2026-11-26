@@ -10,6 +10,9 @@ export type Vec3 = readonly [number, number, number]
 
 const rad = Math.PI / 180
 
+/** Room kept above the map, in card pixels (it was 44 under the old caption). */
+export const MAP_TOP = 18
+
 function mul(a: Mat4, b: Mat4): Mat4 {
   const o = new Float32Array(16)
   for (let c = 0; c < 4; c++)
@@ -76,6 +79,8 @@ export type Camera = {
   toPx: (p: Vec3) => [number, number, number, number]
   /** The lowest a label may reach, in card pixels (the title is below it). */
   labelMax: number
+  /** The top of the map's room, in card pixels: labels and the avatar stay below it. */
+  top: number
 }
 
 export function fitCamera(s: Scene, W: number, H: number): Camera {
@@ -85,6 +90,10 @@ export function fitCamera(s: Scene, W: number, H: number): Camera {
   // title: there the camera turns and looks more steeply down, and the country
   // fills the height between the caption and the title.
   const tall = Math.max(0, Math.min(1, (H / W - 1.05) / 0.3))
+  // The top of the room the country fits in. There is no caption above it any
+  // more (owner, 2026-11-25: "dont need those captions"), so the map uses the
+  // space it held (44px) and sits higher.
+  const top = MAP_TOP
   const elev = (58 + 14 * tall) * rad
   // Turned to look from the south-east, the country runs corner to corner (Los
   // Angeles up on the left, the east coast nearer, lower right) and fills a
@@ -136,7 +145,7 @@ export function fitCamera(s: Scene, W: number, H: number): Camera {
   const want = ((W - padL - padR) / W) * 2
   // On a wide card the height is the limit instead: the country stays between
   // the caption and the top of the title.
-  const wantV = ((bottom - 44) / H) * 2
+  const wantV = ((bottom - top) / H) * 2
   let lo = 20
   let hi = 500
   for (let k = 0; k < 22; k++) {
@@ -149,7 +158,7 @@ export function fitCamera(s: Scene, W: number, H: number): Camera {
   const m = build(hi)
   const ox = ((padL + (W - padL - padR) / 2) / W) * 2 - 1 - (fit[0] + fit[1]) / 2
   // Centred between the caption and the title.
-  const oy = 1 - ((44 + bottom) / 2 / H) * 2 - (fit[2] + fit[3]) / 2
+  const oy = 1 - ((top + bottom) / 2 / H) * 2 - (fit[2] + fit[3]) / 2
   for (let c = 0; c < 4; c++) {
     m[c * 4] += ox * m[c * 4 + 3]
     m[c * 4 + 1] += oy * m[c * 4 + 3]
@@ -160,5 +169,5 @@ export function fitCamera(s: Scene, W: number, H: number): Camera {
   }
   // Labels stay above the title: 76% of the card, lower on a tall card.
   const labelMax = H * 0.76 + tall * (H - 96 - H * 0.76)
-  return { vp: m, eye, dist: hi, toPx, labelMax }
+  return { vp: m, eye, dist: hi, toPx, labelMax, top }
 }

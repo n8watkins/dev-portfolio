@@ -537,6 +537,8 @@ test.describe('the bold map', () => {
       /the tech hubs he would move to\. You seem to be near Austin, TX, about 1,230 miles away\./
     )
     await expect(map.locator('canvas')).toHaveAttribute('aria-hidden', 'true')
+    // No caption over the map (owner, 2026-11-25): the sentence says what the lines are.
+    await expect(slot.getByText(/TECH HUBS|OPEN TO ANYWHERE/)).toHaveCount(0)
   })
 
   test('his avatar grows on hover and on a tap, and eases back', async ({ page, isMobile }) => {
@@ -642,8 +644,12 @@ test.describe('the bold map', () => {
     const map = await openMap(page)
     await expect(map).toHaveAttribute('data-visitor', 'here')
     const chip = map.locator('[data-chip]')
-    await expect(chip).toContainText('Based in Los Angeles')
+    await expect(chip).toContainText('Los Angeles · home base')
     await expect(chip.locator('[data-neighbour]')).toHaveText('Hey, neighbor')
+    // Both lines inside the card, even on a phone.
+    const [c, m] = [(await chip.boundingBox())!, (await map.boundingBox())!]
+    expect(c.x).toBeGreaterThanOrEqual(m.x)
+    expect(c.x + c.width).toBeLessThanOrEqual(m.x + m.width)
     // Los Angeles is named once on the card, and no "You" label repeats it.
     await expect(map.getByText(/^You\b/)).toHaveCount(0)
     expect(await map.evaluate((m) => (m.textContent!.match(/Los Angeles/g) ?? []).length)).toBe(

@@ -17,15 +17,15 @@ export const NEAR_LA_MILES = 60
 export const formatMiles = (m: number) => (Math.round(m / 10) * 10).toLocaleString('en-US')
 
 /*
- * The card's words (owner, 2026-11-25: "LA being repeated twice, maybe rethink
- * that. also maybe rethink the text for los angeles"). Each says one thing:
- * the caption says what the lines are, the chip says where he is, and the
- * card's title ("Ready to relocate", gridItem2.tsx) says what he wants.
+ * The card's words, the owner's picks (2026-11-25: "dont need those captions,
+ * i just wanted to prioritize the right cities being cycled. i like the home
+ * base one, i like the hey neighbor, and i like ready to relocate still").
+ * No caption; the chip says where he is, the card's title ("Ready to relocate",
+ * gridItem2.tsx) says what he wants, and the screen-reader sentence says what
+ * the lines are.
  */
-/** The caption, top left: what the lines on the map are. */
-export const CAPTION = "TECH HUBS I'D MOVE TO"
 /** The chip under Los Angeles: the one place the card names the city. */
-export const CHIP_TEXT = 'Based in Los Angeles'
+export const CHIP_TEXT = 'Los Angeles · home base'
 /** Under the chip, for a visitor in the LA area, instead of a label of their own. */
 export const NEIGHBOUR_TEXT = 'Hey, neighbor'
 

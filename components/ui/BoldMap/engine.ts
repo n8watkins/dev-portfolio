@@ -239,7 +239,7 @@ export function createMapEngine(el: MapElements, opts: MapOptions): MapEngine {
   const clear = (rects: Rect[], lx: number, ly: number, w: number, h: number, bottom: number) =>
     lx >= 6 &&
     lx + w <= W - 6 &&
-    ly >= 30 &&
+    ly >= cam.top - 8 &&
     ly + h <= bottom &&
     !rects.some(
       (r) => lx < r.x + r.w + 4 && lx + w > r.x - 4 && ly < r.y + r.h + 4 && ly + h > r.y - 4
@@ -260,11 +260,11 @@ export function createMapEngine(el: MapElements, opts: MapOptions): MapEngine {
     let cx = fx - grownR - Math.max(14, box * 0.55)
     let cy = fy - grownR * 0.55 - 6
     cx = Math.max(margin + grownR, cx)
-    cy = Math.max(34 + grownR, cy) // below the caption
+    cy = Math.max(cam.top + grownR, cy)
     // Too little sea on a narrow card: rise until the circle clears the city.
     const clearance = grownR + 10
     if (Math.hypot(fx - cx, fy - cy) < clearance) {
-      cy = Math.max(34 + grownR, fy - Math.sqrt(Math.max(0, clearance ** 2 - (fx - cx) ** 2)))
+      cy = Math.max(cam.top + grownR, fy - Math.sqrt(Math.max(0, clearance ** 2 - (fx - cx) ** 2)))
     }
     el.pin.style.transform = `translate(${cx - box / 2}px, ${cy - box / 2}px)`
     // The leader: from the city to the avatar's edge at rest.
@@ -292,7 +292,7 @@ export function createMapEngine(el: MapElements, opts: MapOptions): MapEngine {
     ]
     const s = spots.find(([lx, ly]) => clear(rects, lx, ly, w, h, cam.labelMax + H * 0.02)) ?? [
       Math.max(6, Math.min(W - w - 6, x - w / 2)),
-      Math.max(30, Math.min(cam.labelMax - h, y + 12)),
+      Math.max(cam.top - 8, Math.min(cam.labelMax - h, y + 12)),
     ]
     el.you.style.transform = `translate(${Math.round(s[0])}px, ${Math.round(s[1])}px)`
   }
@@ -341,7 +341,7 @@ export function createMapEngine(el: MapElements, opts: MapOptions): MapEngine {
     ]
     const spot = spots.find(([lx, ly]) => clear(rects, lx, ly, w, h, cam.labelMax)) ?? [
       Math.max(6, Math.min(W - w - 6, x + 12)),
-      Math.max(30, y - h - 12),
+      Math.max(cam.top - 8, y - h - 12),
     ]
     el.label.style.transform = `translate(${Math.round(spot[0])}px, ${Math.round(spot[1])}px)`
     el.label.toggleAttribute('data-on', true)
