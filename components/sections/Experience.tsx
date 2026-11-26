@@ -258,7 +258,7 @@ const Experience = () => {
                       Tech for Pros' link sits above that layer, so it still opens
                       the site. */}
                   <div
-                    className={`group/card relative overflow-hidden rounded-xl border bg-slate-900 shadow-[0_20px_25px_-5px_rgba(0,0,0,0.3)] transition-colors duration-200 has-[[data-role-toggle]:hover]:border-sky-400/40 has-[[data-role-toggle]:hover]:bg-slate-800/80 has-[[data-role-toggle]:focus-visible]:ring-2 has-[[data-role-toggle]:focus-visible]:ring-sky-400 ${isOpen ? 'border-sky-500/30' : 'border-white/5'}`}
+                    className={`group/card relative overflow-hidden rounded-xl border bg-slate-900 shadow-[0_20px_25px_-5px_rgba(0,0,0,0.3)] transition-colors duration-200 has-[[data-role-header]:hover]:border-sky-400/40 has-[[data-role-header]:hover]:bg-slate-800/80 has-[[data-role-toggle]:focus-visible]:ring-2 has-[[data-role-toggle]:focus-visible]:ring-sky-400 ${isOpen ? 'border-sky-500/30' : 'border-white/5'}`}
                   >
                     {/* The role's own picture on the right (desktop), faded into the row:
                         a glimpse on hover, and it stays, a little quieter, while the role
@@ -288,7 +288,9 @@ const Experience = () => {
                         <div className="absolute inset-0 bg-darkBlue/40" />
                       </div>
                     )}
-                    <div className="group/role relative p-4 md:p-5">
+                    {/* data-role-header: the hover target for every role, expandable or not (the
+                        toggle exists only on roles with more, so hover must not key on it). */}
+                    <div data-role-header className="group/role relative p-4 md:p-5">
                       {canOpen && (
                         <button
                           type="button"
@@ -336,7 +338,7 @@ const Experience = () => {
                         {canOpen && (
                           <span
                             aria-hidden="true"
-                            className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-slate-300 transition-colors group-has-[[data-role-toggle]:hover]/role:text-sky-300"
+                            className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-slate-300 transition-colors group-hover/role:text-sky-300"
                           >
                             {isOpen ? 'Less' : 'More'}
                             <FiChevronDown

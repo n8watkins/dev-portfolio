@@ -160,10 +160,16 @@ test('the build log card shows a month, cycles the months, and links the site an
   await expect(site).toHaveAccessibleName(/^n8builds\.dev/)
   await expect(log.locator('img')).toHaveCount(0)
   // About the text's height, on its line.
-  const [iconBox, label] = [await icon.boundingBox(), await site.getByText('n8builds.dev').boundingBox()]
+  const iconBox = await icon.boundingBox()
   expect(iconBox!.height).toBeGreaterThan(12)
   expect(iconBox!.height).toBeLessThan(18)
-  expect(Math.abs(iconBox!.y + iconBox!.height / 2 - (label!.y + label!.height / 2))).toBeLessThan(3)
+  // Measured settled: the card's months flow in, and a box read mid-flow is off by pixels.
+  await expect
+    .poll(async () => {
+      const [i, l] = [await icon.boundingBox(), await site.getByText('n8builds.dev').boundingBox()]
+      return Math.abs(i!.y + i!.height / 2 - (l!.y + l!.height / 2))
+    })
+    .toBeLessThan(3)
   await expect(card.getByText('I post everything here')).toBeVisible()
   // Side by side on one line, along the bottom of the card.
   const [a, b, box] = [await site.boundingBox(), await log.boundingBox(), await card.boundingBox()]
@@ -202,6 +208,10 @@ async function showBuildLog(
     // by its place on screen, not `hover()`, whose own scrolling into view can move the page,
     // and onto the card's own padding, which is there whatever month it is moving to.
     await page.mouse.move(0, 0)
+    // At rest first: the bento cell rises and scales up from 95% as it arrives, so a box read
+    // earlier is smaller than the card's final one, and a point 8px inside it can land outside
+    // the card once it has grown. No hover then, and the months would cycle on for ever.
+    await cellAtRest(card)
     const box = (await card.boundingBox())!
     await page.mouse.move(box.x + 8, box.y + 8)
     await expect(card).not.toHaveAttribute('data-cycling', '')
@@ -1200,6 +1210,39 @@ test('"Expand all" opens the roles with more in place, and closes them again', a
   await expect(site).toHaveAttribute('href', 'https://riverwoodranch.web.app/')
   await experience.getByRole('button', { name: 'Collapse all' }).click()
   for (let i = 0; i < 3; i++) await expect(toggles.nth(i)).toHaveAttribute('aria-expanded', 'false')
+})
+
+test('after "Expand all" every role, The Coder School included, lights up on hover', async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.goto('/')
+  const experience = page.locator('#experience')
+  await experience.getByRole('button', { name: 'Expand all' }).scrollIntoViewIfNeeded()
+  await experience.getByRole('button', { name: 'Expand all' }).click()
+  await expect(experience.locator('[data-role-toggle][aria-expanded="true"]')).toHaveCount(3)
+  const roles = experience.locator('div.group\\/exp')
+  const names = [
+    'Tech for Pros',
+    'Appturnity',
+    'Lifeline Clinical Labs',
+    'Donovan Golf',
+    'Realtek Solutions',
+    'The Coder School',
+  ]
+  for (const name of names) {
+    const role = roles.filter({ hasText: name })
+    const card = role.locator('div.group\\/card')
+    const header = role.locator('[data-role-header]')
+    await header.scrollIntoViewIfNeeded()
+    // Park the pointer away, then onto the header of this role.
+    await page.mouse.move(0, 0)
+    const resting = await card.evaluate((el) => getComputedStyle(el).borderTopColor)
+    await header.hover()
+    await expect
+      .poll(() => card.evaluate((el) => getComputedStyle(el).borderTopColor), name)
+      .not.toBe(resting)
+  }
 })
 
 test('a whole role row opens on a click or from the keyboard, and its link still works', async ({
