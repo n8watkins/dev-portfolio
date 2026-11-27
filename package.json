@@ -69,7 +69,7 @@
     "husky": "^9.1.7",
     "lint-staged": "^17.6.2",
     "postcss": "^8",
-    "release-kit": "github:n8watkins/release-kit#v2.10.1",
+    "release-kit": "github:n8watkins/release-kit#v2.12.0",
     "svgo": "^4.1.0",
     "tailwindcss": "^4.3.3",
     "typescript": "~6.0.3",
