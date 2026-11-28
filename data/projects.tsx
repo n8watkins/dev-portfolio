@@ -16,9 +16,9 @@ export const projects: Project[] = [
       </>
     ),
     subTitle: 'The Developer Portfolio Leaderboard',
-    des: `2,000+ developer portfolios from Emma Bostian's open developer-portfolios list, ranked by head-to-head votes instead of A to Z. Pick the better of two in about five seconds, browse every site with a real screenshot, Lighthouse scores and an AI review, or add your own portfolio and see how it compares.`,
+    des: `2,000+ developer portfolios from Emma Bostian's open developer-portfolios list, ranked by head-to-head votes instead of A to Z. Pick the better of two in about five seconds, browse every site with a real screenshot, Lighthouse scores and code checks, or add your own portfolio and see how it compares.`,
     summary: `2,000+ developer portfolios from Emma Bostian's open list, ranked by head-to-head votes instead of A to Z. Vote on a matchup, or add your own portfolio and see how it compares.`,
-    highlight: `Gemini judges portfolios head to head, so the leaderboard means something before anyone votes; then ELO takes over, with one vote per person per matchup enforced in the database.`,
+    highlight: `Votes in face-offs become an ELO leaderboard, with one vote per person per matchup enforced in the database. The starting rank comes from checks my code runs on each site.`,
     clip: {
       src: '/projects/clips/portfolio-rank.mp4',
       poster: '/projects/clips/portfolio-rank-poster.webp',
@@ -115,10 +115,10 @@ export const projects: Project[] = [
       heading: 'Vote, or add your portfolio',
       body: 'Pick the better of two portfolios in about five seconds, or add yours: it gets a screenshot, Lighthouse scores and an AI review, and joins the head-to-head rankings.',
       label: 'Add yours on Portfolio Rank',
-      href: 'https://portfoliorank.n8builds.dev/',
+      href: 'https://portfoliorank.dev/',
     },
     github: 'https://github.com/n8watkins/portfolio-rank',
-    liveSite: 'https://portfoliorank.n8builds.dev',
+    liveSite: 'https://portfoliorank.dev',
   },
   {
     id: 2,
