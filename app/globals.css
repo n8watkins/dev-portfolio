@@ -460,6 +460,21 @@
   }
 }
 
+/* A hero portrait photo while it loads (components/sections/PortraitRotator.tsx): held
+   transparent over its blurred placeholder, then fades in when it arrives. Only set
+   once hydrated and only for a photo that is not there yet. */
+.hero-portrait-photo {
+  transition: opacity 0.35s ease-out;
+}
+[data-portrait-frame][data-waiting] > .hero-portrait-photo {
+  opacity: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-portrait-photo {
+    transition: none;
+  }
+}
+
 /* The n8builds.dev teaser's build slides in sideways as it changes
    (BuildsTeaser.tsx): from the right going forward, from the left going back. */
 @keyframes teaser-from-r {
