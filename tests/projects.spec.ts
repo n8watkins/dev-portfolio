@@ -502,12 +502,36 @@ test.describe('pixel marks', () => {
     await showMark(page, 'wren')
     await expect.poll(() => seedsIn(page), { timeout: 20000 }).toBe(0)
     const { x, y, step } = await yardPoint(page)
-    let most = 0
-    for (let n = 0; n < 6; n++) {
-      await page.mouse.click(x + n * step, y)
-      most = Math.max(most, await seedsIn(page))
-    }
-    expect(most).toBe(4)
+    // The bird eats a landed seed on its own clock (a busy machine stretches
+    // that clock, and the bird also finds seeds by itself), so clicking one
+    // seed at a time can see fewer than four wait. All six clicks therefore
+    // go in one task, before any seed has landed, and only when the yard is
+    // empty at that moment.
+    let after: number[] | null = null
+    await expect
+      .poll(
+        async () => {
+          after = await markOf(page, 'wren').evaluate(
+            (el, { x, y, step }) => {
+              const seeds = () => el.querySelectorAll('[data-k="S"]').length
+              if (seeds() !== 0) return null
+              const yard = el.querySelector('[data-yard]')!
+              return Array.from({ length: 6 }, (_, n) => {
+                yard.dispatchEvent(
+                  new MouseEvent('click', { bubbles: true, clientX: x + n * step, clientY: y })
+                )
+                return seeds()
+              })
+            },
+            { x, y, step }
+          )
+          return after !== null
+        },
+        { timeout: 20000 }
+      )
+      .toBe(true)
+    // Each of the first four clicks adds a seed; the fifth and sixth are refused.
+    expect(after).toEqual([1, 2, 3, 4, 4, 4])
     await expect.poll(() => seedsIn(page), { timeout: 30000 }).toBe(0)
   })
 
