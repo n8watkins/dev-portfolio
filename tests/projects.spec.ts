@@ -273,13 +273,13 @@ test('Portfolio Rank credits its list and invites you to add your portfolio', as
   ).toHaveAttribute('href', 'https://github.com/emmabostian/developer-portfolios')
   await expect(
     rank.getByRole('link', { name: 'Try the Portfolio Rank live demo (new tab)' })
-  ).toHaveAttribute('href', 'https://portfoliorank.n8builds.dev')
+  ).toHaveAttribute('href', 'https://portfoliorank.dev')
 
   await page.goto('/projects/portfolio-rank')
   await expect(page.getByRole('heading', { name: 'Credits' })).toBeVisible()
   await expect(page.getByRole('link', { name: /Add yours on Portfolio Rank/ })).toHaveAttribute(
     'href',
-    'https://portfoliorank.n8builds.dev/'
+    'https://portfoliorank.dev/'
   )
 })
 
