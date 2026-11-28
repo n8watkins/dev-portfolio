@@ -199,7 +199,24 @@ async function showBuildLog(
   { hold = 'November 2026' as string | false } = {}
 ) {
   const card = page.locator('[data-build-log]')
-  await card.evaluate((el) => el.scrollIntoView({ block: 'center', behavior: 'instant' }))
+  // DIAG (temporary): a timeline of the page's scroll, the card's place and the pointer's events.
+  await card.evaluate((el) => {
+    const w = window as unknown as { __dbg: string[]; __mark: (s: string) => void }
+    const t0 = performance.now()
+    w.__dbg = []
+    w.__mark = (s: string) =>
+      w.__dbg.push(`t=${Math.round(performance.now() - t0)} ${s} scrollY=${Math.round(scrollY)} cardTop=${el.getBoundingClientRect().top.toFixed(1)}`)
+    addEventListener('scroll', () => w.__mark('scroll'), true)
+    const d = (n: EventTarget | null) =>
+      n instanceof Element ? `${n.tagName}.${n.className?.toString().slice(0, 30)}` : String(n)
+    for (const t of ['mouseover', 'mouseenter', 'mouseleave'])
+      el.addEventListener(t, (e) => w.__mark(`card ${t} tgt=${d(e.target)} at ${(e as MouseEvent).clientX},${(e as MouseEvent).clientY}`))
+    addEventListener('mousemove', (e) => w.__mark(`mousemove ${e.clientX},${e.clientY} on ${d(e.target)}`), true)
+    w.__mark('scrollIntoView before')
+    el.scrollIntoView({ block: 'center', behavior: 'instant' })
+    w.__mark('scrollIntoView after')
+  })
+  const mark = (s: string) => page.evaluate((s) => (window as unknown as { __mark: (s: string) => void }).__mark(s), s)
   await expect(card).toHaveAttribute('data-build-log', 'ready', LOADED)
   await expect(card).toHaveAttribute('data-settled', '', LOADED)
   if (hold) {
@@ -213,8 +230,23 @@ async function showBuildLog(
     // the card once it has grown. No hover then, and the months would cycle on for ever.
     await cellAtRest(card)
     const box = (await card.boundingBox())!
+    await mark(`box read y=${box.y.toFixed(1)}`)
     await page.mouse.move(box.x + 8, box.y + 8)
-    await expect(card).not.toHaveAttribute('data-cycling', '')
+    await mark('moved')
+    try {
+      await expect(card).not.toHaveAttribute('data-cycling', '')
+    } catch (err) {
+      const info = await card.evaluate((el, [x, y]) => {
+        const w = window as unknown as { __dbg: string[] }
+        const hit = document.elementFromPoint(x, y)
+        return [...w.__dbg, `now: point ${x},${y} is on ${hit?.tagName}.${hit?.className?.toString().slice(0, 60)} inCard=${el.contains(hit)} hover=${el.matches(':hover')}`].join('\n')
+      }, [box.x + 8, box.y + 8])
+      throw new Error(`DBG timeline\n${info}\n${err}`)
+    }
+    {
+      const log = await page.evaluate(() => (window as unknown as { __dbg: string[] }).__dbg.join('\n  '))
+      console.log(`DBGPASS\n  ${log}`)
+    }
     for (let i = 0; i < 12 && (await card.locator('[data-month]').textContent()) !== hold; i++) {
       await expect(card).toHaveAttribute('data-settled', '', LOADED)
       await card.getByRole('button', { name: 'Newer month' }).click()

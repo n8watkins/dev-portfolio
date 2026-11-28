@@ -95,13 +95,14 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { project: chromium }
-          - { project: firefox }
-          - { project: webkit, shard: 1/2, workers: 1 }
-          - { project: webkit, shard: 2/2, workers: 1 }
-          - { project: mobile-chrome }
-          - { project: mobile-safari, shard: 1/2, workers: 1 }
-          - { project: mobile-safari, shard: 2/2, workers: 1 }
+          - { project: mobile-safari, shard: 1/2, workers: 1, copy: 1 }
+          - { project: mobile-safari, shard: 1/2, workers: 1, copy: 2 }
+          - { project: mobile-safari, shard: 1/2, workers: 1, copy: 3 }
+          - { project: mobile-safari, shard: 1/2, workers: 1, copy: 4 }
+          - { project: mobile-safari, shard: 1/2, workers: 1, copy: 5 }
+          - { project: mobile-safari, shard: 1/2, workers: 1, copy: 6 }
+          - { project: mobile-safari, shard: 1/2, workers: 1, copy: 7 }
+          - { project: mobile-safari, shard: 1/2, workers: 1, copy: 8 }
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
