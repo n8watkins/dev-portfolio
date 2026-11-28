@@ -179,6 +179,47 @@ test('the build log card shows a month, cycles the months, and links the site an
 })
 
 /**
+ * Rests the mouse on the build log card's own padding, 8px inside its top
+ * left corner, and waits until the card knows it is hovered (it stops moving
+ * on through the months). Aimed once the whole bento is at rest, by where the
+ * card is when the move is made, and aimed again, as a person would move their
+ * mouse again, if the card had moved away before the pointer got there.
+ *
+ * It can: WebKit moves the page by itself while the bento's cells arrive. Its
+ * scroll anchoring follows the rising cells (each rises 25px and scales up
+ * from 95%, staggered; Chromium and Firefox leave transforms out of it), so a
+ * page scrolled to the card ends up as much as 35px further up than where it
+ * was put, in steps, and a step can come after the card's own cell is at
+ * rest. On mobile-safari CI the page moved 29px and 31px within a second of
+ * the card's box being read (two runs in eight, 2026-11-28), and in the runs
+ * that failed (2026-11-26, 2026-11-28) the page was drawn about 22px lower
+ * after the aim: the pointer was left in the 28px gap above the card at
+ * 1440px, the card never heard of it, and the months cycled on.
+ */
+async function pointAtCard(
+  page: import('@playwright/test').Page,
+  card: import('@playwright/test').Locator
+) {
+  await expect
+    .poll(() =>
+      card.evaluate((el) => {
+        const cells = el.closest('.grid')?.children ?? []
+        return [...cells].filter((cell) => {
+          const s = getComputedStyle(cell)
+          const still = s.transform === 'none' || s.transform === 'matrix(1, 0, 0, 1, 0, 0)'
+          return !still || s.opacity !== '1'
+        }).length
+      })
+    )
+    .toBe(0)
+  await expect(async () => {
+    const box = (await card.boundingBox())!
+    await page.mouse.move(box.x + 8, box.y + 8)
+    await expect(card).not.toHaveAttribute('data-cycling', '', { timeout: 1_000 })
+  }).toPass({ timeout: 15_000 })
+}
+
+/**
  * Brings the build log card on screen and waits until its months are loaded
  * and its bento cell has finished arriving (it rises 25px and scales up from
  * 95%). A pointer aimed at a day before then lands beside it: on CI a tap at
@@ -212,15 +253,15 @@ async function showBuildLog(
     // earlier is smaller than the card's final one, and a point 8px inside it can land outside
     // the card once it has grown. No hover then, and the months would cycle on for ever.
     await cellAtRest(card)
-    const box = (await card.boundingBox())!
-    await page.mouse.move(box.x + 8, box.y + 8)
-    await expect(card).not.toHaveAttribute('data-cycling', '')
+    await pointAtCard(page, card)
     for (let i = 0; i < 12 && (await card.locator('[data-month]').textContent()) !== hold; i++) {
       await expect(card).toHaveAttribute('data-settled', '', LOADED)
       await card.getByRole('button', { name: 'Newer month' }).click()
     }
     await expect(card.locator('[data-month]')).toHaveText(hold)
     await expect(card).toHaveAttribute('data-settled', '', LOADED)
+    // Still under the pointer: the page can have moved under it meanwhile (see pointAtCard).
+    await pointAtCard(page, card)
   }
   await cellAtRest(card)
   return card
