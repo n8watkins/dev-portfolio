@@ -78,18 +78,74 @@ test("old links to the retired project pages land on Wren's, which replaced them
   expect(sitemap).toContain('/projects/wren<')
 })
 
+/**
+ * Each project page tells a story (owner, 2026-11-26: "I want it to tell a
+ * story"): the opening line, then the same five beats in order, the question
+ * set large, dated steps, and each screenshot where the words mention it.
+ */
+test('every project page tells its story in five beats, with its screenshots along the way', async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  const beats = ['The spark', 'The question', 'The build', 'How it grew', 'Where it is now']
+  for (const slug of ['portfolio-rank', 'net-trailers', 'wren']) {
+    await page.goto(`/projects/${slug}`)
+    const article = page.locator('main article')
+    const kickers = article.locator('section[aria-labelledby] > p:first-child')
+    await expect(kickers, slug).toHaveText(beats.map((beat, i) => new RegExp(`0${i + 1}\\s*/\\s*${beat}`)))
+    for (const id of ['spark', 'question', 'build', 'grew', 'now']) {
+      await expect(article.locator(`h2#${id}`), `${slug} ${id}`).toBeVisible()
+    }
+    await expect(article.locator('blockquote'), slug).toHaveCount(1)
+    await expect(article.getByRole('list', { name: 'Timeline' }).getByRole('listitem'), slug).not.toHaveCount(0)
+    // The three screenshots, each once, in the story.
+    await expect(article.locator('figure img'), slug).toHaveCount(3)
+    // The clip of the live app leads the page, and there it is only a picture.
+    await expect(page.locator('main header video, main header img').first(), slug).toBeAttached()
+    await expect(page.getByRole('button', { name: /^Open .*'s page$/ }), slug).toHaveCount(0)
+    // No em dashes in the story.
+    expect(await page.locator('main').innerText(), slug).not.toContain('—')
+  }
+  // Portfolio Rank's story starts with Emma Bostian's list, credited by link.
+  await page.goto('/projects/portfolio-rank')
+  await expect(page.locator('section[aria-labelledby="spark"]')).toContainText('Emma Bostian')
+  await expect(
+    page.getByRole('link', { name: /Emma Bostian's developer-portfolios/ })
+  ).toHaveAttribute('href', 'https://github.com/emmabostian/developer-portfolios')
+})
+
+test('a project page lists its beats beside the story on desktop', async ({ page, isMobile }) => {
+  test.skip(isMobile, 'The sidebar is desktop only')
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await page.goto('/projects/portfolio-rank')
+  const toc = page.getByRole('navigation', { name: 'On this page' })
+  await expect(toc.getByRole('link')).toHaveText([
+    'The spark',
+    'The question',
+    'The build',
+    'How it grew',
+    'Where it is now',
+    'Credits',
+    'The stack',
+  ])
+  await toc.getByRole('link', { name: 'How it grew' }).click()
+  await expect(page).toHaveURL(/#grew$/)
+  await expect(page.locator('h2#grew')).toBeInViewport()
+})
+
 test('the status API answers with names, states and uptime only', async ({ request }) => {
   const body = await (await request.get('/api/status')).json()
   expect(body.services['Demo Up']).toEqual({ state: 'operational', uptime90d: 92.914 })
   expect(JSON.stringify(body)).not.toMatch(/https?:\/\//)
 })
 
-test('a project page shows its screenshot whole, not cropped to a strip', async ({ page }) => {
+test('a project page shows its screenshots whole, not cropped to a strip', async ({ page }) => {
   for (const width of [375, 1280]) {
     await page.setViewportSize({ width, height: 900 })
     for (const slug of ['net-trailers', 'portfolio-rank']) {
       await page.goto(`/projects/${slug}`)
-      const image = page.locator('main [data-gallery] img').first()
+      const image = page.locator('main figure img').first()
+      await image.scrollIntoViewIfNeeded()
       await expect(image).toBeVisible()
       await expect
         .poll(() => image.evaluate((img: HTMLImageElement) => img.complete && img.naturalWidth > 0))

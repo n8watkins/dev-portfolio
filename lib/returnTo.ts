@@ -9,6 +9,13 @@ const LEFT_HOME_AT = 'portfolio-left-home-at'
 const RESTORE_TO = 'portfolio-restore-to'
 
 /**
+ * Read by the home page (app/page.tsx): scroll to this section once it
+ * renders. The nav, the footer's site map and /about set it when they go home
+ * from another page, so no "#section" stays in the address.
+ */
+export const SCROLL_TO_KEY = 'portfolio-scroll-to'
+
+/**
  * A spot on the home page: the section at the top of the screen and how far
  * into it, so it lands right even if something above loads at another height.
  */

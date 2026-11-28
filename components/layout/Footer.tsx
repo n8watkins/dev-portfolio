@@ -5,7 +5,7 @@ import { motion } from 'motion/react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { SCROLL_TO_KEY } from '@/components/Projects/BackToHome'
+import { SCROLL_TO_KEY } from '@/lib/returnTo'
 import PauseOffscreen from '@/components/ui/PauseOffscreen'
 import { FiGithub, FiMail } from 'react-icons/fi'
 import { CiLinkedin } from 'react-icons/ci'
@@ -62,7 +62,7 @@ type SitemapLink = {
 /** The site map (owner, 2026-11-08): the home page's sections, the pages, and my other sites. */
 const sitemap: { title: string; links: SitemapLink[] }[] = [
   {
-    title: 'Home',
+    title: 'Portfolio',
     links: [
       { label: 'About', href: '/#about', home: 'about' },
       { label: 'Projects', href: '/#projects', home: 'projects' },

@@ -44,18 +44,18 @@ test('the home About teaser is one compact block with two quick facts', async ({
   expect(gap).toBeLessThan(110)
 })
 
-test('/about has a Home / About me breadcrumb above the intro, and Home leads to the home page', async ({
+test('/about has a Portfolio / About me breadcrumb above the intro, and Portfolio leads to the home page', async ({
   page,
 }) => {
   await page.goto('/about')
   const crumbs = page.getByRole('navigation', { name: 'Breadcrumb' })
   await expect(crumbs.locator('li')).toHaveCount(3)
-  await expect(crumbs.getByRole('link', { name: 'Home' })).toHaveAttribute('href', '/')
+  await expect(crumbs.getByRole('link', { name: 'Portfolio' })).toHaveAttribute('href', '/')
   await expect(crumbs.locator('[aria-current="page"]')).toHaveText('About me')
   const above =
     (await crumbs.boundingBox())!.y < (await page.getByText('Get to know me').boundingBox())!.y
   expect(above).toBe(true)
-  await crumbs.getByRole('link', { name: 'Home' }).click()
+  await crumbs.getByRole('link', { name: 'Portfolio' }).click()
   await expect(page).toHaveURL(/\/$/, BETWEEN_PAGES)
 })
 
@@ -272,7 +272,7 @@ test("a subpage's nav jumps to the home page's sections", async ({ page, isMobil
   await expect(page.locator('#experience')).toBeInViewport()
 })
 
-test('/about ends with ways on: where you were, the experience, and the top of the home page', async ({
+test('/about ends with ways on: where you were, the experience, and the top of the portfolio', async ({
   page,
 }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
@@ -281,7 +281,7 @@ test('/about ends with ways on: where you were, the experience, and the top of t
   const ways = page.getByRole('navigation', { name: 'Where to next' })
   await ways.scrollIntoViewIfNeeded()
   await expect(
-    ways.getByRole('link', { name: 'Back to the top of the home page' })
+    ways.getByRole('link', { name: 'Back to the top of the portfolio' })
   ).toHaveAttribute('href', '/')
   await expect(ways.getByRole('link', { name: 'See my experience' })).toBeVisible()
   await expect(ways.getByRole('link', { name: 'Continue where you were' })).toHaveCount(0)

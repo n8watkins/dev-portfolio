@@ -5,7 +5,7 @@ import dynamic from 'next/dynamic'
 import { FloatingNav } from '@/components/layout/FloatingNav'
 import Footer from '@/components/layout/Footer'
 import ProjectFull from '@/components/Projects/ProjectFull'
-import BackToHome from '@/components/Projects/BackToHome'
+import Breadcrumb from '@/components/ui/Breadcrumb'
 import { subpageNavItems } from '@/data/navigation'
 import { projects } from '@/data/projects'
 
@@ -25,8 +25,9 @@ export default function ProjectsPage() {
         tabIndex={-1}
         className="relative w-full overflow-hidden bg-darkBlue text-slate-200 focus:outline-hidden"
       >
-        <div className="mx-auto max-w-md px-4 pt-28 sm:max-w-xl md:max-w-3xl md:pt-36 lg:max-w-4xl xl:max-w-6xl 2xl:max-w-7xl">
-          <BackToHome />
+        {/* The same top as /about: its container, padding and breadcrumb. */}
+        <div className="mx-auto max-w-md px-4 pt-14 sm:max-w-xl md:max-w-3xl md:pt-36 lg:max-w-4xl xl:max-w-6xl 2xl:max-w-7xl">
+          <Breadcrumb current="Projects" className="mb-8 md:mb-10" />
           <p className="text-xs font-semibold tracking-[0.2em] text-sky-400 uppercase">
             Selected projects
           </p>
