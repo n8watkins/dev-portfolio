@@ -45,12 +45,13 @@ const transitionVariants = {
  */
 function PortraitFrame({ src, alt, sizes, first }: { src: string; alt: string; sizes: string; first?: boolean; heldUntilLoaded?: boolean }) {
   const frame = useRef<HTMLDivElement>(null)
-  const [waiting, setWaiting] = useState(false)
+  // A rotated-in layer only ever renders after hydration, so it can start held (no 1 -> 0 flicker).
+  const [waiting, setWaiting] = useState(!first)
 
   useEffect(() => {
     const img = frame.current?.querySelector('img')
     // Read once on mount from the DOM: the photo's state is outside React.
-    if (img && !img.complete) setWaiting(true)
+    if (img) setWaiting(!img.complete)
   }, [])
 
   const placeholder = PORTRAIT_BLUR[src]

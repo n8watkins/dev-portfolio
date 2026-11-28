@@ -97,13 +97,14 @@ test.describe('the hero portrait on a slow first visit', () => {
     })
     await page.goto('/', { waitUntil: 'domcontentloaded' })
     // The rotation starts after 3s; the second portrait's layer mounts over the first.
-    const second = page.locator('#home [data-hero-portrait] [data-portrait-frame]').nth(1)
+    // Found by its own photo, not by position: later layers come and go every 3s.
+    const second = page.locator('#home [data-hero-portrait] [data-portrait-frame]:has(img[src*="watercolor"])')
     await expect(second).toBeAttached({ timeout: 10_000 })
-    await expect.poll(() => paintedOpacity(second), { timeout: 5_000 }).toBe(1)
+    await expect(second).toHaveAttribute('data-waiting', '')
     const bg = await second.evaluate((el) => getComputedStyle(el).backgroundImage)
     expect(bg, 'the layer carries its own placeholder made from its portrait').toMatch(/^url\("data:image\/jpeg;base64,/)
     const secondPhoto = second.locator('img')
-    expect(await secondPhoto.evaluate((img) => getComputedStyle(img).opacity), 'the held photo is transparent, not a black box').toBe('0')
+    await expect.poll(() => secondPhoto.evaluate((img) => getComputedStyle(img).opacity), { message: 'the held photo is transparent, not a black box' }).toBe('0')
     release()
     await expect.poll(() => secondPhoto.evaluate((img) => getComputedStyle(img).opacity), { timeout: 5_000 }).toBe('1')
   })
